@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "revitalize-our-site",
+      "version": "0.1.0",
+      "title": "Revitalize Our Site"
+    },
+    "tools": [
+      {
+        "name": "list_articles",
+        "title": "Listar matérias",
+        "description": "Lista as matérias publicadas mais recentes do IA News, retornando apenas título, resumo e link.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Quantidade de matérias (1-50, padrão 10).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "category": {
+              "description": "Filtra por categoria, ex.: 'Negócios'.",
+              "type": "string",
+              "maxLength": 60
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_articles",
+        "title": "Buscar matérias",
+        "description": "Busca matérias publicadas do IA News por termo no título ou no resumo. Retorna apenas título, resumo e link.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120,
+              "description": "Termo de busca, ex.: 'agentes de IA'."
+            },
+            "limit": {
+              "description": "Quantidade de resultados (1-25, padrão 10).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_article",
+        "title": "Ler matéria",
+        "description": "Retorna o texto público de uma matéria do IA News pelo slug: título, resumo, link e conteúdo editorial.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "^[a-z0-9-]+$",
+              "description": "Slug da matéria, ex.: 'ia-generativa-no-varejo'."
+            }
+          },
+          "required": [
+            "slug"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

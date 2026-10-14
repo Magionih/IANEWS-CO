@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /habitos
+Disallow: /auth
+Disallow: /cadastro
+Disallow: /s/
+Disallow: /lovable/
+Disallow: /api/
+
+Sitemap: https://ianews.site/sitemap.xml

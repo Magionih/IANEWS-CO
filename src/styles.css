@@ -1,0 +1,379 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * IA News — design system.
+ * Editorial identity: azul IA News (#1F5EFF), tinta (#26221C),
+ * fundo cru (#FBFAF7), acento dourado (#E8A020).
+ * Fontes: Outfit (títulos), Lora (corpo editorial),
+ * Instrument Sans (UI), Geist Mono (eyebrows).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-gold: var(--gold);
+  --color-success: var(--success);
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-cat-bigtech: var(--cat-bigtech);
+  --color-cat-startup: var(--cat-startup);
+  --color-cat-brasil: var(--cat-brasil);
+  --color-cat-global: var(--cat-global);
+  --color-cat-mercado: var(--cat-mercado);
+  --color-cat-pesquisa: var(--cat-pesquisa);
+  --color-cat-regulacao: var(--cat-regulacao);
+  --color-cat-ferramentas: var(--cat-ferramentas);
+  --color-cat-generativa: var(--cat-generativa);
+  --color-lime: var(--lime);
+  --color-nav: var(--nav);
+  --color-nav-foreground: var(--nav-foreground);
+  --font-sans: "Roboto", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-display: "Roboto", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-slab: "Roboto Slab", ui-serif, Georgia, serif;
+  --font-serif: "Lora", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --shadow-mui-sm: 0 4px 20px 0 rgb(0 0 0 / 0.06), 0 2px 6px 0 rgb(0 0 0 / 0.04);
+  --shadow-mui-md: 0 12px 40px -12px rgb(23 45 92 / 0.18), 0 6px 20px -8px rgb(23 45 92 / 0.12);
+  --shadow-mui-lg: 0 24px 60px -20px rgb(23 45 92 / 0.28), 0 10px 30px -12px rgb(23 45 92 / 0.18);
+  --shadow-mui-primary: 0 14px 30px -12px color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+:root {
+  --radius: 0.85rem;
+  /* Acento azul claro IA News e barra de navegação escura */
+  --lime: oklch(0.63 0.21 264);
+  --nav: oklch(0.145 0.005 250);
+  --nav-foreground: oklch(0.985 0 0);
+  /* Base — fundo cru estilo TheNews / Morning Brew */
+  --background: oklch(0.985 0.003 250);           /* #F8FAFC — MUI cru neutro */
+  --foreground: oklch(0.22 0.015 60);             /* #26221C ink */
+  --ink: oklch(0.22 0.015 60);
+  --surface: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.015 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.015 60);
+  /* Primária azul IA News #1F5EFF */
+  --primary: oklch(0.585 0.235 265);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.955 0.01 80);
+  --secondary-foreground: oklch(0.22 0.015 60);
+  --muted: oklch(0.955 0.01 80);
+  --muted-foreground: oklch(0.5 0.012 70);        /* #6c6a64 */
+  --accent: oklch(0.955 0.01 80);
+  --accent-foreground: oklch(0.22 0.015 60);
+  --destructive: oklch(0.6 0.22 27);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.9 0.012 80);                  /* #E6E0D6 */
+  --input: oklch(0.9 0.012 80);
+  --ring: oklch(0.585 0.235 265);
+  --gold: oklch(0.78 0.14 78);                    /* #E8A020 PRO */
+  --success: oklch(0.62 0.15 155);                /* #1F965A */
+  /* Chips de categoria */
+  --cat-bigtech: oklch(0.55 0.2 290);             /* #6C4AE6 */
+  --cat-startup: oklch(0.7 0.17 55);              /* #E97824 */
+  --cat-brasil: oklch(0.62 0.15 155);             /* #1F965A */
+  --cat-global: oklch(0.585 0.235 265);           /* #1F5EFF */
+  --cat-mercado: oklch(0.62 0.12 190);            /* #0E9791 */
+  --cat-pesquisa: oklch(0.53 0.2 310);            /* #9649CD */
+  --cat-regulacao: oklch(0.6 0.2 25);             /* #D6404A */
+  --cat-ferramentas: oklch(0.65 0.14 230);        /* #1496C8 */
+  --cat-generativa: oklch(0.65 0.19 350);         /* #DB4A8C */
+  --chart-1: oklch(0.585 0.235 265);
+  --chart-2: oklch(0.62 0.15 155);
+  --chart-3: oklch(0.78 0.14 78);
+  --chart-4: oklch(0.55 0.2 290);
+  --chart-5: oklch(0.7 0.17 55);
+  --sidebar: oklch(0.99 0.004 80);
+  --sidebar-foreground: oklch(0.22 0.015 60);
+  --sidebar-primary: oklch(0.585 0.235 265);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.95 0.01 80);
+  --sidebar-accent-foreground: oklch(0.22 0.015 60);
+  --sidebar-border: oklch(0.9 0.012 80);
+  --sidebar-ring: oklch(0.585 0.235 265);
+}
+
+.dark {
+  --background: oklch(0.16 0.015 260);
+  --foreground: oklch(0.984 0.003 247.858);
+  --ink: oklch(0.984 0.003 247.858);
+  --surface: oklch(0.22 0.02 260);
+  --card: oklch(0.22 0.02 260);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.22 0.02 260);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.68 0.2 265);
+  --primary-foreground: oklch(0.16 0.015 260);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.68 0.2 265);
+  --gold: oklch(0.78 0.14 78);
+  --success: oklch(0.68 0.15 155);
+  --chart-1: oklch(0.68 0.2 265);
+  --chart-2: oklch(0.68 0.15 155);
+  --chart-3: oklch(0.78 0.14 78);
+  --chart-4: oklch(0.6 0.22 290);
+  --chart-5: oklch(0.72 0.17 55);
+  --sidebar: oklch(0.2 0.018 260);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.68 0.2 265);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.68 0.2 265);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    background-color: #000000;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+
+  .font-editorial {
+    font-family: var(--font-serif);
+  }
+
+  .font-mono-eyebrow {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+}
+
+/* ---------- Tipografia editorial das matérias ---------- */
+.prose-ianews {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  line-height: 1.8;
+  letter-spacing: -0.003em;
+}
+
+.prose-ianews > * + * {
+  margin-top: 1.5rem;
+}
+
+.prose-ianews p {
+  margin-block: 0;
+  max-width: 68ch;
+}
+
+.prose-ianews p + p {
+  margin-top: 1.5rem;
+}
+
+.prose-ianews h2,
+.prose-ianews h3,
+.prose-ianews h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--color-foreground);
+}
+
+.prose-ianews h2 {
+  margin-top: 2.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.prose-ianews h3 {
+  margin-top: 2.25rem;
+  margin-bottom: 0.25rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.prose-ianews h4 {
+  margin-top: 1.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.prose-ianews strong {
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.prose-ianews a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.prose-ianews ul,
+.prose-ianews ol {
+  margin-top: 1.5rem;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prose-ianews ul { list-style: disc; }
+.prose-ianews ol { list-style: decimal; }
+
+.prose-ianews li::marker {
+  color: var(--color-lime);
+  font-weight: 700;
+}
+
+.prose-ianews li > p { margin: 0; }
+
+.prose-ianews blockquote {
+  margin-top: 2rem;
+  border-left: 4px solid var(--color-lime);
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  font-style: italic;
+  color: color-mix(in oklab, var(--color-foreground) 82%, transparent);
+}
+
+.prose-ianews hr {
+  margin-block: 2.5rem;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.prose-ianews img {
+  border-radius: 0.75rem;
+  margin-block: 2rem;
+}
+
+.prose-ianews table {
+  width: 100%;
+  margin-top: 2rem;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+
+.prose-ianews th,
+.prose-ianews td {
+  border: 1px solid var(--color-border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.prose-ianews th {
+  background: color-mix(in oklab, var(--color-secondary) 70%, transparent);
+  font-weight: 700;
+}
+
+.prose-ianews code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: color-mix(in oklab, var(--color-secondary) 80%, transparent);
+  padding: 0.15em 0.4em;
+  border-radius: 0.35rem;
+}
+
+/* Capitular na primeira linha do corpo da matéria */
+.prose-ianews.prose-lead > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 3.4rem;
+  line-height: 0.86;
+  font-weight: 800;
+  padding-right: 0.6rem;
+  padding-top: 0.35rem;
+  color: var(--color-lime);
+}
+
+@media (max-width: 640px) {
+  .prose-ianews {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+  .prose-ianews h2 { font-size: 1.35rem; margin-top: 2.25rem; }
+  .prose-ianews.prose-lead > p:first-of-type::first-letter { font-size: 2.9rem; }
+}
+
+
+/* ===== PWA / mobile: a página inteira rola no documento =====
+   (Rolar dentro de um contêiner quebrava o `position: sticky` da navbar.) */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
+.app-shell {
+  min-height: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}

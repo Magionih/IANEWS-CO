@@ -1,0 +1,41 @@
+# IA News
+
+> Jornalismo brasileiro sobre inteligência artificial: notícias diárias, análise editorial para quem decide e o Ranking IA das melhores ferramentas de IA.
+
+IA News (ianews.site) publica, em português do Brasil, notícias e análises sobre inteligência artificial voltadas a empresários, executivos e profissionais de tecnologia. Cada matéria passa por uma cadeia editorial própria que inclui análise de contexto para empresas, impactos práticos, conclusão editorial e citação das fontes utilizadas. O Ranking IA é um placar atualizado diariamente que combina desempenho técnico em benchmarks públicos, repercussão nas notícias e avaliações dos leitores brasileiros.
+
+Política editorial, uso de IA na redação e contato: https://ianews.site/sobre
+
+## Páginas
+
+- [Home](/): últimas notícias de inteligência artificial, atualizadas todos os dias.
+- [Notícias](/noticias): arquivo completo com busca e filtros por categoria (big techs, Brasil, regulação, pesquisa, mercado, startups, IA generativa).
+- [Ranking IA](/ranking): ranking atualizado diariamente das melhores ferramentas de inteligência artificial, com nota, categoria, fabricante e comparativo entre até 3 ferramentas.
+- [IA para empresas](/artigos/inteligencia-artificial-nas-empresas): guia prático com casos de uso por área, custos, roteiro de 90 dias, governança e LGPD.
+- [Sobre o IA News](/sobre): quem somos, política editorial, transparência no uso de IA e critérios de apuração.
+- [Anuncie](/anuncie): oportunidades de publicidade e patrocínio.
+- [Contato](/contato): fale com a redação.
+- [Assinar a newsletter](/assinar): boletim diário gratuito com as notícias mais relevantes de IA.
+- [Newsletter IANews](/newsletter): resumo gratuito de IA para quem decide, todo dia útil às 7h, com curadoria de notícias para negócios e Ranking IA semanal.
+
+## Editorias
+
+- [Big Techs e IA](/categoria/bigtech): OpenAI, Google, Microsoft, Meta, Anthropic, Nvidia.
+- [IA no Brasil](/categoria/brasil): adoção em bancos, varejo, indústria e governo.
+- [Regulação](/categoria/regulacao): PL 2338, LGPD, ANPD e AI Act.
+- [Mercado](/categoria/mercado): investimentos, aquisições e resultados do setor.
+- [Startups](/categoria/startup): novas empresas e produtos de IA.
+- [Pesquisa](/categoria/pesquisa): novos modelos e benchmarks.
+- [Ferramentas](/categoria/ferramentas): lançamentos, testes e preços.
+- [IA generativa](/categoria/generativa): texto, imagem, vídeo e voz.
+- [IA no mundo](/categoria/global): EUA, China e União Europeia.
+
+## Guias temáticos
+
+- [Regulamentação da IA no Brasil](/guias/regulamentacao-ia-brasil): PL 2338, marcos legais, LGPD e obrigações para empresas.
+- [IA para pequenas empresas](/guias/ia-para-pequenas-empresas): ferramentas, custos e primeiros passos para PMEs.
+- [IA no atendimento ao cliente](/guias/ia-atendimento-cliente): agentes, chatbots, métricas e casos brasileiros.
+
+## Opcional
+
+- [Termos e privacidade](/termos): termos de uso, política de privacidade e cookies.
