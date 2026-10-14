@@ -51,8 +51,8 @@ const Email = ({ name, confirmUrl, origin }: Props) => (
         <Text style={small}>
           Você recebe este e-mail porque se inscreveu no IA News
           {origin ? ` (${origin})` : ''}. Leia todas as matérias em{' '}
-          <Link href="https://ianews.site" style={{ color: '#2563eb' }}>
-            ianews.site
+          <Link href="https://ianewsbr.com" style={{ color: '#2563eb' }}>
+            ianewsbr.com
           </Link>
           .
         </Text>
@@ -67,7 +67,7 @@ export const template = {
   displayName: 'Boas-vindas ao lead',
   previewData: {
     name: 'Ana',
-    confirmUrl: 'https://ianews.site/confirmar?t=exemplo',
+    confirmUrl: 'https://ianewsbr.com/confirmar?t=exemplo',
     origin: 'popup-assinatura',
   },
 } satisfies TemplateEntry

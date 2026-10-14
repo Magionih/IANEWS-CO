@@ -57,9 +57,9 @@ export const Route = createFileRoute("/noticias")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://ianews.site/noticias" },
+      { property: "og:url", content: "https://ianewsbr.com/noticias" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/noticias" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/noticias" }],
     scripts: [
       {
         type: "application/ld+json",
@@ -69,9 +69,9 @@ export const Route = createFileRoute("/noticias")({
           name: "Notícias de inteligência artificial",
           description:
             "Todas as notícias de inteligência artificial publicadas pelo IA News.",
-          url: "https://ianews.site/noticias",
-          isPartOf: { "@type": "WebSite", name: "IA News", url: "https://ianews.site/" },
-          publisher: { "@type": "Organization", name: "IA News", url: "https://ianews.site/" },
+          url: "https://ianewsbr.com/noticias",
+          isPartOf: { "@type": "WebSite", name: "IA News", url: "https://ianewsbr.com/" },
+          publisher: { "@type": "Organization", name: "IA News", url: "https://ianewsbr.com/" },
         }),
       },
       {
@@ -80,12 +80,12 @@ export const Route = createFileRoute("/noticias")({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianews.site/" },
+            { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianewsbr.com/" },
             {
               "@type": "ListItem",
               position: 2,
               name: "Notícias",
-              item: "https://ianews.site/noticias",
+              item: "https://ianewsbr.com/noticias",
             },
           ],
         }),
@@ -100,7 +100,7 @@ export const Route = createFileRoute("/noticias")({
           itemListElement: (loaderData?.articles ?? []).slice(0, 20).map((a, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            url: `https://ianews.site/materia/${a.slug}`,
+            url: `https://ianewsbr.com/materia/${a.slug}`,
             name: a.title,
           })),
         }),

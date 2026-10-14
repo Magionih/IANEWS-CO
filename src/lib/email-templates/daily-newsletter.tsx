@@ -35,7 +35,7 @@ export const dailyNewsletterTemplate = {
   displayName: 'Newsletter diária IA News',
   previewData: {
     editionLabel: '30 de julho de 2026',
-    siteUrl: 'https://ianews.site',
+    siteUrl: 'https://ianewsbr.com',
     recipientName: 'Ana',
     articles: NEWSLETTER_PREVIEW_ARTICLES,
   },

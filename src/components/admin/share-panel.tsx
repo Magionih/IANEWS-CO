@@ -34,7 +34,7 @@ const channelLabel = (v: string) => CHANNELS.find((c) => c.value === v)?.label ?
 const fmt = (v?: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
 
 function shareUrl(code: string) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://ianews.site";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://ianewsbr.com";
   return `${origin}/s/${code}`;
 }
 

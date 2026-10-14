@@ -15,7 +15,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
-import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
 import { Route as CadastroRouteImport } from './routes/cadastro'
@@ -31,14 +30,10 @@ import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './routes/artigos.inteligencia-artificial-nas-empresas'
 import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
@@ -73,11 +68,6 @@ const NoticiasRoute = NoticiasRouteImport.update({
 const NewsletterRoute = NewsletterRouteImport.update({
   id: '/newsletter',
   path: '/newsletter',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContatoRoute = ContatoRouteImport.update({
@@ -155,18 +145,6 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
   id: '/api/public/track',
   path: '/api/public/track',
@@ -187,18 +165,6 @@ const ApiPublicAdMetricsRoute = ApiPublicAdMetricsRouteImport.update({
   path: '/api/public/ad-metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksWeeklyRankingRoute =
   ApiPublicHooksWeeklyRankingRouteImport.update({
     id: '/api/public/hooks/weekly-ranking',
@@ -237,15 +203,12 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
-  '/mcp': typeof McpRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
@@ -253,7 +216,6 @@ export interface FileRoutesByFullPath {
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
@@ -263,7 +225,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -273,15 +234,12 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
-  '/mcp': typeof McpRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
@@ -289,7 +247,6 @@ export interface FileRoutesByTo {
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
@@ -299,7 +256,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -311,15 +267,12 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
-  '/mcp': typeof McpRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
@@ -327,7 +280,6 @@ export interface FileRoutesById {
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
@@ -337,7 +289,6 @@ export interface FileRoutesById {
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -349,15 +300,12 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
-    | '/mcp'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
     | '/sitemap.xml'
     | '/sobre'
     | '/termos'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
@@ -365,7 +313,6 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
@@ -375,7 +322,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/weekly-ranking'
-    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -385,15 +331,12 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
-    | '/mcp'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
     | '/sitemap.xml'
     | '/sobre'
     | '/termos'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
@@ -401,7 +344,6 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
@@ -411,7 +353,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/weekly-ranking'
-    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -422,15 +363,12 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
-    | '/mcp'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
     | '/sitemap.xml'
     | '/sobre'
     | '/termos'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
@@ -438,7 +376,6 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
@@ -448,7 +385,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/weekly-ranking'
-    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -460,21 +396,17 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   ConfirmarRoute: typeof ConfirmarRoute
   ContatoRoute: typeof ContatoRoute
-  McpRoute: typeof McpRoute
   NewsletterRoute: typeof NewsletterRoute
   NoticiasRoute: typeof NoticiasRoute
   RankingRoute: typeof RankingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
-  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
-  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ArtigosInteligenciaArtificialNasEmpresasRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRoute
   CategoriaCatRoute: typeof CategoriaCatRoute
   GuiasHubRoute: typeof GuiasHubRoute
   MateriaSlugRoute: typeof MateriaSlugRoute
   SCodeRoute: typeof SCodeRoute
-  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicAdMetricsRoute: typeof ApiPublicAdMetricsRoute
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
@@ -484,7 +416,6 @@ export interface RootRouteChildren {
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
   ApiPublicHooksWeeklyRankingRoute: typeof ApiPublicHooksWeeklyRankingRoute
-  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -529,13 +460,6 @@ declare module '@tanstack/react-router' {
       path: '/newsletter'
       fullPath: '/newsletter'
       preLoaderRoute: typeof NewsletterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contato': {
@@ -643,20 +567,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/track': {
       id: '/api/public/track'
       path: '/api/public/track'
@@ -683,20 +593,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/ad-metrics'
       fullPath: '/api/public/ad-metrics'
       preLoaderRoute: typeof ApiPublicAdMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/weekly-ranking': {
@@ -759,23 +655,18 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   ConfirmarRoute: ConfirmarRoute,
   ContatoRoute: ContatoRoute,
-  McpRoute: McpRoute,
   NewsletterRoute: NewsletterRoute,
   NoticiasRoute: NoticiasRoute,
   RankingRoute: RankingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
-  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
-  Char91DotwellKnownChar93OauthProtectedResourceRoute:
-    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ArtigosInteligenciaArtificialNasEmpresasRoute:
     ArtigosInteligenciaArtificialNasEmpresasRoute,
   CategoriaCatRoute: CategoriaCatRoute,
   GuiasHubRoute: GuiasHubRoute,
   MateriaSlugRoute: MateriaSlugRoute,
   SCodeRoute: SCodeRoute,
-  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicAdMetricsRoute: ApiPublicAdMetricsRoute,
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
@@ -785,7 +676,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
   ApiPublicHooksWeeklyRankingRoute: ApiPublicHooksWeeklyRankingRoute,
-  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

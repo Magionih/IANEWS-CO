@@ -42,10 +42,10 @@ export const Route = createFileRoute("/assinar")({
           "Uma edição diária com o que muda na inteligência artificial e o impacto para empresas brasileiras.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://ianews.site/assinar" },
+      { property: "og:url", content: "https://ianewsbr.com/assinar" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/assinar" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/assinar" }],
   }),
   component: AssinarPage,
 });

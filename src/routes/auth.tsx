@@ -26,9 +26,9 @@ export const Route = createFileRoute("/auth")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
-      { property: "og:url", content: "https://ianews.site/auth" },
+      { property: "og:url", content: "https://ianewsbr.com/auth" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/auth" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/auth" }],
   }),
   component: AuthPage,
 });

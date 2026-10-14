@@ -34,9 +34,9 @@ export const Route = createFileRoute("/anuncie")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://ianews.site/anuncie" },
+      { property: "og:url", content: "https://ianewsbr.com/anuncie" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/anuncie" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/anuncie" }],
   }),
   component: AnunciePage,
 });

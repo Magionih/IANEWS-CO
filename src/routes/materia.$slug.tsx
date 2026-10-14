@@ -117,10 +117,10 @@ export const Route = createFileRoute("/materia/$slug")({
               { name: "twitter:image", content: img },
             ]
           : []),
-        { property: "og:url", content: `https://ianews.site/materia/${a.slug}` },
+        { property: "og:url", content: `https://ianewsbr.com/materia/${a.slug}` },
       ],
       links: [
-        { rel: "canonical", href: `https://ianews.site/materia/${a.slug}` },
+        { rel: "canonical", href: `https://ianewsbr.com/materia/${a.slug}` },
       ],
       scripts: [
         {
@@ -142,12 +142,12 @@ export const Route = createFileRoute("/materia/$slug")({
               name: "IA News",
               logo: {
                 "@type": "ImageObject",
-                url: "https://ianews.site/og-brand.png",
+                url: "https://ianewsbr.com/og-brand.png",
               },
             },
             mainEntityOfPage: {
               "@type": "WebPage",
-              "@id": `https://ianews.site/materia/${a.slug}`,
+              "@id": `https://ianewsbr.com/materia/${a.slug}`,
             },
             ...(a.tags && a.tags.length ? { keywords: a.tags.join(", ") } : {}),
             inLanguage: "pt-BR",
@@ -159,13 +159,13 @@ export const Route = createFileRoute("/materia/$slug")({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://ianews.site/" },
-              { "@type": "ListItem", position: 2, name: "Notícias", item: "https://ianews.site/noticias" },
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://ianewsbr.com/" },
+              { "@type": "ListItem", position: 2, name: "Notícias", item: "https://ianewsbr.com/noticias" },
               {
                 "@type": "ListItem",
                 position: 3,
                 name: a.title,
-                item: `https://ianews.site/materia/${a.slug}`,
+                item: `https://ianewsbr.com/materia/${a.slug}`,
               },
             ],
           }),

@@ -357,9 +357,9 @@ export const Route = createFileRoute("/ranking")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
-        { property: "og:url", content: "https://ianews.site/ranking" },
+        { property: "og:url", content: "https://ianewsbr.com/ranking" },
       ],
-      links: [{ rel: "canonical", href: "https://ianews.site/ranking" }],
+      links: [{ rel: "canonical", href: "https://ianewsbr.com/ranking" }],
       scripts: [
         {
           type: "application/ld+json",
@@ -368,13 +368,13 @@ export const Route = createFileRoute("/ranking")({
             "@graph": [
               {
                 "@type": "WebPage",
-                "@id": "https://ianews.site/ranking#webpage",
-                url: "https://ianews.site/ranking",
+                "@id": "https://ianewsbr.com/ranking#webpage",
+                url: "https://ianewsbr.com/ranking",
                 name: title,
                 description,
                 inLanguage: "pt-BR",
-                isPartOf: { "@id": "https://ianews.site/#website" },
-                publisher: { "@id": "https://ianews.site/#organization" },
+                isPartOf: { "@id": "https://ianewsbr.com/#website" },
+                publisher: { "@id": "https://ianewsbr.com/#organization" },
                 dateModified: tools[0]?.last_ranked_at ?? undefined,
                 mainEntity: {
                   "@type": "ItemList",
@@ -385,7 +385,7 @@ export const Route = createFileRoute("/ranking")({
                     "@type": "ListItem",
                     position: i + 1,
                     name: t.name,
-                    url: `https://ianews.site/ranking#${t.slug ?? t.id}`,
+                    url: `https://ianewsbr.com/ranking#${t.slug ?? t.id}`,
                     item: {
                       "@type": "SoftwareApplication",
                       name: t.name,
@@ -400,8 +400,8 @@ export const Route = createFileRoute("/ranking")({
               {
                 "@type": "BreadcrumbList",
                 itemListElement: [
-                  { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianews.site/" },
-                  { "@type": "ListItem", position: 2, name: "Ranking IA", item: "https://ianews.site/ranking" },
+                  { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianewsbr.com/" },
+                  { "@type": "ListItem", position: 2, name: "Ranking IA", item: "https://ianewsbr.com/ranking" },
                 ],
               },
             ],

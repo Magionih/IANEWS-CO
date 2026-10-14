@@ -25,9 +25,9 @@ export const Route = createFileRoute("/cadastro")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://ianews.site/cadastro" },
+      { property: "og:url", content: "https://ianewsbr.com/cadastro" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/cadastro" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/cadastro" }],
   }),
   component: SignupPage,
 });

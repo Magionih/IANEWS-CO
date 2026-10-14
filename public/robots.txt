@@ -8,4 +8,4 @@ Disallow: /s/
 Disallow: /lovable/
 Disallow: /api/
 
-Sitemap: https://ianews.site/sitemap.xml
+Sitemap: https://ianewsbr.com/sitemap.xml

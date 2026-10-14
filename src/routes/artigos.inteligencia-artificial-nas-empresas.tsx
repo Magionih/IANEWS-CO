@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const TITLE = "IA para empresas: guia prático de implementação (2026)";
 const DESCRIPTION =
   "Guia completo de inteligência artificial nas empresas: onde começar, casos de uso reais por área, custos, governança, LGPD, métricas e um roteiro de 90 dias.";
-const URL = "https://ianews.site/artigos/inteligencia-artificial-nas-empresas";
+const URL = "https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas";
 
 export const Route = createFileRoute("/artigos/inteligencia-artificial-nas-empresas")({
   head: () => ({
@@ -41,8 +41,8 @@ export const Route = createFileRoute("/artigos/inteligencia-artificial-nas-empre
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianews.site/" },
-            { "@type": "ListItem", position: 2, name: "Artigos", item: "https://ianews.site/artigos/inteligencia-artificial-nas-empresas" },
+            { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianewsbr.com/" },
+            { "@type": "ListItem", position: 2, name: "Artigos", item: "https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas" },
             { "@type": "ListItem", position: 3, name: "IA para empresas", item: URL },
           ],
         }),

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/public/ad-metrics")({
               let utmMedium: string | null = null;
               let utmCampaign: string | null = null;
               try {
-                const full = new URL(rawPath, "https://ianews.site");
+                const full = new URL(rawPath, "https://ianewsbr.com");
                 utmSource = full.searchParams.get("utm_source");
                 utmMedium = full.searchParams.get("utm_medium");
                 utmCampaign = full.searchParams.get("utm_campaign");

@@ -1,6 +1,6 @@
 import { ApplicationServerKeys, generatePushHTTPRequest } from "webpush-webcrypto";
 
-const SITE_URL = "https://ianews.site";
+const SITE_URL = "https://ianewsbr.com";
 
 type SubscriptionRow = {
   id: string;
@@ -31,7 +31,7 @@ export async function sendPushToAll(input: {
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const keys = await loadKeys();
-  const contact = process.env["VAPID_CONTACT_EMAIL"] ?? "contato@ianews.site";
+  const contact = process.env["VAPID_CONTACT_EMAIL"] ?? "contato@ianewsbr.com";
 
   const { data } = await supabaseAdmin
     .from("push_subscriptions")

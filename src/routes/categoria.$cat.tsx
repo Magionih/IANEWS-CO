@@ -11,7 +11,7 @@ import { listArticlesFiltered, type ArticleRow } from "@/lib/articles.functions"
 const FALLBACK_COVER =
   "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80&auto=format&fit=crop";
 
-const SITE = "https://ianews.site";
+const SITE = "https://ianewsbr.com";
 
 export const Route = createFileRoute("/categoria/$cat")({
   loader: async ({ params }) => {

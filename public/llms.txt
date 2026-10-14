@@ -2,9 +2,9 @@
 
 > Jornalismo brasileiro sobre inteligência artificial: notícias diárias, análise editorial para quem decide e o Ranking IA das melhores ferramentas de IA.
 
-IA News (ianews.site) publica, em português do Brasil, notícias e análises sobre inteligência artificial voltadas a empresários, executivos e profissionais de tecnologia. Cada matéria passa por uma cadeia editorial própria que inclui análise de contexto para empresas, impactos práticos, conclusão editorial e citação das fontes utilizadas. O Ranking IA é um placar atualizado diariamente que combina desempenho técnico em benchmarks públicos, repercussão nas notícias e avaliações dos leitores brasileiros.
+IA News (ianewsbr.com) publica, em português do Brasil, notícias e análises sobre inteligência artificial voltadas a empresários, executivos e profissionais de tecnologia. Cada matéria passa por uma cadeia editorial própria que inclui análise de contexto para empresas, impactos práticos, conclusão editorial e citação das fontes utilizadas. O Ranking IA é um placar atualizado diariamente que combina desempenho técnico em benchmarks públicos, repercussão nas notícias e avaliações dos leitores brasileiros.
 
-Política editorial, uso de IA na redação e contato: https://ianews.site/sobre
+Política editorial, uso de IA na redação e contato: https://ianewsbr.com/sobre
 
 ## Páginas
 

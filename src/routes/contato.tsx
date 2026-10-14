@@ -27,9 +27,9 @@ export const Route = createFileRoute("/contato")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://ianews.site/contato" },
+      { property: "og:url", content: "https://ianewsbr.com/contato" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/contato" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/contato" }],
   }),
   component: ContatoPage,
 });

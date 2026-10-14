@@ -1,13 +1,13 @@
 import React from "react";
 import { render } from "@react-email/render";
-import { sendLovableEmail, EmailAPIError } from "@lovable.dev/email-js";
+import { sendLovableEmail, EmailAPIError } from "@/lib/email.server";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { WeeklyRankingEmail, type RankingEmailTool } from "@/lib/ranking-email-template";
 import { RANKING_PREVIEW_TOOLS } from "@/lib/email-templates/weekly-ranking";
 
-export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianews.site";
-export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "notify.ianews.site";
+export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
+export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "ianewsbr.com";
 export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IA News <news@${SENDER_DOMAIN}>`;
 
 const TOOL_COLS =
@@ -186,13 +186,13 @@ export async function runWeeklyRanking(
   }
 
   const sendId = (sendRow as { id: string }).id;
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     await supabaseAdmin
       .from("newsletter_sends")
       .update({
         status: "failed",
-        error: "LOVABLE_API_KEY ausente.",
+        error: "RESEND_API_KEY ausente.",
         finished_at: new Date().toISOString(),
       })
       .eq("id", sendId);

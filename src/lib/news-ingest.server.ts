@@ -283,8 +283,11 @@ type Curated = {
   read_minutes: number;
 };
 
-const WRITER_MODEL = "google/gemini-2.5-pro";
-const FAST_MODEL = "google/gemini-2.5-flash";
+// IA própria (sem gateway do Lovable). Padrão: API do Google Gemini no formato OpenAI.
+// Para trocar de provedor, ajuste AI_BASE_URL / AI_API_KEY / AI_*_MODEL na Vercel.
+const AI_BASE_URL = process.env.AI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai";
+const WRITER_MODEL = process.env.AI_WRITER_MODEL ?? "gemini-2.5-pro";
+const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-2.5-flash";
 
 /** Nota mínima (0-10) exigida para uma matéria ir ao ar. */
 export const QUALITY_THRESHOLD = 8.2;
@@ -304,7 +307,7 @@ async function callAgent<T>(
 ): Promise<T | null> {
   const request = async (m: string) =>
     safeFetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      `${AI_BASE_URL.replace(/\/$/, "")}/chat/completions`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -326,7 +329,7 @@ async function callAgent<T>(
     const body = await res.text();
     if (res.status === 429)
       throw new Error("Limite de requisições da IA atingido. Tente novamente em alguns minutos.");
-    if (res.status === 402) throw new Error("Créditos de IA esgotados no workspace.");
+    if (res.status === 402) throw new Error("Créditos da API de IA esgotados.");
     throw new Error(`AI ${res.status}: ${body.slice(0, 200)}`);
   }
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
@@ -630,8 +633,8 @@ export async function runNewsIngest(
     : SOURCE_FEEDS;
   const activeFeeds = selected.length ? selected : SOURCE_FEEDS;
 
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
+  const apiKey = process.env.AI_API_KEY ?? process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("AI_API_KEY (chave da API de IA) não configurada.");
 
   const { data: runRow } = await supabaseAdmin
     .from("ingest_runs")

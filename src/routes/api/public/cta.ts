@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/public/cta")({
           let utmMedium: string | null = null;
           let utmCampaign: string | null = null;
           try {
-            const full = new URL(path, "https://ianews.site");
+            const full = new URL(path, "https://ianewsbr.com");
             utmSource = full.searchParams.get("utm_source");
             utmMedium = full.searchParams.get("utm_medium");
             utmCampaign = full.searchParams.get("utm_campaign");

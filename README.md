@@ -1,26 +1,30 @@
-# IANews Co
+# IANews — site (ianewsbr.com)
 
-Recrie esse site
+Site da IANews em TanStack Start, hospedado na **Vercel** com banco **Supabase** (projeto `hgydwvuowxxkdgtlqrdy`) e e-mails pelo **Resend**.
 
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://ianewsnoticias.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6c9f1cd5-1240-43ec-b796-da2b5afd28c5).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+## Rodar localmente
+```
+npm install
 npm run dev
 ```
+
+## Variáveis de ambiente (Vercel → Settings → Environment Variables)
+| Variável | Obrigatória | Para quê |
+|---|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | sim | Acesso administrativo ao banco (só servidor) |
+| `CRON_SECRET` | sim | Protege as rotinas agendadas (`/api/public/hooks/*`) |
+| `AI_API_KEY` | para a automação de notícias | Chave da API do Google Gemini (ou outro provedor compatível com OpenAI) |
+| `RESEND_API_KEY` | para e-mails | Confirmação de inscrição e newsletter |
+| `NEWSLETTER_ENABLED` | não | `true` liga o envio da newsletter diária/semanal e lembretes |
+| `EMAIL_FROM` | não | Remetente, ex.: `IA News <newsletter@ianewsbr.com>` |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | não | Notificações push |
+| `AI_BASE_URL`, `AI_WRITER_MODEL`, `AI_FAST_MODEL` | não | Trocar provedor/modelos de IA |
+
+Os valores públicos do Supabase (URL e chave publicável) já estão no `.env`.
+
+## Rotinas agendadas (vercel.json)
+- 07:00 (BRT) — ingestão de notícias com curadoria por IA
+- 07:50 — push diário
+- 08:00 dias úteis — newsletter diária (só envia com `NEWSLETTER_ENABLED=true`)
+- 11:00 — follow-up de leads (idem)
+- segunda 08:00 — ranking semanal (idem)

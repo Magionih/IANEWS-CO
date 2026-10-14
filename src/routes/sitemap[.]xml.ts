@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type {} from "@tanstack/react-start";
 import { CATEGORY_SEO_LIST } from "@/lib/categories";
 
-const BASE_URL = "https://ianews.site";
+const BASE_URL = "https://ianewsbr.com";
 
 interface SitemapEntry {
   path: string;

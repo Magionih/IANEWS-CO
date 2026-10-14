@@ -49,7 +49,7 @@ export const weeklyRankingTemplate = {
   displayName: 'Ranking IA semanal',
   previewData: {
     editionLabel: '25 de agosto de 2026',
-    siteUrl: 'https://ianews.site',
+    siteUrl: 'https://ianewsbr.com',
     recipientName: 'Ana',
     tools: RANKING_PREVIEW_TOOLS,
   },

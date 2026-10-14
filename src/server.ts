@@ -1,3 +1,5 @@
+import { applyEnvDefaults } from "./lib/env-defaults";
+applyEnvDefaults();
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";

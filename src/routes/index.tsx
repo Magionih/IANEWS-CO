@@ -153,22 +153,22 @@ export const Route = createFileRoute("/")({
         { name: "twitter:card", content: "summary_large_image" },
         { property: "og:image", content: cover },
         { name: "twitter:image", content: cover },
-        { property: "og:url", content: "https://ianews.site/" },
+        { property: "og:url", content: "https://ianewsbr.com/" },
       ],
-      links: [{ rel: "canonical", href: "https://ianews.site/" }],
+      links: [{ rel: "canonical", href: "https://ianewsbr.com/" }],
       scripts: [
         {
           type: "application/ld+json",
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            "@id": "https://ianews.site/#homepage",
-            url: "https://ianews.site/",
+            "@id": "https://ianewsbr.com/#homepage",
+            url: "https://ianewsbr.com/",
             name: title,
             description,
             inLanguage: "pt-BR",
-            isPartOf: { "@id": "https://ianews.site/#website" },
-            publisher: { "@id": "https://ianews.site/#organization" },
+            isPartOf: { "@id": "https://ianewsbr.com/#website" },
+            publisher: { "@id": "https://ianewsbr.com/#organization" },
             dateModified: items[0]?.published_at ?? undefined,
             mainEntity: {
               "@type": "ItemList",
@@ -176,7 +176,7 @@ export const Route = createFileRoute("/")({
               itemListElement: items.map((a: ArticleRow, i: number) => ({
                 "@type": "ListItem",
                 position: i + 1,
-                url: `https://ianews.site/materia/${a.slug}`,
+                url: `https://ianewsbr.com/materia/${a.slug}`,
                 name: a.title,
               })),
             },

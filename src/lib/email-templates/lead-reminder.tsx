@@ -45,8 +45,8 @@ const Email = ({ name, confirmUrl, headline }: Props) => (
         <Hr style={hr} />
         <Text style={small}>
           Se não foi você quem se inscreveu, basta ignorar este e-mail. Conteúdo completo em{' '}
-          <Link href="https://ianews.site" style={{ color: '#2563eb' }}>
-            ianews.site
+          <Link href="https://ianewsbr.com" style={{ color: '#2563eb' }}>
+            ianewsbr.com
           </Link>
           .
         </Text>
@@ -59,7 +59,7 @@ export const template = {
   component: Email,
   subject: 'Falta 1 clique para receber o IA News',
   displayName: 'Lembrete de confirmação',
-  previewData: { name: 'Ana', confirmUrl: 'https://ianews.site/confirmar?t=exemplo' },
+  previewData: { name: 'Ana', confirmUrl: 'https://ianewsbr.com/confirmar?t=exemplo' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif' }

@@ -27,7 +27,7 @@ export type HubConfig = {
   faq: { q: string; a: string }[];
 };
 
-export const SITE_URL = "https://ianews.site";
+export const SITE_URL = "https://ianewsbr.com";
 
 export const HUBS: Record<string, HubConfig> = {
   "regulamentacao-da-ia-no-brasil": {

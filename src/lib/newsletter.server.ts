@@ -1,13 +1,13 @@
 import React from "react";
 import { render } from "@react-email/render";
-import { sendLovableEmail, EmailAPIError } from "@lovable.dev/email-js";
+import { sendLovableEmail, EmailAPIError } from "@/lib/email.server";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DailyNewsletter, type NewsletterArticle } from "@/lib/newsletter-template";
 import { NEWSLETTER_PREVIEW_ARTICLES } from "@/lib/email-templates/daily-newsletter";
 
-export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianews.site";
-export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "notify.ianews.site";
+export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
+export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "ianewsbr.com";
 export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IA News <news@${SENDER_DOMAIN}>`;
 
 export type NewsletterRunOptions = {
@@ -50,7 +50,7 @@ function plainText(articles: NewsletterArticle[], label: string) {
 function friendlyEmailError(err: unknown): string {
   if (err instanceof EmailAPIError) {
     if (err.code === "domain_not_verified")
-      return "O domínio remetente (notify.ianews.site) ainda está em verificação de DNS. Os envios começam automaticamente assim que a verificação concluir.";
+      return "O domínio remetente (ianewsbr.com) ainda está em verificação de DNS. Os envios começam automaticamente assim que a verificação concluir.";
     if (err.code === "emails_disabled")
       return "O envio de e-mails está desativado para este projeto. Reative em Cloud → Emails.";
     if (err.status === 429)
@@ -173,12 +173,12 @@ export async function runDailyNewsletter(
   }
 
   const sendId = (sendRow as { id: string }).id;
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
     await supabaseAdmin
       .from("newsletter_sends")
-      .update({ status: "failed", error: "LOVABLE_API_KEY ausente.", finished_at: new Date().toISOString() })
+      .update({ status: "failed", error: "RESEND_API_KEY ausente.", finished_at: new Date().toISOString() })
       .eq("id", sendId);
     return {
       ok: false,

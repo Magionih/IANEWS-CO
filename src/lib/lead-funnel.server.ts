@@ -1,6 +1,6 @@
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 
-const SITE_URL = "https://ianews.site";
+const SITE_URL = "https://ianewsbr.com";
 
 export const confirmUrlFor = (token: string) => `${SITE_URL}/confirmar?t=${token}`;
 

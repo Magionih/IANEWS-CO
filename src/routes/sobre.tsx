@@ -20,9 +20,9 @@ export const Route = createFileRoute("/sobre")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://ianews.site/sobre" },
+      { property: "og:url", content: "https://ianewsbr.com/sobre" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/sobre" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/sobre" }],
   }),
   component: SobrePage,
 });

@@ -19,9 +19,9 @@ export const Route = createFileRoute("/termos")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://ianews.site/termos" },
+      { property: "og:url", content: "https://ianewsbr.com/termos" },
     ],
-    links: [{ rel: "canonical", href: "https://ianews.site/termos" }],
+    links: [{ rel: "canonical", href: "https://ianewsbr.com/termos" }],
   }),
   component: TermosPage,
 });

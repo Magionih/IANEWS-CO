@@ -86,7 +86,7 @@ export const Route = createFileRoute("/api/public/track")({
             }
           }
           try {
-            const full = new URL(path, "https://ianews.site");
+            const full = new URL(path, "https://ianewsbr.com");
             utm = {
               utm_source: full.searchParams.get("utm_source"),
               utm_medium: full.searchParams.get("utm_medium"),

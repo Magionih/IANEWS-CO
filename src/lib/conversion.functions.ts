@@ -241,11 +241,12 @@ async function fetchEmailMetrics(leads: LeadRow[], since: string): Promise<Email
     byOrigin: [],
     note: "Métricas de e-mail indisponíveis no momento.",
   };
-  const apiKey = process.env["LOVABLE_API_KEY"];
+  // Métricas detalhadas de entrega ficam no painel do Resend.
+  const apiKey = process.env["RESEND_API_KEY"];
   if (!apiKey) return empty;
   try {
-    const { listEmailLogs } = await import("@lovable.dev/email-js");
-    const res = await listEmailLogs({ limit: 1000, since }, { apiKey });
+    const res: { data: any[] } = { data: [] };
+    void since;
     const logs: any[] = res?.data ?? [];
     if (!Array.isArray(logs)) return empty;
 
