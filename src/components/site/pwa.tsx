@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { getPushPublicKey, savePushSubscription } from "@/lib/push.functions";
 import { getTrackingSessionId } from "@/lib/cta-tracking";
@@ -46,7 +46,15 @@ export function PwaManager() {
         if (existing) return;
         if (Notification.permission !== "default") return;
         if (localStorage.getItem(DISMISS_KEY)) return;
-        window.setTimeout(() => setVisible(true), 12000);
+        // Só depois da escolha de cookies e de um tempo de leitura, para não empilhar avisos.
+        window.setTimeout(() => {
+          try {
+            if (!localStorage.getItem("ianews-consent-v1")) return;
+          } catch {
+            return;
+          }
+          setVisible(true);
+        }, 45000);
       } catch (err) {
         console.warn("[pwa] service worker não registrado", err);
       }
@@ -93,35 +101,23 @@ export function PwaManager() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-3 z-[70] mx-auto max-w-md border-2 border-foreground bg-background p-4 shadow-[6px_6px_0_0_var(--color-nav)] sm:bottom-6">
+    <div className="push-card" role="dialog" aria-label="Notificações">
       <button
         type="button"
         aria-label="Fechar"
+        className="push-x"
         onClick={() => {
           localStorage.setItem(DISMISS_KEY, "1");
           setVisible(false);
         }}
-        className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </button>
-      <div className="flex items-start gap-3">
-        <Bell className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-        <div>
-          <p className="text-sm font-extrabold">Receba as matérias do dia</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Uma notificação por dia com as principais notícias de IA — mesmo com o app fechado.
-          </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={enable}
-            className="mt-3 inline-flex items-center gap-2 bg-foreground px-3 py-2 text-xs font-bold uppercase tracking-wide text-background disabled:opacity-60"
-          >
-            {busy ? "Ativando..." : "Ativar notificações"}
-          </button>
-        </div>
-      </div>
+      <p className="push-t">Receba as matérias do dia</p>
+      <p className="push-s">Uma notificação por dia com as principais notícias de IA.</p>
+      <button type="button" disabled={busy} onClick={enable} className="btn blue s">
+        {busy ? "Ativando..." : "Ativar notificações"}
+      </button>
     </div>
   );
 }

@@ -925,3 +925,12 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 .art-fallback p{color:var(--p-ink-2)}
 .art-fallback-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}
 }
+
+/* aviso de notificações (push) no padrão do portal */
+@layer components {
+.push-card{position:fixed;left:16px;bottom:16px;z-index:70;width:min(340px,calc(100vw - 32px));background:#fff;color:var(--p-ink);border:1px solid var(--p-rule);border-radius:12px;box-shadow:var(--p-shadow);padding:18px 18px 16px;animation:rise .25s ease}
+.push-x{position:absolute;top:8px;right:8px;width:30px;height:30px;display:grid;place-items:center;border:0;background:none;border-radius:50%;color:var(--p-ink-3);cursor:pointer}
+.push-x:hover{background:var(--p-soft);color:var(--p-ink)}
+.push-t{font-weight:700;font-size:15.5px;padding-right:26px}
+.push-s{font-size:13.5px;color:var(--p-ink-2);margin:4px 0 12px}
+}

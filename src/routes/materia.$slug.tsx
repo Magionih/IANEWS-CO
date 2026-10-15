@@ -250,9 +250,14 @@ function ArticlePage() {
   const [bodyTop, bodyBottom] = splitBody(article.body_markdown);
   const url = `https://ianewsbr.com/materia/${article.slug}`;
 
-  const sources: { name?: string | null; url?: string | null }[] =
-    article.sources && article.sources.length
-      ? article.sources
+  type Src = { name?: string | null; url?: string | null; kind?: string | null };
+  const allSources = (article.sources ?? []) as Src[];
+  // Crédito da foto de capa fica guardado em sources com kind "foto"; não entra na lista de fontes.
+  const photoCredit = allSources.find((s) => s.kind === "foto") ?? null;
+  const textSources = allSources.filter((s) => s.kind !== "foto");
+  const sources: Src[] =
+    textSources.length
+      ? textSources
       : article.source_url
         ? [{ name: article.source_name ?? "Fonte original", url: article.source_url }]
         : [];
@@ -329,7 +334,17 @@ function ArticlePage() {
                 />
                 {article.cover_image_url ? (
                   <figcaption className="cap">
-                    Foto: {article.source_name ?? "Reprodução"}
+                    {photoCredit?.name ? (
+                      photoCredit.url ? (
+                        <a href={photoCredit.url} target="_blank" rel="noopener noreferrer">
+                          {photoCredit.name}
+                        </a>
+                      ) : (
+                        photoCredit.name
+                      )
+                    ) : (
+                      "Imagem: reprodução"
+                    )}
                   </figcaption>
                 ) : null}
               </figure>
