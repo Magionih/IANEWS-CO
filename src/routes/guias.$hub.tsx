@@ -115,7 +115,7 @@ export const Route = createFileRoute("/guias/$hub")({
   },
   errorComponent: ({ error }) => (
     <div role="alert" className="p-10 text-center text-muted-foreground">
-      {error.message}
+      {error instanceof Error ? error.message : "Não foi possível carregar."}
     </div>
   ),
   notFoundComponent: HubNotFound,

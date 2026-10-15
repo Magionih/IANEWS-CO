@@ -109,7 +109,7 @@ export const Route = createFileRoute("/noticias")({
   }),
   errorComponent: ({ error }) => (
     <div role="alert" className="p-10 text-center text-muted-foreground">
-      {error.message}
+      {error instanceof Error ? error.message : "Não foi possível carregar."}
     </div>
   ),
   notFoundComponent: () => <div className="p-10 text-center">Nada por aqui.</div>,

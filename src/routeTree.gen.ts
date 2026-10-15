@@ -9,90 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermosRouteImport } from './routes/termos'
-import { Route as SobreRouteImport } from './routes/sobre'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RankingRouteImport } from './routes/ranking'
-import { Route as NoticiasRouteImport } from './routes/noticias'
-import { Route as NewsletterRouteImport } from './routes/newsletter'
-import { Route as ContatoRouteImport } from './routes/contato'
-import { Route as ConfirmarRouteImport } from './routes/confirmar'
-import { Route as CadastroRouteImport } from './routes/cadastro'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AssinarRouteImport } from './routes/assinar'
-import { Route as AnuncieRouteImport } from './routes/anuncie'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SCodeRouteImport } from './routes/s.$code'
-import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
-import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
-import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
-import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './routes/artigos.inteligencia-artificial-nas-empresas'
-import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AnuncieRouteImport } from './routes/anuncie'
+import { Route as AssinarRouteImport } from './routes/assinar'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as ConfirmarRouteImport } from './routes/confirmar'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as NewsletterRouteImport } from './routes/newsletter'
+import { Route as NoticiasRouteImport } from './routes/noticias'
+import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
-import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
-import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
+import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
+import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './routes/artigos.inteligencia-artificial-nas-empresas'
+import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
+import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
+import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
+import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
-import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
-import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
-import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
-import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
+import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
+import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
+import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
+import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
+import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
+import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
+import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
 
-const TermosRoute = TermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SobreRoute = SobreRouteImport.update({
-  id: '/sobre',
-  path: '/sobre',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RankingRoute = RankingRouteImport.update({
-  id: '/ranking',
-  path: '/ranking',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NoticiasRoute = NoticiasRouteImport.update({
-  id: '/noticias',
-  path: '/noticias',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NewsletterRoute = NewsletterRouteImport.update({
-  id: '/newsletter',
-  path: '/newsletter',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContatoRoute = ContatoRouteImport.update({
-  id: '/contato',
-  path: '/contato',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfirmarRoute = ConfirmarRouteImport.update({
-  id: '/confirmar',
-  path: '/confirmar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadastroRoute = CadastroRouteImport.update({
-  id: '/cadastro',
-  path: '/cadastro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssinarRoute = AssinarRouteImport.update({
-  id: '/assinar',
-  path: '/assinar',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnuncieRoute = AnuncieRouteImport.update({
@@ -100,34 +54,70 @@ const AnuncieRoute = AnuncieRouteImport.update({
   path: '/anuncie',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AssinarRoute = AssinarRouteImport.update({
+  id: '/assinar',
+  path: '/assinar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SCodeRoute = SCodeRouteImport.update({
-  id: '/s/$code',
-  path: '/s/$code',
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MateriaSlugRoute = MateriaSlugRouteImport.update({
-  id: '/materia/$slug',
-  path: '/materia/$slug',
+const ConfirmarRoute = ConfirmarRouteImport.update({
+  id: '/confirmar',
+  path: '/confirmar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuiasHubRoute = GuiasHubRouteImport.update({
-  id: '/guias/$hub',
-  path: '/guias/$hub',
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CategoriaCatRoute = CategoriaCatRouteImport.update({
-  id: '/categoria/$cat',
-  path: '/categoria/$cat',
+const NewsletterRoute = NewsletterRouteImport.update({
+  id: '/newsletter',
+  path: '/newsletter',
   getParentRoute: () => rootRouteImport,
+} as any)
+const NoticiasRoute = NoticiasRouteImport.update({
+  id: '/noticias',
+  path: '/noticias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHabitosRoute = AuthenticatedHabitosRouteImport.update({
+  id: '/habitos',
+  path: '/habitos',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ArtigosInteligenciaArtificialNasEmpresasRoute =
   ArtigosInteligenciaArtificialNasEmpresasRouteImport.update({
@@ -135,29 +125,24 @@ const ArtigosInteligenciaArtificialNasEmpresasRoute =
     path: '/artigos/inteligencia-artificial-nas-empresas',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedHabitosRoute = AuthenticatedHabitosRouteImport.update({
-  id: '/habitos',
-  path: '/habitos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
-  id: '/api/public/track',
-  path: '/api/public/track',
+const CategoriaCatRoute = CategoriaCatRouteImport.update({
+  id: '/categoria/$cat',
+  path: '/categoria/$cat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicEngagementRoute = ApiPublicEngagementRouteImport.update({
-  id: '/api/public/engagement',
-  path: '/api/public/engagement',
+const GuiasHubRoute = GuiasHubRouteImport.update({
+  id: '/guias/$hub',
+  path: '/guias/$hub',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicCtaRoute = ApiPublicCtaRouteImport.update({
-  id: '/api/public/cta',
-  path: '/api/public/cta',
+const MateriaSlugRoute = MateriaSlugRouteImport.update({
+  id: '/materia/$slug',
+  path: '/materia/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SCodeRoute = SCodeRouteImport.update({
+  id: '/s/$code',
+  path: '/s/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAdMetricsRoute = ApiPublicAdMetricsRouteImport.update({
@@ -165,10 +150,36 @@ const ApiPublicAdMetricsRoute = ApiPublicAdMetricsRouteImport.update({
   path: '/api/public/ad-metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksWeeklyRankingRoute =
-  ApiPublicHooksWeeklyRankingRouteImport.update({
-    id: '/api/public/hooks/weekly-ranking',
-    path: '/api/public/hooks/weekly-ranking',
+const ApiPublicCtaRoute = ApiPublicCtaRouteImport.update({
+  id: '/api/public/cta',
+  path: '/api/public/cta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicEngagementRoute = ApiPublicEngagementRouteImport.update({
+  id: '/api/public/engagement',
+  path: '/api/public/engagement',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
+  id: '/api/public/track',
+  path: '/api/public/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksDailyNewsletterRoute =
+  ApiPublicHooksDailyNewsletterRouteImport.update({
+    id: '/api/public/hooks/daily-newsletter',
+    path: '/api/public/hooks/daily-newsletter',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDailyPushRoute = ApiPublicHooksDailyPushRouteImport.update({
+  id: '/api/public/hooks/daily-push',
+  path: '/api/public/hooks/daily-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksIngestNewsRoute =
+  ApiPublicHooksIngestNewsRouteImport.update({
+    id: '/api/public/hooks/ingest-news',
+    path: '/api/public/hooks/ingest-news',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksLeadFollowupRoute =
@@ -177,21 +188,10 @@ const ApiPublicHooksLeadFollowupRoute =
     path: '/api/public/hooks/lead-followup',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksIngestNewsRoute =
-  ApiPublicHooksIngestNewsRouteImport.update({
-    id: '/api/public/hooks/ingest-news',
-    path: '/api/public/hooks/ingest-news',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDailyPushRoute = ApiPublicHooksDailyPushRouteImport.update({
-  id: '/api/public/hooks/daily-push',
-  path: '/api/public/hooks/daily-push',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHooksDailyNewsletterRoute =
-  ApiPublicHooksDailyNewsletterRouteImport.update({
-    id: '/api/public/hooks/daily-newsletter',
-    path: '/api/public/hooks/daily-newsletter',
+const ApiPublicHooksWeeklyRankingRoute =
+  ApiPublicHooksWeeklyRankingRouteImport.update({
+    id: '/api/public/hooks/weekly-ranking',
+    path: '/api/public/hooks/weekly-ranking',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -420,88 +420,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termos': {
-      id: '/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sobre': {
-      id: '/sobre'
-      path: '/sobre'
-      fullPath: '/sobre'
-      preLoaderRoute: typeof SobreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ranking': {
-      id: '/ranking'
-      path: '/ranking'
-      fullPath: '/ranking'
-      preLoaderRoute: typeof RankingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/noticias': {
-      id: '/noticias'
-      path: '/noticias'
-      fullPath: '/noticias'
-      preLoaderRoute: typeof NoticiasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/newsletter': {
-      id: '/newsletter'
-      path: '/newsletter'
-      fullPath: '/newsletter'
-      preLoaderRoute: typeof NewsletterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contato': {
-      id: '/contato'
-      path: '/contato'
-      fullPath: '/contato'
-      preLoaderRoute: typeof ContatoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/confirmar': {
-      id: '/confirmar'
-      path: '/confirmar'
-      fullPath: '/confirmar'
-      preLoaderRoute: typeof ConfirmarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadastro': {
-      id: '/cadastro'
-      path: '/cadastro'
-      fullPath: '/cadastro'
-      preLoaderRoute: typeof CadastroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assinar': {
-      id: '/assinar'
-      path: '/assinar'
-      fullPath: '/assinar'
-      preLoaderRoute: typeof AssinarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/anuncie': {
-      id: '/anuncie'
-      path: '/anuncie'
-      fullPath: '/anuncie'
-      preLoaderRoute: typeof AnuncieRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -511,32 +434,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/anuncie': {
+      id: '/anuncie'
+      path: '/anuncie'
+      fullPath: '/anuncie'
+      preLoaderRoute: typeof AnuncieRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/s/$code': {
-      id: '/s/$code'
-      path: '/s/$code'
-      fullPath: '/s/$code'
-      preLoaderRoute: typeof SCodeRouteImport
+    '/assinar': {
+      id: '/assinar'
+      path: '/assinar'
+      fullPath: '/assinar'
+      preLoaderRoute: typeof AssinarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/materia/$slug': {
-      id: '/materia/$slug'
-      path: '/materia/$slug'
-      fullPath: '/materia/$slug'
-      preLoaderRoute: typeof MateriaSlugRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/guias/$hub': {
-      id: '/guias/$hub'
-      path: '/guias/$hub'
-      fullPath: '/guias/$hub'
-      preLoaderRoute: typeof GuiasHubRouteImport
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar': {
+      id: '/confirmar'
+      path: '/confirmar'
+      fullPath: '/confirmar'
+      preLoaderRoute: typeof ConfirmarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter': {
+      id: '/newsletter'
+      path: '/newsletter'
+      fullPath: '/newsletter'
+      preLoaderRoute: typeof NewsletterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/noticias': {
+      id: '/noticias'
+      path: '/noticias'
+      fullPath: '/noticias'
+      preLoaderRoute: typeof NoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/habitos': {
+      id: '/_authenticated/habitos'
+      path: '/habitos'
+      fullPath: '/habitos'
+      preLoaderRoute: typeof AuthenticatedHabitosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/artigos/inteligencia-artificial-nas-empresas': {
+      id: '/artigos/inteligencia-artificial-nas-empresas'
+      path: '/artigos/inteligencia-artificial-nas-empresas'
+      fullPath: '/artigos/inteligencia-artificial-nas-empresas'
+      preLoaderRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categoria/$cat': {
@@ -546,46 +546,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriaCatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/artigos/inteligencia-artificial-nas-empresas': {
-      id: '/artigos/inteligencia-artificial-nas-empresas'
-      path: '/artigos/inteligencia-artificial-nas-empresas'
-      fullPath: '/artigos/inteligencia-artificial-nas-empresas'
-      preLoaderRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRouteImport
+    '/guias/$hub': {
+      id: '/guias/$hub'
+      path: '/guias/$hub'
+      fullPath: '/guias/$hub'
+      preLoaderRoute: typeof GuiasHubRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/habitos': {
-      id: '/_authenticated/habitos'
-      path: '/habitos'
-      fullPath: '/habitos'
-      preLoaderRoute: typeof AuthenticatedHabitosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/public/track': {
-      id: '/api/public/track'
-      path: '/api/public/track'
-      fullPath: '/api/public/track'
-      preLoaderRoute: typeof ApiPublicTrackRouteImport
+    '/materia/$slug': {
+      id: '/materia/$slug'
+      path: '/materia/$slug'
+      fullPath: '/materia/$slug'
+      preLoaderRoute: typeof MateriaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/engagement': {
-      id: '/api/public/engagement'
-      path: '/api/public/engagement'
-      fullPath: '/api/public/engagement'
-      preLoaderRoute: typeof ApiPublicEngagementRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/cta': {
-      id: '/api/public/cta'
-      path: '/api/public/cta'
-      fullPath: '/api/public/cta'
-      preLoaderRoute: typeof ApiPublicCtaRouteImport
+    '/s/$code': {
+      id: '/s/$code'
+      path: '/s/$code'
+      fullPath: '/s/$code'
+      preLoaderRoute: typeof SCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ad-metrics': {
@@ -595,25 +574,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/weekly-ranking': {
-      id: '/api/public/hooks/weekly-ranking'
-      path: '/api/public/hooks/weekly-ranking'
-      fullPath: '/api/public/hooks/weekly-ranking'
-      preLoaderRoute: typeof ApiPublicHooksWeeklyRankingRouteImport
+    '/api/public/cta': {
+      id: '/api/public/cta'
+      path: '/api/public/cta'
+      fullPath: '/api/public/cta'
+      preLoaderRoute: typeof ApiPublicCtaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/lead-followup': {
-      id: '/api/public/hooks/lead-followup'
-      path: '/api/public/hooks/lead-followup'
-      fullPath: '/api/public/hooks/lead-followup'
-      preLoaderRoute: typeof ApiPublicHooksLeadFollowupRouteImport
+    '/api/public/engagement': {
+      id: '/api/public/engagement'
+      path: '/api/public/engagement'
+      fullPath: '/api/public/engagement'
+      preLoaderRoute: typeof ApiPublicEngagementRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/ingest-news': {
-      id: '/api/public/hooks/ingest-news'
-      path: '/api/public/hooks/ingest-news'
-      fullPath: '/api/public/hooks/ingest-news'
-      preLoaderRoute: typeof ApiPublicHooksIngestNewsRouteImport
+    '/api/public/track': {
+      id: '/api/public/track'
+      path: '/api/public/track'
+      fullPath: '/api/public/track'
+      preLoaderRoute: typeof ApiPublicTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/daily-newsletter': {
+      id: '/api/public/hooks/daily-newsletter'
+      path: '/api/public/hooks/daily-newsletter'
+      fullPath: '/api/public/hooks/daily-newsletter'
+      preLoaderRoute: typeof ApiPublicHooksDailyNewsletterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/daily-push': {
@@ -623,11 +609,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDailyPushRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/daily-newsletter': {
-      id: '/api/public/hooks/daily-newsletter'
-      path: '/api/public/hooks/daily-newsletter'
-      fullPath: '/api/public/hooks/daily-newsletter'
-      preLoaderRoute: typeof ApiPublicHooksDailyNewsletterRouteImport
+    '/api/public/hooks/ingest-news': {
+      id: '/api/public/hooks/ingest-news'
+      path: '/api/public/hooks/ingest-news'
+      fullPath: '/api/public/hooks/ingest-news'
+      preLoaderRoute: typeof ApiPublicHooksIngestNewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/lead-followup': {
+      id: '/api/public/hooks/lead-followup'
+      path: '/api/public/hooks/lead-followup'
+      fullPath: '/api/public/hooks/lead-followup'
+      preLoaderRoute: typeof ApiPublicHooksLeadFollowupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/weekly-ranking': {
+      id: '/api/public/hooks/weekly-ranking'
+      path: '/api/public/hooks/weekly-ranking'
+      fullPath: '/api/public/hooks/weekly-ranking'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyRankingRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
