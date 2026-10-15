@@ -1,33 +1,123 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, Search, User } from "lucide-react";
-import { useState } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 
-import { Logo } from "@/components/brand/logo";
+import logoWhite from "@/assets/ianews-logo-white.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useAdminAccess } from "@/hooks/use-admin";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { CATEGORY_SEO_LIST } from "@/lib/categories";
+import { HUB_LIST } from "@/lib/hubs";
+import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
 
-const nav = [
-  { to: "/", label: "Home" },
-  { to: "/noticias", label: "Notícias" },
-  { to: "/ranking", label: "Ranking IA" },
-  { to: "/newsletter", label: "Newsletter" },
-  { to: "/habitos", label: "Meus Hábitos" },
-] as const;
+/* Cabeçalho no design do IANews Portal: uma linha só, escuro, com Notícias em menu suspenso. */
+
+function Icon({ d, className = "ico" }: { d: string; className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+}
+const I = {
+  search: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm9 16-3.6-3.6",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  x: "M6 6l12 12M18 6 6 18",
+};
+
+function SearchOverlay({ onClose }: { onClose: () => void }) {
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    input.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+  function go(e?: React.FormEvent) {
+    e?.preventDefault();
+    const term = q.trim().slice(0, 80);
+    onClose();
+    navigate({ to: "/noticias", search: { q: term, cat: "all" } });
+  }
+  return (
+    <div
+      className="srch-bg"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Buscar na IANews"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="srch">
+        <form className="srch-bar" onSubmit={go}>
+          <Icon d={I.search} />
+          <input
+            ref={input}
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar matérias e plataformas"
+            aria-label="Buscar matérias e plataformas"
+            autoComplete="off"
+            maxLength={80}
+          />
+          <button className="srch-x" type="button" onClick={onClose}>
+            Fechar
+          </button>
+        </form>
+        <div className="srch-res">
+          <h5>Atalhos</h5>
+          <Link className="srch-it" to="/ranking" onClick={onClose}>
+            <span>
+              <b>Ranking IA</b>
+              <small>As melhores plataformas de IA, atualizado todo dia</small>
+            </span>
+          </Link>
+          <Link className="srch-it" to="/newsletter" onClick={onClose}>
+            <span>
+              <b>Newsletter</b>
+              <small>O resumo de IA para quem decide, grátis</small>
+            </span>
+          </Link>
+          <h5>Editorias</h5>
+          {CATEGORY_SEO_LIST.slice(0, 6).map((c) => (
+            <Link key={c.slug} className="srch-it" to="/categoria/$cat" params={{ cat: c.slug }} onClick={onClose}>
+              <span>
+                <b>{c.label}</b>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function SiteHeader() {
-  const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [search, setSearch] = useState(false);
+  const [ddOff, setDdOff] = useState(false);
   const { isAuthenticated } = useAuth();
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    setMenu(false);
+    setDdOff(true);
+    const t = setTimeout(() => setDdOff(false), 300);
+    return () => clearTimeout(t);
+  }, [path]);
+
+  const cur = (p: string) =>
+    (p === "/noticias" ? /^\/(noticias|materia|categoria|guias|artigos)/.test(path) : path.startsWith(p))
+      ? ("page" as const)
+      : undefined;
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -35,161 +125,166 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[color:var(--color-nav)] text-[color:var(--color-nav-foreground)] [padding-top:env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <Logo onDark />
-        <nav className="hidden shrink-0 items-center gap-4 lg:flex">
-          {nav.map((item) => (
-            <Link
-              key={item.label}
-              to={item.to}
-              className="inline-flex items-center gap-1 text-[15px] font-medium text-white/70 transition-colors hover:text-white"
-              activeProps={{ className: "text-white font-semibold" }}
-            >
-              {item.label}
+    <>
+      <header className="top" id="top">
+        <div className="wrap top-in">
+          <Link className="logo" to="/" aria-label="IANews, página inicial">
+            <img src={logoWhite} alt="IANews" width={795} height={160} />
+          </Link>
+          <nav className="nav" aria-label="Seções">
+            <div className={"nav-dd" + (ddOff ? " off" : "")}>
+              <Link to="/noticias" search={{ q: "", cat: "all" }} aria-haspopup="true" aria-current={cur("/noticias")}>
+                Notícias
+              </Link>
+              <div className="dd">
+                <div>
+                  <h5>Editorias</h5>
+                  <div className="dd-cats">
+                    {CATEGORY_SEO_LIST.map((c) => (
+                      <Link key={c.slug} to="/categoria/$cat" params={{ cat: c.slug }}>
+                        {c.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h5>Temas</h5>
+                  <div>
+                    {HUB_LIST.map((h) => (
+                      <Link key={h.slug} to="/guias/$hub" params={{ hub: h.slug }} search={{ q: "", tema: "all" }}>
+                        {h.eyebrow || h.title}
+                      </Link>
+                    ))}
+                    <Link to="/artigos/inteligencia-artificial-nas-empresas">IA nas empresas</Link>
+                  </div>
+                </div>
+                <div className="dd-all">
+                  <Link to="/noticias" search={{ q: "", cat: "all" }}>
+                    Todas as notícias →
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <Link to="/ranking" aria-current={cur("/ranking")}>
+              Ranking IA
             </Link>
-          ))}
-        </nav>
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            asChild
-            className="hidden h-10 rounded-lg bg-[color:var(--color-lime)] px-5 text-sm font-bold text-white hover:bg-[color:var(--color-lime)]/90 sm:inline-flex"
-          >
-            <Link to="/newsletter">Assine</Link>
-          </Button>
-          {isAdmin && (
-            <Button
-              asChild
-              variant="ghost"
-              className="hidden h-10 rounded-lg px-3 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white lg:inline-flex"
+            <Link to="/gente" aria-current={cur("/gente")}>
+              Gente
+            </Link>
+            <Link to="/empresas" aria-current={cur("/empresas")}>
+              Para empresas
+            </Link>
+            {isAdmin && (
+              <Link to="/admin" aria-current={cur("/admin")}>
+                Painel
+              </Link>
+            )}
+          </nav>
+          <div className="top-act">
+            <button className="icon-btn" type="button" aria-label="Buscar" onClick={() => setSearch(true)}>
+              <Icon d={I.search} />
+            </button>
+            {isAuthenticated ? (
+              <Link className="top-pref" to="/habitos">
+                Minha conta
+              </Link>
+            ) : (
+              <Link className="top-pref" to="/auth">
+                Entrar
+              </Link>
+            )}
+            <button className="btn blue s" type="button" onClick={() => openSubscribeDialog("topo")}>
+              <span className="cta-long">Assinar newsletter</span>
+              <span className="cta-short">Assinar</span>
+            </button>
+            <button
+              className="icon-btn"
+              id="open-menu"
+              type="button"
+              aria-label={menu ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={menu}
+              aria-controls="menu"
+              onClick={() => setMenu((m) => !m)}
             >
-              <Link to="/admin">Painel</Link>
-            </Button>
-          )}
-          {isAuthenticated ? (
-            <>
-              <Button
-                asChild
-                variant="outline"
-                className="hidden h-10 rounded-lg border-white/25 bg-transparent px-4 text-sm font-semibold text-white hover:bg-white/10 hover:text-white md:inline-flex"
-              >
-                <Link to="/habitos">
-                  <User className="mr-1.5 h-4 w-4" /> Minha conta
-                </Link>
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={signOut}
-                className="hidden h-10 rounded-lg px-3 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white lg:inline-flex"
-              >
-                Sair
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                asChild
-                variant="outline"
-                className="hidden h-10 rounded-lg border-white/25 bg-transparent px-5 text-sm font-semibold text-white hover:bg-white/10 hover:text-white md:inline-flex"
-              >
-                <Link to="/cadastro">Cadastre-se</Link>
-              </Button>
-              <Button
-                asChild
-                variant="ghost"
-                className="hidden h-10 rounded-lg px-3 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white lg:inline-flex"
-              >
-                <Link to="/auth">Entrar</Link>
-              </Button>
-            </>
-          )}
-          <label className="hidden items-center gap-2 rounded-lg bg-white/10 px-3.5 py-2.5 xl:flex">
-            <Search className="h-4 w-4 text-white/60" />
-            <input
-              type="search"
-              placeholder="Buscar..."
-              aria-label="Buscar no IA News"
-              className="w-44 bg-transparent text-sm text-white outline-none placeholder:text-white/50"
-            />
-          </label>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-lg text-white hover:bg-white/10 hover:text-white lg:hidden"
-                aria-label="Abrir menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="flex w-[86vw] max-w-sm flex-col overflow-y-auto overscroll-contain bg-background p-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
-            >
-              <SheetHeader className="p-0 text-left">
-                <SheetTitle className="text-left">
-                  <Logo />
-                </SheetTitle>
-              </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-1">
-                {nav.map((item) => (
-                  <Link
-                    key={item.label}
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-3 text-base font-medium text-foreground/80 hover:bg-secondary hover:text-foreground"
-                    activeProps={{ className: "bg-secondary font-semibold text-foreground" }}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-3 text-base font-medium text-foreground/80 hover:bg-secondary"
-                  >
-                    Painel administrativo
-                  </Link>
-                )}
-                {isAuthenticated ? (
-                  <Link
-                    to="/habitos"
-                    onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-3 text-base font-medium text-foreground/80 hover:bg-secondary"
-                  >
+              <Icon d={menu ? I.x : I.menu} />
+            </button>
+          </div>
+        </div>
+        {menu && (
+          <div className="menu" id="menu">
+            <div className="wrap">
+              <Link className="m" to="/noticias" search={{ q: "", cat: "all" }} aria-current={cur("/noticias")}>
+                Notícias
+              </Link>
+              <Link className="m" to="/ranking" aria-current={cur("/ranking")}>
+                Ranking IA
+              </Link>
+              <Link className="m" to="/gente" aria-current={cur("/gente")}>
+                Gente
+              </Link>
+              <Link className="m" to="/empresas" aria-current={cur("/empresas")}>
+                Para empresas
+              </Link>
+              <Link className="m" to="/newsletter" aria-current={cur("/newsletter")}>
+                Newsletter
+              </Link>
+              <Link className="m" to="/anuncie" aria-current={cur("/anuncie")}>
+                Anuncie
+              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link className="m" to="/habitos" aria-current={cur("/habitos")}>
                     Minha conta
                   </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/cadastro"
-                      onClick={() => setOpen(false)}
-                      className="rounded-md px-3 py-3 text-base font-medium text-foreground/80 hover:bg-secondary"
-                    >
-                      Cadastre-se
+                  {isAdmin && (
+                    <Link className="m" to="/admin">
+                      Painel
                     </Link>
-                    <Link
-                      to="/auth"
-                      onClick={() => setOpen(false)}
-                      className="rounded-md px-3 py-3 text-base font-medium text-foreground/80 hover:bg-secondary"
-                    >
-                      Entrar
-                    </Link>
-                  </>
-                )}
-                <Button
-                  asChild
-                  className="mt-4"
-                >
-                  <Link to="/newsletter" onClick={() => setOpen(false)}>Assine</Link>
-                </Button>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </header>
+                  )}
+                  <a
+                    className="m"
+                    href="/"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void signOut();
+                    }}
+                  >
+                    Sair
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Link className="m" to="/auth">
+                    Entrar
+                  </Link>
+                  <Link className="m" to="/cadastro">
+                    Criar conta
+                  </Link>
+                </>
+              )}
+              <h5>Editorias</h5>
+              <div className="menu-cats">
+                {CATEGORY_SEO_LIST.map((c) => (
+                  <Link key={c.slug} to="/categoria/$cat" params={{ cat: c.slug }}>
+                    {c.label}
+                  </Link>
+                ))}
+              </div>
+              <button
+                className="btn blue"
+                type="button"
+                onClick={() => {
+                  setMenu(false);
+                  openSubscribeDialog("menu");
+                }}
+              >
+                Assinar newsletter grátis
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
+      {search && <SearchOverlay onClose={() => setSearch(false)} />}
+    </>
   );
 }

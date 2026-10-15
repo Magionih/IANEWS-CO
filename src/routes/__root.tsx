@@ -14,7 +14,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { SubscribeDialog } from "@/components/site/subscribe-dialog";
 import { VisitTracker } from "@/components/site/visit-tracker";
-import { StickyCta } from "@/components/site/sticky-cta";
 import { ExitIntent } from "@/components/site/exit-intent";
 import { PwaManager } from "@/components/site/pwa";
 import { InstallPwaDialog } from "@/components/site/install-pwa-dialog";
@@ -115,7 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href:
-          "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;600;700;800&family=Roboto:wght@300;400;500;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Roboto+Mono:wght@400;500;600&display=swap",
+          "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Roboto+Mono:wght@400;500;600&display=swap",
       },
       {
         rel: "stylesheet",
@@ -247,7 +246,6 @@ function RootComponent() {
       <VisitTracker />
       <SubscribeDialog />
       <ConsentBanner />
-      <StickyCta />
       <ExitIntent />
       <PwaManager />
       <InstallPwaDialog />

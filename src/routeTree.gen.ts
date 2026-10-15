@@ -17,6 +17,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
 import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as GenteRouteImport } from './routes/gente'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
 import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as RankingRouteImport } from './routes/ranking'
@@ -78,6 +80,16 @@ const ConfirmarRoute = ConfirmarRouteImport.update({
 const ContatoRoute = ContatoRouteImport.update({
   id: '/contato',
   path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresasRoute = EmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenteRoute = GenteRouteImport.update({
+  id: '/gente',
+  path: '/gente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsletterRoute = NewsletterRouteImport.update({
@@ -209,6 +221,8 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
+  '/empresas': typeof EmpresasRoute
+  '/gente': typeof GenteRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
@@ -241,6 +255,8 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
+  '/empresas': typeof EmpresasRoute
+  '/gente': typeof GenteRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
@@ -275,6 +291,8 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
+  '/empresas': typeof EmpresasRoute
+  '/gente': typeof GenteRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
@@ -309,6 +327,8 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
+    | '/empresas'
+    | '/gente'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
@@ -341,6 +361,8 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
+    | '/empresas'
+    | '/gente'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
@@ -374,6 +396,8 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
+    | '/empresas'
+    | '/gente'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
@@ -408,6 +432,8 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   ConfirmarRoute: typeof ConfirmarRoute
   ContatoRoute: typeof ContatoRoute
+  EmpresasRoute: typeof EmpresasRoute
+  GenteRoute: typeof GenteRoute
   NewsletterRoute: typeof NewsletterRoute
   NoticiasRoute: typeof NoticiasRoute
   RankingRoute: typeof RankingRoute
@@ -487,6 +513,20 @@ declare module '@tanstack/react-router' {
       path: '/contato'
       fullPath: '/contato'
       preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresas': {
+      id: '/empresas'
+      path: '/empresas'
+      fullPath: '/empresas'
+      preLoaderRoute: typeof EmpresasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gente': {
+      id: '/gente'
+      path: '/gente'
+      fullPath: '/gente'
+      preLoaderRoute: typeof GenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newsletter': {
@@ -675,6 +715,8 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   ConfirmarRoute: ConfirmarRoute,
   ContatoRoute: ContatoRoute,
+  EmpresasRoute: EmpresasRoute,
+  GenteRoute: GenteRoute,
   NewsletterRoute: NewsletterRoute,
   NoticiasRoute: NoticiasRoute,
   RankingRoute: RankingRoute,

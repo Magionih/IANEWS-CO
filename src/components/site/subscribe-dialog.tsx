@@ -1,15 +1,11 @@
-import { useSyncExternalStore, useState, useEffect } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { Check, Sparkles } from "lucide-react";
-import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { EmailInput, PhoneInput } from "@/components/site/smart-fields";
-import { subscribeLead } from "@/lib/newsletter.functions";
-import { getLeadContext, trackCta } from "@/lib/cta-tracking";
+import { trackCta } from "@/lib/cta-tracking";
+import { PortalSubscribeForm } from "@/components/site/portal-subscribe";
+
+/* Pop-up de newsletter no design do IANews Portal (limpo, central no desktop,
+   folha inferior no celular). Mesmas funções públicas de antes. */
 
 let open = false;
 let placement = "generico";
@@ -20,19 +16,15 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
-/**
- * CTA principal de assinatura: leva o leitor para a página /assinar
- * (em vez de abrir o pop-up).
- */
+/** CTA que leva à página de assinatura. */
 export function openSubscribe(from?: string) {
   const source = from ?? "generico";
   trackCta({ event: "click", placement: source, variant: "ir-para-assinar" });
   if (goToSubscribePage) goToSubscribePage(source);
-  else if (typeof window !== "undefined")
-    window.location.assign(`/assinar?from=${encodeURIComponent(source)}`);
+  else if (typeof window !== "undefined") window.location.assign(`/assinar?from=${encodeURIComponent(source)}`);
 }
 
-/** Pop-up compacto — usado apenas em gatilhos automáticos (exit intent). */
+/** Abre o pop-up de assinatura. */
 export function openSubscribeDialog(from?: string) {
   placement = from ?? "generico";
   open = true;
@@ -50,24 +42,9 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-const PERKS = [
-  "Edição diária no e-mail antes das 8h",
-  "Alertas de mercado em tempo real no WhatsApp",
-  "Ranking IA completo, atualizado a cada edição",
-  "Análises de impacto para o seu negócio",
-];
-
 export function SubscribeDialog() {
-  const isOpen = useSyncExternalStore(
-    subscribe,
-    () => open,
-    () => false,
-  );
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [sending, setSending] = useState(false);
-  const subscribeFn = useServerFn(subscribeLead);
+  const isOpen = useSyncExternalStore(subscribe, () => open, () => false);
+  const [done, setDone] = useState<null | { already: boolean }>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,127 +58,90 @@ export function SubscribeDialog() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setDone(null);
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
-      <DialogContent
-        className="left-1/2 top-auto bottom-3 w-[calc(100%-1.5rem)] max-w-md translate-x-[-50%] translate-y-0 gap-0 overflow-hidden border border-white/10 bg-[color:var(--color-nav)] p-0 text-white shadow-2xl data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 sm:bottom-auto sm:top-1/2 sm:translate-y-[-50%]"
-      >
-        <div className="relative p-5 sm:p-7">
-          <div
-            className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-25 blur-3xl"
-            style={{ background: "var(--color-lime)" }}
-          />
-          <p className="relative font-mono-eyebrow flex items-center gap-2 text-[color:var(--color-lime)]">
-            <Sparkles className="h-3.5 w-3.5" /> Assinatura IA News
-          </p>
-          <DialogTitle className="relative mt-2 text-xl font-extrabold leading-tight sm:text-2xl">
-            5 minutos por dia. Zero hype.
-          </DialogTitle>
-          <p className="relative mt-1.5 text-[13px] leading-snug text-white/70">
-            A edição diária do IA News, grátis, antes das 8h.
-          </p>
-
-          <ul className="relative mt-4 hidden space-y-2 sm:block">
-            {PERKS.slice(0, 3).map((p) => (
-              <li key={p} className="flex items-start gap-2.5 text-sm text-white/85">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--color-lime)]" />
-                {p}
-              </li>
-            ))}
-          </ul>
-
-          <form
-            className="relative mt-4 flex flex-col gap-2.5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const value = email.trim();
-              if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value) || value.length > 255) {
-                toast.error("Informe um e-mail válido.");
-                return;
-              }
-              setSending(true);
-              const ctx = getLeadContext();
-              subscribeFn({
-                data: {
-                  email: value,
-                  full_name: name.trim() || undefined,
-                  phone: phone.trim() || undefined,
-                  source: placement || "popup-assinatura",
-                  placement,
-                  variant: "popup-assinatura",
-                  path: ctx.path,
-                  utmSource: ctx.utmSource,
-                  utmMedium: ctx.utmMedium,
-                  utmCampaign: ctx.utmCampaign,
-                },
-              })
-                .then((res) => {
-                  trackCta({
-                    event: "convert",
-                    placement,
-                    variant: "popup-assinatura",
-                    leadEmail: value,
-                  });
-                  setEmail("");
-                  setName("");
-                  setPhone("");
-                  setOpen(false);
-                  toast.success(
-                    res.alreadySubscribed
-                      ? `${value} já está na lista — a próxima edição chega amanhã cedo.`
-                      : `Quase lá! Enviamos um e-mail para ${value}: confirme para ativar a assinatura.`,
-                  );
-                })
-
-                .catch((err: unknown) =>
-                  toast.error(
-                    err instanceof Error ? err.message : "Não foi possível concluir a inscrição.",
-                  ),
-                )
-                .finally(() => setSending(false));
-            }}
-          >
-            <div className="hidden flex-col gap-2.5 sm:flex sm:flex-row">
-              <Input
-                maxLength={120}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Seu nome"
-                aria-label="Seu nome"
-                className="h-11 rounded-none border-white/15 bg-white/10 px-4 text-base text-white placeholder:text-white/50"
-              />
-              <PhoneInput
-                value={phone}
-                onChange={setPhone}
-                className="h-11 rounded-none border-white/15 bg-white/10 px-4 text-base text-white placeholder:text-white/50"
-              />
+    <div
+      className="pop-bg"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pop-title"
+      onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}
+    >
+      <div className="pop">
+        <button className="pop-x" type="button" aria-label="Fechar" onClick={() => setOpen(false)}>
+          <svg className="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+        {done ? (
+          <div>
+            <span className="ok-mark">
+              <svg className="ico" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m5 12.5 4.5 4.5L19 7.5" />
+              </svg>
+            </span>
+            <h2 id="pop-title">{done.already ? "Você já está na lista" : "Quase lá!"}</h2>
+            <p className="lead-p">
+              {done.already
+                ? "A próxima edição chega no seu e-mail."
+                : "Enviamos um e-mail para confirmar a sua inscrição. Confira a caixa de entrada e o spam."}
+            </p>
+            <a
+              className="wa-link"
+              href="https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Quer os destaques no celular? Entre no grupo do WhatsApp →
+            </a>
+            <div className="actions" style={{ marginTop: 18 }}>
+              <button className="btn blue wide" type="button" onClick={() => setOpen(false)}>
+                Voltar à leitura
+              </button>
             </div>
-            <EmailInput
-              value={email}
-              onChange={setEmail}
-              className="h-11 rounded-none border-white/15 bg-white/10 px-4 text-base text-white placeholder:text-white/50"
+          </div>
+        ) : (
+          <div>
+            <p className="kick">Newsletter IANews</p>
+            <h2 id="pop-title">5 minutos por dia. Zero hype.</h2>
+            <p className="lead-p">A IA muda todo dia. Receba só o que importa para o seu negócio.</p>
+            <ul className="ticks small">
+              <li>Todo dia útil, antes das 8h</li>
+              <li>Ranking IA toda segunda</li>
+              <li>Grátis, cancele quando quiser</li>
+            </ul>
+            <PortalSubscribeForm
+              placement={placement || "popup"}
+              layout="stack"
+              wideButton
+              onDone={(r) => setDone({ already: r.alreadySubscribed })}
             />
-            <Button
-              type="submit"
-              disabled={sending}
-              className="h-11 w-full rounded-none bg-[color:var(--color-lime)] px-6 font-bold text-white hover:bg-[color:var(--color-lime)]/90"
-            >
-              {sending ? "Enviando..." : "Assinar grátis"}
-            </Button>
-          </form>
-
-          <p className="relative mt-3 text-xs text-white/50">
-            <Link
-              to="/assinar"
-              search={{ from: "popup" }}
-              onClick={() => setOpen(false)}
-              className="font-semibold text-[color:var(--color-lime)] hover:underline"
-            >
-              Ver todos os benefícios
-            </Link>
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <p className="fine">
+              Gratuita. Você cancela quando quiser. Ao assinar, você aceita a{" "}
+              <Link to="/termos" onClick={() => setOpen(false)}>
+                política de privacidade
+              </Link>
+              .
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
