@@ -50,31 +50,50 @@ export function ConsentBanner() {
     <div
       role="dialog"
       aria-label="Preferências de privacidade e cookies"
-      className="fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-[color:var(--color-nav)] px-4 py-4 text-white shadow-2xl sm:px-6"
+      style={{
+        position: "fixed",
+        insetInline: 0,
+        bottom: 0,
+        zIndex: 60,
+        background: "#fff",
+        color: "var(--p-ink)",
+        borderTop: "1px solid var(--p-rule)",
+        boxShadow: "0 -10px 30px rgba(11,14,19,.08)",
+        paddingBlock: "14px calc(14px + env(safe-area-inset-bottom, 0px))",
+      }}
     >
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-3xl text-xs leading-relaxed text-white/75 sm:text-sm">
-          Usamos cookies essenciais para o funcionamento do site e, com o seu consentimento,
-          cookies de medição para entender o desempenho do conteúdo. Saiba mais na nossa{" "}
-          <Link to="/termos" hash="cookies" className="underline hover:text-white">
+      <div
+        className="wrap"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "10px 24px",
+        }}
+      >
+        <p
+          className="fine"
+          style={{
+            flex: "1 1 420px",
+            maxWidth: "62em",
+            color: "var(--p-ink-2)",
+            fontSize: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          Usamos cookies essenciais para o funcionamento do site e, com o seu consentimento, cookies
+          de medição para entender o desempenho do conteúdo. Saiba mais na nossa{" "}
+          <Link to="/termos" hash="cookies">
             Política de Privacidade
           </Link>
           .
         </p>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={() => writeConsent("essential")}
-            className="rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/85 hover:bg-white/10"
-          >
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, flex: "0 0 auto" }}>
+          <button type="button" className="btn line s" onClick={() => writeConsent("essential")}>
             Só essenciais
           </button>
-          <button
-            type="button"
-            onClick={() => writeConsent("all")}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
-            style={{ background: "var(--color-lime)" }}
-          >
+          <button type="button" className="btn blue s" onClick={() => writeConsent("all")}>
             Aceitar tudo
           </button>
         </div>

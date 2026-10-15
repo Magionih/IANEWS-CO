@@ -96,66 +96,54 @@ const SECTIONS: { id: string; title: string; body: string[] }[] = [
 
 function SobrePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Sobre</p>
-        <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">
-          Quem somos e como o IA News é feito
-        </h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Transparência editorial: nossa metodologia de apuração, o uso de IA na redação,
-          atribuição de fontes, correções e a relação com a publicidade.
-        </p>
+      <main id="main" className="page">
+        <div className="wrap">
+          <div className="page-head">
+            <p className="kick">Sobre</p>
+            <h1>Quem somos e como o IA News é feito</h1>
+            <p className="sub">
+              Transparência editorial: nossa metodologia de apuração, o uso de IA na redação,
+              atribuição de fontes, correções e a relação com a publicidade.
+            </p>
+          </div>
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[240px_1fr]">
-          <nav aria-label="Índice" className="hidden lg:block">
-            <div className="sticky top-28 space-y-2">
-              <p className="font-mono-eyebrow text-muted-foreground">Nesta página</p>
-              {SECTIONS.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className="block text-sm text-muted-foreground hover:text-[color:var(--color-lime)]"
-                >
-                  {s.title}
-                </a>
-              ))}
-            </div>
-          </nav>
-
-          <div className="max-w-3xl space-y-10">
-            {SECTIONS.map((s) => (
-              <section key={s.id} id={s.id} className="scroll-mt-28">
-                <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.title}</h2>
-                <div className="mt-3 space-y-3">
+          <div className="two-col">
+            <div className="prose">
+              {SECTIONS.map((s, i) => (
+                <section key={s.id} id={s.id} style={{ scrollMarginTop: 96 }}>
+                  <h2 style={i === 0 ? { marginTop: 0 } : undefined}>{s.title}</h2>
                   {s.body.map((p) => (
-                    <p key={p} className="text-muted-foreground">
-                      {p}
-                    </p>
+                    <p key={p}>{p}</p>
                   ))}
-                </div>
-              </section>
-            ))}
+                </section>
+              ))}
 
-            <section className="rounded-xl border border-border bg-secondary/40 p-6">
-              <h2 className="text-xl font-extrabold tracking-tight">Fale com a redação</h2>
-              <p className="mt-2 text-muted-foreground">
-                Pautas, correções, direito de resposta e propostas comerciais:{" "}
-                <Link to="/contato" className="font-semibold text-[color:var(--color-lime)]">
-                  página de Contato
-                </Link>
-                . Regras de uso e tratamento de dados na página de{" "}
-                <Link to="/termos" className="font-semibold text-[color:var(--color-lime)]">
-                  Termos &amp; Privacidade
-                </Link>
-                .
-              </p>
-            </section>
+              <div className="note-box" style={{ marginTop: 32 }}>
+                <h3>Fale com a redação</h3>
+                <p>
+                  Pautas, correções, direito de resposta e propostas comerciais:{" "}
+                  <Link to="/contato">página de Contato</Link>. Regras de uso e tratamento de dados
+                  na página de <Link to="/termos">Termos &amp; Privacidade</Link>.
+                </p>
+              </div>
+            </div>
+
+            <nav aria-label="Índice" className="panel-form" style={{ position: "sticky", top: 96 }}>
+              <h3>Nesta página</h3>
+              <ul className="plain" style={{ marginTop: 0 }}>
+                {SECTIONS.map((s) => (
+                  <li key={s.id}>
+                    <a href={`#${s.id}`}>{s.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }
