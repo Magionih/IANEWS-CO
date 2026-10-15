@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { Button } from "@/components/ui/button";
 
 const TITLE = "IA para empresas: guia prático de implementação (2026)";
 const DESCRIPTION =
@@ -42,7 +40,12 @@ export const Route = createFileRoute("/artigos/inteligencia-artificial-nas-empre
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianewsbr.com/" },
-            { "@type": "ListItem", position: 2, name: "Artigos", item: "https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas" },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Artigos",
+              item: "https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas",
+            },
             { "@type": "ListItem", position: 3, name: "IA para empresas", item: URL },
           ],
         }),
@@ -57,7 +60,7 @@ type Section = { id: string; title: string; body: string[]; bullets?: string[] }
 const SECTIONS: Section[] = [
   {
     id: "o-que-e",
-    title: "O que significa \"IA para empresas\" na prática",
+    title: 'O que significa "IA para empresas" na prática',
     body: [
       "Inteligência artificial nas empresas deixou de ser projeto de laboratório. Na prática, hoje significa três coisas distintas: usar ferramentas prontas (assistentes de texto, transcrição, atendimento), conectar modelos de linguagem aos sistemas internos da companhia (CRM, ERP, base de conhecimento) e automatizar processos ponta a ponta com agentes que executam tarefas com supervisão humana.",
       "A diferença entre uma empresa que ganha produtividade e outra que só gasta com licenças está quase sempre na escolha do problema, não na escolha do modelo. Comece pelo processo caro, repetitivo e bem documentado — não pelo mais chamativo.",
@@ -118,9 +121,7 @@ const SECTIONS: Section[] = [
   {
     id: "metricas",
     title: "Métricas que provam valor",
-    body: [
-      "Adoção sozinha não é resultado. Acompanhe indicadores que a diretoria reconhece.",
-    ],
+    body: ["Adoção sozinha não é resultado. Acompanhe indicadores que a diretoria reconhece."],
     bullets: [
       "Tempo médio por tarefa antes e depois.",
       "Custo por atendimento, por proposta ou por documento processado.",
@@ -132,9 +133,7 @@ const SECTIONS: Section[] = [
   {
     id: "erros",
     title: "Erros comuns que travam a adoção",
-    body: [
-      "Os tropeços se repetem em empresas de todos os portes.",
-    ],
+    body: ["Os tropeços se repetem em empresas de todos os portes."],
     bullets: [
       "Comprar licenças para toda a empresa antes de validar um caso de uso.",
       "Escolher o processo mais complexo como piloto inicial.",
@@ -147,108 +146,103 @@ const SECTIONS: Section[] = [
 
 function GuiaIaEmpresas() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-        <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Guia IA News</p>
-        <h1 className="mt-3 max-w-4xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          Inteligência artificial nas empresas: o guia prático para quem decide
-        </h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Onde a IA gera retorno real, quanto custa, como implementar em 90 dias e o que a sua
-          empresa precisa ter no lugar antes de escalar — sem hype, com foco em operação.
-        </p>
-
-        <div className="mt-10 grid gap-10 lg:grid-cols-[240px_1fr]">
-          <nav aria-label="Índice" className="hidden lg:block">
-            <div className="sticky top-28 space-y-2">
-              <p className="font-mono-eyebrow text-muted-foreground">Nesta página</p>
-              {SECTIONS.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className="block text-sm text-muted-foreground hover:text-[color:var(--color-lime)]"
-                >
-                  {s.title}
-                </a>
-              ))}
-            </div>
+      <main id="main" className="page">
+        <div className="wrap">
+          <nav aria-label="Trilha" className="crumbs">
+            <Link to="/">IA News</Link>
+            <span aria-hidden="true">/</span>
+            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+              Notícias
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span>IA para empresas</span>
           </nav>
 
-          <div className="max-w-3xl space-y-10">
-            {SECTIONS.map((s) => (
-              <section key={s.id} id={s.id} className="scroll-mt-28">
-                <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.title}</h2>
-                <div className="mt-3 space-y-3">
-                  {s.body.map((p) => (
-                    <p key={p} className="text-muted-foreground">
-                      {p}
-                    </p>
+          <div className="page-head">
+            <p className="kick">Guia IA News</p>
+            <h1>Inteligência artificial nas empresas: o guia prático para quem decide</h1>
+            <p className="sub">
+              Onde a IA gera retorno real, quanto custa, como implementar em 90 dias e o que a sua
+              empresa precisa ter no lugar antes de escalar — sem hype, com foco em operação.
+            </p>
+          </div>
+
+          <div className="art" style={{ paddingTop: 0 }}>
+            <article className="art-main">
+              <div className="prose">
+                {SECTIONS.map((s, i) => (
+                  <section key={s.id} id={s.id} style={{ scrollMarginTop: 96 }}>
+                    <h2 style={i === 0 ? { marginTop: 0 } : undefined}>{s.title}</h2>
+                    {s.body.map((p) => (
+                      <p key={p}>{p}</p>
+                    ))}
+                    {s.bullets ? (
+                      <ul
+                        className="plain"
+                        style={{ listStyle: "none", margin: "0 0 18px", padding: 0 }}
+                      >
+                        {s.bullets.map((b) => (
+                          <li key={b}>{b}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </section>
+                ))}
+              </div>
+
+              <section id="continue">
+                <h2 className="h-sm">Continue pelo IA News</h2>
+                <ul className="plain links-list">
+                  <li>
+                    <Link to="/noticias" search={{ q: "", cat: "all" }}>
+                      Últimas notícias de IA aplicadas a negócios
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/ranking">Ranking IA — comparação das principais ferramentas</Link>
+                  </li>
+                  <li>
+                    <Link to="/sobre">Nossa política editorial e metodologia</Link>
+                  </li>
+                </ul>
+              </section>
+
+              <section className="inline-cta">
+                <p className="kick">Fale com a gente</p>
+                <h3>Quer discutir a adoção de IA na sua empresa?</h3>
+                <p className="s">
+                  Envie sua dúvida, sugestão de pauta ou proposta de parceria para a redação do IA
+                  News. Respondemos em até 3 dias úteis.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <Link className="btn blue" to="/contato">
+                    Falar com a redação →
+                  </Link>
+                  <Link className="btn line" to="/anuncie">
+                    Anunciar no IA News
+                  </Link>
+                </div>
+              </section>
+            </article>
+
+            <aside className="art-side">
+              <nav aria-label="Índice" className="box toc toc-box">
+                <h3>Nesta página</h3>
+                <div>
+                  {SECTIONS.map((s) => (
+                    <a key={s.id} href={`#${s.id}`}>
+                      {s.title}
+                    </a>
                   ))}
                 </div>
-                {s.bullets ? (
-                  <ul className="mt-4 space-y-2 border-l-2 border-border pl-4">
-                    {s.bullets.map((b) => (
-                      <li key={b} className="text-sm leading-relaxed text-muted-foreground">
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </section>
-            ))}
-
-            <section id="continue" className="scroll-mt-28 border-t border-border pt-8">
-              <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-                Continue pelo IA News
-              </h2>
-              <ul className="mt-3 space-y-2">
-                <li>
-                  <Link
-                    to="/noticias"
-                    search={{ q: "", cat: "all" }}
-                    className="font-semibold text-[color:var(--color-lime)] hover:underline"
-                  >
-                    Últimas notícias de IA aplicadas a negócios
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/ranking" className="font-semibold text-[color:var(--color-lime)] hover:underline">
-                    Ranking IA — comparação das principais ferramentas
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/sobre" className="font-semibold text-[color:var(--color-lime)] hover:underline">
-                    Nossa política editorial e metodologia
-                  </Link>
-                </li>
-              </ul>
-            </section>
-
-            <section className="border border-border bg-secondary/40 p-6">
-              <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Fale com a gente</p>
-              <h2 className="mt-2 text-xl font-extrabold tracking-tight sm:text-2xl">
-                Quer discutir a adoção de IA na sua empresa?
-              </h2>
-              <p className="mt-2 text-muted-foreground">
-                Envie sua dúvida, sugestão de pauta ou proposta de parceria para a redação do IA
-                News. Respondemos em até 3 dias úteis.
-              </p>
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <Button asChild className="h-11 rounded-none px-6 font-semibold">
-                  <Link to="/contato">
-                    Falar com a redação <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-11 rounded-none px-6 font-semibold">
-                  <Link to="/anuncie">Anunciar no IA News</Link>
-                </Button>
-              </div>
-            </section>
+              </nav>
+            </aside>
           </div>
         </div>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }

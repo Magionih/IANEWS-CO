@@ -1,19 +1,26 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, LoaderCircle, Mail } from "lucide-react";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { subscribeLead } from "@/lib/newsletter.functions";
 import { getLeadContext } from "@/lib/cta-tracking";
+import { markSubscribed } from "@/components/site/portal-subscribe";
+
+/* Formulário da página /newsletter no visual do IANews Portal (.nlh-form).
+   Mesma lógica de antes: zod, honeypot "site", tempo mínimo de 2s, subscribeLead com UTMs. */
 
 const emailSchema = z.string().trim().max(255).email();
-const confirmation = "Quase lá! Enviamos um e-mail para confirmar sua inscrição. Confira a caixa de entrada (e o spam).";
+const confirmation =
+  "Quase lá! Enviamos um e-mail para confirmar sua inscrição. Confira a caixa de entrada (e o spam).";
 
-export function NewsletterForm({ placement, loadedAt }: {
+export function NewsletterForm({
+  placement,
+  loadedAt,
+  button = "Assinar grátis",
+}: {
   placement: "newsletter-hero" | "newsletter-footer";
   loadedAt: { current: number | null };
+  button?: string;
 }) {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -42,55 +49,95 @@ export function NewsletterForm({ placement, loadedAt }: {
     setSending(true);
     try {
       const context = getLeadContext();
-      const response = await subscribe({ data: {
-        email: parsed.data,
-        source: "newsletter-page",
-        placement,
-        path: context.path,
-        utmSource: context.utmSource?.slice(0, 120),
-        utmMedium: context.utmMedium?.slice(0, 120),
-        utmCampaign: context.utmCampaign?.slice(0, 120),
-      } });
+      const response = await subscribe({
+        data: {
+          email: parsed.data,
+          source: "newsletter-page",
+          placement,
+          path: context.path,
+          utmSource: context.utmSource?.slice(0, 120),
+          utmMedium: context.utmMedium?.slice(0, 120),
+          utmCampaign: context.utmCampaign?.slice(0, 120),
+        },
+      });
       if (!response.ok) throw new Error("subscription failed");
+      markSubscribed(parsed.data);
       setResult(response.alreadySubscribed ? "Este e-mail já está inscrito." : confirmation);
     } catch {
-      setError("Não foi possível concluir sua inscrição agora. Tente novamente em alguns instantes.");
+      setError(
+        "Não foi possível concluir sua inscrição agora. Tente novamente em alguns instantes.",
+      );
     } finally {
       inFlight.current = false;
       setSending(false);
     }
   }
 
+  if (result) {
+    return (
+      <p
+        className="msg ok"
+        role="status"
+        aria-live="polite"
+        style={{ fontSize: 16, fontWeight: 500 }}
+      >
+        {result}
+      </p>
+    );
+  }
+
   return (
-    <div className="w-full max-w-xl">
-      {result ? (
-        <div role="status" className="flex items-start gap-3 border-l-4 border-primary bg-primary/5 p-5">
-          <Mail className="mt-0.5 size-5 shrink-0 text-primary" />
-          <p className="text-base font-medium leading-relaxed">{result}</p>
-        </div>
-      ) : (
-        <form onSubmit={submit} noValidate aria-label={placement === "newsletter-hero" ? "Inscrição na newsletter" : "Inscrição final na newsletter"}>
-          <label htmlFor={inputId} className="mb-2 block text-sm font-semibold">Seu e-mail</label>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Input id={inputId} name="email" type="email" autoComplete="email" inputMode="email" maxLength={255} required
-              value={email} onChange={(event) => { setEmail(event.target.value); setError(""); }}
-              placeholder="voce@exemplo.com" disabled={sending} aria-invalid={Boolean(error)}
-              aria-describedby={error ? `${inputId}-error` : undefined}
-              className="h-12 min-w-0 flex-1 rounded-none bg-card text-base" />
-            <Input name="site" tabIndex={-1} aria-hidden="true" autoComplete="off" className="hidden" />
-            <Button type="submit" disabled={sending} className="h-12 shrink-0 rounded-none px-6 text-base font-bold">
-              {sending && <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />}
-              {sending ? "Enviando..." : "Quero receber"}
-            </Button>
-          </div>
-          {error && <p id={`${inputId}-error`} role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
-        </form>
-      )}
-      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground sm:text-sm">
-        {["Grátis", "Cancele com 1 clique", "Sem spam"].map((label) => (
-          <li key={label} className="flex items-center gap-1.5"><Check className="size-3.5 text-primary" />{label}</li>
-        ))}
-      </ul>
-    </div>
+    <form
+      className="nlh-form"
+      onSubmit={submit}
+      noValidate
+      aria-label={
+        placement === "newsletter-hero"
+          ? "Inscrição na newsletter"
+          : "Inscrição final na newsletter"
+      }
+    >
+      <input
+        className="hp"
+        type="text"
+        name="site"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+      <div className="form-row">
+        <input
+          id={inputId}
+          className={"field" + (placement === "newsletter-hero" ? " big" : "")}
+          name="email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="Seu melhor e-mail"
+          aria-label="Seu e-mail"
+          maxLength={255}
+          required
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setError("");
+          }}
+          disabled={sending}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${inputId}-error` : undefined}
+        />
+        <button className="btn blue" type="submit" disabled={sending}>
+          {sending ? "Enviando…" : button}
+        </button>
+      </div>
+      <p
+        id={`${inputId}-error`}
+        className={"msg" + (error ? " err" : "")}
+        role={error ? "alert" : "status"}
+        aria-live="polite"
+      >
+        {error}
+      </p>
+    </form>
   );
 }

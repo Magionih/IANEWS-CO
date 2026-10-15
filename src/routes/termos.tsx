@@ -15,7 +15,8 @@ export const Route = createFileRoute("/termos")({
       { property: "og:title", content: "Termos de uso e privacidade — IA News" },
       {
         property: "og:description",
-        content: "Como o IA News trata seus dados e cookies essenciais e de medição, conforme a LGPD.",
+        content:
+          "Como o IA News trata seus dados e cookies essenciais e de medição, conforme a LGPD.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -124,52 +125,49 @@ const SECTIONS = [
 
 function TermosPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Legal</p>
-        <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">
-          Termos de uso &amp; Privacidade
-        </h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Última atualização em{" "}
-          {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}. Este
-          documento explica as regras de uso do IA News e como tratamos seus dados pessoais.
-        </p>
+      <main id="main" className="page">
+        <div className="wrap">
+          <div className="page-head">
+            <p className="kick">Legal</p>
+            <h1>Termos de uso &amp; Privacidade</h1>
+            <p className="sub">
+              Este documento explica as regras de uso do IA News e como tratamos seus dados
+              pessoais.
+            </p>
+            <p className="when" style={{ marginTop: 12 }}>
+              Última atualização em{" "}
+              {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}.
+            </p>
+          </div>
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[240px_1fr]">
-          <nav aria-label="Índice" className="hidden lg:block">
-            <div className="sticky top-28 space-y-2">
-              <p className="font-mono-eyebrow text-muted-foreground">Nesta página</p>
+          <div className="two-col">
+            <div className="legal">
               {SECTIONS.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className="block text-sm text-muted-foreground hover:text-[color:var(--color-lime)]"
-                >
-                  {s.title}
-                </a>
+                <section key={s.id} id={s.id} style={{ scrollMarginTop: 96 }}>
+                  <h2>{s.title}</h2>
+                  {s.body.map((p) => (
+                    <p key={p}>{p}</p>
+                  ))}
+                </section>
               ))}
             </div>
-          </nav>
 
-          <div className="max-w-3xl space-y-10">
-            {SECTIONS.map((s) => (
-              <section key={s.id} id={s.id} className="scroll-mt-28">
-                <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.title}</h2>
-                <div className="mt-3 space-y-3">
-                  {s.body.map((p) => (
-                    <p key={p} className="text-muted-foreground">
-                      {p}
-                    </p>
-                  ))}
-                </div>
-              </section>
-            ))}
+            <nav aria-label="Índice" className="panel-form" style={{ position: "sticky", top: 96 }}>
+              <h3>Nesta página</h3>
+              <ul className="plain" style={{ marginTop: 0 }}>
+                {SECTIONS.map((s) => (
+                  <li key={s.id}>
+                    <a href={`#${s.id}`}>{s.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }

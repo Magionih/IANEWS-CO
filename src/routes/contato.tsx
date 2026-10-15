@@ -1,14 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, MessageCircle, Newspaper } from "lucide-react";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { submitContactMessage } from "@/lib/contact.functions";
 
 export const Route = createFileRoute("/contato")({
@@ -35,9 +30,15 @@ export const Route = createFileRoute("/contato")({
 });
 
 const REASONS = [
-  { icon: Newspaper, title: "Pauta ou release", text: "Tem uma novidade de IA relevante para quem decide? Conte para a redação." },
-  { icon: MessageCircle, title: "Correção", text: "Encontrou um erro em alguma matéria? Corrigimos com transparência." },
-  { icon: Mail, title: "Imprensa e parcerias", text: "Colaborações editoriais, entrevistas e cobertura de eventos." },
+  {
+    title: "Pauta ou release",
+    text: "Tem uma novidade de IA relevante para quem decide? Conte para a redação.",
+  },
+  { title: "Correção", text: "Encontrou um erro em alguma matéria? Corrigimos com transparência." },
+  {
+    title: "Imprensa e parcerias",
+    text: "Colaborações editoriais, entrevistas e cobertura de eventos.",
+  },
 ];
 
 function ContatoPage() {
@@ -72,69 +73,119 @@ function ContatoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Fale conosco</p>
-        <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">
-          Contato com a redação do IA News
-        </h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Pautas, correções, sugestões e parcerias editoriais. Toda mensagem chega direto ao
-          time e é respondida em até 2 dias úteis.
-        </p>
+      <main id="main" className="page">
+        <div className="wrap">
+          <div className="page-head">
+            <p className="kick">Fale conosco</p>
+            <h1>Contato com a redação do IA News</h1>
+            <p className="sub">
+              Pautas, correções, sugestões e parcerias editoriais. Toda mensagem chega direto ao
+              time e é respondida em até 2 dias úteis.
+            </p>
+          </div>
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_360px]">
-          <form onSubmit={onSubmit} className="rounded-[var(--radius)] border bg-card p-5 sm:p-8">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome completo</Label>
-                <Input id="name" required maxLength={160} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Maria Silva" className="h-12 rounded-lg" />
+          <div className="two-col">
+            <form onSubmit={onSubmit} className="panel-form">
+              <h3>Envie sua mensagem</h3>
+              <div className="two">
+                <label className="f" htmlFor="name">
+                  Nome completo
+                  <input
+                    className="field"
+                    id="name"
+                    required
+                    maxLength={160}
+                    autoComplete="name"
+                    value={form.name}
+                    onChange={(e) => set("name", e.target.value)}
+                    placeholder="Maria Silva"
+                  />
+                </label>
+                <label className="f" htmlFor="email">
+                  E-mail
+                  <input
+                    className="field"
+                    id="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    maxLength={255}
+                    value={form.email}
+                    onChange={(e) => set("email", e.target.value)}
+                    placeholder="voce@empresa.com"
+                  />
+                </label>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" required maxLength={255} value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="voce@empresa.com" className="h-12 rounded-lg" />
+              <div className="two">
+                <label className="f" htmlFor="phone">
+                  Telefone (opcional)
+                  <input
+                    className="field"
+                    id="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    maxLength={30}
+                    value={form.phone}
+                    onChange={(e) => set("phone", e.target.value)}
+                    placeholder="(11) 99999-0000"
+                  />
+                </label>
+                <label className="f" htmlFor="subject">
+                  Assunto
+                  <input
+                    className="field"
+                    id="subject"
+                    maxLength={200}
+                    value={form.subject}
+                    onChange={(e) => set("subject", e.target.value)}
+                    placeholder="Pauta, correção, parceria..."
+                  />
+                </label>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone (opcional)</Label>
-                <Input id="phone" type="tel" maxLength={30} value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(11) 99999-0000" className="h-12 rounded-lg" />
+              <label className="f" htmlFor="message">
+                Mensagem
+                <textarea
+                  className="field"
+                  id="message"
+                  required
+                  maxLength={4000}
+                  rows={7}
+                  value={form.message}
+                  onChange={(e) => set("message", e.target.value)}
+                  placeholder="Conte o contexto, links e prazos relevantes."
+                />
+              </label>
+              <div>
+                <button type="submit" className="btn blue" disabled={loading}>
+                  {loading ? "Enviando..." : "Enviar mensagem"}
+                </button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="subject">Assunto</Label>
-                <Input id="subject" maxLength={200} value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder="Pauta, correção, parceria..." className="h-12 rounded-lg" />
-              </div>
-            </div>
-            <div className="mt-5 space-y-2">
-              <Label htmlFor="message">Mensagem</Label>
-              <Textarea id="message" required maxLength={4000} rows={7} value={form.message} onChange={(e) => set("message", e.target.value)} placeholder="Conte o contexto, links e prazos relevantes." className="rounded-lg" />
-            </div>
-            <Button type="submit" disabled={loading} className="mt-6 h-12 w-full rounded-lg text-base font-bold sm:w-auto sm:px-10">
-              {loading ? "Enviando..." : "Enviar mensagem"}
-            </Button>
-          </form>
+            </form>
 
-          <aside className="space-y-4">
-            {REASONS.map((r) => (
-              <div key={r.title} className="rounded-[var(--radius)] border bg-card p-5">
-                <r.icon className="h-5 w-5 text-[color:var(--color-lime)]" aria-hidden />
-                <p className="mt-3 font-extrabold">{r.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{r.text}</p>
+            <aside style={{ display: "grid", gap: 26 }}>
+              <ol className="biz-steps">
+                {REASONS.map((r) => (
+                  <li key={r.title}>
+                    <b>{r.title}</b>
+                    <span>{r.text}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="note-box">
+                <p className="kick">Anunciantes</p>
+                <p>
+                  Para mídia, patrocínio de newsletter e conteúdo de marca, use a página{" "}
+                  <Link to="/anuncie">Anuncie</Link>.
+                </p>
               </div>
-            ))}
-            <div className="rounded-[var(--radius)] bg-secondary/60 p-5">
-              <p className="font-mono-eyebrow text-muted-foreground">Anunciantes</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Para mídia, patrocínio de newsletter e conteúdo de marca, use a página{" "}
-                <a href="/anuncie" className="font-semibold text-[color:var(--color-lime)] hover:underline">
-                  Anuncie
-                </a>
-                .
-              </p>
-            </div>
-          </aside>
+            </aside>
+          </div>
         </div>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }

@@ -1,71 +1,28 @@
+import { isValidElement, type ReactNode } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Clock, ExternalLink } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { SiteHeader } from "@/components/site/header";
 import { ReadingTracker } from "@/components/site/reading-tracker";
 import { ContentEngagement } from "@/components/site/content-engagement";
 import { SiteFooter } from "@/components/site/footer";
-import { LeadCta } from "@/components/site/lead-cta";
+import { ArticleThumb } from "@/components/portal/article-thumb";
+import { ArticleToc, type TocItem } from "@/components/portal/article-toc";
+import {
+  ArticleEndBand,
+  ArticleInlineCta,
+  ArticleSideSubscribe,
+} from "@/components/portal/article-cta";
+import { ArticleShare } from "@/components/portal/article-share";
 import { HUB_LIST } from "@/lib/hubs";
-import {
-  CategoryChip,
-  type CategoryKey,
-  CATEGORY_MAP,
-} from "@/components/site/category-chip";
-import { Button } from "@/components/ui/button";
-import {
-  getArticleBySlug,
-  listMostRead,
-  type ArticleRow,
-} from "@/lib/articles.functions";
+import { CATEGORY_SEO } from "@/lib/categories";
+import { type CategoryKey, CATEGORY_MAP } from "@/components/site/category-chip";
+import { getArticleBySlug, listMostRead, type ArticleRow } from "@/lib/articles.functions";
 
+/** Usada só nos metadados (og:image / JSON-LD) quando a matéria não tem capa. */
 const FALLBACK_COVER =
   "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1600&q=80&auto=format&fit=crop";
-
-/** Banco de imagens editoriais para a segunda foto da matéria. */
-const INLINE_IMAGES: Record<string, string[]> = {
-  default: [
-    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600&q=80&auto=format&fit=crop",
-  ],
-  negocios: [
-    "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1600&q=80&auto=format&fit=crop",
-  ],
-  brasil: [
-    "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1543059080-f9b1272213d5?w=1600&q=80&auto=format&fit=crop",
-  ],
-  regulacao: [
-    "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1600&q=80&auto=format&fit=crop",
-  ],
-  pesquisa: [
-    "https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1600&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1516110833967-0b5716ca1387?w=1600&q=80&auto=format&fit=crop",
-  ],
-};
-
-function hashOf(text: string): number {
-  let h = 0;
-  for (let i = 0; i < text.length; i += 1) h = (h * 31 + text.charCodeAt(i)) >>> 0;
-  return h;
-}
-
-/** Escolhe uma segunda imagem estável (sempre a mesma para a mesma matéria). */
-function pickInlineImage(article: ArticleRow): string {
-  const pool =
-    INLINE_IMAGES[article.category ?? "default"] ?? INLINE_IMAGES["default"]!;
-  const cover = article.cover_image_url ?? "";
-  const candidates = pool.filter((u) => u !== cover);
-  const list = candidates.length ? candidates : pool;
-  return list[hashOf(article.slug) % list.length]!;
-}
 
 /** Divide o markdown em duas partes num limite de parágrafo perto do meio. */
 function splitBody(markdown: string): [string, string] {
@@ -75,6 +32,53 @@ function splitBody(markdown: string): [string, string] {
   // não cortar logo antes de um título órfão
   while (cut < blocks.length - 1 && blocks[cut]!.trim().startsWith("#")) cut += 1;
   return [blocks.slice(0, cut).join("\n\n"), blocks.slice(cut).join("\n\n")];
+}
+
+/** Âncora estável para os intertítulos (usada no índice "Nesta matéria"). */
+function anchorOf(text: string): string {
+  const base = text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return "s-" + (base || "secao");
+}
+
+function nodeText(node: ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(nodeText).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return nodeText(node.props.children);
+  return "";
+}
+
+/** Intertítulos "## ..." do corpo, em texto puro, na ordem em que aparecem. */
+function headingsOf(markdown: string): TocItem[] {
+  const out: TocItem[] = [];
+  for (const line of markdown.split("\n")) {
+    const m = /^##\s+(.+?)\s*#*\s*$/.exec(line);
+    if (!m) continue;
+    const label = m[1]!
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/[*_`~]/g, "")
+      .trim();
+    if (label) out.push({ id: anchorOf(label), label });
+  }
+  return out;
+}
+
+const MD_COMPONENTS: Components = {
+  h2: ({ children }) => <h2 id={anchorOf(nodeText(children))}>{children}</h2>,
+};
+
+function Markdown({ children }: { children: string }) {
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+      {children}
+    </ReactMarkdown>
+  );
 }
 
 export const Route = createFileRoute("/materia/$slug")({
@@ -89,15 +93,11 @@ export const Route = createFileRoute("/materia/$slug")({
   head: ({ loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [
-          { title: "Matéria indisponível — IA News" },
-          { name: "robots", content: "noindex" },
-        ],
+        meta: [{ title: "Matéria indisponível — IA News" }, { name: "robots", content: "noindex" }],
       };
     }
     const a = loaderData.article;
-    const desc =
-      a.seo_description ?? a.dek ?? "Análise do IA News sobre inteligência artificial.";
+    const desc = a.seo_description ?? a.dek ?? "Análise do IA News sobre inteligência artificial.";
     const seoTitle = a.seo_title ?? a.title;
     const img = a.cover_image_url ?? FALLBACK_COVER;
     return {
@@ -108,9 +108,7 @@ export const Route = createFileRoute("/materia/$slug")({
         { property: "og:description", content: desc.slice(0, 155) },
         { property: "og:type", content: "article" },
         { name: "twitter:card", content: "summary_large_image" },
-        ...(a.tags && a.tags.length
-          ? [{ name: "keywords", content: a.tags.join(", ") }]
-          : []),
+        ...(a.tags && a.tags.length ? [{ name: "keywords", content: a.tags.join(", ") }] : []),
         ...(img.startsWith("https://")
           ? [
               { property: "og:image", content: img },
@@ -119,9 +117,7 @@ export const Route = createFileRoute("/materia/$slug")({
           : []),
         { property: "og:url", content: `https://ianewsbr.com/materia/${a.slug}` },
       ],
-      links: [
-        { rel: "canonical", href: `https://ianewsbr.com/materia/${a.slug}` },
-      ],
+      links: [{ rel: "canonical", href: `https://ianewsbr.com/materia/${a.slug}` }],
       scripts: [
         {
           type: "application/ld+json",
@@ -160,7 +156,12 @@ export const Route = createFileRoute("/materia/$slug")({
             "@type": "BreadcrumbList",
             itemListElement: [
               { "@type": "ListItem", position: 1, name: "Home", item: "https://ianewsbr.com/" },
-              { "@type": "ListItem", position: 2, name: "Notícias", item: "https://ianewsbr.com/noticias" },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Notícias",
+                item: "https://ianewsbr.com/noticias",
+              },
               {
                 "@type": "ListItem",
                 position: 3,
@@ -178,370 +179,365 @@ export const Route = createFileRoute("/materia/$slug")({
   component: ArticlePage,
 });
 
-function fullDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    timeZone: "America/Sao_Paulo",
-  });
-}
+const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
+/** "8 out 2026", no fuso de São Paulo (como no protótipo). */
 function shortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "numeric",
     year: "numeric",
     timeZone: "America/Sao_Paulo",
-  });
+  }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  const month = MONTHS[Number(get("month")) - 1] ?? "";
+  return `${get("day")} ${month} ${get("year")}`;
 }
 
 function catOf(value: string): CategoryKey {
   return (Object.keys(CATEGORY_MAP).includes(value) ? value : "generativa") as CategoryKey;
 }
 
+function labelOf(category: string): string {
+  return CATEGORY_MAP[catOf(category)].label;
+}
+
 function ArticleFallback({ title }: { title: string }) {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto max-w-2xl px-4 py-24 text-center">
-        <h1 className="text-3xl font-extrabold">{title}</h1>
-        <p className="mt-3 text-muted-foreground">
-          Talvez ela tenha sido removida ou o endereço esteja incorreto.
-        </p>
-        <Button asChild className="mt-8 h-11 rounded-lg px-6 font-semibold">
-          <Link to="/">Voltar para a home</Link>
-        </Button>
+      <main id="main">
+        <div className="wrap art-fallback">
+          <p className="kick">IANews</p>
+          <h1>{title}</h1>
+          <p>Talvez ela tenha sido removida ou o endereço esteja incorreto.</p>
+          <div className="art-fallback-actions">
+            <Link to="/" className="btn blue">
+              Voltar para o início
+            </Link>
+            <Link to="/noticias" search={{ q: "", cat: "all" }} className="btn line">
+              Ver todas as notícias
+            </Link>
+          </div>
+        </div>
       </main>
       <SiteFooter />
-    </div>
+    </>
+  );
+}
+
+function ArticleCard({ a }: { a: ArticleRow }) {
+  const label = labelOf(a.category);
+  return (
+    <Link to="/materia/$slug" params={{ slug: a.slug }} className="card sm">
+      <ArticleThumb src={a.cover_image_url} alt={a.title} label={label} />
+      <span className="kick">
+        <span>{label}</span>
+      </span>
+      <h3>{a.title}</h3>
+      <span className="when">
+        {shortDate(a.published_at)} · {a.read_minutes ?? 4} min de leitura
+      </span>
+    </Link>
   );
 }
 
 function ArticlePage() {
   const { article, mostRead } = Route.useLoaderData();
-  const cover = article.cover_image_url ?? FALLBACK_COVER;
-  const category = catOf(article.category);
-  const inlineImage = pickInlineImage(article);
+  const categoryLabel = labelOf(article.category);
+  const categorySeo = CATEGORY_SEO[article.category];
+  const minutes = article.read_minutes ?? 4;
   const [bodyTop, bodyBottom] = splitBody(article.body_markdown);
-  const others: ArticleRow[] = mostRead
-    .filter((a: ArticleRow) => a.slug !== article.slug)
-    .slice(0, 5);
+  const url = `https://ianewsbr.com/materia/${article.slug}`;
+
+  const sources: { name?: string | null; url?: string | null }[] =
+    article.sources && article.sources.length
+      ? article.sources
+      : article.source_url
+        ? [{ name: article.source_name ?? "Fonte original", url: article.source_url }]
+        : [];
+  const impacts = (article.business_impacts ?? []) as string[];
+
+  const others: ArticleRow[] = mostRead.filter((a: ArticleRow) => a.slug !== article.slug);
+  const next = others.find((a) => a.category === article.category) ?? others[0] ?? null;
+  const readAlso = others.filter((a) => a.slug !== next?.slug).slice(0, 3);
+  const topRead = others.slice(0, 5);
+
+  // Índice "Nesta matéria": intertítulos do corpo + blocos editoriais que existirem.
+  const toc: TocItem[] = [];
+  const seen = new Set<string>();
+  const addToc = (item: TocItem) => {
+    if (seen.has(item.id)) return;
+    seen.add(item.id);
+    toc.push(item);
+  };
+  headingsOf(article.body_markdown).forEach(addToc);
+  if (article.why_it_matters) addToc({ id: "s-porque", label: "Por que isso importa" });
+  if (article.analysis_markdown) addToc({ id: "s-analise", label: "Análise IA News" });
+  if (article.business_context) addToc({ id: "s-contexto", label: "Contexto para empresas" });
+  if (impacts.length) addToc({ id: "s-impactos", label: "Impactos para empresas" });
+  if (article.editorial_conclusion) addToc({ id: "s-conclusao", label: "Conclusão editorial" });
+  if (sources.length) addToc({ id: "s-fontes", label: "Fontes" });
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto grid max-w-[1400px] gap-10 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
-        <article>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" /> Todas as notícias
-          </Link>
-
-          <div className="mt-5">
-            <CategoryChip category={category} variant="solid" />
-          </div>
-          <h1 className="mt-4 text-3xl font-extrabold leading-[1.12] tracking-tight text-foreground md:text-5xl">
-            {article.title}
-          </h1>
-          {article.dek ? (
-            <p className="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-              {article.dek}
-            </p>
-          ) : null}
-
-          <div className="mt-6 flex flex-wrap items-center gap-3 border-y border-border py-4 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              Por {article.author ?? "Análise IA News"}
-            </span>
-            <span className="text-border">•</span>
-            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-foreground/80">
-              Análise própria IA News
-            </span>
-            <span className="text-border">•</span>
-            <span>{fullDate(article.published_at)}</span>
-            <span className="text-border">•</span>
-            <span>
-              <Clock className="mr-1 inline h-3.5 w-3.5" />
-              {article.read_minutes ?? 4} min de leitura
-            </span>
-          </div>
-
-          <figure className="mt-8">
-            <img
-              src={cover}
-              alt={article.title}
-              loading="eager"
-              className="aspect-[16/9] w-full rounded-xl object-cover"
-            />
-            <figcaption className="mt-2 text-xs text-muted-foreground">
-              Foto: {article.source_name ?? "Reprodução"}
-            </figcaption>
-          </figure>
-
-
-          <ContentEngagement
-            slug={article.slug}
-            title={article.title}
-            category={article.category}
-          />
-
-          <ReadingTracker
-            slug={article.slug}
-            title={article.title}
-            category={article.category}
-            minutes={article.read_minutes ?? 4}
-          />
-
-          <div className="prose-ianews prose-lead mt-10 max-w-3xl text-foreground">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{bodyTop}</ReactMarkdown>
-          </div>
-
-          <LeadCta
-            variant="inline"
-            className="mt-10 max-w-3xl"
-            title="Gostou desta análise? Receba a próxima primeiro."
-            description="Edição diária da IA News com impacto real para empresas — grátis no seu e-mail."
-            action="Assinar grátis"
-            placement="materia-meio"
-            articleSlug={article.slug}
-          />
-
-          <figure className="mt-10 max-w-3xl">
-            <img
-              src={inlineImage}
-              alt={`Contexto visual da matéria: ${article.title}`}
-              loading="lazy"
-              className="aspect-[16/9] w-full rounded-xl object-cover"
-            />
-            <figcaption className="mt-2 border-l-2 pl-3 text-xs leading-relaxed text-muted-foreground" style={{ borderColor: "var(--color-lime)" }}>
-              {article.dek ?? article.title} · Imagem ilustrativa — IA News
-            </figcaption>
-          </figure>
-
-          {bodyBottom ? (
-            <div className="prose-ianews mt-10 max-w-3xl text-foreground">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{bodyBottom}</ReactMarkdown>
-            </div>
-          ) : null}
-
-
-          {article.why_it_matters ? (
-            <aside className="mt-10 max-w-3xl rounded-xl border-l-4 bg-secondary/60 p-6" style={{ borderColor: "var(--color-lime)" }}>
-              <p className="font-mono-eyebrow text-muted-foreground">
-                Por que isso importa
-              </p>
-              <p className="mt-2 text-[17px] leading-relaxed text-foreground">
-                {article.why_it_matters}
-              </p>
-            </aside>
-          ) : null}
-
-          {article.analysis_markdown ? (
-            <section className="mt-10 max-w-3xl rounded-xl border border-border bg-secondary/30 p-6 sm:p-8">
-              <p className="font-mono-eyebrow text-[color:var(--color-lime)]">
-                Análise IA News
-              </p>
-              <h2 className="mt-2 text-2xl font-extrabold tracking-tight">
-                A leitura da nossa redação
-              </h2>
-              <div className="prose-ianews mt-4 text-[17px] leading-[1.75] text-foreground">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {article.analysis_markdown}
-                </ReactMarkdown>
-              </div>
-            </section>
-          ) : null}
-
-          {article.business_context ? (
-            <section className="mt-8 max-w-3xl">
-              <p className="font-mono-eyebrow text-muted-foreground">
-                Contexto para empresários e decisores
-              </p>
-              <p className="mt-3 text-[17px] leading-[1.75] text-foreground">
-                {article.business_context}
-              </p>
-            </section>
-          ) : null}
-
-          {article.business_impacts && article.business_impacts.length ? (
-            <section className="mt-8 max-w-3xl">
-              <p className="font-mono-eyebrow text-muted-foreground">Impactos para empresas</p>
-              <ul className="mt-4 space-y-3">
-                {(article.business_impacts as string[]).map((impact: string, i: number) => (
-                  <li key={i} className="flex gap-3 rounded-xl border border-border/70 p-4">
-                    <span
-                      className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold text-white"
-                      style={{ background: "var(--color-lime)" }}
-                    >
-                      {i + 1}
-                    </span>
-                    <span className="text-[15px] leading-relaxed text-foreground">{impact}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {article.editorial_conclusion ? (
-            <section
-              className="mt-8 max-w-3xl rounded-xl p-6 text-white sm:p-8"
-              style={{ background: "var(--color-nav)" }}
-            >
-              <p className="font-mono-eyebrow text-[color:var(--color-lime)]">
-                Conclusão editorial
-              </p>
-              <p className="mt-3 text-[17px] leading-relaxed text-white/90">
-                {article.editorial_conclusion}
-              </p>
-              <p className="mt-4 text-sm font-semibold text-white/70">
-                — Redação IA News
-              </p>
-            </section>
-          ) : null}
-
-          <section className="mt-8 max-w-3xl rounded-xl border border-border p-6">
-            <p className="font-mono-eyebrow text-muted-foreground">Fontes utilizadas</p>
-            <ul className="mt-3 space-y-2 text-sm">
-              {(article.sources && article.sources.length
-                ? article.sources
-                : article.source_url
-                  ? [{ name: article.source_name ?? "Fonte original", url: article.source_url }]
-                  : []
-              ).map((s: { name?: string | null; url?: string | null }, i: number) => (
-                <li key={i}>
-                  {s.url ? (
-                    <a
-                      href={s.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
-                    >
-                      {s.name ?? s.url}
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  ) : (
-                    <span className="text-foreground">{s.name}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              Apuração, análise e conclusão editorial produzidas pela redação do IA News a
-              partir das fontes acima. O conteúdo não reproduz o texto original.
-            </p>
-          </section>
-
-          {article.source_url ? (
-            <div className="mt-8">
-              <Button asChild variant="outline" className="h-11 rounded-lg px-6 font-semibold">
-                <a href={article.source_url} target="_blank" rel="noopener noreferrer">
-                  Ler na fonte {article.source_name ? `(${article.source_name})` : ""}
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-          ) : null}
-        </article>
-
-        <aside className="flex flex-col gap-6">
-          <section className="rounded-xl bg-secondary/60 p-6">
-            <h2 className="text-xl font-bold">Mais Lidas</h2>
-            <ol className="mt-4 divide-y divide-border/70">
-              {others.map((s: ArticleRow, i: number) => (
-                <li key={s.slug} className="flex gap-3 py-3.5 first:pt-0 last:pb-0">
-                  <span
-                    className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold text-white"
-                    style={{ background: "var(--color-lime)" }}
-                  >
-                    {i + 1}
-                  </span>
-                  <div>
-                    <Link
-                      to="/materia/$slug"
-                      params={{ slug: s.slug }}
-                      className="text-[15px] font-semibold leading-snug hover:text-primary"
-                    >
-                      {s.title}
-                    </Link>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {shortDate(s.published_at)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-              {others.length === 0 ? (
-                <li className="py-2 text-sm text-muted-foreground">
-                  Nenhuma outra matéria por enquanto.
-                </li>
-              ) : null}
-            </ol>
-          </section>
-
-          <section className="relative overflow-hidden rounded-xl bg-[color:var(--color-nav)] p-6 text-white">
-            <p className="font-mono-eyebrow text-[color:var(--color-lime)]">
-              Newsletter diária
-            </p>
-            <h2 className="mt-3 text-2xl font-bold">5 minutos por dia</h2>
-            <p className="mt-2 text-sm text-white/70">
-              O que muda na IA, todo dia útil antes das 8h — sem hype.
-            </p>
-            <Button
-              asChild
-              className="mt-5 h-11 w-full rounded-lg bg-[color:var(--color-lime)] font-bold text-white hover:bg-[color:var(--color-lime)]/90"
-            >
-              <Link to="/">Assinar grátis</Link>
-            </Button>
-          </section>
-
-          <section className="border border-border bg-secondary/40 p-5">
-            <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Leia também</p>
-            <h2 className="mt-2 text-lg font-extrabold leading-snug tracking-tight">
-              IA para empresas: guia prático de implementação
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Casos de uso por área, custos, governança, LGPD e um roteiro de 90 dias.
-            </p>
-            <Link
-              to="/artigos/inteligencia-artificial-nas-empresas"
-              className="mt-3 inline-block text-sm font-bold text-[color:var(--color-lime)] hover:underline"
-            >
-              Ler o guia completo
+      <main id="main">
+        <div className="wrap">
+          <nav className="crumbs" aria-label="Você está em">
+            <Link to="/">Início</Link>
+            <span>/</span>
+            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+              Notícias
             </Link>
-          </section>
+            <span>/</span>
+            {categorySeo ? (
+              <Link to="/categoria/$cat" params={{ cat: categorySeo.slug }}>
+                {categoryLabel}
+              </Link>
+            ) : (
+              <span>{categoryLabel}</span>
+            )}
+          </nav>
 
-          <section className="border border-border p-5">
-            <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Hubs temáticos</p>
-            <ul className="mt-3 space-y-2">
-              {HUB_LIST.map((h) => (
-                <li key={h.slug}>
-                  <Link
-                    to="/guias/$hub"
-                    params={{ hub: h.slug }}
-                    search={{ q: "", tema: "all" }}
-                    className="text-sm font-semibold leading-snug hover:text-[color:var(--color-lime)]"
-                  >
-                    {h.h1}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className="art">
+            <article className="art-main">
+              <span className="kick">
+                <span>{categoryLabel}</span>
+              </span>
+              <h1>{article.title}</h1>
+              {article.dek ? <p className="dek">{article.dek}</p> : null}
 
-          <LeadCta
-            variant="card"
-            eyebrow="Continue informado"
-            title="Análises de IA aplicadas ao seu negócio"
-            description="Receba a edição diária da IA News e o Ranking IA atualizado, direto no e-mail."
-            action="Quero receber"
-            placement="materia-sidebar"
-            articleSlug={article.slug}
-          />
-        </aside>
+              <div className="byline">
+                <span>
+                  Por <b>{article.author ?? "Redação IA News"}</b>
+                </span>
+                <time dateTime={article.published_at}>{shortDate(article.published_at)}</time>
+                <span>{minutes} min de leitura</span>
+                {sources.length ? (
+                  <span>{sources.length === 1 ? "1 fonte" : `${sources.length} fontes`}</span>
+                ) : null}
+                <span>Análise própria IA News</span>
+              </div>
+
+              <figure className="cover">
+                <ArticleThumb
+                  src={article.cover_image_url}
+                  alt={article.title}
+                  label={categoryLabel}
+                  eager
+                />
+                {article.cover_image_url ? (
+                  <figcaption className="cap">
+                    Foto: {article.source_name ?? "Reprodução"}
+                  </figcaption>
+                ) : null}
+              </figure>
+
+              <ContentEngagement
+                slug={article.slug}
+                title={article.title}
+                category={article.category}
+              />
+
+              <ReadingTracker
+                slug={article.slug}
+                title={article.title}
+                category={article.category}
+                minutes={minutes}
+              />
+
+              <div className="prose">
+                <Markdown>{bodyTop}</Markdown>
+                <ArticleInlineCta articleSlug={article.slug} />
+                {bodyBottom ? <Markdown>{bodyBottom}</Markdown> : null}
+              </div>
+
+              {article.why_it_matters ? (
+                <section className="why-box">
+                  <h2 id="s-porque">Por que isso importa</h2>
+                  <p className="by">Análise IA News · a leitura da nossa redação</p>
+                  <p className="t">{article.why_it_matters}</p>
+                </section>
+              ) : null}
+
+              {article.analysis_markdown ? (
+                <section className="art-block">
+                  <h2 className="h-sm" id="s-analise">
+                    Análise IA News
+                  </h2>
+                  <p className="art-block-sub">A leitura da nossa redação</p>
+                  <div className="prose">
+                    <Markdown>{article.analysis_markdown}</Markdown>
+                  </div>
+                </section>
+              ) : null}
+
+              {article.business_context ? (
+                <section className="art-block">
+                  <h2 className="h-sm" id="s-contexto">
+                    Contexto para empresários e decisores
+                  </h2>
+                  <div className="prose">
+                    <p>{article.business_context}</p>
+                  </div>
+                </section>
+              ) : null}
+
+              {impacts.length ? (
+                <section className="art-block">
+                  <h2 className="h-sm" id="s-impactos">
+                    Impactos para empresas
+                  </h2>
+                  <ol className="art-impacts">
+                    {impacts.map((impact, i) => (
+                      <li key={i}>{impact}</li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
+
+              {article.editorial_conclusion ? (
+                <section className="art-concl">
+                  <h2 className="h-sm" id="s-conclusao">
+                    Conclusão editorial
+                  </h2>
+                  <p className="t">{article.editorial_conclusion}</p>
+                  <p className="by">Redação IA News</p>
+                </section>
+              ) : null}
+
+              {sources.length ? (
+                <>
+                  <h2 className="h-sm" id="s-fontes">
+                    Fontes
+                  </h2>
+                  <ul className="srcs">
+                    {sources.map((s, i) => (
+                      <li key={i}>
+                        {s.url ? (
+                          <a href={s.url} target="_blank" rel="noopener noreferrer">
+                            {s.name ?? s.url}
+                          </a>
+                        ) : (
+                          <span>{s.name}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+
+              {article.source_url ? (
+                <a
+                  className="btn line s art-src-btn"
+                  href={article.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ler na fonte{article.source_name ? ` (${article.source_name})` : ""} ↗
+                </a>
+              ) : null}
+
+              {article.tags && article.tags.length ? (
+                <div className="tags">
+                  {article.tags.map((t: string) => (
+                    <span key={t} className="tag l">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              <p className="fine art-note">
+                Apuração, análise e conclusão editorial produzidas pela redação do IA News a partir
+                das fontes acima. O conteúdo não reproduz o texto original.
+              </p>
+
+              <ArticleEndBand articleSlug={article.slug} categoryLabel={categoryLabel} />
+
+              {next ? (
+                <Link to="/materia/$slug" params={{ slug: next.slug }} className="next-art">
+                  <span className="next-txt">
+                    <span className="kick">Próxima matéria</span>
+                    <b>{next.title}</b>
+                    <span className="when">
+                      {labelOf(next.category)} · {next.read_minutes ?? 4} min de leitura
+                    </span>
+                  </span>
+                  <ArticleThumb
+                    src={next.cover_image_url}
+                    alt={next.title}
+                    label={labelOf(next.category)}
+                    className="r43"
+                  />
+                </Link>
+              ) : null}
+
+              {readAlso.length ? (
+                <>
+                  <h2 className="h-sm">Leia também</h2>
+                  <div className="grid-3 compact-m">
+                    {readAlso.map((a) => (
+                      <ArticleCard key={a.slug} a={a} />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </article>
+
+            <aside className="art-side art-side-flow" aria-label="Mais da IANews">
+              <ArticleToc items={toc} />
+              <ArticleSideSubscribe articleSlug={article.slug} />
+              <ArticleShare url={url} title={article.title} />
+
+              <div className="box">
+                <h3>Mais lidas</h3>
+                {topRead.length ? (
+                  <ol className="art-rank">
+                    {topRead.map((s, i) => (
+                      <li key={s.slug}>
+                        <Link to="/materia/$slug" params={{ slug: s.slug }}>
+                          <span className="n">{i + 1}</span>
+                          <span>
+                            <b>{s.title}</b>
+                            <span className="when">{shortDate(s.published_at)}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="fine">Nenhuma outra matéria por enquanto.</p>
+                )}
+              </div>
+
+              <div className="box">
+                <h3>Guias da IANews</h3>
+                <ul className="art-links">
+                  <li>
+                    <Link to="/artigos/inteligencia-artificial-nas-empresas">
+                      IA para empresas: guia prático de implementação
+                    </Link>
+                  </li>
+                  {HUB_LIST.map((h) => (
+                    <li key={h.slug}>
+                      <Link
+                        to="/guias/$hub"
+                        params={{ hub: h.slug }}
+                        search={{ q: "", tema: "all" }}
+                      >
+                        {h.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </div>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }

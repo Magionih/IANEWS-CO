@@ -1,329 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  ArrowUpRight,
-  Check,
-  ChevronDown,
-  ExternalLink,
-  GitCompare,
-  Search,
-  SlidersHorizontal,
-  Star,
-  TrendingDown,
-  TrendingUp,
-  Minus,
-  X,
-} from "lucide-react";
+import { Check, GitCompare, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { LeadCta } from "@/components/site/lead-cta";
-import { cn } from "@/lib/utils";
+import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-subscribe";
 import { useAuth } from "@/hooks/use-auth";
-import { listAiTools, getMyToolRatings, rateAiTool, type AiTool } from "@/lib/ai-ranking.functions";
+import { listAiTools, getMyToolRatings, type AiTool } from "@/lib/ai-ranking.functions";
+import {
+  AREAS,
+  CATEGORIES,
+  RankLogo,
+  TrendBadge,
+  catLabel,
+  fmtScore,
+  scoreFor,
+} from "@/components/portal/rank-shared";
+import { CompareDialog, RatingPrompt, ToolDialog } from "@/components/portal/rank-dialogs";
 
 type Search = { area?: string; cat?: string; q?: string; all?: boolean; maker?: string };
 
-const AREAS = [
-  { key: "semanal", label: "Ranking do dia" },
-  { key: "geral", label: "Conhecimento Geral" },
-  { key: "contabilidade", label: "Contabilidade" },
-  { key: "juridico", label: "Jurídico" },
-  { key: "literatura", label: "Literatura Brasileira" },
-  { key: "medicina", label: "Medicina" },
-  { key: "avaliacao", label: "Nota dos leitores" },
-] as const;
-
-const CATEGORIES = [
-  { key: "todas", label: "Todas as categorias" },
-  { key: "chat", label: "Assistentes / Chat" },
-  { key: "codigo", label: "Programação" },
-  { key: "imagem", label: "Imagem" },
-  { key: "video", label: "Vídeo" },
-  { key: "audio", label: "Áudio e voz" },
-  { key: "produtividade", label: "Produtividade" },
-  { key: "negocios", label: "Negócios" },
-  { key: "pesquisa", label: "Pesquisa" },
-] as const;
-
-function scoreFor(tool: AiTool, area: string) {
-  if (area === "semanal") return tool.weekly_score;
-  if (area === "avaliacao") return tool.ratings_avg * 2;
-  return tool.scores?.[area] ?? tool.base_score;
-}
-
-function logoSources(m: AiTool) {
-  const sources: string[] = [];
-  if (m.icon) sources.push(`https://cdn.simpleicons.org/${m.icon}`);
-  let host = "";
-  try {
-    host = new URL(m.website).hostname.replace(/^www\./, "");
-  } catch {
-    host = "";
-  }
-  if (host) {
-    sources.push(`https://logo.clearbit.com/${host}`);
-    sources.push(`https://www.google.com/s2/favicons?sz=128&domain=${host}`);
-  }
-  return sources;
-}
-
-function ModelLogo({ m, size = 28 }: { m: AiTool; size?: number }) {
-  const sources = useMemo(() => logoSources(m), [m.icon, m.website]);
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    setIndex(0);
-  }, [m.id]);
-
-  const src = sources[index];
-
-  if (!src) {
-    return (
-      <span
-        className="grid shrink-0 place-items-center rounded-lg text-xs font-extrabold text-white"
-        style={{ width: size, height: size, background: m.brand }}
-        aria-hidden="true"
-      >
-        {m.maker.charAt(0)}
-      </span>
-    );
-  }
-  return (
-    <span
-      className="grid shrink-0 place-items-center rounded-lg bg-white ring-1 ring-inset ring-border/60"
-      style={{ width: size, height: size }}
-    >
-      <img
-        src={src}
-        alt={`Logomarca ${m.maker}`}
-        loading="lazy"
-        width={Math.round(size * 0.68)}
-        height={Math.round(size * 0.68)}
-        style={{ width: size * 0.68, height: size * 0.68, objectFit: "contain" }}
-        onError={() => setIndex((i) => i + 1)}
-      />
-    </span>
-  );
-}
-
-function Stars({
-  value,
-  onChange,
-  size = 20,
-}: {
-  value: number;
-  onChange?: (v: number) => void;
-  size?: number;
-}) {
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => {
-        const filled = n <= Math.round(value);
-        const star = (
-          <Star
-            className={cn(filled ? "fill-current" : "opacity-30")}
-            style={{ width: size, height: size, color: "var(--color-gold, #F5A623)" }}
-          />
-        );
-        return onChange ? (
-          <button
-            key={n}
-            type="button"
-            aria-label={`Dar nota ${n}`}
-            onClick={() => onChange(n)}
-            className="transition-transform hover:scale-110"
-          >
-            {star}
-          </button>
-        ) : (
-          <span key={n}>{star}</span>
-        );
-      })}
-    </span>
-  );
-}
-
-function TrendBadge({ tool }: { tool: AiTool }) {
-  const delta = tool.previous_position > 0 ? tool.previous_position - tool.rank_position : 0;
-  if (delta === 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <Minus className="h-3 w-3" /> estável
-      </span>
-    );
-  }
-  const up = delta > 0;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 text-xs font-semibold",
-        up ? "text-emerald-500" : "text-rose-500",
-      )}
-    >
-      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      {up ? "+" : ""}
-      {delta}
-    </span>
-  );
-}
-
-function FilterMenu({
-  label,
-  value,
-  options,
-  active,
-  onSelect,
-  icon,
-}: {
-  label: string;
-  value: string;
-  options: { key: string; label: string }[];
-  active: string;
-  onSelect: (key: string) => void;
-  icon?: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-11 max-w-[15rem] items-center gap-2 rounded-full bg-secondary/50 px-4 text-xs font-semibold text-foreground/80 ring-1 ring-inset ring-border/70 transition-colors hover:text-foreground"
-        >
-          {icon}
-          <span className="text-muted-foreground">{label}:</span>
-          <span className="truncate">{value}</span>
-          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="max-h-72 w-64 overflow-y-auto p-1">
-        {options.map((o) => (
-          <button
-            key={o.key}
-            type="button"
-            onClick={() => {
-              onSelect(o.key);
-              setOpen(false);
-            }}
-            className={cn(
-              "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-secondary",
-              active === o.key && "font-semibold text-primary",
-            )}
-          >
-            <span className="truncate">{o.label}</span>
-            {active === o.key ? <Check className="h-4 w-4 shrink-0" /> : null}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function CompareDialog({
-  tools,
-  open,
-  onClose,
-  onClear,
-}: {
-  tools: AiTool[];
-  open: boolean;
-  onClose: () => void;
-  onClear: () => void;
-}) {
-  const rows: { label: string; get: (t: AiTool) => string }[] = [
-    { label: "Fabricante", get: (t) => t.maker },
-    { label: "Posição no ranking", get: (t) => `#${t.rank_position}` },
-    { label: "Nota do dia", get: (t) => t.weekly_score.toFixed(2) },
-    { label: "Nota técnica", get: (t) => t.base_score.toFixed(2) },
-    { label: "Repercussão", get: (t) => t.buzz_score.toFixed(2) },
-    {
-      label: "Leitores",
-      get: (t) => (t.ratings_count > 0 ? `${t.ratings_avg.toFixed(1)}/5 (${t.ratings_count})` : "sem notas"),
-    },
-    { label: "Contexto", get: (t) => t.context_window || "—" },
-    { label: "Preço", get: (t) => t.pricing || "—" },
-    { label: "Desde", get: (t) => t.released || "—" },
-    { label: "Ponto forte", get: (t) => t.pros[0] ?? "—" },
-    { label: "Atenção", get: (t) => t.cons[0] ?? "—" },
-  ];
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Comparar ferramentas</DialogTitle>
-          <DialogDescription>
-            Comparativo lado a lado com desempenho técnico, repercussão do dia e nota dos leitores.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-left text-sm">
-            <thead>
-              <tr>
-                <th className="w-36 py-3 pr-3 text-xs uppercase tracking-wide text-muted-foreground">
-                  Critério
-                </th>
-                {tools.map((t) => (
-                  <th key={t.id} className="py-3 pr-3">
-                    <span className="flex items-center gap-2">
-                      <ModelLogo m={t} size={30} />
-                      <span className="font-bold leading-tight">{t.name}</span>
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.label} className="border-t border-border/50">
-                  <th scope="row" className="py-3 pr-3 text-xs font-semibold text-muted-foreground">
-                    {r.label}
-                  </th>
-                  {tools.map((t) => (
-                    <td key={t.id} className="py-3 pr-3 align-top text-foreground/85">
-                      {r.get(t)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <LeadCta
-          variant="inline"
-          title="Receba o comparativo completo toda semana"
-          description="Toda segunda-feira enviamos o ranking das melhores ferramentas de IA, o que subiu na semana e como aplicar no seu negócio."
-          action="Receber grátis"
-            placement="ranking-band"
-          />
-
-        <button
-          type="button"
-          onClick={onClear}
-          className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:underline"
-        >
-          Limpar seleção
-        </button>
-      </DialogContent>
-    </Dialog>
-  );
-}
+/** Quantas plataformas aparecem antes do botão "Ver todas". */
+const FIRST_ROWS = 20;
+/** Teto da lista completa (mantido do comportamento anterior). */
+const MAX_ROWS = 50;
 
 export const Route = createFileRoute("/ranking")({
   validateSearch: (search: Record<string, unknown>): Search => ({
@@ -400,8 +103,18 @@ export const Route = createFileRoute("/ranking")({
               {
                 "@type": "BreadcrumbList",
                 itemListElement: [
-                  { "@type": "ListItem", position: 1, name: "IA News", item: "https://ianewsbr.com/" },
-                  { "@type": "ListItem", position: 2, name: "Ranking IA", item: "https://ianewsbr.com/ranking" },
+                  {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: "IA News",
+                    item: "https://ianewsbr.com/",
+                  },
+                  {
+                    "@type": "ListItem",
+                    position: 2,
+                    name: "Ranking IA",
+                    item: "https://ianewsbr.com/ranking",
+                  },
                 ],
               },
             ],
@@ -424,9 +137,9 @@ function RankingPage() {
   const navigate = useNavigate({ from: "/ranking" });
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const subscribed = useSubscribed();
 
   const [selected, setSelected] = useState<AiTool | null>(null);
-  const [searchOpen, setSearchOpen] = useState<boolean>(Boolean(search.q));
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptDone, setPromptDone] = useState(false);
 
@@ -439,7 +152,6 @@ function RankingPage() {
     staleTime: 5 * 60_000,
   });
 
-
   const fetchMine = useServerFn(getMyToolRatings);
   const { data: myRatings = [] } = useQuery({
     queryKey: ["ai-tool-ratings", "mine"],
@@ -447,10 +159,7 @@ function RankingPage() {
     enabled: isAuthenticated,
     staleTime: 60_000,
   });
-  const myMap = useMemo(
-    () => new Map(myRatings.map((r) => [r.tool_id, r])),
-    [myRatings],
-  );
+  const myMap = useMemo(() => new Map(myRatings.map((r) => [r.tool_id, r])), [myRatings]);
 
   const activeArea = AREAS.some((a) => a.key === area) ? area : "semanal";
   const activeCat = CATEGORIES.some((c) => c.key === cat) ? cat : "todas";
@@ -477,7 +186,8 @@ function RankingPage() {
       .sort((a, b) => scoreFor(b, activeArea) - scoreFor(a, activeArea));
   }, [tools, activeArea, activeCat, activeMaker, q]);
 
-  const visible = all ? filtered.slice(0, 50) : filtered.slice(0, 10);
+  const allCount = Math.min(filtered.length, MAX_ROWS);
+  const visible = all ? filtered.slice(0, MAX_ROWS) : filtered.slice(0, FIRST_ROWS);
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -495,13 +205,7 @@ function RankingPage() {
       return [...prev, id];
     });
 
-  const activeFilters = [
-    activeCat !== "todas"
-      ? { label: CATEGORIES.find((c) => c.key === activeCat)?.label ?? activeCat, clear: () => setSearch({ cat: "todas" }) }
-      : null,
-    activeMaker !== "todos" ? { label: activeMaker, clear: () => setSearch({ maker: "todos" }) } : null,
-    q.trim() ? { label: `“${q.trim()}”`, clear: () => setSearch({ q: "" }) } : null,
-  ].filter(Boolean) as { label: string; clear: () => void }[];
+  const isFiltered = activeCat !== "todas" || activeMaker !== "todos" || q.trim() !== "";
 
   const highlights = useMemo(() => {
     const bestOf = (label: string, pool: AiTool[], key: string) => {
@@ -517,6 +221,11 @@ function RankingPage() {
     ].filter(Boolean) as { label: string; tool: AiTool }[];
   }, [tools]);
 
+  const topFive = useMemo(
+    () => [...tools].sort((a, b) => b.weekly_score - a.weekly_score).slice(0, 5),
+    [tools],
+  );
+
   const updatedAt = tools[0]?.last_ranked_at
     ? new Date(tools[0].last_ranked_at).toLocaleDateString("pt-BR", {
         day: "2-digit",
@@ -527,7 +236,6 @@ function RankingPage() {
         timeZone: "America/Sao_Paulo",
       })
     : "—";
-
 
   // Pop-up de avaliação após 1 minuto na página
   useEffect(() => {
@@ -545,319 +253,326 @@ function RankingPage() {
   const setSearch = (patch: Partial<Search>) =>
     navigate({ search: (prev: Search) => ({ ...prev, ...patch }) });
 
+  const total = tools.length;
+  const countText =
+    filtered.length === total
+      ? `${total} plataformas`
+      : `${filtered.length === 1 ? "1" : filtered.length} de ${total} plataformas`;
+
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-
-
-      {/* Placar — direto no topo */}
-      <section id="placar" className="scroll-mt-24 bg-background pt-5 pb-10 sm:pt-7 sm:pb-14">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-              Ranking IA: as melhores ferramentas de inteligência artificial
-            </h1>
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              Atualizado em {updatedAt}
-            </p>
-          </div>
-
-          {/* Resposta direta — otimizado para busca e para respostas de IA */}
-          <div className="mt-3 max-w-4xl space-y-2 text-sm leading-relaxed text-muted-foreground">
-            <p>
-              <strong className="text-foreground">Resposta direta:</strong>{" "}
+      <main id="main">
+        <div className="page" data-page="ranking">
+          <div className="wrap">
+            <div className="page-head">
+              <p className="kick">Ranking IA</p>
+              <h1>As melhores plataformas de IA</h1>
+              <p className="sub">
+                {total ? `${total} plataformas avaliadas` : "Plataformas avaliadas"} com nota de 0 a
+                10. A nota combina desempenho técnico, repercussão nas notícias e avaliação dos
+                leitores.
+              </p>
               {filtered.length >= 3 ? (
-                <>
-                  as três ferramentas de IA melhor colocadas hoje são{" "}
-                  <strong className="text-foreground">{filtered[0].name}</strong> ({filtered[0].maker}),{" "}
-                  <strong className="text-foreground">{filtered[1].name}</strong> ({filtered[1].maker}) e{" "}
-                  <strong className="text-foreground">{filtered[2].name}</strong> ({filtered[2].maker}).
-                </>
-              ) : (
-                <>
-                  o Ranking IA compara as 50 principais ferramentas de inteligência artificial usadas
-                  por empresas brasileiras.
-                </>
-              )}{" "}
-              O placar é do IA News e reúne {tools.length || 50} plataformas.
-            </p>
-            <p>
-              <strong className="text-foreground">Como calculamos:</strong> cada ferramenta recebe uma
-              nota de 0 a 100 que combina desempenho técnico em benchmarks públicos, repercussão nas
-              notícias das últimas semanas e a média das avaliações dos leitores do IA News. A
-              atualização é diária e é possível filtrar por categoria (texto, código, imagem, vídeo,
-              jurídico), por fabricante e por área de uso.
-            </p>
-          </div>
+                <p className="rk-answer">
+                  <b>Resposta direta:</b> as três ferramentas de IA melhor colocadas hoje
+                  {activeArea !== "semanal" ? ` em ${activeLabel}` : ""} são{" "}
+                  <b>{filtered[0].name}</b> ({filtered[0].maker}), <b>{filtered[1].name}</b> (
+                  {filtered[1].maker}) e <b>{filtered[2].name}</b> ({filtered[2].maker}).
+                </p>
+              ) : null}
+              <p className="when" style={{ marginTop: 12 }}>
+                Atualizado em {updatedAt}. Recálculo automático todos os dias, às 6h.
+              </p>
+            </div>
 
+            {highlights.length ? (
+              <div className="tiles">
+                {highlights.map((h) => (
+                  <button
+                    key={h.label}
+                    type="button"
+                    className="tile rk-tile"
+                    onClick={() => setSelected(h.tool)}
+                  >
+                    <span className="lb">{h.label}</span>
+                    <span className="who">
+                      <RankLogo m={h.tool} />
+                      <b>{h.tool.name}</b>
+                    </span>
+                    <span className="sc">
+                      {fmtScore(scoreFor(h.tool, "semanal"))}
+                      <small>nota</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
-
-          {/* Barra minimalista de filtros e busca */}
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-y border-border py-2.5">
-            <FilterMenu
-              icon={<SlidersHorizontal className="h-3.5 w-3.5" />}
-              label="Avaliação"
-              value={activeLabel}
-              options={AREAS.map((a) => ({ key: a.key, label: a.label }))}
-              active={activeArea}
-              onSelect={(key) => setSearch({ area: key })}
-            />
-            <FilterMenu
-              label="Categoria"
-              value={CATEGORIES.find((c) => c.key === activeCat)?.label ?? "Todas"}
-              options={CATEGORIES.map((c) => ({ key: c.key, label: c.label }))}
-              active={activeCat}
-              onSelect={(key) => setSearch({ cat: key })}
-            />
-            <FilterMenu
-              label="Fabricante"
-              value={activeMaker === "todos" ? "Todos" : activeMaker}
-              options={[{ key: "todos", label: "Todos os fabricantes" }, ...makers.map((m) => ({ key: m, label: m }))]}
-              active={activeMaker}
-              onSelect={(key) => setSearch({ maker: key })}
-            />
-
-            <div className="ml-auto flex items-center gap-2">
-              {searchOpen ? (
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    autoFocus
+            <div className="sec-head" style={{ marginTop: 44 }}>
+              <h2>Classificação</h2>
+            </div>
+            <div className="toolbar">
+              <div className="filter" role="search">
+                <label className="filter-q">
+                  <Search className="ico" aria-hidden="true" />
+                  <input
+                    type="search"
                     value={q}
                     onChange={(e) => setSearch({ q: e.target.value })}
-                    placeholder="Buscar ferramenta"
-                    className="h-9 w-[190px] rounded-none pl-9 text-sm"
-                    aria-label="Buscar ferramentas de IA"
+                    placeholder="Buscar plataforma ou fabricante"
+                    aria-label="Buscar plataforma ou fabricante"
+                    autoComplete="off"
                   />
-                </div>
-              ) : null}
+                </label>
+                <label className="filter-s">
+                  Categoria
+                  <select
+                    aria-label="Categoria"
+                    value={activeCat}
+                    onChange={(e) => setSearch({ cat: e.target.value })}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="filter-meta">
+                <span role="status" aria-live="polite">
+                  {countText}
+                </span>
+                {isFiltered ? (
+                  <button
+                    className="more"
+                    type="button"
+                    onClick={() => setSearch({ cat: "todas", maker: "todos", q: "" })}
+                  >
+                    Limpar
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rk-opts">
+              <label>
+                Nota
+                <select
+                  aria-label="Critério da nota"
+                  value={activeArea}
+                  onChange={(e) => setSearch({ area: e.target.value })}
+                >
+                  {AREAS.map((a) => (
+                    <option key={a.key} value={a.key}>
+                      {a.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Fabricante
+                <select
+                  aria-label="Fabricante"
+                  value={activeMaker}
+                  onChange={(e) => setSearch({ maker: e.target.value })}
+                >
+                  <option value="todos">Todos</option>
+                  {makers.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <button
                 type="button"
-                aria-label={searchOpen ? "Fechar busca" : "Buscar ferramenta"}
-                onClick={() => {
-                  if (searchOpen) setSearch({ q: "" });
-                  setSearchOpen((v) => !v);
-                }}
-                className="grid h-9 w-9 shrink-0 place-items-center border border-border text-foreground/70 hover:text-foreground"
-              >
-                {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => (compareTools.length >= 2 ? setCompareOpen(true) : toast.info("Marque 2 ou 3 ferramentas na tabela para comparar."))}
-                className={cn(
-                  "inline-flex h-9 items-center gap-2 px-3 text-[11px] font-bold uppercase tracking-wide transition-colors",
+                className={"btn s rk-cmp-go" + (compareTools.length >= 2 ? " blue" : " line")}
+                onClick={() =>
                   compareTools.length >= 2
-                    ? "bg-[color:var(--color-lime)] text-white"
-                    : "border border-border text-muted-foreground hover:text-foreground",
-                )}
+                    ? setCompareOpen(true)
+                    : toast.info("Marque 2 ou 3 ferramentas na lista para comparar.")
+                }
               >
-                <GitCompare className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Comparar</span>
-                {compareTools.length ? ` (${compareTools.length})` : ""}
+                <GitCompare className="ico" aria-hidden="true" />
+                Comparar{compareTools.length ? ` (${compareTools.length})` : ""}
               </button>
             </div>
 
-            {activeFilters.length ? (
-              <div className="flex w-full flex-wrap items-center gap-2 pt-1">
-                {activeFilters.map((f) => (
-                  <button
-                    key={f.label}
-                    type="button"
-                    onClick={f.clear}
-                    className="inline-flex items-center gap-1.5 bg-secondary px-2.5 py-1 text-xs font-medium text-foreground/80 hover:text-foreground"
-                  >
-                    {f.label} <X className="h-3 w-3" />
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setSearch({ cat: "todas", maker: "todos", q: "" })}
-                  className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                  Limpar tudo
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-border/60 bg-background shadow-[var(--shadow-mui-sm)]">
-            <table className="w-full text-left">
-              <caption className="sr-only">Ranking de ferramentas de IA em {activeLabel}</caption>
-              <thead>
-                <tr className="border-b border-border/70 text-xs uppercase tracking-wide text-muted-foreground">
-                  <th scope="col" className="px-3 py-4 font-semibold sm:px-5">#</th>
-                  <th scope="col" className="px-3 py-4 font-semibold sm:px-5">Ferramenta</th>
-                  <th scope="col" className="hidden px-5 py-4 font-semibold sm:table-cell">Fabricante</th>
-                  <th scope="col" className="hidden px-5 py-4 font-semibold lg:table-cell">Leitores</th>
-                  <th scope="col" className="hidden px-5 py-4 font-semibold md:table-cell">Hoje</th>
-                  <th scope="col" className="px-3 py-4 text-right font-semibold sm:px-5">Nota</th>
-                  <th scope="col" className="px-3 py-4 text-right font-semibold sm:px-5">Comparar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((m, i) => (
-                  <tr
+            <div
+              className="rk"
+              role="list"
+              aria-label={`Ranking de ferramentas de IA em ${activeLabel}`}
+            >
+              {visible.map((m, i) => {
+                const score = scoreFor(m, activeArea);
+                const on = compareIds.includes(m.id);
+                return (
+                  <div
                     key={m.id}
-                    onClick={() => setSelected(m)}
-                    tabIndex={0}
-                    role="button"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSelected(m);
-                      }
-                    }}
-                    className="cursor-pointer border-b border-border/50 last:border-0 transition-colors hover:bg-secondary/50 focus:bg-secondary/60 focus:outline-none"
+                    id={m.slug ?? m.id}
+                    role="listitem"
+                    className={"rk-item" + (i < 3 ? " t3" : "")}
                   >
-                    <td className="px-3 py-4 text-sm font-bold text-muted-foreground sm:px-5">
-                      {String(i + 1).padStart(2, "0")}
-                    </td>
-                    <td className="px-3 py-4 sm:px-5">
-                      <span className="flex items-center gap-3">
-                        <ModelLogo m={m} />
-                        <span>
-                          <span className="block font-semibold">{m.name}</span>
-                          <span className="block text-xs text-muted-foreground sm:hidden">
-                            {m.maker}
-                          </span>
+                    <div className="rk-row rk-x" onClick={() => setSelected(m)}>
+                      <span className="rk-pos">{String(i + 1).padStart(2, "0")}</span>
+                      <RankLogo m={m} />
+                      <span className="rk-name">
+                        <b>
+                          <button
+                            type="button"
+                            className="rk-open"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected(m);
+                            }}
+                          >
+                            {m.name}
+                          </button>
+                        </b>
+                        <span className="mk">
+                          {m.maker === m.name
+                            ? catLabel(m.category)
+                            : `${m.maker} · ${catLabel(m.category)}`}
+                          <TrendBadge tool={m} />
+                          {m.ratings_count > 0 ? (
+                            <span className="rk-readers" title="Média das avaliações dos leitores">
+                              ★ {m.ratings_avg.toFixed(1).replace(".", ",")} ({m.ratings_count})
+                            </span>
+                          ) : null}
                         </span>
                       </span>
-                    </td>
-                    <td className="hidden px-5 py-4 text-sm text-muted-foreground sm:table-cell">
-                      {m.maker}
-                    </td>
-                    <td className="hidden px-5 py-4 text-sm text-muted-foreground lg:table-cell">
-                      {m.ratings_count > 0 ? (
-                        <span className="inline-flex items-center gap-2">
-                          <Stars value={m.ratings_avg} size={14} />
-                          <span className="text-xs">({m.ratings_count})</span>
-                        </span>
-                      ) : (
-                        <span className="text-xs">sem avaliações</span>
-                      )}
-                    </td>
-                    <td className="hidden px-5 py-4 md:table-cell">
-                      <TrendBadge tool={m} />
-                    </td>
-                    <td className="px-3 py-4 text-right sm:px-5">
-                      <span
-                        className="inline-flex min-w-[3.5rem] justify-center rounded-full px-2.5 py-1.5 text-sm font-extrabold text-white sm:min-w-[4rem] sm:px-3"
-                        style={{
-                          background:
-                            i === 0
-                              ? "var(--color-lime)"
-                              : "color-mix(in oklab, var(--color-lime) 30%, transparent)",
-                        }}
-                      >
-                        {scoreFor(m, activeArea).toFixed(2)}
+                      <span className="rk-bar" aria-hidden="true">
+                        <i
+                          style={{
+                            ["--v" as string]: `${Math.max(0, Math.min(100, score * 10))}%`,
+                          }}
+                        />
                       </span>
-                    </td>
-                    <td
-                      className="px-3 py-4 text-right sm:px-5"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                      <span className="rk-score">{fmtScore(score)}</span>
                       <button
                         type="button"
-                        aria-label={`Adicionar ${m.name} à comparação`}
+                        className="rk-cmp-btn"
+                        aria-pressed={on}
+                        aria-label={`${on ? "Remover" : "Adicionar"} ${m.name} ${on ? "da" : "à"} comparação`}
+                        title="Comparar"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleCompare(m.id);
                         }}
-                        className={cn(
-                          "grid h-8 w-8 place-items-center rounded-full ring-1 ring-inset transition-colors",
-                          compareIds.includes(m.id)
-                            ? "bg-[color:var(--color-lime)] text-white ring-transparent"
-                            : "text-muted-foreground ring-border/70 hover:text-foreground",
-                        )}
                       >
-                        {compareIds.includes(m.id) ? (
-                          <Check className="h-4 w-4" />
+                        {on ? (
+                          <Check className="ico" aria-hidden="true" />
                         ) : (
-                          <GitCompare className="h-4 w-4" />
+                          <GitCompare className="ico" aria-hidden="true" />
                         )}
                       </button>
-                    </td>
-                  </tr>
-                ))}
-                {visible.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                      Nenhuma ferramenta encontrada com esses filtros.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {visible.length === 0 ? (
+              <p className="empty">
+                Nenhuma plataforma encontrada. Tente outro nome ou outra categoria.
+              </p>
+            ) : null}
 
-          {filtered.length > 10 ? (
-            <div className="mt-6 flex justify-center">
+            {filtered.length > FIRST_ROWS ? (
+              <div className="load-more">
+                <button className="btn line" type="button" onClick={() => setSearch({ all: !all })}>
+                  {all
+                    ? `Mostrar só as ${FIRST_ROWS} primeiras`
+                    : `Ver todas as ${allCount} plataformas`}
+                </button>
+              </div>
+            ) : null}
+
+            {!subscribed ? (
+              <div className="band gate">
+                <div className="txt">
+                  {topFive.length ? (
+                    <div className="gate-logos" aria-hidden="true">
+                      {topFive.map((t) => (
+                        <RankLogo key={t.id} m={t} />
+                      ))}
+                      {total > topFive.length ? (
+                        <span className="plus">e outras {total - topFive.length}</span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <h3>O ranking completo, toda segunda-feira no seu e-mail</h3>
+                  <p>
+                    Quem sobe, quem cai e o que mudou nas plataformas de IA, junto com a newsletter
+                    diária da IANews.
+                  </p>
+                </div>
+                <div className="rk-band-form">
+                  <PortalSubscribeForm placement="ranking-rodape" button="Quero receber" />
+                  <p className="fine">
+                    Gratuito. Você cancela quando quiser. Ao assinar, você aceita a{" "}
+                    <Link to="/termos">política de privacidade</Link>.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="sec-head" style={{ marginTop: 56 }}>
+              <h2>Metodologia</h2>
+              <p className="lede">Como a nota é calculada</p>
+            </div>
+            <div className="cols3">
+              <div>
+                <h3>Desempenho técnico</h3>
+                <p>Resultados em benchmarks públicos e em provas aplicadas em português.</p>
+              </div>
+              <div>
+                <h3>Repercussão nas notícias</h3>
+                <p>
+                  O quanto a plataforma apareceu no noticiário nas últimas 24 horas e nos últimos 7
+                  dias.
+                </p>
+              </div>
+              <div>
+                <h3>Avaliação dos leitores</h3>
+                <p>
+                  A média das notas dadas pelos leitores da IA News que usam a ferramenta no dia a
+                  dia.
+                </p>
+              </div>
+            </div>
+            <p className="fine rk-method-note">
+              A nota vai de 0 a 10 e é recalculada automaticamente todos os dias, às 6h. Dá para
+              filtrar por categoria, por fabricante e por área de uso (conhecimento geral,
+              contabilidade, jurídico, literatura brasileira, medicina ou nota dos leitores). Clique
+              em uma plataforma para ver a avaliação completa, ou marque de 2 a 3 para comparar lado
+              a lado.
+            </p>
+
+            <div className="sec-head" style={{ marginTop: 56 }}>
+              <h2>Voto do leitor</h2>
+              <p className="lede">Qual IA você mais usa no trabalho?</p>
+            </div>
+            <div className="ask">
+              <p>
+                Dê a sua nota de 1 a 5
+                <span>Leva 10 segundos e a sua nota entra no cálculo do ranking de amanhã.</span>
+              </p>
               <button
                 type="button"
-                onClick={() => setSearch({ all: !all })}
-                className="rounded-full bg-[color:var(--color-nav)] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
+                className="btn blue s"
+                onClick={() => {
+                  setPromptDone(false);
+                  setPromptOpen(true);
+                }}
               >
-                {all ? "Ver apenas o top 10" : `Ver todas (${Math.min(filtered.length, 50)})`}
+                Avaliar uma plataforma
               </button>
             </div>
-          ) : null}
-
-          <p className="mt-6 text-xs text-muted-foreground">
-            A nota combina o desempenho técnico em provas aplicadas em português, a
-            repercussão real da ferramenta nas notícias das últimas 24 horas (e dos últimos 7
-            dias) e a média das avaliações dos leitores da IA News. O recálculo é automático,
-            todos os dias às 6h.
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Clique em uma ferramenta para ver a avaliação completa, ou marque de 2 a 3 para
-            comparar lado a lado.
-          </p>
-
-          <section className="mt-10">
-            <h2 className="text-lg font-bold tracking-tight sm:text-xl">Destaques de hoje</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {highlights.map((h) => (
-                <button
-                  key={h.label}
-                  type="button"
-                  onClick={() => setSelected(h.tool)}
-                  className="group relative overflow-hidden border border-border p-5 text-left transition-colors hover:border-foreground/40"
-                >
-                  <span className="font-mono-eyebrow text-[color:var(--color-lime)]">
-                    {h.label}
-                  </span>
-                  <h3 className="mt-3 text-lg font-extrabold leading-tight">{h.tool.name}</h3>
-                  <p className="mt-1.5 pr-8 text-sm leading-relaxed text-muted-foreground">
-                    {h.tool.maker} · nota {scoreFor(h.tool, "semanal").toFixed(2)}
-                  </p>
-                  <span className="absolute bottom-4 right-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5">
-                    <ArrowUpRight className="h-4 w-4" />
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="mt-8 border border-border bg-secondary/40 p-5">
-              <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Sobre o placar</p>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                Um ranking recalculado automaticamente todos os dias, combinando desempenho
-                técnico em provas aplicadas em português, repercussão real nas notícias das
-                últimas 24 horas e a avaliação de quem usa as ferramentas no dia a dia.
-              </p>
-            </div>
-          </section>
-
-          <LeadCta
-            className="mt-10"
-            eyebrow="Ranking IA semanal"
-            title="Receba toda semana o ranking das melhores ferramentas de IA"
-            description="As ferramentas que mais subiram, o que mudou no mercado e como aplicar no seu negócio — em 3 minutos de leitura, toda segunda-feira."
-            action="Quero o ranking semanal"
-            placement="ranking-rodape"
-          />
+          </div>
         </div>
-      </section>
+      </main>
 
       <CompareDialog
         tools={compareTools}
@@ -873,7 +588,7 @@ function RankingPage() {
         tool={selected}
         activeArea={activeArea === "semanal" || activeArea === "avaliacao" ? "geral" : activeArea}
         activeLabel={activeLabel}
-        myRating={selected ? myMap.get(selected.id) ?? null : null}
+        myRating={selected ? (myMap.get(selected.id) ?? null) : null}
         isAuthenticated={isAuthenticated}
         onClose={() => setSelected(null)}
         onSaved={() => {
@@ -895,326 +610,7 @@ function RankingPage() {
         }}
       />
 
-
       <SiteFooter />
-    </div>
-  );
-}
-
-function RatingForm({
-  tool,
-  initial,
-  isAuthenticated,
-  onSaved,
-}: {
-  tool: AiTool;
-  initial: { rating: number; use_case: string | null; comment: string | null } | null;
-  isAuthenticated: boolean;
-  onSaved: () => void;
-}) {
-  const [rating, setRating] = useState(initial?.rating ?? 0);
-  const [useCase, setUseCase] = useState(initial?.use_case ?? "");
-  const [comment, setComment] = useState(initial?.comment ?? "");
-
-  useEffect(() => {
-    setRating(initial?.rating ?? 0);
-    setUseCase(initial?.use_case ?? "");
-    setComment(initial?.comment ?? "");
-  }, [initial, tool.id]);
-
-  const rate = useServerFn(rateAiTool);
-  const mutation = useMutation({
-    mutationFn: (vars: { toolId: string; rating: number; useCase: string; comment: string }) =>
-      rate({ data: vars }),
-    onSuccess: () => {
-      toast.success("Avaliação registrada. Obrigado!");
-      onSaved();
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao avaliar."),
-  });
-
-  if (!isAuthenticated) {
-    return (
-      <div className="rounded-xl border border-border/60 bg-secondary/40 p-4">
-        <p className="text-sm font-semibold">Avalie esta ferramenta</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Entre na sua conta IA News para dar sua nota e influenciar o ranking de amanhã.
-        </p>
-        <Link
-          to="/auth"
-          className="mt-3 inline-flex rounded-full bg-[color:var(--color-nav)] px-4 py-2 text-xs font-semibold text-white"
-        >
-          Entrar ou criar conta
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-xl border border-border/60 bg-secondary/40 p-4">
-      <p className="text-sm font-semibold">Sua avaliação</p>
-      <div className="mt-2">
-        <Stars value={rating} onChange={setRating} />
-      </div>
-      <Input
-        value={useCase}
-        onChange={(e) => setUseCase(e.target.value)}
-        placeholder="Para que você usa? (ex.: atendimento, contabilidade)"
-        maxLength={120}
-        className="mt-3 bg-background"
-      />
-      <Textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Conte sua experiência (opcional)"
-        maxLength={800}
-        rows={3}
-        className="mt-2 bg-background"
-      />
-      <button
-        type="button"
-        disabled={rating < 1 || mutation.isPending}
-        onClick={() =>
-          mutation.mutate({ toolId: tool.id, rating, useCase, comment })
-        }
-        className="mt-3 w-full rounded-full bg-[color:var(--color-lime)] px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
-        {mutation.isPending ? "Enviando..." : initial ? "Atualizar avaliação" : "Enviar avaliação"}
-      </button>
-    </div>
-  );
-}
-
-function ToolDialog({
-  tool,
-  activeArea,
-  activeLabel,
-  myRating,
-  isAuthenticated,
-  onClose,
-  onSaved,
-}: {
-  tool: AiTool | null;
-  activeArea: string;
-  activeLabel: string;
-  myRating: { rating: number; use_case: string | null; comment: string | null } | null;
-  isAuthenticated: boolean;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  return (
-    <Dialog open={!!tool} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-        {tool ? (
-          <>
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <ModelLogo m={tool} size={44} />
-                <div className="text-left">
-                  <DialogTitle className="text-xl leading-tight">{tool.name}</DialogTitle>
-                  <DialogDescription className="text-xs">
-                    {tool.maker}
-                    {tool.released ? ` · desde ${tool.released}` : ""}
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-
-            <p className="text-sm leading-relaxed text-foreground/80">{tool.about}</p>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-border/60 p-3">
-                <p className="text-xs text-muted-foreground">Nota do dia</p>
-                <p className="text-2xl font-extrabold">{tool.weekly_score.toFixed(2)}</p>
-              </div>
-              <div className="rounded-xl border border-border/60 p-3">
-                <p className="text-xs text-muted-foreground">Posição</p>
-                <p className="text-2xl font-extrabold">#{tool.rank_position}</p>
-              </div>
-              <div className="rounded-xl border border-border/60 p-3">
-                <p className="text-xs text-muted-foreground">Leitores</p>
-                <p className="text-sm font-semibold">
-                  {tool.ratings_count > 0
-                    ? `${tool.ratings_avg.toFixed(1)} / 5 (${tool.ratings_count})`
-                    : "Seja o primeiro"}
-                </p>
-              </div>
-            </div>
-
-            {tool.context_window ? (
-              <p className="text-xs text-muted-foreground">Contexto: {tool.context_window}</p>
-            ) : null}
-
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Notas por área
-              </p>
-              {AREAS.filter((a) => a.key !== "semanal" && a.key !== "avaliacao").map((a) => (
-                <div key={a.key} className="flex items-center gap-3">
-                  <span className="w-40 shrink-0 text-xs text-muted-foreground">{a.label}</span>
-                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                    <span
-                      className="block h-full rounded-full"
-                      style={{
-                        width: `${(scoreFor(tool, a.key) / 10) * 100}%`,
-                        background:
-                          a.key === activeArea ? "var(--color-lime)" : "var(--color-nav)",
-                      }}
-                    />
-                  </span>
-                  <span className="w-10 text-right text-xs font-bold">
-                    {scoreFor(tool, a.key).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-              <p className="sr-only">Área em destaque: {activeLabel}</p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Pontos fortes
-                </p>
-                <ul className="mt-2 space-y-1 text-sm text-foreground/80">
-                  {tool.pros.map((p) => (
-                    <li key={p}>• {p}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Pontos de atenção
-                </p>
-                <ul className="mt-2 space-y-1 text-sm text-foreground/80">
-                  {tool.cons.map((c) => (
-                    <li key={c}>• {c}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {tool.pricing ? (
-              <p className="text-xs text-muted-foreground">{tool.pricing}</p>
-            ) : null}
-
-            <RatingForm
-              tool={tool}
-              initial={myRating}
-              isAuthenticated={isAuthenticated}
-              onSaved={onSaved}
-            />
-
-            {tool.website ? (
-              <a
-                href={tool.website}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--color-nav)] px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                Visitar plataforma <ExternalLink className="h-4 w-4" />
-              </a>
-            ) : null}
-          </>
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RatingPrompt({
-  open,
-  tools,
-  isAuthenticated,
-  onClose,
-  onDone,
-}: {
-  open: boolean;
-  tools: AiTool[];
-  isAuthenticated: boolean;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const [toolId, setToolId] = useState("");
-  const [rating, setRating] = useState(0);
-  const rate = useServerFn(rateAiTool);
-  const mutation = useMutation({
-    mutationFn: (vars: { toolId: string; rating: number }) => rate({ data: vars }),
-    onSuccess: () => {
-      toast.success("Obrigado! Sua nota já conta para o ranking de amanhã.");
-      onDone();
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao avaliar."),
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Qual IA você mais usa?</DialogTitle>
-          <DialogDescription>
-            Leva 10 segundos. Sua nota entra no cálculo do ranking de amanhã.
-          </DialogDescription>
-        </DialogHeader>
-
-        {isAuthenticated ? (
-          <>
-            <select
-              value={toolId}
-              onChange={(e) => setToolId(e.target.value)}
-              className="h-11 w-full rounded-xl border border-border/70 bg-background px-3 text-sm"
-              aria-label="Escolha a ferramenta que mais usa"
-            >
-              <option value="">Selecione a ferramenta…</option>
-              {[...tools]
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} — {t.maker}
-                  </option>
-                ))}
-            </select>
-
-            <div className="flex justify-center py-2">
-              <Stars value={rating} onChange={setRating} size={30} />
-            </div>
-
-            <button
-              type="button"
-              disabled={!toolId || rating < 1 || mutation.isPending}
-              onClick={() => mutation.mutate({ toolId, rating })}
-              className="w-full rounded-full bg-[color:var(--color-lime)] px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {mutation.isPending ? "Enviando..." : "Enviar avaliação"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-            >
-              Agora não
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Entre na sua conta IA News para avaliar as ferramentas que você usa.
-            </p>
-            <Link
-              to="/auth"
-              className="w-full rounded-full bg-[color:var(--color-nav)] px-4 py-2.5 text-center text-sm font-bold text-white"
-            >
-              Entrar ou criar conta
-            </Link>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-            >
-              Agora não
-            </button>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+    </>
   );
 }

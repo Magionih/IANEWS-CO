@@ -4,9 +4,6 @@ import { toast } from "sonner";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
@@ -38,6 +35,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -47,25 +45,26 @@ function AuthPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     const mail = email.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
-      toast.error("Informe um e-mail válido.");
+      setError("Informe um e-mail válido.");
       return;
     }
     if (password.length < 6) {
-      toast.error("Informe sua senha (mínimo de 6 caracteres).");
+      setError("Informe sua senha (mínimo de 6 caracteres).");
       return;
     }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: mail, password });
     setLoading(false);
     if (error) {
-      toast.error(
+      setError(
         error.message.includes("Invalid login")
           ? "E-mail ou senha incorretos."
           : error.message.toLowerCase().includes("not confirmed")
-          ? "Confirme seu e-mail antes de entrar."
-          : error.message,
+            ? "Confirme seu e-mail antes de entrar."
+            : error.message,
       );
       return;
     }
@@ -74,76 +73,79 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto grid max-w-[1400px] gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <div className="max-w-md">
-          <p className="font-mono-eyebrow text-primary">Área do leitor</p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Entrar</h1>
-          <p className="mt-3 text-muted-foreground">
-            Acompanhe seus hábitos de leitura, defina metas e receba a edição diária.
-          </p>
+      <main id="main">
+        <div className="wrap">
+          <div className="page-head">
+            <p className="kick">Área do leitor</p>
+            <h1>Entrar</h1>
+            <p className="sub">
+              Acompanhe seus hábitos de leitura, defina metas e receba a edição diária.
+            </p>
+          </div>
 
-          <form className="mt-8 space-y-5" onSubmit={onSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                maxLength={255}
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@empresa.com"
-                className="h-12 rounded-lg"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                maxLength={72}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="h-12 rounded-lg"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-12 w-full rounded-lg text-base font-bold"
+          <div className="two-col" style={{ paddingBottom: 64 }}>
+            <section
+              className="panel-form"
+              style={{ padding: 28, boxShadow: "var(--p-shadow)", maxWidth: 520 }}
             >
-              {loading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
+              <form noValidate style={{ display: "grid", gap: 14 }} onSubmit={onSubmit}>
+                <label className="f" htmlFor="email">
+                  E-mail
+                  <input
+                    id="email"
+                    className="field"
+                    type="email"
+                    inputMode="email"
+                    required
+                    maxLength={255}
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="voce@empresa.com"
+                  />
+                </label>
+                <label className="f" htmlFor="password">
+                  Senha
+                  <input
+                    id="password"
+                    className="field"
+                    type="password"
+                    required
+                    maxLength={72}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </label>
+                <button className="btn blue wide" type="submit" disabled={loading}>
+                  {loading ? "Entrando..." : "Entrar"}
+                </button>
+                <p className={"msg" + (error ? " err" : "")} role="status" aria-live="polite">
+                  {error}
+                </p>
+              </form>
+              <p className="fine">
+                Ainda não tem conta? <Link to="/cadastro">Cadastre-se grátis</Link>
+              </p>
+            </section>
 
-          <p className="mt-6 text-sm text-muted-foreground">
-            Ainda não tem conta?{" "}
-            <Link to="/cadastro" className="font-semibold text-primary hover:underline">
-              Cadastre-se grátis
-            </Link>
-          </p>
+            <aside style={{ display: "grid", gap: 16, alignContent: "start" }}>
+              <p className="kick">Meus Hábitos</p>
+              <h2 className="h-big">Sua rotina de leitura, medida de verdade.</h2>
+              <ul className="ticks">
+                <li>Tempo de leitura por dia e por semana</li>
+                <li>Metas semanais de matérias e minutos</li>
+                <li>Sequência de dias lendo sem falhar</li>
+                <li>Editorias que você mais acompanha</li>
+              </ul>
+            </aside>
+          </div>
         </div>
-
-        <aside className="hidden rounded-2xl bg-[color:var(--color-nav)] p-10 text-white lg:block">
-          <p className="font-mono-eyebrow text-[color:var(--color-lime)]">Meus Hábitos</p>
-          <h2 className="mt-3 text-3xl font-extrabold leading-tight">
-            Sua rotina de leitura, medida de verdade.
-          </h2>
-          <ul className="mt-8 space-y-4 text-white/75">
-            <li>• Tempo de leitura por dia e por semana</li>
-            <li>• Metas semanais de matérias e minutos</li>
-            <li>• Sequência de dias lendo sem falhar</li>
-            <li>• Editorias que você mais acompanha</li>
-          </ul>
-        </aside>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }

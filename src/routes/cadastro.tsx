@@ -4,9 +4,6 @@ import { toast } from "sonner";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/cadastro")({
@@ -21,7 +18,8 @@ export const Route = createFileRoute("/cadastro")({
       { property: "og:title", content: "Cadastre-se grátis no IA News" },
       {
         property: "og:description",
-        content: "Crie sua conta e acompanhe seus hábitos de leitura sobre inteligência artificial.",
+        content:
+          "Crie sua conta e acompanhe seus hábitos de leitura sobre inteligência artificial.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -47,6 +45,7 @@ function SignupPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function set(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -54,28 +53,29 @@ function SignupPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     const name = form.name.trim();
     const email = form.email.trim();
     const phone = form.phone.trim();
 
     if (name.length < 2 || name.length > 120) {
-      toast.error("Informe seu nome completo.");
+      setError("Informe seu nome completo.");
       return;
     }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 255) {
-      toast.error("Informe um e-mail válido.");
+      setError("Informe um e-mail válido.");
       return;
     }
     if (phone.replace(/\D/g, "").length < 10) {
-      toast.error("Informe um telefone com DDD.");
+      setError("Informe um telefone com DDD.");
       return;
     }
     if (form.password.length < 8) {
-      toast.error("A senha precisa ter ao menos 8 caracteres.");
+      setError("A senha precisa ter ao menos 8 caracteres.");
       return;
     }
     if (form.password.length > 72) {
-      toast.error("A senha pode ter no máximo 72 caracteres.");
+      setError("A senha pode ter no máximo 72 caracteres.");
       return;
     }
 
@@ -92,7 +92,7 @@ function SignupPage() {
     if (error) {
       setLoading(false);
       const msg = error.message.toLowerCase();
-      toast.error(
+      setError(
         msg.includes("already registered") || msg.includes("already been registered")
           ? "Este e-mail já tem conta. Faça login."
           : msg.includes("password") && msg.includes("least")
@@ -124,116 +124,107 @@ function SignupPage() {
     navigate({ to: "/auth" });
   }
 
+  const field = (
+    key: keyof typeof form,
+    label: string,
+    props: React.InputHTMLAttributes<HTMLInputElement>,
+  ) => (
+    <label className="f" htmlFor={key}>
+      {label}
+      <input
+        id={key}
+        className="field"
+        required
+        value={form[key]}
+        onChange={(e) => set(key, e.target.value)}
+        {...props}
+      />
+    </label>
+  );
+
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
-      <main className="mx-auto grid max-w-[1400px] gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <div className="max-w-md">
-          <p className="font-mono-eyebrow text-primary">Grátis para sempre</p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Cadastre-se</h1>
-          <p className="mt-3 text-muted-foreground">
-            Crie sua conta para acompanhar metas, tempo de leitura e a edição diária.
-          </p>
+      <main id="main">
+        <div className="wrap">
+          <div className="page-head">
+            <p className="kick">Grátis para sempre</p>
+            <h1>Cadastre-se</h1>
+            <p className="sub">
+              Crie sua conta para acompanhar metas, tempo de leitura e a edição diária.
+            </p>
+          </div>
 
-          <form className="mt-8 space-y-5" onSubmit={onSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <Input
-                id="name"
-                required
-                maxLength={120}
-                autoComplete="name"
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-                placeholder="Maria Silva"
-                className="h-12 rounded-lg"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                maxLength={255}
-                autoComplete="email"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                placeholder="voce@empresa.com"
-                className="h-12 rounded-lg"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone (WhatsApp)</Label>
-              <Input
-                id="phone"
-                type="tel"
-                required
-                maxLength={30}
-                autoComplete="tel"
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                placeholder="(11) 99999-0000"
-                className="h-12 rounded-lg"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                minLength={8}
-                maxLength={72}
-                autoComplete="new-password"
-                value={form.password}
-                onChange={(e) => set("password", e.target.value)}
-                placeholder="Mínimo de 8 caracteres"
-                className="h-12 rounded-lg"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-12 w-full rounded-lg text-base font-bold"
+          <div className="two-col" style={{ paddingBottom: 64 }}>
+            <section
+              className="panel-form"
+              style={{ padding: 28, boxShadow: "var(--p-shadow)", maxWidth: 560 }}
             >
-              {loading ? "Criando conta..." : "Criar minha conta"}
-            </Button>
-          </form>
+              <form noValidate style={{ display: "grid", gap: 14 }} onSubmit={onSubmit}>
+                {field("name", "Nome completo", {
+                  maxLength: 120,
+                  autoComplete: "name",
+                  placeholder: "Maria Silva",
+                })}
+                <div className="two">
+                  {field("email", "E-mail", {
+                    type: "email",
+                    inputMode: "email",
+                    maxLength: 255,
+                    autoComplete: "email",
+                    placeholder: "voce@empresa.com",
+                  })}
+                  {field("phone", "Telefone (WhatsApp)", {
+                    type: "tel",
+                    maxLength: 30,
+                    autoComplete: "tel",
+                    placeholder: "(11) 99999-0000",
+                  })}
+                </div>
+                {field("password", "Senha", {
+                  type: "password",
+                  minLength: 8,
+                  maxLength: 72,
+                  autoComplete: "new-password",
+                  placeholder: "Mínimo de 8 caracteres",
+                })}
+                <button className="btn blue wide" type="submit" disabled={loading}>
+                  {loading ? "Criando conta..." : "Criar minha conta"}
+                </button>
+                <p className={"msg" + (error ? " err" : "")} role="status" aria-live="polite">
+                  {error}
+                </p>
+              </form>
+              <p className="fine">
+                Já tem conta? <Link to="/auth">Entrar</Link>
+              </p>
+            </section>
 
-          <p className="mt-6 text-sm text-muted-foreground">
-            Já tem conta?{" "}
-            <Link to="/auth" className="font-semibold text-primary hover:underline">
-              Entrar
-            </Link>
-          </p>
+            <aside style={{ display: "grid", gap: 16, alignContent: "start" }}>
+              <h2 className="h-big">O que você desbloqueia agora</h2>
+              <div className="cols3" style={{ gridTemplateColumns: "1fr", gap: 14 }}>
+                <div>
+                  <h3>Meus Hábitos</h3>
+                  <p>Tempo de leitura, metas semanais e sequência de dias.</p>
+                </div>
+                <div>
+                  <h3>Histórico</h3>
+                  <p>Tudo o que você leu, organizado por editoria.</p>
+                </div>
+                <div>
+                  <h3>Edição diária</h3>
+                  <p>O resumo do dia antes das 8h.</p>
+                </div>
+                <div>
+                  <h3>Ranking IA</h3>
+                  <p>O placar dos modelos atualizado a cada edição.</p>
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
-
-        <aside className="hidden rounded-2xl bg-secondary/60 p-10 lg:block">
-          <h2 className="text-2xl font-extrabold leading-tight">
-            O que você desbloqueia agora
-          </h2>
-          <ul className="mt-6 space-y-4 text-muted-foreground">
-            <li>
-              <strong className="text-foreground">Meus Hábitos.</strong> Tempo de leitura,
-              metas semanais e sequência de dias.
-            </li>
-            <li>
-              <strong className="text-foreground">Histórico.</strong> Tudo o que você leu,
-              organizado por editoria.
-            </li>
-            <li>
-              <strong className="text-foreground">Edição diária.</strong> O resumo do dia
-              antes das 8h.
-            </li>
-            <li>
-              <strong className="text-foreground">Ranking IA.</strong> O placar dos modelos
-              atualizado a cada edição.
-            </li>
-          </ul>
-        </aside>
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }
