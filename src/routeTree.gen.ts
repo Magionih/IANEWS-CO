@@ -33,6 +33,7 @@ import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
@@ -160,6 +161,11 @@ const ApiPublicEngagementRoute = ApiPublicEngagementRouteImport.update({
   path: '/api/public/engagement',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
   id: '/api/public/track',
   path: '/api/public/track',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
+    | '/api/public/health'
     | '/api/public/track'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
+    | '/api/public/health'
     | '/api/public/track'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
+    | '/api/public/health'
     | '/api/public/track'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
@@ -410,6 +422,7 @@ export interface RootRouteChildren {
   ApiPublicAdMetricsRoute: typeof ApiPublicAdMetricsRoute
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
@@ -588,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEngagementRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/track': {
       id: '/api/public/track'
       path: '/api/public/track'
@@ -670,6 +690,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAdMetricsRoute: ApiPublicAdMetricsRoute,
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
