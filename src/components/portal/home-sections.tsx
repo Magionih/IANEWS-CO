@@ -6,6 +6,7 @@ import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-sub
 import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
 import { useCtaImpression } from "@/hooks/use-cta-impression";
 import type { ArticleRow } from "@/lib/articles.functions";
+import { RankLogo } from "@/components/portal/rank-shared";
 import type { AiTool } from "@/lib/ai-ranking.functions";
 
 /* Peças da página inicial no padrão do IANews Portal (ver renderHome/card/rankRowHome no protótipo). */
@@ -210,42 +211,8 @@ function HomeNewsItem({ a, withBiz }: { a: ArticleRow; withBiz: boolean }) {
 }
 
 /* ---------- Ranking IA (top 5) ---------- */
-function logoSources(t: AiTool): string[] {
-  const out: string[] = [];
-  if (t.icon) out.push(`https://cdn.simpleicons.org/${t.icon}`);
-  try {
-    const host = new URL(t.website).hostname.replace(/^www\./, "");
-    if (host) out.push(`https://www.google.com/s2/favicons?sz=128&domain=${host}`);
-  } catch {
-    /* sem site */
-  }
-  return out;
-}
-
 function LogoTile({ t }: { t: AiTool }) {
-  const sources = useMemo(() => logoSources(t), [t]);
-  const [i, setI] = useState(0);
-  const src = sources[i];
-  return (
-    <span className="logo-tile" aria-hidden="true">
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          width={24}
-          height={24}
-          loading="lazy"
-          style={{ width: 24, height: 24, objectFit: "contain" }}
-          onError={() => setI((n) => n + 1)}
-        />
-      ) : (
-        t.name
-          .replace(/[^A-Za-zÀ-ú0-9]/g, "")
-          .slice(0, 1)
-          .toUpperCase()
-      )}
-    </span>
-  );
+  return <RankLogo m={t} />;
 }
 
 function fmtScore(n: number) {

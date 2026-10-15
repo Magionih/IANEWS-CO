@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Star } from "lucide-react";
 
 import type { AiTool } from "@/lib/ai-ranking.functions";
@@ -79,6 +79,12 @@ export function RankLogo({ m, className }: { m: AiTool; className?: string }) {
   }, [m.id]);
 
   const src = sources[index];
+  const imgRef = useRef<HTMLImageElement>(null);
+  // Erros de imagem antes da hidratação não disparam onError: confere ao montar.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth === 0) setIndex((i) => i + 1);
+  }, [src]);
   return (
     <span className={"logo-tile" + (className ? " " + className : "")} aria-hidden="true">
       {src ? (
@@ -89,7 +95,12 @@ export function RankLogo({ m, className }: { m: AiTool; className?: string }) {
           width={24}
           height={24}
           className="rk-logo-img"
+          ref={imgRef}
           onError={() => setIndex((i) => i + 1)}
+          onLoad={(e) => {
+            // ícone genérico de 16px do serviço de favicons = sem logo real
+            if (e.currentTarget.naturalWidth <= 16) setIndex((i) => i + 1);
+          }}
         />
       ) : (
         m.name

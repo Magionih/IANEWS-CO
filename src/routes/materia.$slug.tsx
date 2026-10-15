@@ -29,8 +29,8 @@ function splitBody(markdown: string): [string, string] {
   const blocks = markdown.split(/\n{2,}/).filter((b) => b.trim().length > 0);
   if (blocks.length < 5) return [markdown, ""];
   let cut = Math.round(blocks.length * 0.45);
-  // não cortar logo antes de um título órfão
-  while (cut < blocks.length - 1 && blocks[cut]!.trim().startsWith("#")) cut += 1;
+  // não deixar um intertítulo órfão antes da chamada de newsletter
+  while (cut < blocks.length - 1 && blocks[cut - 1]!.trim().startsWith("#")) cut += 1;
   return [blocks.slice(0, cut).join("\n\n"), blocks.slice(cut).join("\n\n")];
 }
 
