@@ -4,8 +4,11 @@ import { timingSafeEqual } from "node:crypto";
 
 export function cronUnauthorized(request: Request): Response | null {
   const secret = process.env.CRON_SECRET;
-  if (!secret || secret.length < 16) {
+  if (!secret) {
     return Response.json({ ok: false, error: "CRON_SECRET não configurado." }, { status: 503 });
+  }
+  if (secret.length < 16) {
+    return Response.json({ ok: false, error: "CRON_SECRET muito curto (mínimo 16 caracteres)." }, { status: 503 });
   }
   const header = request.headers.get("authorization") ?? "";
   const expected = Buffer.from(`Bearer ${secret}`);
