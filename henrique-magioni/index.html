@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Henrique Magioni</title>
+<meta name="description" content="Empresário. Negócios, mídia e tecnologia. Fundador da IA News e da Sinmed. Mentoria e contato.">
+<meta property="og:title" content="Henrique Magioni">
+<meta property="og:description" content="Negócios, mídia e tecnologia. Fundador da IA News e da Sinmed.">
+<meta property="og:image" content="avatar.jpg">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="avatar.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --card: #141416;
+    --card-hover: #1a1a1d;
+    --line: #26262a;
+    --text: #f4f2ee;
+    --muted: #9a9893;
+    --accent: #d8c3a0;
+    --ok: #9fd4b0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 "Inter Tight", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0 0 auto 0; height: 420px; z-index: -1;
+    background: radial-gradient(60% 100% at 50% 0%, rgba(216, 195, 160, .13), transparent 70%);
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 56px 16px 40px; }
+
+  .perfil { text-align: center; }
+  .foto { position: relative; width: 104px; height: 104px; margin: 0 auto 18px; }
+  .foto img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+  .selo { position: absolute; right: 2px; bottom: 4px; width: 24px; height: 24px; }
+  h1 { font: 400 44px/1.05 "Instrument Serif", Georgia, serif; margin: 0; letter-spacing: -.01em; }
+  .papel { margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+  .frase { margin: 18px auto 0; max-width: 400px; font: italic 400 21px/1.35 "Instrument Serif", Georgia, serif; color: var(--accent); }
+  .acoes { display: flex; gap: 10px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px;
+    font: 500 15px "Inter Tight", sans-serif; text-decoration: none; cursor: pointer; border: 1px solid var(--line);
+    color: var(--text); background: transparent; transition: background .2s, border-color .2s;
+  }
+  .btn:hover { border-color: #3a3a40; background: var(--card); }
+  .btn.principal { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn.principal:hover { background: #fff; }
+
+  h2 {
+    font: 600 12px "Inter Tight", sans-serif; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted); margin: 52px 0 14px;
+  }
+  .empresa {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin-bottom: 12px;
+  }
+  .empresa header { display: flex; align-items: center; gap: 14px; }
+  .marca {
+    flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+    font: 600 15px "Inter Tight", sans-serif; letter-spacing: -.02em;
+  }
+  .marca.ianews { background: #000; color: #fff; border: 1px solid #333; }
+  .marca.sinmed { background: #1f4e5f; color: #f8f7f4; font: 400 24px "Instrument Serif", serif; }
+  .marca.fgia { background: #22201c; color: var(--accent); border: 1px solid #3a352c; font-size: 13px; }
+  .empresa h3 { margin: 0; font-size: 18px; font-weight: 600; }
+  .empresa .cargo { margin: 0; color: var(--muted); font-size: 14px; }
+  .empresa p.desc { margin: 14px 0 0; color: #cfccc6; font-size: 15px; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .links a {
+    padding: 8px 14px; border-radius: 999px; background: #1e1e21; border: 1px solid var(--line);
+    color: var(--text); text-decoration: none; font-size: 14px; transition: background .2s;
+  }
+  .links a:hover { background: #26262a; }
+  .links a.destaque { background: var(--accent); color: #1a1712; border-color: var(--accent); font-weight: 500; }
+
+  .mentoria { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px 20px; }
+  .mentoria h3 { font: 400 30px/1.1 "Instrument Serif", Georgia, serif; margin: 0 0 10px; }
+  .mentoria > p { margin: 0 0 22px; color: #cfccc6; }
+  form { display: grid; gap: 14px; }
+  label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+  input, select, textarea {
+    width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0f0f11;
+    color: var(--text); font: 16px "Inter Tight", sans-serif; outline: none; transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 110px; resize: vertical; }
+  select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 55%, calc(100% - 15px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .aceite { grid-template-columns: auto 1fr; align-items: start; gap: 10px; font-size: 13px; }
+  .aceite input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+  .escondido { position: absolute; left: -9999px; }
+  form .btn.principal { justify-content: center; width: 100%; padding: 15px; font-size: 16px; }
+  .btn[disabled] { opacity: .6; cursor: wait; }
+  .aviso { margin: 0; font-size: 14px; color: #e8a598; }
+  .sucesso { display: none; text-align: center; padding: 24px 0 8px; }
+  .sucesso strong { display: block; font: 400 30px "Instrument Serif", serif; color: var(--ok); margin-bottom: 6px; }
+  .sucesso p { margin: 0; color: #cfccc6; }
+  .enviado form { display: none; }
+  .enviado .sucesso { display: block; }
+
+  footer { margin-top: 48px; text-align: center; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--text); text-decoration: none; }
+  .redes { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; }
+  .redes a { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; }
+  .redes a:hover { background: var(--card); }
+
+  @media (max-width: 420px) {
+    main { padding-top: 40px; }
+    h1 { font-size: 38px; }
+    .duas { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="perfil">
+    <div class="foto">
+      <img src="avatar.jpg" alt="Henrique Magioni" width="104" height="104">
+      <svg class="selo" viewBox="0 0 24 24" aria-label="Perfil verificado"><path fill="#3897f0" d="M12 1l2.6 2.2 3.4-.3.9 3.3 3 1.6-1.2 3.2 1.2 3.2-3 1.6-.9 3.3-3.4-.3L12 23l-2.6-2.2-3.4.3-.9-3.3-3-1.6L3.3 13 2.1 9.8l3-1.6.9-3.3 3.4.3z"/><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7.5 12.2l3 3 6-6.2"/></svg>
+    </div>
+    <h1>Henrique Magioni</h1>
+    <p class="papel">Empresário · Negócios, mídia e tecnologia</p>
+    <p class="frase">Crescimento, estratégia e oportunidade.</p>
+    <div class="acoes">
+      <a class="btn principal" href="#mentoria">Quero uma mentoria</a>
+      <a class="btn" href="https://instagram.com/henriquemagioni" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </section>
+
+  <h2>Empresas</h2>
+
+  <article class="empresa">
+    <header>
+      <div class="marca ianews" aria-hidden="true">IA</div>
+      <div><h3>IA News</h3><p class="cargo">Fundador</p></div>
+    </header>
+    <p class="desc">Jornalismo brasileiro sobre inteligência artificial para quem decide: notícias todos os dias, análise para empresas e o Ranking IA das melhores ferramentas.</p>
+    <div class="links">
+      <a class="destaque" href="https://ianewsbr.com" target="_blank" rel="noopener">ianewsbr.com</a>
+      <a href="https://ianewsbr.com/newsletter" target="_blank" rel="noopener">Newsletter grátis</a>
+      <a href="https://ianewsbr.com/ranking" target="_blank" rel="noopener">Ranking IA</a>
+      <a href="https://ianewsbr.com/anuncie" target="_blank" rel="noopener">Anuncie</a>
+      <a href="https://instagram.com/ianews.co" target="_blank" rel="noopener">@ianews.co</a>
+    </div>
+  </article>
+
+  <article class="empresa">
+    <header>
+      <div class="marca sinmed" aria-hidden="true">S</div>
+      <div><h3>Sinmed</h3><p class="cargo">Fundador</p></div>
+    </header>
+    <p class="desc">Tecnologia para clínicas e consultórios: uma secretária virtual no WhatsApp da própria clínica, ligada à agenda e ao sistema de gestão. O paciente chama e a consulta já entra na agenda.</p>
+    <div class="links">
+      <a class="destaque" href="https://sinmed.site" target="_blank" rel="noopener">sinmed.site</a>
+      <a href="https://sinmed.site" target="_blank" rel="noopener">Diagnóstico gratuito</a>
+      <a href="https://instagram.com/sinmed.co" target="_blank" rel="noopener">@sinmed.co</a>
+    </div>
+  </article>
+
+  <!-- FGIA: preencher descrição, cargo e links -->
+  <article class="empresa">
+    <header>
+      <div class="marca fgia" aria-hidden="true">FGIA</div>
+      <div><h3>FGIA</h3><p class="cargo">Fundador</p></div>
+    </header>
+    <p class="desc">Em breve.</p>
+  </article>
+
+  <h2 id="mentoria">Mentoria e contato</h2>
+  <section class="mentoria" id="caixa-form">
+    <h3>Vamos conversar</h3>
+    <p>Mentoria para quem quer empreender, crescer com estratégia e usar mídia e tecnologia a favor do negócio. Também para parcerias, imprensa e projetos. Conte um pouco sobre você e eu retorno pessoalmente.</p>
+
+    <form name="contato" method="POST" action="/obrigado.html" data-netlify="true" netlify-honeypot="empresa-site" id="form">
+      <input type="hidden" name="form-name" value="contato">
+      <p class="escondido"><label>Não preencha <input name="empresa-site" tabindex="-1" autocomplete="off"></label></p>
+
+      <label>Nome
+        <input name="nome" required autocomplete="name" placeholder="Seu nome completo">
+      </label>
+      <div class="duas">
+        <label>WhatsApp
+          <input name="whatsapp" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(31) 99999-9999">
+        </label>
+        <label>E-mail
+          <input name="email" type="email" required autocomplete="email" placeholder="voce@email.com">
+        </label>
+      </div>
+      <div class="duas">
+        <label>Assunto
+          <select name="assunto" required>
+            <option value="Mentoria" selected>Mentoria</option>
+            <option value="Parceria ou negócios">Parceria ou negócios</option>
+            <option value="IA News">IA News (mídia, anúncio, pauta)</option>
+            <option value="Sinmed">Sinmed (clínicas)</option>
+            <option value="FGIA">FGIA</option>
+            <option value="Palestra ou evento">Palestra ou evento</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </label>
+        <label>Você é
+          <select name="perfil">
+            <option value="Empresário(a)">Empresário(a)</option>
+            <option value="Quero empreender">Quero empreender</option>
+            <option value="Profissional / executivo(a)">Profissional / executivo(a)</option>
+            <option value="Estudante">Estudante</option>
+            <option value="Imprensa">Imprensa</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </label>
+      </div>
+      <label>Instagram ou empresa <span style="opacity:.7">(opcional)</span>
+        <input name="instagram_empresa" placeholder="@seuperfil ou nome da empresa">
+      </label>
+      <label>Como posso te ajudar?
+        <textarea name="mensagem" required placeholder="Seu momento, o desafio principal e o que espera da conversa."></textarea>
+      </label>
+      <label class="aceite">
+        <input type="checkbox" name="aceite" value="sim" required>
+        <span>Aceito ser contatado(a) por WhatsApp ou e-mail sobre este pedido. Seus dados são usados só para responder.</span>
+      </label>
+      <p class="aviso" id="aviso" hidden></p>
+      <button class="btn principal" type="submit" id="enviar">Enviar</button>
+    </form>
+
+    <div class="sucesso" role="status">
+      <strong>Recebido.</strong>
+      <p>Obrigado pelo contato. Eu leio cada mensagem e retorno pelo WhatsApp ou e-mail.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="redes">
+      <a href="https://instagram.com/henriquemagioni" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+    </div>
+    <p>© <span id="ano">2026</span> Henrique Magioni · Belo Horizonte</p>
+  </footer>
+</main>
+
+<script>
+  document.getElementById("ano").textContent = new Date().getFullYear();
+
+  const tel = document.querySelector('input[name="whatsapp"]');
+  tel.addEventListener("input", () => {
+    const d = tel.value.replace(/\D/g, "").slice(0, 11);
+    tel.value = d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`
+      : d.length > 2 ? `(${d.slice(0, 2)}) ${d.slice(2)}` : d;
+  });
+
+  // ?assunto=Sinmed na URL já deixa o assunto escolhido (útil para links da bio)
+  const assunto = new URLSearchParams(location.search).get("assunto");
+  if (assunto) {
+    const opcao = [...document.querySelectorAll('select[name="assunto"] option')].find(
+      (o) => o.value.toLowerCase() === assunto.toLowerCase());
+    if (opcao) opcao.selected = true;
+  }
+
+  const form = document.getElementById("form");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const botao = document.getElementById("enviar");
+    const aviso = document.getElementById("aviso");
+    botao.disabled = true;
+    botao.textContent = "Enviando…";
+    aviso.hidden = true;
+    try {
+      const resposta = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(new FormData(form)).toString(),
+      });
+      if (!resposta.ok) throw new Error(resposta.status);
+      document.getElementById("caixa-form").classList.add("enviado");
+    } catch {
+      aviso.textContent = "Não foi possível enviar agora. Tente de novo em instantes ou me chame no Instagram.";
+      aviso.hidden = false;
+      botao.disabled = false;
+      botao.textContent = "Enviar";
+    }
+  });
+</script>
+</body>
+</html>
