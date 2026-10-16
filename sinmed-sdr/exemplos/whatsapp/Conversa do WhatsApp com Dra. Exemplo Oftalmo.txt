@@ -1,0 +1,7 @@
+02/10/2026 10:12 - As mensagens e as chamadas são protegidas com a criptografia de ponta a ponta.
+02/10/2026 10:12 - Renata Sinmed: Oi, Dra. Exemplo! Aqui é a Renata, da Sinmed, de BH. A gente coloca uma secretária virtual no WhatsApp da clínica, junto com a recepção. Posso te enviar uma apresentação curta, em PDF?
+02/10/2026 11:40 - Dra. Exemplo Oftalmo: Pode mandar sim
+02/10/2026 11:45 - Renata Sinmed: <Mídia oculta>
+02/10/2026 11:45 - Renata Sinmed: Segue a apresentação! Qualquer dúvida estou por aqui.
+03/10/2026 18:02 - Dra. Exemplo Oftalmo: Achei interessante. Mas a gente já usa o HiDoctor e não quero trocar de sistema agora.
+03/10/2026 18:03 - Dra. Exemplo Oftalmo: Quanto fica?

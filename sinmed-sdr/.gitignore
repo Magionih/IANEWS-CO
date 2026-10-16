@@ -1,0 +1,6 @@
+# conversas e planilhas reais têm dados de contato: nunca versionar
+dados/
+saida/
+__pycache__/
+*.pyc
+.venv/
