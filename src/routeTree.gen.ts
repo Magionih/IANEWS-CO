@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
 import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as GenteRouteImport } from './routes/gente'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
@@ -37,6 +38,7 @@ import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
+import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
@@ -80,6 +82,11 @@ const ConfirmarRoute = ConfirmarRouteImport.update({
 const ContatoRoute = ContatoRouteImport.update({
   id: '/contato',
   path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DescadastrarRoute = DescadastrarRouteImport.update({
+  id: '/descadastrar',
+  path: '/descadastrar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmpresasRoute = EmpresasRouteImport.update({
@@ -183,6 +190,11 @@ const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
   path: '/api/public/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
+  id: '/api/public/unsubscribe',
+  path: '/api/public/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksDailyNewsletterRoute =
   ApiPublicHooksDailyNewsletterRouteImport.update({
     id: '/api/public/hooks/daily-newsletter',
@@ -221,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
+  '/descadastrar': typeof DescadastrarRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/newsletter': typeof NewsletterRoute
@@ -241,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
@@ -255,6 +269,7 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
+  '/descadastrar': typeof DescadastrarRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/newsletter': typeof NewsletterRoute
@@ -275,6 +290,7 @@ export interface FileRoutesByTo {
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
@@ -291,6 +307,7 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
+  '/descadastrar': typeof DescadastrarRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/newsletter': typeof NewsletterRoute
@@ -311,6 +328,7 @@ export interface FileRoutesById {
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
@@ -327,6 +345,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
+    | '/descadastrar'
     | '/empresas'
     | '/gente'
     | '/newsletter'
@@ -347,6 +366,7 @@ export interface FileRouteTypes {
     | '/api/public/engagement'
     | '/api/public/health'
     | '/api/public/track'
+    | '/api/public/unsubscribe'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
@@ -361,6 +381,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
+    | '/descadastrar'
     | '/empresas'
     | '/gente'
     | '/newsletter'
@@ -381,6 +402,7 @@ export interface FileRouteTypes {
     | '/api/public/engagement'
     | '/api/public/health'
     | '/api/public/track'
+    | '/api/public/unsubscribe'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
@@ -396,6 +418,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/confirmar'
     | '/contato'
+    | '/descadastrar'
     | '/empresas'
     | '/gente'
     | '/newsletter'
@@ -416,6 +439,7 @@ export interface FileRouteTypes {
     | '/api/public/engagement'
     | '/api/public/health'
     | '/api/public/track'
+    | '/api/public/unsubscribe'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
@@ -432,6 +456,7 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   ConfirmarRoute: typeof ConfirmarRoute
   ContatoRoute: typeof ContatoRoute
+  DescadastrarRoute: typeof DescadastrarRoute
   EmpresasRoute: typeof EmpresasRoute
   GenteRoute: typeof GenteRoute
   NewsletterRoute: typeof NewsletterRoute
@@ -450,6 +475,7 @@ export interface RootRouteChildren {
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
+  ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
@@ -513,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/contato'
       fullPath: '/contato'
       preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/descadastrar': {
+      id: '/descadastrar'
+      path: '/descadastrar'
+      fullPath: '/descadastrar'
+      preLoaderRoute: typeof DescadastrarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/empresas': {
@@ -655,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/unsubscribe': {
+      id: '/api/public/unsubscribe'
+      path: '/api/public/unsubscribe'
+      fullPath: '/api/public/unsubscribe'
+      preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-newsletter': {
       id: '/api/public/hooks/daily-newsletter'
       path: '/api/public/hooks/daily-newsletter'
@@ -715,6 +755,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   ConfirmarRoute: ConfirmarRoute,
   ContatoRoute: ContatoRoute,
+  DescadastrarRoute: DescadastrarRoute,
   EmpresasRoute: EmpresasRoute,
   GenteRoute: GenteRoute,
   NewsletterRoute: NewsletterRoute,
@@ -734,6 +775,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
+  ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,

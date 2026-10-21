@@ -11,7 +11,7 @@ import { emailSuggestions, formatPhoneBR } from "@/lib/form-format";
 const WHATSAPP_URL = "https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL";
 
 const PERKS = [
-  "Edição diária no e-mail antes das 8h",
+  "Edição diária no e-mail todo dia às 7h",
   "Alertas de mercado em tempo real no WhatsApp",
   "Ranking IA completo, atualizado a cada edição",
   "Análises de impacto para o seu negócio",
@@ -25,11 +25,11 @@ export const Route = createFileRoute("/assinar")({
   }),
   head: () => ({
     meta: [
-      { title: "Assine a newsletter do IA News — grátis, todo dia útil" },
+      { title: "Assine a newsletter do IA News — grátis, todo dia às 7h" },
       {
         name: "description",
         content:
-          "Receba a edição diária do IA News antes das 8h: notícias, análises e o Ranking IA com impacto real para o seu negócio. Grátis.",
+          "Receba a edição diária do IA News todo dia às 7h: notícias, análises e o Ranking IA com impacto real para o seu negócio. Grátis.",
       },
       { property: "og:title", content: "Assine a newsletter do IA News" },
       {
@@ -135,7 +135,7 @@ function AssinarPage() {
             <h1>5 minutos por dia. Zero hype.</h1>
             <p className="sub">
               Tudo o que muda na inteligência artificial, com a análise de impacto para quem precisa
-              decidir. Grátis, todo dia útil antes das 8h.
+              decidir. Grátis, todo dia às 7h.
             </p>
           </div>
 

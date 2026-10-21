@@ -7,6 +7,7 @@ import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-sub
 import { CATEGORY_MAP, type CategoryKey } from "@/components/site/category-chip";
 import { getArticleBySlug } from "@/lib/articles.functions";
 import { submitContactMessage } from "@/lib/contact.functions";
+import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 const PAGE_URL = "https://ianewsbr.com/gente";
 const TITLE = "Gente — quem faz a IA no Brasil | IA News";
@@ -562,6 +563,7 @@ function IndicacaoForm() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const newsletter = wantsNewsletter(e);
     if (sending) return;
     if (hp.current?.value) {
       setMsg({ t: "Indicação enviada. Obrigado!", ok: true });
@@ -579,6 +581,7 @@ function IndicacaoForm() {
       const motivo = form.motivo.trim();
       await submitContactMessage({
         data: {
+          newsletter,
           kind: "contato",
           full_name: form.nome,
           email: form.email,
@@ -662,6 +665,7 @@ function IndicacaoForm() {
           onChange={(e) => set("motivo", e.target.value)}
         />
       </label>
+      <NewsletterOptIn />
       <div>
         <button className="btn" type="submit" disabled={sending}>
           {sending ? "Enviando..." : "Enviar indicação"}

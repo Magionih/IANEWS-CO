@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cronUnauthorized } from "@/lib/cron-auth.server";
 
 async function handle(request: Request) {
-  const denied = cronUnauthorized(request);
+  const denied = await cronUnauthorized(request);
   if (denied) return denied;
   try {
     const { runDailyPush } = await import("@/lib/push.server");

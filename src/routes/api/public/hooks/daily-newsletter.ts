@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cronUnauthorized, emailSendingEnabled, readJson } from "@/lib/cron-auth.server";
 
 async function handle(request: Request) {
-  const denied = cronUnauthorized(request);
+  const denied = await cronUnauthorized(request);
   if (denied) return denied;
   try {
     const body = await readJson<{ limit: number; ingest: boolean }>(request);
     if (!emailSendingEnabled()) {
-      return Response.json({ ok: true, skipped: "Envio da newsletter desligado (NEWSLETTER_ENABLED)." });
+      return Response.json({ ok: true, skipped: "Envio de e-mails desligado (sem RESEND_API_KEY ou NEWSLETTER_ENABLED=false)." });
     }
     let ingested = 0;
     if (body.ingest === true) {
@@ -20,7 +20,7 @@ async function handle(request: Request) {
       }
     }
     const { runDailyNewsletter } = await import("@/lib/newsletter.server");
-    const result = await runDailyNewsletter({ limit: body.limit ?? 5, triggeredBy: "cron" });
+    const result = await runDailyNewsletter({ limit: body.limit ?? 8, triggeredBy: "cron" });
     return Response.json({ ingested, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -122,7 +122,7 @@ export function SubscribeDialog() {
             <h2 id="pop-title">5 minutos por dia. Zero hype.</h2>
             <p className="lead-p">A IA muda todo dia. Receba só o que importa para o seu negócio.</p>
             <ul className="ticks small">
-              <li>Todo dia útil, antes das 8h</li>
+              <li>Todo dia às 7h da manhã</li>
               <li>Ranking IA toda segunda</li>
               <li>Grátis, cancele quando quiser</li>
             </ul>

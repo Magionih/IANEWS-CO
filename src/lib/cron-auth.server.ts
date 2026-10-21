@@ -1,27 +1,67 @@
 // Proteção das rotinas agendadas (/api/public/hooks/*).
-// A Vercel envia "Authorization: Bearer <CRON_SECRET>" nas chamadas de cron.
-import { timingSafeEqual } from "node:crypto";
+// Aceita duas origens:
+//  1. Vercel Cron: "Authorization: Bearer <CRON_SECRET>".
+//  2. pg_cron do Supabase: "x-ianews-cron-token: <token>", cujo SHA-256 fica em public.cron_tokens
+//     (o token em si fica só no Vault do banco).
+import { createHash, timingSafeEqual } from "node:crypto";
 
-export function cronUnauthorized(request: Request): Response | null {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return Response.json({ ok: false, error: "CRON_SECRET não configurado." }, { status: 503 });
+function safeEqual(a: string, b: string) {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+}
+
+let tokenHashCache: { hash: string | null; at: number } | null = null;
+
+async function dbTokenHash(): Promise<string | null> {
+  if (tokenHashCache && Date.now() - tokenHashCache.at < 5 * 60 * 1000) return tokenHashCache.hash;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("cron_tokens" as never)
+      .select("token_sha256")
+      .eq("name", "pg_cron")
+      .maybeSingle();
+    const hash = (data as { token_sha256?: string } | null)?.token_sha256 ?? null;
+    tokenHashCache = { hash, at: Date.now() };
+    return hash;
+  } catch {
+    return null;
   }
-  if (secret.length < 16) {
-    return Response.json({ ok: false, error: "CRON_SECRET muito curto (mínimo 16 caracteres)." }, { status: 503 });
+}
+
+export async function cronUnauthorized(request: Request): Promise<Response | null> {
+  const dbToken = request.headers.get("x-ianews-cron-token");
+  if (dbToken && dbToken.length >= 32) {
+    const expected = await dbTokenHash();
+    const got = createHash("sha256").update(dbToken).digest("hex");
+    if (expected && safeEqual(got, expected)) return null;
+    return Response.json({ ok: false, error: "Não autorizado." }, { status: 401 });
+  }
+
+  const secret = process.env.CRON_SECRET;
+  if (!secret || secret.length < 16) {
+    return Response.json({ ok: false, error: "Não autorizado." }, { status: 401 });
   }
   const header = request.headers.get("authorization") ?? "";
-  const expected = Buffer.from(`Bearer ${secret}`);
-  const got = Buffer.from(header);
-  if (got.length !== expected.length || !timingSafeEqual(got, expected)) {
+  if (!safeEqual(header, `Bearer ${secret}`)) {
     return Response.json({ ok: false, error: "Não autorizado." }, { status: 401 });
   }
   return null;
 }
 
-/** Envio de e-mails para a base só acontece com NEWSLETTER_ENABLED=true. */
+/** Quem disparou a rotina (para registro). */
+export function cronSource(request: Request): "pg_cron" | "vercel" {
+  return request.headers.get("x-ianews-cron-token") ? "pg_cron" : "vercel";
+}
+
+/**
+ * Envio de e-mails para a base. Ligado por padrão quando há chave do Resend;
+ * pode ser desligado com NEWSLETTER_ENABLED=false.
+ */
 export function emailSendingEnabled(): boolean {
-  return process.env.NEWSLETTER_ENABLED === "true";
+  if (process.env.NEWSLETTER_ENABLED === "false") return false;
+  return Boolean(process.env.RESEND_API_KEY);
 }
 
 export async function readJson<T extends object>(request: Request): Promise<Partial<T>> {

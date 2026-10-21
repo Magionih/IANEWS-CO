@@ -126,8 +126,8 @@ function ConfirmPage() {
               <>
                 {mark(true)}
                 <p style={{ color: "var(--p-ink-2)", fontSize: 16, lineHeight: 1.5 }}>
-                  A edição diária do IA News chega no seu e-mail antes das 8h, com análise de
-                  impacto para quem precisa decidir.
+                  A edição diária da IANews chega no seu e-mail todo dia às 7h, com as notícias de
+                  IA do dia anterior explicadas para quem decide.
                 </p>
               </>
             ) : null}

@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@react-email/render";
-import { sendLovableEmail, EmailAPIError } from "@/lib/email.server";
+import { EmailAPIError, sendEmail, sendEmailBatch } from "@/lib/email.server";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DailyNewsletter, type NewsletterArticle } from "@/lib/newsletter-template";
@@ -8,7 +8,11 @@ import { NEWSLETTER_PREVIEW_ARTICLES } from "@/lib/email-templates/daily-newslet
 
 export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
 export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "ianewsbr.com";
-export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IA News <news@${SENDER_DOMAIN}>`;
+export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IANews <news@${SENDER_DOMAIN}>`;
+const REPLY_TO = process.env.EMAIL_REPLY_TO ?? "magionih@gmail.com";
+
+const ARTICLE_FIELDS = "slug, title, dek, category, why_it_matters, read_minutes, cover_image_url, published_at";
+const MAX_ARTICLES = 8;
 
 export type NewsletterRunOptions = {
   limit?: number;
@@ -24,7 +28,28 @@ export type NewsletterRunResult = {
   delivered: number;
   failed: number;
   message: string;
+  skipped?: boolean;
 };
+
+/* ---------- datas no fuso de Brasília (UTC-3, sem horário de verão) ---------- */
+
+const BRT_OFFSET_H = 3;
+
+function brtParts(date = new Date()) {
+  const d = new Date(date.getTime() - BRT_OFFSET_H * 3600 * 1000);
+  return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate() };
+}
+
+/** Início do dia (00:00 em Brasília) em UTC. */
+function brtDayStart(date = new Date()) {
+  const p = brtParts(date);
+  return new Date(Date.UTC(p.y, p.m, p.d, BRT_OFFSET_H, 0, 0));
+}
+
+export function brtDateISO(date = new Date()) {
+  const p = brtParts(date);
+  return `${p.y}-${String(p.m + 1).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`;
+}
 
 function editionLabel(date = new Date()) {
   return date.toLocaleDateString("pt-BR", {
@@ -35,250 +60,302 @@ function editionLabel(date = new Date()) {
   });
 }
 
-function plainText(articles: NewsletterArticle[], label: string) {
+/* ---------- seleção das matérias ---------- */
+
+/**
+ * Matérias publicadas ontem (00:00–23:59 de Brasília). Se ontem não houve matéria,
+ * usa as das últimas 72h que ainda não foram em nenhuma edição — nunca repete edição.
+ */
+export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES) {
+  const todayStart = brtDayStart(now);
+  const yesterdayStart = new Date(todayStart.getTime() - 24 * 3600 * 1000);
+
+  const { data, error } = await supabaseAdmin
+    .from("articles")
+    .select(ARTICLE_FIELDS)
+    .gte("published_at", yesterdayStart.toISOString())
+    .lt("published_at", todayStart.toISOString())
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`Falha ao carregar matérias: ${error.message}`);
+  if (data && data.length > 0) return { articles: data as NewsletterArticle[], window: "ontem" as const };
+
+  const since = new Date(todayStart.getTime() - 72 * 3600 * 1000);
+  const [{ data: recent }, { data: lastSends }] = await Promise.all([
+    supabaseAdmin
+      .from("articles")
+      .select(ARTICLE_FIELDS)
+      .gte("published_at", since.toISOString())
+      .lt("published_at", todayStart.toISOString())
+      .order("published_at", { ascending: false })
+      .limit(limit * 2),
+    supabaseAdmin
+      .from("newsletter_sends")
+      .select("article_slugs")
+      .in("status", ["sent", "partial"])
+      .gte("created_at", new Date(since.getTime() - 24 * 3600 * 1000).toISOString()),
+  ]);
+  const used = new Set(((lastSends ?? []) as { article_slugs: string[] | null }[]).flatMap((r) => r.article_slugs ?? []));
+  const fresh = ((recent ?? []) as NewsletterArticle[]).filter((a) => !used.has(a.slug)).slice(0, limit);
+  return { articles: fresh, window: "72h" as const };
+}
+
+/* ---------- renderização ---------- */
+
+const NAME_TOKEN = "__IANEWS_NAME__";
+const UNSUB_TOKEN = "__IANEWS_UNSUB__";
+
+function escapeHtml(v: string) {
+  return v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+export const unsubscribeUrlFor = (token: string) => `${SITE_URL}/descadastrar?t=${token}`;
+const oneClickUrlFor = (token: string) => `${SITE_URL}/api/public/unsubscribe?t=${token}`;
+
+function plainText(articles: NewsletterArticle[], label: string, unsub: string) {
   return [
-    `IA News — edição de ${label}`,
+    `IANews — edição de ${label}`,
     "",
-    ...articles.map(
-      (a, i) =>
-        `${i + 1}. ${a.title}\n${a.dek ?? ""}\n${SITE_URL}/materia/${a.slug}\n`,
-    ),
+    ...articles.map((a, i) => `${i + 1}. ${a.title}\n${a.dek ?? ""}\n${SITE_URL}/materia/${a.slug}\n`),
+    "",
+    `Cancelar inscrição: ${unsub}`,
   ].join("\n");
+}
+
+async function renderVariants(articles: NewsletterArticle[], label: string) {
+  const base = { editionLabel: label, siteUrl: SITE_URL, articles, unsubscribeUrl: UNSUB_TOKEN };
+  const [withName, noName] = await Promise.all([
+    render(React.createElement(DailyNewsletter, { ...base, recipientName: NAME_TOKEN })),
+    render(React.createElement(DailyNewsletter, { ...base, recipientName: null })),
+  ]);
+  return (name: string | null, token: string | null) => {
+    const unsub = token ? unsubscribeUrlFor(token) : `${SITE_URL}/newsletter`;
+    const html = (name ? withName.split(NAME_TOKEN).join(escapeHtml(name)) : noName).split(UNSUB_TOKEN).join(unsub);
+    return { html, text: plainText(articles, label, unsub) };
+  };
 }
 
 /** Mensagens legíveis para os erros mais comuns do serviço de e-mail. */
 function friendlyEmailError(err: unknown): string {
   if (err instanceof EmailAPIError) {
-    if (err.code === "domain_not_verified")
-      return "O domínio remetente (ianewsbr.com) ainda está em verificação de DNS. Os envios começam automaticamente assim que a verificação concluir.";
-    if (err.code === "emails_disabled")
-      return "O envio de e-mails está desativado para este projeto. Reative em Cloud → Emails.";
-    if (err.status === 429)
-      return `Limite de envio atingido. Tente novamente em ${err.retryAfterSeconds ?? 60} segundos.`;
-    return `Serviço de e-mail recusou o envio (${err.code ?? err.status}).`;
+    if (err.code === "domain_not_verified") return "Domínio remetente não verificado no Resend.";
+    if (err.code === "missing_api_key") return "RESEND_API_KEY não configurada.";
+    if (err.code === "quota_exceeded") return "Cota diária/mensal do Resend esgotada.";
+    if (err.status === 401 || err.status === 403) return "Chave do Resend inválida ou sem permissão.";
+    if (err.status === 429) return `Limite de envio atingido. Tente em ${err.retryAfterSeconds ?? 60}s.`;
+    return `Resend recusou o envio (${err.code ?? err.status}): ${err.message}`.slice(0, 300);
   }
   return err instanceof Error ? err.message : String(err);
 }
 
-/** HTML da newsletter para visualização do layout dentro do painel. */
+function isFatal(err: unknown) {
+  return (
+    err instanceof EmailAPIError &&
+    (["domain_not_verified", "missing_api_key", "quota_exceeded"].includes(err.code) ||
+      err.status === 401 ||
+      err.status === 403)
+  );
+}
+
+/** HTML da newsletter para visualização no painel (usa as matérias de ontem ou as mais recentes). */
 export async function renderNewsletterPreview(): Promise<{ html: string; subject: string; live: boolean }> {
   const label = editionLabel();
-  const { data } = await supabaseAdmin
-    .from("articles")
-    .select("slug, title, dek, category, why_it_matters, read_minutes")
-    .order("published_at", { ascending: false })
-    .limit(5);
-
-  const rows = (data ?? []) as NewsletterArticle[];
-  const live = rows.length > 0;
-  const articles = live ? rows : NEWSLETTER_PREVIEW_ARTICLES;
-
+  let { articles } = await articlesForEdition();
+  if (articles.length === 0) {
+    const { data } = await supabaseAdmin
+      .from("articles")
+      .select(ARTICLE_FIELDS)
+      .order("published_at", { ascending: false })
+      .limit(5);
+    articles = (data ?? []) as NewsletterArticle[];
+  }
+  const live = articles.length > 0;
+  if (!live) articles = NEWSLETTER_PREVIEW_ARTICLES;
   const html = await render(
     React.createElement(DailyNewsletter, {
       editionLabel: label,
       siteUrl: SITE_URL,
       articles,
       recipientName: null,
+      unsubscribeUrl: `${SITE_URL}/newsletter`,
     }),
   );
-  return { html, subject: `IA News · ${label} — ${articles[0].title}`, live };
+  return { html, subject: subjectFor(articles), live };
 }
 
-export async function runDailyNewsletter(
-  options: NewsletterRunOptions = {},
-): Promise<NewsletterRunResult> {
-  const limit = Math.max(1, Math.min(10, options.limit ?? 5));
+function subjectFor(articles: NewsletterArticle[]) {
+  const first = articles[0]?.title ?? "As notícias de IA de ontem";
+  const more = articles.length > 1 ? ` (+${articles.length - 1})` : "";
+  return `${first}${more}`.slice(0, 180);
+}
+
+/* ---------- envio ---------- */
+
+export async function runDailyNewsletter(options: NewsletterRunOptions = {}): Promise<NewsletterRunResult> {
+  const limit = Math.max(1, Math.min(10, options.limit ?? MAX_ARTICLES));
   const triggeredBy = options.triggeredBy ?? "cron";
-  const label = editionLabel();
+  const now = new Date();
+  const label = editionLabel(now);
+  const editionDate = brtDateISO(now);
+  const empty = (message: string, extra: Partial<NewsletterRunResult> = {}): NewsletterRunResult => ({
+    ok: false,
+    sendId: null,
+    subject: "",
+    recipients: 0,
+    delivered: 0,
+    failed: 0,
+    message,
+    ...extra,
+  });
 
-  const { data: articleRows, error: articlesError } = await supabaseAdmin
-    .from("articles")
-    .select("slug, title, dek, category, why_it_matters, read_minutes")
-    .order("published_at", { ascending: false })
-    .limit(limit);
-
-  if (articlesError) {
-    return {
-      ok: false,
-      sendId: null,
-      subject: "",
-      recipients: 0,
-      delivered: 0,
-      failed: 0,
-      message: `Falha ao carregar matérias: ${articlesError.message}`,
-    };
+  let articles: NewsletterArticle[];
+  try {
+    articles = (await articlesForEdition(now, limit)).articles;
+  } catch (err) {
+    return empty(err instanceof Error ? err.message : String(err));
   }
-
-  const articles = (articleRows ?? []) as NewsletterArticle[];
+  if (articles.length === 0 && options.testEmail) {
+    const { data } = await supabaseAdmin.from("articles").select(ARTICLE_FIELDS).order("published_at", { ascending: false }).limit(limit);
+    articles = (data ?? []) as NewsletterArticle[];
+  }
   if (articles.length === 0) {
-    return {
-      ok: false,
-      sendId: null,
-      subject: "",
-      recipients: 0,
-      delivered: 0,
-      failed: 0,
-      message: "Nenhuma matéria disponível para montar a edição.",
-    };
+    return empty("Nenhuma matéria nova desde a última edição. Edição de hoje não enviada.", { ok: true, skipped: true });
   }
 
-  const subject = `IA News · ${label} — ${articles[0].title}`;
+  const subject = subjectFor(articles);
+  const apiKey = process.env.RESEND_API_KEY;
+  const build = await renderVariants(articles, label);
 
-  let recipients: { id: string | null; email: string; full_name: string | null }[] = [];
+  // Envio de teste: um único e-mail, sem registro de edição.
   if (options.testEmail) {
-    recipients = [{ id: null, email: options.testEmail, full_name: null }];
-  } else {
-    const { data: leads, error: leadsError } = await supabaseAdmin
-      .from("leads")
-      .select("id, email, full_name")
-      .eq("is_active", true)
-      .is("unsubscribed_at", null)
-      .limit(5000);
-    if (leadsError) {
-      return {
-        ok: false,
-        sendId: null,
-        subject,
-        recipients: 0,
-        delivered: 0,
-        failed: 0,
-        message: `Falha ao carregar assinantes: ${leadsError.message}`,
-      };
+    if (!apiKey) return empty("RESEND_API_KEY não configurada.", { subject });
+    try {
+      const { html, text } = build(null, null);
+      await sendEmail({ to: options.testEmail, from: FROM_ADDRESS, subject: `[Teste] ${subject}`, html, text, reply_to: REPLY_TO, label: "daily-newsletter-test" }, { apiKey });
+      return { ok: true, sendId: null, subject, recipients: 1, delivered: 1, failed: 0, message: `Teste enviado para ${options.testEmail}.` };
+    } catch (err) {
+      return empty(friendlyEmailError(err), { subject, recipients: 1, failed: 1 });
     }
-    recipients = (leads ?? []) as typeof recipients;
   }
 
+  const { data: leads, error: leadsError } = await supabaseAdmin
+    .from("leads")
+    .select("id, email, full_name, confirm_token")
+    .eq("is_active", true)
+    .is("unsubscribed_at", null)
+    .order("created_at", { ascending: true })
+    .limit(20000);
+  if (leadsError) return empty(`Falha ao carregar assinantes: ${leadsError.message}`, { subject });
+  const recipients = (leads ?? []) as { id: string; email: string; full_name: string | null; confirm_token: string | null }[];
+
+  // Registra a edição. Para o envio automático, o índice único garante uma edição por dia.
   const { data: sendRow, error: sendError } = await supabaseAdmin
     .from("newsletter_sends")
     .insert({
       subject,
       status: "running",
+      kind: "daily",
+      edition_date: editionDate,
       recipients_count: recipients.length,
       article_slugs: articles.map((a) => a.slug),
       triggered_by: triggeredBy,
-    })
+    } as never)
     .select("id")
     .single();
-
   if (sendError || !sendRow) {
-    return {
-      ok: false,
-      sendId: null,
-      subject,
-      recipients: recipients.length,
-      delivered: 0,
-      failed: 0,
-      message: `Falha ao registrar o envio: ${sendError?.message ?? "desconhecido"}`,
-    };
+    if (sendError?.code === "23505") {
+      return empty(`A edição de ${label} já foi enviada.`, { ok: true, skipped: true, subject });
+    }
+    return empty(`Falha ao registrar o envio: ${sendError?.message ?? "desconhecido"}`, { subject });
   }
-
   const sendId = (sendRow as { id: string }).id;
-  const apiKey = process.env.RESEND_API_KEY;
 
-  if (!apiKey) {
+  const finish = async (status: string, delivered: number, failed: number, error: string | null) => {
     await supabaseAdmin
       .from("newsletter_sends")
-      .update({ status: "failed", error: "RESEND_API_KEY ausente.", finished_at: new Date().toISOString() })
+      .update({ status, delivered_count: delivered, failed_count: failed, error, finished_at: new Date().toISOString() })
       .eq("id", sendId);
-    return {
-      ok: false,
-      sendId,
-      subject,
-      recipients: recipients.length,
-      delivered: 0,
-      failed: recipients.length,
-      message: "Serviço de e-mail indisponível (chave ausente).",
-    };
+  };
+
+  if (!apiKey) {
+    await finish("failed", 0, recipients.length, "RESEND_API_KEY não configurada.");
+    return { ok: false, sendId, subject, recipients: recipients.length, delivered: 0, failed: recipients.length, message: "RESEND_API_KEY não configurada." };
+  }
+  if (recipients.length === 0) {
+    await finish("sent", 0, 0, null);
+    return { ok: true, sendId, subject, recipients: 0, delivered: 0, failed: 0, message: "Nenhum assinante ativo na base." };
   }
 
-  const text = plainText(articles, label);
   let delivered = 0;
   let failed = 0;
   let fatal: string | null = null;
-  const log: { send_id: string; lead_id: string | null; email: string; status: string; reason: string | null }[] = [];
 
-  for (const recipient of recipients) {
+  for (let i = 0; i < recipients.length; i += 100) {
+    const chunk = recipients.slice(i, i + 100);
+    const log: { send_id: string; lead_id: string | null; email: string; status: string; reason: string | null }[] = [];
     if (fatal) {
-      failed += 1;
-      log.push({
-        send_id: sendId,
-        lead_id: recipient.id,
-        email: recipient.email,
-        status: "failed",
-        reason: fatal,
+      failed += chunk.length;
+      for (const r of chunk) log.push({ send_id: sendId, lead_id: r.id, email: r.email, status: "failed", reason: fatal });
+    } else {
+      const emails = chunk.map((r) => {
+        const { html, text } = build(r.full_name?.trim().split(/\s+/)[0] ?? null, r.confirm_token);
+        const headers: Record<string, string> = {};
+        if (r.confirm_token) {
+          headers["List-Unsubscribe"] = `<${oneClickUrlFor(r.confirm_token)}>`;
+          headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+        }
+        return { to: r.email, from: FROM_ADDRESS, subject, html, text, reply_to: REPLY_TO, headers, label: "daily-newsletter" };
       });
-      continue;
-    }
-    try {
-      const html = await render(
-        React.createElement(DailyNewsletter, {
-          editionLabel: label,
-          siteUrl: SITE_URL,
-          articles,
-          recipientName: recipient.full_name?.split(" ")[0] ?? null,
-        }),
-      );
-      await sendLovableEmail(
-        {
-          to: recipient.email,
-          from: FROM_ADDRESS,
-          sender_domain: SENDER_DOMAIN,
-          subject,
-          html,
-          text,
-          purpose: "newsletter",
-          label: "daily-newsletter",
-          idempotency_key: `newsletter-${sendId}-${recipient.email}`,
-        },
-        { apiKey },
-      );
-      delivered += 1;
-      log.push({ send_id: sendId, lead_id: recipient.id, email: recipient.email, status: "sent", reason: null });
-    } catch (err) {
-      failed += 1;
-      const reason = friendlyEmailError(err);
-      if (err instanceof EmailAPIError) {
-        if (err.code === "domain_not_verified" || err.code === "emails_disabled" || err.status === 429) {
-          fatal = reason;
+      let attempt = 0;
+      for (;;) {
+        try {
+          await sendEmailBatch(emails, { apiKey, idempotencyKey: `newsletter-${sendId}-${i}` });
+          delivered += chunk.length;
+          for (const r of chunk) log.push({ send_id: sendId, lead_id: r.id, email: r.email, status: "sent", reason: null });
+          break;
+        } catch (err) {
+          const retryable = err instanceof EmailAPIError && (err.code === "rate_limited" || err.code === "network_error" || err.status >= 500);
+          if (retryable && attempt < 3) {
+            attempt += 1;
+            const wait = err instanceof EmailAPIError && err.retryAfterSeconds ? err.retryAfterSeconds * 1000 : 1500 * attempt;
+            await new Promise((r) => setTimeout(r, Math.min(wait, 10000)));
+            continue;
+          }
+          const reason = friendlyEmailError(err);
+          if (isFatal(err)) fatal = reason;
+          failed += chunk.length;
+          for (const r of chunk) log.push({ send_id: sendId, lead_id: r.id, email: r.email, status: "failed", reason: reason.slice(0, 500) });
+          break;
         }
       }
-      log.push({
-        send_id: sendId,
-        lead_id: recipient.id,
-        email: recipient.email,
-        status: "failed",
-        reason: reason.slice(0, 500),
-      });
     }
+    if (log.length) await supabaseAdmin.from("newsletter_recipients").insert(log as never);
   }
 
-  if (log.length) {
-    await supabaseAdmin.from("newsletter_recipients").insert(log as never);
-  }
-
-  const status = fatal ? "failed" : failed === 0 ? "sent" : "partial";
-  await supabaseAdmin
-    .from("newsletter_sends")
-    .update({
-      status,
-      delivered_count: delivered,
-      failed_count: failed,
-      error: fatal,
-      finished_at: new Date().toISOString(),
-    })
-    .eq("id", sendId);
-
+  const status = delivered === 0 ? "failed" : failed === 0 ? "sent" : "partial";
+  await finish(status, delivered, failed, fatal);
   return {
-    ok: !fatal,
+    ok: delivered > 0,
     sendId,
     subject,
     recipients: recipients.length,
     delivered,
     failed,
-    message: fatal
-      ? fatal
-      : recipients.length === 0
-        ? "Nenhum assinante ativo na base."
-        : `${delivered} e-mails enviados, ${failed} falhas.`,
+    message: fatal ? fatal : `${delivered} e-mails enviados, ${failed} falhas.`,
   };
+}
+
+/** Descadastra pelo token do e-mail. */
+export async function unsubscribeByToken(token: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(token)) return { ok: false as const };
+  const { data } = await supabaseAdmin.from("leads").select("id, unsubscribed_at").eq("confirm_token", token).maybeSingle();
+  if (!data) return { ok: false as const };
+  const row = data as { id: string; unsubscribed_at: string | null };
+  if (!row.unsubscribed_at) {
+    await supabaseAdmin
+      .from("leads")
+      .update({ is_active: false, unsubscribed_at: new Date().toISOString() } as never)
+      .eq("id", row.id);
+  }
+  return { ok: true as const };
 }

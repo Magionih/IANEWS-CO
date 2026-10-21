@@ -1,8 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
 
 export type ContactKind = "contato" | "anuncie";
 export type ContactStatus = "nova" | "andamento" | "respondida" | "arquivada";
@@ -35,6 +33,8 @@ export const submitContactMessage = createServerFn({ method: "POST" })
       budget?: string;
       subject?: string;
       message: string;
+      newsletter?: boolean;
+      website?: string;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -47,13 +47,11 @@ export const submitContactMessage = createServerFn({ method: "POST" })
     if (!EMAIL_RE.test(email) || email.length > 255) throw new Error("Informe um e-mail válido.");
     if (message.length < 5 || message.length > 4000) throw new Error("Escreva uma mensagem com mais detalhes.");
 
-    const supabase = createClient<Database>(
-      process.env["SUPABASE_URL"]!,
-      process.env["SUPABASE_PUBLISHABLE_KEY"]!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
+    // Campo-armadilha para robôs: se vier preenchido, finge sucesso e não grava.
+    if (data.website && data.website.trim()) return { ok: true };
 
-    const { error } = await supabase.from("contact_messages").insert({
+    const { supabaseAdmin: supabase } = await import("@/integrations/supabase/client.server");
+    const row = {
       kind,
       full_name,
       email,
@@ -62,21 +60,33 @@ export const submitContactMessage = createServerFn({ method: "POST" })
       budget: data.budget?.trim().slice(0, 80) || null,
       subject: data.subject?.trim().slice(0, 200) || null,
       message,
-    } as never);
+    };
+    const { error } = await supabase.from("contact_messages").insert(row as never);
     if (error) {
       console.error("[contact] insert error", error.message);
       throw new Error("Não foi possível enviar sua mensagem agora. Tente novamente.");
     }
 
-    // Também registra o contato na base de leads do painel.
-    await supabase
-      .from("leads")
-      .insert({
+    // Registra o contato na base de leads. Só entra na newsletter quem marcou a opção.
+    const { data: existing } = await supabase.from("leads").select("id").eq("email", email).maybeSingle();
+    if (!existing) {
+      await supabase.from("leads").insert({
         email,
         full_name,
-        phone: data.phone?.trim().slice(0, 40) || null,
+        phone: row.phone,
         source: kind,
+        cta_placement: `form-${kind}`,
+        is_active: data.newsletter === true,
       } as never);
+    }
+
+    // Aviso para o administrador (não bloqueia o envio do formulário).
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("contact-notification", "magionih@gmail.com", { templateData: row, replyTo: email });
+    } catch (err) {
+      console.error("[contact] notify failed", err instanceof Error ? err.message : err);
+    }
 
     return { ok: true };
   });

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cronUnauthorized, readJson } from "@/lib/cron-auth.server";
 
 async function handle(request: Request) {
-  const denied = cronUnauthorized(request);
+  const denied = await cronUnauthorized(request);
   if (denied) return denied;
   try {
     const body = await readJson<{ limit: number; hours: number; topics: string[] }>(request);

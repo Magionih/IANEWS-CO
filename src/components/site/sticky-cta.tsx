@@ -47,7 +47,7 @@ export function StickyCta() {
       <div className="mx-auto flex max-w-[1400px] items-center gap-3">
         <p className="min-w-0 flex-1 text-xs font-semibold leading-snug sm:text-sm">
           <span className="hidden sm:inline">Receba a análise diária de IA para decisores. </span>
-          Grátis, todo dia útil antes das 8h.
+          Grátis, todo dia às 7h.
         </p>
         <button
           type="button"

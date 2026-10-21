@@ -15,7 +15,7 @@ const articlesOptions = queryOptions({
 });
 const title = "Newsletter IANews — o resumo de IA para quem decide";
 const description =
-  "Receba a newsletter gratuita da IANews: curadoria das notícias de inteligência artificial que importam para negócios, em 5 minutos, todo dia útil às 7h, e Ranking IA semanal. Sem hype.";
+  "Receba a newsletter gratuita da IANews: curadoria das notícias de inteligência artificial que importam para negócios, em 5 minutos, todo dia às 7h, e Ranking IA semanal. Sem hype.";
 const WHATSAPP_URL = "https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL";
 
 export const Route = createFileRoute("/newsletter")({
@@ -78,7 +78,7 @@ function NewsletterPage() {
         <div className="wrap">
           <section className="nlh">
             <div className="nlh-txt">
-              <p className="kick">Newsletter gratuita · todo dia útil, 7h</p>
+              <p className="kick">Newsletter gratuita · todo dia, 7h</p>
               <h1>5 minutos por dia. Zero hype.</h1>
               <p className="sub">
                 A curadoria da IANews com as notícias de inteligência artificial que importam para
@@ -146,7 +146,7 @@ function NewsletterPage() {
                 )}
                 <p className="edicao-foot">
                   Uma amostra com as matérias mais recentes da redação. Assim chega a sua edição,
-                  todo dia útil às 7h.
+                  todo dia às 7h.
                 </p>
               </article>
             </div>
@@ -186,7 +186,7 @@ function NewsletterPage() {
             </details>
             <details>
               <summary>Com que frequência?</summary>
-              <p>Todo dia útil, às 7h, mais o Ranking IA semanal.</p>
+              <p>Todo dia, às 7h, mais o Ranking IA semanal.</p>
             </details>
             <details>
               <summary>Posso cancelar?</summary>
@@ -211,7 +211,7 @@ function NewsletterPage() {
                 Newsletter IANews
               </p>
               <h3 id="final-title">Comece amanhã às 7h</h3>
-              <p>Seu próximo dia útil começa com as notícias que ajudam a decidir.</p>
+              <p>Seu próximo dia começa com as notícias que ajudam a decidir.</p>
             </div>
             <div style={{ width: "min(440px, 100%)" }}>
               <NewsletterForm

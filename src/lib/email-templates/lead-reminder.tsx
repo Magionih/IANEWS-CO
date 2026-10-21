@@ -1,18 +1,7 @@
 import React from 'react'
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components'
+import { Link, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { C, CtaButton, Shell, s } from './layout'
 
 interface Props {
   name?: string
@@ -21,66 +10,43 @@ interface Props {
 }
 
 const Email = ({ name, confirmUrl, headline }: Props) => (
-  <Html lang="pt-BR" dir="ltr">
-    <Head />
-    <Preview>Sua assinatura do IA News ainda não foi confirmada</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Text style={eyebrow}>IA NEWS</Text>
-        <Heading style={h1}>
-          {name ? `${name}, falta confirmar` : 'Falta confirmar sua assinatura'}
-        </Heading>
-        <Text style={text}>
-          Você se inscreveu no IA News, mas ainda não confirmou o e-mail — e por isso não está
-          recebendo a edição diária.
-        </Text>
-        {headline ? <Text style={text}>Hoje você perderia: “{headline}”.</Text> : null}
-        {confirmUrl ? (
-          <Section style={{ margin: '28px 0' }}>
-            <Button style={button} href={confirmUrl}>
-              Confirmar agora
-            </Button>
-          </Section>
-        ) : null}
-        <Hr style={hr} />
-        <Text style={small}>
-          Se não foi você quem se inscreveu, basta ignorar este e-mail. Conteúdo completo em{' '}
-          <Link href="https://ianewsbr.com" style={{ color: '#2563eb' }}>
-            ianewsbr.com
-          </Link>
-          .
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+  <Shell
+    preview="Sua inscrição na IANews ainda não foi confirmada"
+    footer={
+      <Text style={{ ...s.small, textAlign: 'center' as const }}>
+        Você recebe este lembrete uma única vez porque se inscreveu em ianewsbr.com.
+      </Text>
+    }
+  >
+    <Text style={s.kick}>Lembrete</Text>
+    <Text style={s.h1}>{name ? `${name}, sua inscrição está quase pronta.` : 'Sua inscrição está quase pronta.'}</Text>
+    <Text style={s.p}>
+      Falta confirmar seu e-mail para garantir a newsletter diária da IANews, todo dia às 7h.
+    </Text>
+    {headline ? (
+      <Text style={{ ...s.p, borderLeft: `3px solid ${C.blue}`, paddingLeft: '12px' }}>
+        Na edição de hoje: “{headline}”.
+      </Text>
+    ) : null}
+    {confirmUrl ? <CtaButton href={confirmUrl}>Confirmar meu e-mail</CtaButton> : null}
+    {confirmUrl ? (
+      <Text style={s.small}>
+        Ou copie o link:{' '}
+        <Link href={confirmUrl} style={{ color: C.blueInk, wordBreak: 'break-all' as const }}>
+          {confirmUrl}
+        </Link>
+      </Text>
+    ) : null}
+  </Shell>
 )
 
 export const template = {
   component: Email,
-  subject: 'Falta 1 clique para receber o IA News',
+  subject: 'Falta 1 clique para receber a IANews',
   displayName: 'Lembrete de confirmação',
-  previewData: { name: 'Ana', confirmUrl: 'https://ianewsbr.com/confirmar?t=exemplo' },
+  previewData: {
+    name: 'Ana',
+    confirmUrl: 'https://ianewsbr.com/confirmar?t=00000000-0000-0000-0000-000000000000',
+    headline: 'Exemplo de manchete',
+  },
 } satisfies TemplateEntry
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif' }
-const container = { padding: '32px 28px', maxWidth: '560px' }
-const eyebrow = {
-  fontSize: '12px',
-  letterSpacing: '2px',
-  fontWeight: 700,
-  color: '#2563eb',
-  margin: '0 0 8px',
-}
-const h1 = { fontSize: '26px', lineHeight: '1.2', margin: '0 0 12px', color: '#0b1020' }
-const text = { fontSize: '15px', lineHeight: '1.6', color: '#2c3345' }
-const small = { fontSize: '12px', lineHeight: '1.6', color: '#6b7280' }
-const button = {
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontSize: '15px',
-  fontWeight: 700,
-  padding: '14px 26px',
-  borderRadius: '8px',
-  textDecoration: 'none',
-}
-const hr = { borderColor: '#e5e7eb', margin: '28px 0 16px' }

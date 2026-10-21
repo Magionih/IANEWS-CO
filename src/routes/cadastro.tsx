@@ -213,7 +213,7 @@ function SignupPage() {
                 </div>
                 <div>
                   <h3>Edição diária</h3>
-                  <p>O resumo do dia antes das 8h.</p>
+                  <p>O resumo de IA todo dia às 7h.</p>
                 </div>
                 <div>
                   <h3>Ranking IA</h3>

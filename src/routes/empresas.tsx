@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { useSubscribed } from "@/components/site/portal-subscribe";
 import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
 import { submitContactMessage } from "@/lib/contact.functions";
+import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 const PAGE_URL = "https://ianewsbr.com/empresas";
 const TITLE = "IA para empresas — implementação, conteúdo e treinamento | IA News";
@@ -94,6 +95,7 @@ function EmpresasPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const newsletter = wantsNewsletter(e);
     if (sending) return;
     const email = form.email.trim();
     const empresa = form.empresa.trim();
@@ -129,6 +131,7 @@ function EmpresasPage() {
     try {
       await submitContactMessage({
         data: {
+          newsletter,
           kind: "contato",
           full_name: form.nome,
           email,
@@ -330,6 +333,7 @@ function EmpresasPage() {
                     </div>
                   </fieldset>
 
+                  <NewsletterOptIn />
                   <div className="biz-submit">
                     <button className="btn blue" type="submit" disabled={sending}>
                       {sending ? "Enviando..." : "Enviar pedido"}

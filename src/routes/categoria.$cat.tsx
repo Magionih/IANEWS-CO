@@ -160,7 +160,7 @@ function CategoriaPage() {
             articles={articles as ArticleRow[]}
             placement="categoria"
             band={{
-              title: `Receba as notícias de ${seo.label} antes das 8h`,
+              title: `Receba as notícias de ${seo.label} todo dia às 7h`,
               text: "A newsletter diária do IA News resume o que importa para quem decide. Grátis.",
             }}
             emptyText={

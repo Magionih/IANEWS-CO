@@ -65,15 +65,41 @@ export const subscribeLead = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin
       .from("leads")
-      .select("id, email, full_name, source, confirm_token, created_at, confirmed_at")
+      .select("id, email, full_name, phone, source, confirm_token, created_at, confirmed_at, unsubscribed_at, welcome_sent_at")
       .eq("email", email)
       .maybeSingle();
 
     if (existing) {
+      const row = existing as {
+        id: string;
+        email: string;
+        full_name: string | null;
+        phone: string | null;
+        source: string | null;
+        confirm_token: string;
+        created_at: string;
+        confirmed_at: string | null;
+        unsubscribed_at: string | null;
+        welcome_sent_at: string | null;
+      };
+      const patch: Record<string, unknown> = {};
+      if (row.unsubscribed_at) {
+        patch.is_active = true;
+        patch.unsubscribed_at = null;
+      }
+      if (!row.full_name && data.full_name?.trim()) patch.full_name = data.full_name.trim().slice(0, 160);
+      if (!row.phone && data.phone?.trim()) patch.phone = data.phone.trim().slice(0, 40);
+      if (Object.keys(patch).length) {
+        await supabaseAdmin.from("leads").update(patch as never).eq("id", row.id);
+      }
+      if (!row.confirmed_at && (!row.welcome_sent_at || row.unsubscribed_at)) {
+        const { sendWelcomeEmail } = await import("@/lib/lead-funnel.server");
+        await sendWelcomeEmail({ ...row, full_name: (patch.full_name as string) ?? row.full_name });
+      }
       return {
         ok: true,
-        alreadySubscribed: true,
-        confirmed: !!(existing as { confirmed_at: string | null }).confirmed_at,
+        alreadySubscribed: !row.unsubscribed_at,
+        confirmed: !!row.confirmed_at,
       };
     }
 
@@ -224,4 +250,11 @@ export const sendRankingNewsletterNow = createServerFn({ method: "POST" })
       testEmail: data.testEmail?.trim() || null,
       triggeredBy: data.testEmail ? "admin-ranking-test" : "admin-ranking",
     });
+  });
+
+export const unsubscribeLead = createServerFn({ method: "POST" })
+  .inputValidator((input: { token: string }) => input)
+  .handler(async ({ data }) => {
+    const { unsubscribeByToken } = await import("@/lib/newsletter.server");
+    return unsubscribeByToken(String(data.token ?? "").trim());
   });

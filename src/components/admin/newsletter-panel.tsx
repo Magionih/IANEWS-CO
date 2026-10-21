@@ -151,8 +151,8 @@ export function NewsletterPanel() {
           <div>
             <h3 className="font-bold">Edição diária automática</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Todo dia às 8h (Brasília) o sistema apura novas notícias e envia as 5 matérias mais
-              recentes para todos os assinantes ativos. Use os botões abaixo para disparar
+              Todo dia às 7h (Brasília) o sistema envia as matérias publicadas no dia anterior (até 8)
+              para todos os assinantes ativos. Use os botões abaixo para disparar
               manualmente ou testar o layout.
             </p>
           </div>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { submitContactMessage } from "@/lib/contact.functions";
+import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 export const Route = createFileRoute("/anuncie")({
   head: () => ({
@@ -99,10 +100,12 @@ function AnunciePage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const newsletter = wantsNewsletter(e);
     setLoading(true);
     try {
       await submitContactMessage({
         data: {
+          newsletter,
           kind: "anuncie",
           full_name: form.name,
           email: form.email,
@@ -248,6 +251,7 @@ function AnunciePage() {
                   </label>
                 </fieldset>
 
+                <NewsletterOptIn />
                 <div className="biz-submit">
                   <button className="btn blue" type="submit" disabled={loading}>
                     {loading ? "Enviando..." : "Quero o mídia kit"}

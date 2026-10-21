@@ -1,18 +1,7 @@
 import React from 'react'
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components'
+import { Link, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { C, CtaButton, Shell, SITE, s } from './layout'
 
 interface Props {
   name?: string
@@ -20,77 +9,51 @@ interface Props {
   origin?: string
 }
 
-const Email = ({ name, confirmUrl, origin }: Props) => (
-  <Html lang="pt-BR" dir="ltr">
-    <Head />
-    <Preview>Confirme sua assinatura do IA News e receba a edição diária</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Text style={eyebrow}>IA NEWS</Text>
-        <Heading style={h1}>{name ? `Bem-vindo, ${name}!` : 'Bem-vindo ao IA News!'}</Heading>
-        <Text style={text}>
-          Falta um passo: confirme seu e-mail para começar a receber a edição diária com as
-          notícias de inteligência artificial que realmente importam para quem decide.
-        </Text>
-        {confirmUrl ? (
-          <Section style={{ margin: '28px 0' }}>
-            <Button style={button} href={confirmUrl}>
-              Confirmar minha assinatura
-            </Button>
-          </Section>
-        ) : null}
-        {confirmUrl ? (
-          <Text style={small}>
-            Se o botão não funcionar, copie este link:{' '}
-            <Link href={confirmUrl} style={{ color: '#2563eb' }}>
-              {confirmUrl}
-            </Link>
-          </Text>
-        ) : null}
-        <Hr style={hr} />
-        <Text style={small}>
-          Você recebe este e-mail porque se inscreveu no IA News
-          {origin ? ` (${origin})` : ''}. Leia todas as matérias em{' '}
-          <Link href="https://ianewsbr.com" style={{ color: '#2563eb' }}>
-            ianewsbr.com
-          </Link>
-          .
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+const Email = ({ name, confirmUrl }: Props) => (
+  <Shell
+    preview="Confirme seu e-mail e receba a IANews todo dia às 7h"
+    footer={
+      <Text style={{ ...s.small, textAlign: 'center' as const }}>
+        Você recebe este e-mail porque se inscreveu em ianewsbr.com. Se não foi você, é só ignorar.
+      </Text>
+    }
+  >
+    <Text style={s.kick}>Bem-vindo à IANews</Text>
+    <Text style={s.h1}>{name ? `${name}, falta um clique.` : 'Falta um clique.'}</Text>
+    <Text style={s.p}>
+      Confirme seu e-mail para receber, todo dia às 7h da manhã, as notícias de inteligência artificial
+      que saíram na IANews no dia anterior, explicadas para quem decide.
+    </Text>
+    {confirmUrl ? <CtaButton href={confirmUrl}>Confirmar meu e-mail</CtaButton> : null}
+    {confirmUrl ? (
+      <Text style={s.small}>
+        Se o botão não abrir, copie este link no navegador:{' '}
+        <Link href={confirmUrl} style={{ color: C.blueInk, wordBreak: 'break-all' as const }}>
+          {confirmUrl}
+        </Link>
+      </Text>
+    ) : null}
+    <Text style={{ ...s.p, fontSize: '15px', marginTop: '18px' }}>
+      Enquanto isso, veja o que saiu hoje em{' '}
+      <Link href={`${SITE}/noticias`} style={{ color: C.blueInk }}>
+        ianewsbr.com
+      </Link>{' '}
+      e qual IA lidera o{' '}
+      <Link href={`${SITE}/ranking`} style={{ color: C.blueInk }}>
+        Ranking IA
+      </Link>
+      .
+    </Text>
+  </Shell>
 )
 
 export const template = {
   component: Email,
-  subject: 'Confirme sua assinatura do IA News',
+  subject: 'Confirme seu e-mail para receber a IANews',
   displayName: 'Boas-vindas ao lead',
   previewData: {
     name: 'Ana',
-    confirmUrl: 'https://ianewsbr.com/confirmar?t=exemplo',
-    origin: 'popup-assinatura',
+    confirmUrl: 'https://ianewsbr.com/confirmar?t=00000000-0000-0000-0000-000000000000',
+    origin: 'site',
   },
 } satisfies TemplateEntry
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif' }
-const container = { padding: '32px 28px', maxWidth: '560px' }
-const eyebrow = {
-  fontSize: '12px',
-  letterSpacing: '2px',
-  fontWeight: 700,
-  color: '#2563eb',
-  margin: '0 0 8px',
-}
-const h1 = { fontSize: '26px', lineHeight: '1.2', margin: '0 0 12px', color: '#0b1020' }
-const text = { fontSize: '15px', lineHeight: '1.6', color: '#2c3345' }
-const small = { fontSize: '12px', lineHeight: '1.6', color: '#6b7280' }
-const button = {
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontSize: '15px',
-  fontWeight: 700,
-  padding: '14px 26px',
-  borderRadius: '8px',
-  textDecoration: 'none',
-}
-const hr = { borderColor: '#e5e7eb', margin: '28px 0 16px' }

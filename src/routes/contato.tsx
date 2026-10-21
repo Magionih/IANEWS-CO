@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { submitContactMessage } from "@/lib/contact.functions";
+import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 export const Route = createFileRoute("/contato")({
   head: () => ({
@@ -51,10 +52,12 @@ function ContatoPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const newsletter = wantsNewsletter(e);
     setLoading(true);
     try {
       await submitContactMessage({
         data: {
+          newsletter,
           kind: "contato",
           full_name: form.name,
           email: form.email,
@@ -158,6 +161,7 @@ function ContatoPage() {
                   placeholder="Conte o contexto, links e prazos relevantes."
                 />
               </label>
+              <NewsletterOptIn />
               <div>
                 <button type="submit" className="btn blue" disabled={loading}>
                   {loading ? "Enviando..." : "Enviar mensagem"}
