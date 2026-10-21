@@ -8,6 +8,8 @@ import { submitContactMessage } from "@/lib/contact.functions";
 import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 export const Route = createFileRoute("/contato")({
+  validateSearch: (search: Record<string, unknown>): { assunto?: string } =>
+    typeof search["assunto"] === "string" ? { assunto: search["assunto"].slice(0, 40) } : {},
   head: () => ({
     meta: [
       { title: "Contato — fale com a redação do IA News" },
@@ -42,8 +44,19 @@ const REASONS = [
   },
 ];
 
+const ASSUNTOS: Record<string, string> = {
+  pauta: "Sugestão de pauta",
+};
+
 function ContatoPage() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const { assunto } = Route.useSearch();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: (assunto && ASSUNTOS[assunto]) || "",
+    message: "",
+  });
   const [loading, setLoading] = useState(false);
 
   function set(key: keyof typeof form, value: string) {

@@ -523,7 +523,7 @@ function GentePage() {
             </table>
           </div>
 
-          <div className="two-col" style={{ marginTop: 56 }}>
+          <div className="two-col" id="indicar" style={{ marginTop: 56, scrollMarginTop: 80 }}>
             <div>
               <p className="kick" style={{ marginBottom: 10 }}>
                 Indique

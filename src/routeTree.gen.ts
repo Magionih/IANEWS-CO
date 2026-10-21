@@ -20,6 +20,7 @@ import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as GenteRouteImport } from './routes/gente'
+import { Route as LinksRouteImport } from './routes/links'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
 import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as RankingRouteImport } from './routes/ranking'
@@ -98,6 +99,11 @@ const EmpresasRoute = EmpresasRouteImport.update({
 const GenteRoute = GenteRouteImport.update({
   id: '/gente',
   path: '/gente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinksRoute = LinksRouteImport.update({
+  id: '/links',
+  path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsletterRoute = NewsletterRouteImport.update({
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/descadastrar': typeof DescadastrarRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
+  '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/descadastrar': typeof DescadastrarRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
+  '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/descadastrar': typeof DescadastrarRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
+  '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
@@ -357,6 +366,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/empresas'
     | '/gente'
+    | '/links'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/empresas'
     | '/gente'
+    | '/links'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/empresas'
     | '/gente'
+    | '/links'
     | '/newsletter'
     | '/noticias'
     | '/ranking'
@@ -471,6 +483,7 @@ export interface RootRouteChildren {
   DescadastrarRoute: typeof DescadastrarRoute
   EmpresasRoute: typeof EmpresasRoute
   GenteRoute: typeof GenteRoute
+  LinksRoute: typeof LinksRoute
   NewsletterRoute: typeof NewsletterRoute
   NoticiasRoute: typeof NoticiasRoute
   RankingRoute: typeof RankingRoute
@@ -573,6 +586,13 @@ declare module '@tanstack/react-router' {
       path: '/gente'
       fullPath: '/gente'
       preLoaderRoute: typeof GenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/links': {
+      id: '/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newsletter': {
@@ -778,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   DescadastrarRoute: DescadastrarRoute,
   EmpresasRoute: EmpresasRoute,
   GenteRoute: GenteRoute,
+  LinksRoute: LinksRoute,
   NewsletterRoute: NewsletterRoute,
   NoticiasRoute: NoticiasRoute,
   RankingRoute: RankingRoute,
