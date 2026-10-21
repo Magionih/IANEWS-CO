@@ -43,6 +43,7 @@ import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
+import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
 import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
 
 const IndexRoute = IndexRouteImport.update({
@@ -218,6 +219,11 @@ const ApiPublicHooksLeadFollowupRoute =
     path: '/api/public/hooks/lead-followup',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPingRoute = ApiPublicHooksPingRouteImport.update({
+  id: '/api/public/hooks/ping',
+  path: '/api/public/hooks/ping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWeeklyRankingRoute =
   ApiPublicHooksWeeklyRankingRouteImport.update({
     id: '/api/public/hooks/weekly-ranking',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
 }
 export interface FileRoutesByTo {
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
 }
 export interface FileRoutesById {
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
 }
 export interface FileRouteTypes {
@@ -371,6 +380,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
   id:
     | '__root__'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
   fileRoutesById: FileRoutesById
 }
@@ -480,6 +492,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
+  ApiPublicHooksPingRoute: typeof ApiPublicHooksPingRoute
   ApiPublicHooksWeeklyRankingRoute: typeof ApiPublicHooksWeeklyRankingRoute
 }
 
@@ -723,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLeadFollowupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/ping': {
+      id: '/api/public/hooks/ping'
+      path: '/api/public/hooks/ping'
+      fullPath: '/api/public/hooks/ping'
+      preLoaderRoute: typeof ApiPublicHooksPingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/weekly-ranking': {
       id: '/api/public/hooks/weekly-ranking'
       path: '/api/public/hooks/weekly-ranking'
@@ -780,6 +800,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
+  ApiPublicHooksPingRoute: ApiPublicHooksPingRoute,
   ApiPublicHooksWeeklyRankingRoute: ApiPublicHooksWeeklyRankingRoute,
 }
 export const routeTree = rootRouteImport
