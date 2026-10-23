@@ -108,6 +108,8 @@ export async function runDailyPush(triggeredBy = "cron") {
   const { data } = await supabaseAdmin
     .from("articles")
     .select("slug, title, dek, cover_image_url, published_at")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .limit(3);
 

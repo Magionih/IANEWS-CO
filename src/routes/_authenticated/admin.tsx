@@ -87,6 +87,31 @@ const fmtDate = (v?: string | null) =>
   v ? new Date(v).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const fmtNum = (n: number) => n.toLocaleString("pt-BR");
 
+/** ISO -> valor de <input type="datetime-local"> no horário de Brasília (UTC-3). */
+const toLocalInput = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(new Date(iso).getTime() - 3 * 3600 * 1000);
+  return d.toISOString().slice(0, 16);
+};
+/** Valor do <input type="datetime-local"> (Brasília) -> ISO. */
+const fromLocalInput = (v: string) => (v ? new Date(`${v}:00-03:00`).toISOString() : null);
+const fmtDateTime = (v?: string | null) =>
+  v
+    ? new Date(v).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
+    : "—";
+
+function ArticleStatus({ a }: { a: AdminArticle }) {
+  if (a.status === "draft")
+    return <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold">Rascunho</span>;
+  if (new Date(a.published_at).getTime() > Date.now())
+    return (
+      <span className="rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-900" title="Entra no ar sozinha no horário marcado">
+        Agendada · {fmtDateTime(a.published_at)}
+      </span>
+    );
+  return <span className="text-muted-foreground">{fmtDate(a.published_at)}</span>;
+}
+
 const emptyForm = {
   id: undefined as string | undefined,
   slug: "",
@@ -100,6 +125,10 @@ const emptyForm = {
   read_minutes: 3,
   body_markdown: "",
   why_it_matters: "",
+  status: "published" as "draft" | "published",
+  publish_at: "",
+  origin: "",
+  social_url: "",
 };
 
 function AdminPage() {
@@ -176,6 +205,10 @@ function AdminPage() {
       read_minutes: a.read_minutes ?? 3,
       body_markdown: "",
       why_it_matters: "",
+      status: a.status ?? "published",
+      publish_at: toLocalInput(a.published_at),
+      origin: a.origin ?? "",
+      social_url: a.social_url ?? "",
     });
     setDialogOpen(true);
   }
@@ -187,15 +220,28 @@ function AdminPage() {
       return toast.error("Slug inválido — use apenas letras minúsculas, números e hífens.");
     setSaving(true);
     try {
+      const { publish_at, ...rest } = form;
+      const publishedAt = fromLocalInput(publish_at);
       await saveArticle({
         data: {
-          ...form,
+          ...rest,
+          published_at: publishedAt,
+          origin: form.origin || null,
+          social_url: form.social_url || null,
           read_minutes: Number(form.read_minutes) || 3,
           body_markdown: form.id && !form.body_markdown ? undefined : form.body_markdown,
           why_it_matters: form.why_it_matters || undefined,
         },
       });
-      toast.success(form.id ? "Matéria atualizada." : "Matéria publicada.");
+      toast.success(
+        form.status === "draft"
+          ? "Rascunho salvo."
+          : publishedAt && new Date(publishedAt).getTime() > Date.now()
+            ? `Matéria agendada para ${fmtDateTime(publishedAt)}.`
+            : form.id
+              ? "Matéria atualizada."
+              : "Matéria publicada.",
+      );
       setDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["admin-data"] });
     } catch (err) {
@@ -403,7 +449,7 @@ function AdminPage() {
                         <tr>
                           <th className="px-4 py-3">Título</th>
                           <th className="px-4 py-3">Editoria</th>
-                          <th className="px-4 py-3">Publicada</th>
+                          <th className="px-4 py-3">Publicação</th>
                           <th className="px-4 py-3 text-right">Qualidade</th>
                           <th className="px-4 py-3 text-right">Views</th>
                           <th className="px-4 py-3 text-right">Ações</th>
@@ -421,7 +467,9 @@ function AdminPage() {
                                 {a.category}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-muted-foreground">{fmtDate(a.published_at)}</td>
+                            <td className="px-4 py-3">
+                              <ArticleStatus a={a} />
+                            </td>
                             <td className="px-4 py-3 text-right">
                               {a.quality_score == null ? (
                                 <span className="text-xs text-muted-foreground">—</span>
@@ -824,6 +872,53 @@ function AdminPage() {
                   max={60}
                   value={form.read_minutes}
                   onChange={(e) => setForm({ ...form, read_minutes: Number(e.target.value) })}
+                />
+              </Field>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Status" id="status">
+                <select
+                  id="status"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as "draft" | "published" })}
+                >
+                  <option value="published">Publicar (agora ou na data abaixo)</option>
+                  <option value="draft">Rascunho (não aparece no site)</option>
+                </select>
+              </Field>
+              <Field label="Publicar em (horário de Brasília)" id="publish_at">
+                <Input
+                  id="publish_at"
+                  type="datetime-local"
+                  value={form.publish_at}
+                  onChange={(e) => setForm({ ...form, publish_at: e.target.value })}
+                />
+              </Field>
+            </div>
+            <p className="-mt-2 text-xs text-muted-foreground">
+              Deixe a data em branco para publicar agora. Com data futura, a matéria fica agendada e entra no ar sozinha.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Canal de origem" id="origin">
+                <select
+                  id="origin"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.origin}
+                  onChange={(e) => setForm({ ...form, origin: e.target.value })}
+                >
+                  <option value="">Redação (site)</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="newsletter">Newsletter</option>
+                </select>
+              </Field>
+              <Field label="Link do post (opcional)" id="social_url">
+                <Input
+                  id="social_url"
+                  value={form.social_url}
+                  onChange={(e) => setForm({ ...form, social_url: e.target.value })}
+                  placeholder="https://www.instagram.com/p/..."
                 />
               </Field>
             </div>

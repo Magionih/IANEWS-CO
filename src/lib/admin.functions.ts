@@ -17,6 +17,9 @@ export type AdminArticle = {
   views_count: number;
   quality_score: number | null;
   published_at: string;
+  status: "draft" | "published";
+  origin: string | null;
+  social_url: string | null;
 };
 
 export type AdminReader = {
@@ -74,7 +77,7 @@ export const getAdminData = createServerFn({ method: "GET" })
       supabase
         .from("articles")
         .select(
-          "id, slug, title, dek, category, author, cover_image_url, source_name, source_url, read_minutes, views_count, quality_score, published_at",
+          "id, slug, title, dek, category, author, cover_image_url, source_name, source_url, read_minutes, views_count, quality_score, published_at, status, origin, social_url",
         )
         .order("published_at", { ascending: false })
         .limit(300),
@@ -189,6 +192,12 @@ export const saveArticle = createServerFn({ method: "POST" })
       read_minutes: number;
       body_markdown?: string;
       why_it_matters?: string;
+      /** "draft" = rascunho; "published" = publicada a partir de published_at. */
+      status?: "draft" | "published";
+      /** ISO. No futuro = agendada. */
+      published_at?: string | null;
+      origin?: string | null;
+      social_url?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -206,6 +215,14 @@ export const saveArticle = createServerFn({ method: "POST" })
     };
     if (data.body_markdown !== undefined) payload.body_markdown = data.body_markdown;
     if (data.why_it_matters !== undefined) payload.why_it_matters = data.why_it_matters || null;
+    if (data.status) payload.status = data.status === "draft" ? "draft" : "published";
+    if (data.published_at) {
+      const when = new Date(data.published_at);
+      if (Number.isNaN(when.getTime())) throw new Error("Data de publicação inválida.");
+      payload.published_at = when.toISOString();
+    }
+    if (data.origin !== undefined) payload.origin = data.origin?.trim().slice(0, 40) || null;
+    if (data.social_url !== undefined) payload.social_url = data.social_url?.trim().slice(0, 500) || null;
 
     if (data.id) {
       const { error } = await context.supabase

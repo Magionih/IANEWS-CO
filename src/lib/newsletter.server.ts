@@ -73,6 +73,8 @@ export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES)
   const { data, error } = await supabaseAdmin
     .from("articles")
     .select(ARTICLE_FIELDS)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
     .gte("published_at", yesterdayStart.toISOString())
     .lt("published_at", todayStart.toISOString())
     .order("published_at", { ascending: false })
@@ -85,6 +87,8 @@ export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES)
     supabaseAdmin
       .from("articles")
       .select(ARTICLE_FIELDS)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
       .gte("published_at", since.toISOString())
       .lt("published_at", todayStart.toISOString())
       .order("published_at", { ascending: false })
@@ -165,6 +169,8 @@ export async function renderNewsletterPreview(): Promise<{ html: string; subject
     const { data } = await supabaseAdmin
       .from("articles")
       .select(ARTICLE_FIELDS)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
       .order("published_at", { ascending: false })
       .limit(5);
     articles = (data ?? []) as NewsletterArticle[];
@@ -215,7 +221,9 @@ export async function runDailyNewsletter(options: NewsletterRunOptions = {}): Pr
     return empty(err instanceof Error ? err.message : String(err));
   }
   if (articles.length === 0 && options.testEmail) {
-    const { data } = await supabaseAdmin.from("articles").select(ARTICLE_FIELDS).order("published_at", { ascending: false }).limit(limit);
+    const { data } = await supabaseAdmin.from("articles").select(ARTICLE_FIELDS)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString()).order("published_at", { ascending: false }).limit(limit);
     articles = (data ?? []) as NewsletterArticle[];
   }
   if (articles.length === 0) {

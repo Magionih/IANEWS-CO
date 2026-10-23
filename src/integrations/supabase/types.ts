@@ -228,6 +228,10 @@ export type Database = {
           published_at: string
           quality_report: Json | null
           quality_score: number | null
+          status: string
+          origin: string | null
+          social_url: string | null
+          scheduled_by: string | null
           read_minutes: number | null
           seo_description: string | null
           seo_title: string | null
@@ -257,6 +261,10 @@ export type Database = {
           published_at?: string
           quality_report?: Json | null
           quality_score?: number | null
+          status?: string
+          origin?: string | null
+          social_url?: string | null
+          scheduled_by?: string | null
           read_minutes?: number | null
           seo_description?: string | null
           seo_title?: string | null
@@ -286,6 +294,10 @@ export type Database = {
           published_at?: string
           quality_report?: Json | null
           quality_score?: number | null
+          status?: string
+          origin?: string | null
+          social_url?: string | null
+          scheduled_by?: string | null
           read_minutes?: number | null
           seo_description?: string | null
           seo_title?: string | null

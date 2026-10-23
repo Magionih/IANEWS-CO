@@ -73,6 +73,8 @@ export async function runLeadFollowUp(options: { reminderAfterHours?: number } =
   const { data: latest } = await supabaseAdmin
     .from("articles")
     .select("title")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .limit(1);
   const headline = (latest?.[0] as { title?: string } | undefined)?.title;
