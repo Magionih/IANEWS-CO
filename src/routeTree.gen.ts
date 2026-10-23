@@ -18,6 +18,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
+import { Route as EdicaoRouteImport } from './routes/edicao'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as GenteRouteImport } from './routes/gente'
 import { Route as LinksRouteImport } from './routes/links'
@@ -89,6 +90,11 @@ const ContatoRoute = ContatoRouteImport.update({
 const DescadastrarRoute = DescadastrarRouteImport.update({
   id: '/descadastrar',
   path: '/descadastrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EdicaoRoute = EdicaoRouteImport.update({
+  id: '/edicao',
+  path: '/edicao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmpresasRoute = EmpresasRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
   '/descadastrar': typeof DescadastrarRoute
+  '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
@@ -284,6 +291,7 @@ export interface FileRoutesByTo {
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
   '/descadastrar': typeof DescadastrarRoute
+  '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/confirmar': typeof ConfirmarRoute
   '/contato': typeof ContatoRoute
   '/descadastrar': typeof DescadastrarRoute
+  '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/confirmar'
     | '/contato'
     | '/descadastrar'
+    | '/edicao'
     | '/empresas'
     | '/gente'
     | '/links'
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/confirmar'
     | '/contato'
     | '/descadastrar'
+    | '/edicao'
     | '/empresas'
     | '/gente'
     | '/links'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/confirmar'
     | '/contato'
     | '/descadastrar'
+    | '/edicao'
     | '/empresas'
     | '/gente'
     | '/links'
@@ -481,6 +493,7 @@ export interface RootRouteChildren {
   ConfirmarRoute: typeof ConfirmarRoute
   ContatoRoute: typeof ContatoRoute
   DescadastrarRoute: typeof DescadastrarRoute
+  EdicaoRoute: typeof EdicaoRoute
   EmpresasRoute: typeof EmpresasRoute
   GenteRoute: typeof GenteRoute
   LinksRoute: typeof LinksRoute
@@ -572,6 +585,13 @@ declare module '@tanstack/react-router' {
       path: '/descadastrar'
       fullPath: '/descadastrar'
       preLoaderRoute: typeof DescadastrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/edicao': {
+      id: '/edicao'
+      path: '/edicao'
+      fullPath: '/edicao'
+      preLoaderRoute: typeof EdicaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/empresas': {
@@ -796,6 +816,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfirmarRoute: ConfirmarRoute,
   ContatoRoute: ContatoRoute,
   DescadastrarRoute: DescadastrarRoute,
+  EdicaoRoute: EdicaoRoute,
   EmpresasRoute: EmpresasRoute,
   GenteRoute: GenteRoute,
   LinksRoute: LinksRoute,

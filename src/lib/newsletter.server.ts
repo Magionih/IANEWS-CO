@@ -3,7 +3,7 @@ import { render } from "@react-email/render";
 import { EmailAPIError, sendEmail, sendEmailBatch } from "@/lib/email.server";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { DailyNewsletter, type NewsletterArticle } from "@/lib/newsletter-template";
+import { DailyNewsletter, type NewsletterArticle, type NewsletterRankItem } from "@/lib/newsletter-template";
 import { NEWSLETTER_PREVIEW_ARTICLES } from "@/lib/email-templates/daily-newsletter";
 
 export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
@@ -52,12 +52,35 @@ export function brtDateISO(date = new Date()) {
 }
 
 function editionLabel(date = new Date()) {
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
+  const s = date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
     month: "long",
-    year: "numeric",
     timeZone: "America/Sao_Paulo",
   });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Top do Ranking IA para o bloco da newsletter (falha silenciosa: a edição sai sem o bloco). */
+async function rankingTop(): Promise<NewsletterRankItem[]> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("ai_tools")
+      .select("name, maker, rank_position, previous_position, weekly_score")
+      .eq("is_active", true)
+      .not("rank_position", "is", null)
+      .order("rank_position", { ascending: true })
+      .limit(3);
+    return ((data ?? []) as { name: string; maker: string | null; rank_position: number; previous_position: number | null; weekly_score: number | null }[]).map((r) => ({
+      name: r.name,
+      maker: r.maker,
+      position: r.rank_position,
+      previous: r.previous_position,
+      score: r.weekly_score,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 /* ---------- seleção das matérias ---------- */
@@ -127,7 +150,8 @@ function plainText(articles: NewsletterArticle[], label: string, unsub: string) 
 }
 
 async function renderVariants(articles: NewsletterArticle[], label: string) {
-  const base = { editionLabel: label, siteUrl: SITE_URL, articles, unsubscribeUrl: UNSUB_TOKEN };
+  const ranking = await rankingTop();
+  const base = { editionLabel: label, siteUrl: SITE_URL, articles, unsubscribeUrl: UNSUB_TOKEN, ranking };
   const [withName, noName] = await Promise.all([
     render(React.createElement(DailyNewsletter, { ...base, recipientName: NAME_TOKEN })),
     render(React.createElement(DailyNewsletter, { ...base, recipientName: null })),
@@ -162,9 +186,11 @@ function isFatal(err: unknown) {
 }
 
 /** HTML da newsletter para visualização no painel (usa as matérias de ontem ou as mais recentes). */
-export async function renderNewsletterPreview(): Promise<{ html: string; subject: string; live: boolean }> {
+export async function renderNewsletterPreview(
+  opts: { latest?: number } = {},
+): Promise<{ html: string; subject: string; live: boolean }> {
   const label = editionLabel();
-  let { articles } = await articlesForEdition();
+  let { articles } = opts.latest ? { articles: [] as NewsletterArticle[] } : await articlesForEdition();
   if (articles.length === 0) {
     const { data } = await supabaseAdmin
       .from("articles")
@@ -172,13 +198,14 @@ export async function renderNewsletterPreview(): Promise<{ html: string; subject
     .eq("status", "published")
     .lte("published_at", new Date().toISOString())
       .order("published_at", { ascending: false })
-      .limit(5);
+      .limit(Math.min(8, Math.max(1, opts.latest ?? 5)));
     articles = (data ?? []) as NewsletterArticle[];
   }
   const live = articles.length > 0;
   if (!live) articles = NEWSLETTER_PREVIEW_ARTICLES;
   const html = await render(
     React.createElement(DailyNewsletter, {
+      ranking: await rankingTop(),
       editionLabel: label,
       siteUrl: SITE_URL,
       articles,
