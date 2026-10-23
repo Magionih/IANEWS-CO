@@ -62,6 +62,8 @@ export type NewsletterProps = {
   feature?: NewsletterFeature | null;
   briefs?: NewsletterBrief[];
   rankingAnalysis?: NewsletterRankingAnalysis | null;
+  /** "ontem" (padrão) ou "recentes" quando não houve matéria no dia anterior. */
+  articlesWindow?: "ontem" | "recentes";
 };
 
 const C = {
@@ -119,12 +121,14 @@ export function DailyNewsletter({
   feature: featureProp = null,
   briefs = [],
   rankingAnalysis = null,
+  articlesWindow = "ontem",
 }: NewsletterProps) {
   // Sem curadoria do dia, o destaque é a primeira matéria de ontem.
   const lead = featureProp ? null : articles[0] ?? null;
   const feature = featureProp ?? (lead ? articleAsFeature(lead, siteUrl) : null);
   const rest = lead ? articles.slice(1) : articles;
-  const minutes = Math.max(3, articles.reduce((s, a) => s + (a.read_minutes ?? 2), 0) + (featureProp ? 2 : 0) + Math.ceil(briefs.length / 2));
+  // Tempo de leitura do e-mail (não das matérias completas).
+  const minutes = Math.max(2, Math.round(1 + (feature ? 1.5 : 0) + briefs.length * 0.4 + rest.length * 0.5));
   const preview = feature
     ? `${feature.title}${rest.length ? ` · e mais ${rest.length} de ontem` : ""}`
     : "As notícias de IA de ontem";
@@ -160,7 +164,9 @@ export function DailyNewsletter({
             <Text style={{ fontFamily: SERIF, fontSize: "19px", lineHeight: "1.5", color: C.ink, margin: "0 0 18px" }}>
               {recipientName ? `Bom dia, ${recipientName}.` : "Bom dia."}{" "}
               {briefs.length || featureProp
-                ? "O que mais importou em inteligência artificial nesta semana e tudo o que saiu ontem na IANews."
+                ? articlesWindow === "recentes" || !articles.length
+                  ? "O que mais importou em inteligência artificial nesta semana, escolhido pela redação da IANews."
+                  : "O que mais importou em inteligência artificial nesta semana e tudo o que saiu ontem na IANews."
                 : articles.length === 1
                   ? "Esta é a notícia de inteligência artificial que saiu ontem na IANews."
                   : `Estas são as ${articles.length} notícias de inteligência artificial que saíram ontem na IANews.`}
@@ -263,7 +269,9 @@ export function DailyNewsletter({
             {rest.length ? (
               <>
                 <Rule m="32px 0 24px" />
-                <Text style={sectionLabel}>{featureProp ? "Ontem na IANews" : "Mais de ontem"}</Text>
+                <Text style={sectionLabel}>
+                  {articlesWindow === "recentes" ? "Recentes na IANews" : featureProp ? "Ontem na IANews" : "Mais de ontem"}
+                </Text>
                 {rest.map((a, i) => (
                   <Section key={a.slug} style={{ paddingBottom: "18px", marginBottom: "18px", borderBottom: i < rest.length - 1 ? `1px solid ${C.rule}` : "none" }}>
                     <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">

@@ -139,6 +139,7 @@ export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES)
 /* ---------- curadoria do dia (tabela newsletter_editions) ---------- */
 
 export type EditionExtras = {
+  articlesWindow?: "ontem" | "recentes";
   feature: NewsletterFeature | null;
   briefs: NewsletterBrief[];
   ranking: NewsletterRankItem[];
@@ -272,7 +273,8 @@ export async function renderNewsletterPreview(
   // Data da edição (YYYY-MM-DD, Brasília). Edição de uma data = matérias do dia anterior + curadoria da data.
   const at = opts.date && /^\d{4}-\d{2}-\d{2}$/.test(opts.date) ? new Date(`${opts.date}T10:00:00Z`) : new Date();
   const label = editionLabel(at);
-  let { articles } = opts.latest ? { articles: [] as NewsletterArticle[] } : await articlesForEdition(at);
+  const sel = opts.latest ? { articles: [] as NewsletterArticle[], window: "72h" as const } : await articlesForEdition(at);
+  let articles = sel.articles;
   if (articles.length === 0) {
     const { data } = await supabaseAdmin
       .from("articles")
@@ -283,7 +285,7 @@ export async function renderNewsletterPreview(
       .limit(Math.min(8, Math.max(1, opts.latest ?? 5)));
     articles = (data ?? []) as NewsletterArticle[];
   }
-  const extras = await loadEditionExtras(brtDateISO(at));
+  const extras = { ...(await loadEditionExtras(brtDateISO(at))), articlesWindow: sel.window === "ontem" ? ("ontem" as const) : ("recentes" as const) };
   const live = articles.length > 0 || Boolean(extras.feature);
   if (!live) articles = NEWSLETTER_PREVIEW_ARTICLES;
   const html = await render(
@@ -326,8 +328,11 @@ export async function runDailyNewsletter(options: NewsletterRunOptions = {}): Pr
   });
 
   let articles: NewsletterArticle[];
+  let windowKind: "ontem" | "recentes" = "ontem";
   try {
-    articles = (await articlesForEdition(now, limit)).articles;
+    const sel = await articlesForEdition(now, limit);
+    articles = sel.articles;
+    windowKind = sel.window === "ontem" ? "ontem" : "recentes";
   } catch (err) {
     return empty(err instanceof Error ? err.message : String(err));
   }
@@ -337,7 +342,7 @@ export async function runDailyNewsletter(options: NewsletterRunOptions = {}): Pr
     .lte("published_at", new Date().toISOString()).order("published_at", { ascending: false }).limit(limit);
     articles = (data ?? []) as NewsletterArticle[];
   }
-  const extras = await loadEditionExtras(editionDate);
+  const extras = { ...(await loadEditionExtras(editionDate)), articlesWindow: windowKind };
   if (articles.length === 0 && !extras.feature) {
     return empty("Nenhuma matéria nova desde a última edição e sem curadoria do dia. Edição não enviada.", { ok: true, skipped: true });
   }
