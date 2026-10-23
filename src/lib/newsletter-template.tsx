@@ -23,15 +23,45 @@ export type NewsletterRankItem = {
   position: number;
   previous: number | null;
   score: number | null;
+  /** Comentário curto da curadoria (ex.: "lidera em texto e código"). */
+  note?: string | null;
+};
+
+/** Destaque do dia escolhido pela curadoria (matéria da semana, nunca repetida). */
+export type NewsletterFeature = {
+  title: string;
+  dek?: string | null;
+  why_it_matters?: string | null;
+  category?: string | null;
+  image_url?: string | null;
+  image_credit?: string | null;
+  /** Link absoluto: matéria no site ou fonte original. */
+  url: string;
+  source_name?: string | null;
+};
+
+/** Item do "Em 30 segundos": notícia relevante da semana. */
+export type NewsletterBrief = { title: string; summary?: string | null; source_name?: string | null; url?: string | null };
+
+/** Análise do Ranking IA feita pela curadoria (com fonte). */
+export type NewsletterRankingAnalysis = {
+  analysis: string;
+  source_name?: string | null;
+  source_url?: string | null;
+  as_of?: string | null;
 };
 
 export type NewsletterProps = {
   editionLabel: string;
   siteUrl: string;
+  /** Matérias publicadas ontem nos canais da IANews ("Mais de ontem"). */
   articles: NewsletterArticle[];
   recipientName?: string | null;
   unsubscribeUrl?: string | null;
   ranking?: NewsletterRankItem[];
+  feature?: NewsletterFeature | null;
+  briefs?: NewsletterBrief[];
+  rankingAnalysis?: NewsletterRankingAnalysis | null;
 };
 
 const C = {
@@ -66,11 +96,37 @@ function Move({ pos, prev }: { pos: number; prev: number | null }) {
   return prev > pos ? <span style={{ color: C.up }}>▲ {prev - pos}</span> : <span style={{ color: C.down }}>▼ {pos - prev}</span>;
 }
 
-export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName, unsubscribeUrl, ranking = [] }: NewsletterProps) {
-  const [lead, ...rest] = articles;
-  const minutes = Math.max(3, articles.reduce((s, a) => s + (a.read_minutes ?? 2), 0));
-  const preview = lead
-    ? `${lead.title}${articles.length > 1 ? ` · e mais ${articles.length - 1} de ontem` : ""}`
+/** Converte uma matéria do site no formato de destaque. */
+const articleAsFeature = (a: NewsletterArticle, siteUrl: string): NewsletterFeature => ({
+  title: a.title,
+  dek: a.dek,
+  why_it_matters: a.why_it_matters,
+  category: a.category,
+  image_url: a.cover_image_url ?? null,
+  url: utm(siteUrl, `/materia/${a.slug}`, "destaque"),
+});
+
+const withUtm = (url: string, siteUrl: string, content: string) =>
+  url.startsWith(siteUrl) ? utm(siteUrl, url.slice(siteUrl.length) || "/", content) : url;
+
+export function DailyNewsletter({
+  editionLabel,
+  siteUrl,
+  articles,
+  recipientName,
+  unsubscribeUrl,
+  ranking = [],
+  feature: featureProp = null,
+  briefs = [],
+  rankingAnalysis = null,
+}: NewsletterProps) {
+  // Sem curadoria do dia, o destaque é a primeira matéria de ontem.
+  const lead = featureProp ? null : articles[0] ?? null;
+  const feature = featureProp ?? (lead ? articleAsFeature(lead, siteUrl) : null);
+  const rest = lead ? articles.slice(1) : articles;
+  const minutes = Math.max(3, articles.reduce((s, a) => s + (a.read_minutes ?? 2), 0) + (featureProp ? 2 : 0) + Math.ceil(briefs.length / 2));
+  const preview = feature
+    ? `${feature.title}${rest.length ? ` · e mais ${rest.length} de ontem` : ""}`
     : "As notícias de IA de ontem";
 
   return (
@@ -103,13 +159,41 @@ export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName
             {/* Abertura */}
             <Text style={{ fontFamily: SERIF, fontSize: "19px", lineHeight: "1.5", color: C.ink, margin: "0 0 18px" }}>
               {recipientName ? `Bom dia, ${recipientName}.` : "Bom dia."}{" "}
-              {articles.length === 1
-                ? "Esta é a notícia de inteligência artificial que saiu ontem na IANews."
-                : `Estas são as ${articles.length} notícias de inteligência artificial que saíram ontem na IANews.`}
+              {briefs.length || featureProp
+                ? "O que mais importou em inteligência artificial nesta semana e tudo o que saiu ontem na IANews."
+                : articles.length === 1
+                  ? "Esta é a notícia de inteligência artificial que saiu ontem na IANews."
+                  : `Estas são as ${articles.length} notícias de inteligência artificial que saíram ontem na IANews.`}
             </Text>
 
-            {/* Em 30 segundos */}
-            {articles.length > 1 ? (
+            {/* Em 30 segundos: notícias da semana (curadoria) ou, sem curadoria, as manchetes de ontem */}
+            {briefs.length ? (
+              <Section style={{ backgroundColor: C.soft, borderRadius: "10px", padding: "18px 20px", margin: "0 0 28px" }}>
+                <Text style={{ ...kick, color: C.ink, margin: "0 0 12px" }}>Em 30 segundos · a semana da IA</Text>
+                {briefs.map((b, i) => (
+                  <table key={i} width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ marginBottom: i < briefs.length - 1 ? "12px" : 0 }}>
+                    <tbody>
+                      <tr>
+                        <td valign="top" width="22" style={{ fontFamily: SANS, fontSize: "14px", fontWeight: 700, color: C.blue, paddingTop: "1px" }}>
+                          {i + 1}
+                        </td>
+                        <td valign="top" style={{ fontFamily: SANS, fontSize: "14.5px", lineHeight: "1.45", color: C.ink }}>
+                          {b.url ? (
+                            <Link href={withUtm(b.url, siteUrl, `semana-${i + 1}`)} style={{ color: C.ink, textDecoration: "none", fontWeight: 700 }}>
+                              {b.title}
+                            </Link>
+                          ) : (
+                            <b>{b.title}</b>
+                          )}
+                          {b.summary ? <span style={{ color: C.ink2 }}> {b.summary}</span> : null}
+                          {b.source_name ? <span style={{ color: C.ink3, fontSize: "12.5px" }}> ({b.source_name})</span> : null}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                ))}
+              </Section>
+            ) : articles.length > 1 ? (
               <Section style={{ backgroundColor: C.soft, borderRadius: "10px", padding: "18px 20px", margin: "0 0 28px" }}>
                 <Text style={{ ...kick, color: C.ink, margin: "0 0 10px" }}>Em 30 segundos</Text>
                 {articles.map((a, i) => (
@@ -131,39 +215,47 @@ export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName
               </Section>
             ) : null}
 
-            {/* Matéria principal */}
-            {lead ? (
+            {/* Destaque */}
+            {feature ? (
               <Section>
-                <Text style={sectionLabel}>Destaque</Text>
-                {lead.cover_image_url ? (
-                  <Link href={utm(siteUrl, `/materia/${lead.slug}`, "destaque-img")}>
+                <Text style={sectionLabel}>{featureProp ? "Destaque da semana" : "Destaque"}</Text>
+                {feature.image_url ? (
+                  <Link href={withUtm(feature.url, siteUrl, "destaque-img")}>
                     <Img
-                      src={lead.cover_image_url}
+                      src={feature.image_url}
                       width="576"
                       alt=""
-                      style={{ width: "100%", maxWidth: "576px", height: "auto", borderRadius: "10px", display: "block", margin: "0 0 18px" }}
+                      style={{ width: "100%", maxWidth: "576px", height: "auto", borderRadius: "10px", display: "block", margin: "0 0 6px" }}
                     />
                   </Link>
                 ) : null}
-                <Text style={kick}>{catLabel(lead.category)}</Text>
-                <Link href={utm(siteUrl, `/materia/${lead.slug}`, "destaque-titulo")} style={{ textDecoration: "none" }}>
-                  <Text style={{ fontFamily: SERIF, fontSize: "28px", lineHeight: "1.22", fontWeight: 700, color: C.ink, margin: "0 0 12px" }}>{lead.title}</Text>
-                </Link>
-                {lead.dek ? (
-                  <Text style={{ fontFamily: SANS, fontSize: "16px", lineHeight: "1.6", color: C.ink2, margin: "0 0 16px" }}>{lead.dek}</Text>
+                {feature.image_url && feature.image_credit ? (
+                  <Text style={{ fontFamily: SANS, fontSize: "11px", color: C.ink3, margin: "0 0 14px" }}>{feature.image_credit}</Text>
+                ) : feature.image_url ? (
+                  <div style={{ height: "12px" }}>&nbsp;</div>
                 ) : null}
-                {lead.why_it_matters ? (
+                {feature.category ? <Text style={kick}>{catLabel(feature.category)}</Text> : null}
+                <Link href={withUtm(feature.url, siteUrl, "destaque-titulo")} style={{ textDecoration: "none" }}>
+                  <Text style={{ fontFamily: SERIF, fontSize: "28px", lineHeight: "1.22", fontWeight: 700, color: C.ink, margin: "0 0 12px" }}>{feature.title}</Text>
+                </Link>
+                {feature.dek ? (
+                  <Text style={{ fontFamily: SANS, fontSize: "16px", lineHeight: "1.6", color: C.ink2, margin: "0 0 16px" }}>{feature.dek}</Text>
+                ) : null}
+                {feature.why_it_matters ? (
                   <Section style={{ borderLeft: `3px solid ${C.blue}`, padding: "2px 0 2px 16px", margin: "0 0 20px" }}>
                     <Text style={{ ...kick, margin: "0 0 4px" }}>Por que importa</Text>
-                    <Text style={{ fontFamily: SERIF, fontSize: "16px", lineHeight: "1.55", color: C.ink, margin: 0 }}>{lead.why_it_matters}</Text>
+                    <Text style={{ fontFamily: SERIF, fontSize: "16px", lineHeight: "1.55", color: C.ink, margin: 0 }}>{feature.why_it_matters}</Text>
                   </Section>
                 ) : null}
                 <Link
-                  href={utm(siteUrl, `/materia/${lead.slug}`, "destaque-botao")}
+                  href={withUtm(feature.url, siteUrl, "destaque-botao")}
                   style={{ display: "inline-block", backgroundColor: C.ink, color: "#fff", fontFamily: SANS, fontSize: "14px", fontWeight: 700, textDecoration: "none", padding: "12px 20px", borderRadius: "8px" }}
                 >
                   Ler a matéria completa →
                 </Link>
+                {feature.source_name && !feature.url.startsWith(siteUrl) ? (
+                  <Text style={{ fontFamily: SANS, fontSize: "12px", color: C.ink3, margin: "10px 0 0" }}>Fonte: {feature.source_name}</Text>
+                ) : null}
               </Section>
             ) : null}
 
@@ -171,7 +263,7 @@ export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName
             {rest.length ? (
               <>
                 <Rule m="32px 0 24px" />
-                <Text style={sectionLabel}>Mais de ontem</Text>
+                <Text style={sectionLabel}>{featureProp ? "Ontem na IANews" : "Mais de ontem"}</Text>
                 {rest.map((a, i) => (
                   <Section key={a.slug} style={{ paddingBottom: "18px", marginBottom: "18px", borderBottom: i < rest.length - 1 ? `1px solid ${C.rule}` : "none" }}>
                     <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
@@ -213,7 +305,10 @@ export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName
                   <tr>
                     <td>
                       <Text style={{ ...kick, color: "#7FB0FF", margin: "0 0 4px" }}>Ranking IA de hoje</Text>
-                      <Text style={{ fontFamily: SERIF, fontSize: "20px", fontWeight: 700, color: "#fff", margin: "0 0 14px" }}>Quem lidera a corrida</Text>
+                      <Text style={{ fontFamily: SERIF, fontSize: "20px", fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>Quem lidera a corrida</Text>
+                      {rankingAnalysis?.analysis ? (
+                        <Text style={{ fontFamily: SANS, fontSize: "14px", lineHeight: "1.55", color: "#D5DAE3", margin: "0 0 14px" }}>{rankingAnalysis.analysis}</Text>
+                      ) : null}
                     </td>
                   </tr>
                   {ranking.slice(0, 3).map((r) => (
@@ -226,9 +321,12 @@ export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName
                               <td style={{ fontFamily: SANS, fontSize: "15px", color: "#fff", fontWeight: 700 }}>
                                 {r.name}
                                 {r.maker ? <span style={{ fontWeight: 400, color: "#AEB6C2" }}> · {r.maker}</span> : null}
+                                {r.note ? (
+                                  <span style={{ display: "block", fontWeight: 400, fontSize: "12.5px", color: "#AEB6C2", marginTop: "2px" }}>{r.note}</span>
+                                ) : null}
                               </td>
                               <td align="right" style={{ fontFamily: SANS, fontSize: "12.5px", fontWeight: 700, whiteSpace: "nowrap" as const }}>
-                                <Move pos={r.position} prev={r.previous} />
+                                {r.previous != null ? <Move pos={r.position} prev={r.previous} /> : null}
                               </td>
                             </tr>
                           </tbody>
@@ -241,6 +339,16 @@ export function DailyNewsletter({ editionLabel, siteUrl, articles, recipientName
                       <Link href={utm(siteUrl, "/ranking", "ranking")} style={{ fontFamily: SANS, fontSize: "14px", fontWeight: 700, color: "#7FB0FF", textDecoration: "none" }}>
                         Ver o Ranking IA completo →
                       </Link>
+                      {rankingAnalysis?.source_name ? (
+                        <Text style={{ fontFamily: SANS, fontSize: "11.5px", color: "#8A93A2", margin: "10px 0 0" }}>
+                          Fonte: {rankingAnalysis.source_url ? (
+                            <Link href={rankingAnalysis.source_url} style={{ color: "#8A93A2", textDecoration: "underline" }}>{rankingAnalysis.source_name}</Link>
+                          ) : (
+                            rankingAnalysis.source_name
+                          )}
+                          {rankingAnalysis.as_of ? `, ${rankingAnalysis.as_of}` : ""}
+                        </Text>
+                      ) : null}
                     </td>
                   </tr>
                 </tbody>

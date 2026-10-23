@@ -20,7 +20,7 @@ async function handle(request: Request) {
       }
     }
     const { runDailyNewsletter } = await import("@/lib/newsletter.server");
-    const result = await runDailyNewsletter({ limit: body.limit ?? 8, triggeredBy: "cron" });
+    const result = await runDailyNewsletter({ limit: body.limit ?? 20, triggeredBy: "cron" });
     return Response.json({ ingested, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

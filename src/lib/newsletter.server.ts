@@ -3,7 +3,14 @@ import { render } from "@react-email/render";
 import { EmailAPIError, sendEmail, sendEmailBatch } from "@/lib/email.server";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { DailyNewsletter, type NewsletterArticle, type NewsletterRankItem } from "@/lib/newsletter-template";
+import {
+  DailyNewsletter,
+  type NewsletterArticle,
+  type NewsletterBrief,
+  type NewsletterFeature,
+  type NewsletterRankingAnalysis,
+  type NewsletterRankItem,
+} from "@/lib/newsletter-template";
 import { NEWSLETTER_PREVIEW_ARTICLES } from "@/lib/email-templates/daily-newsletter";
 
 export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
@@ -12,7 +19,7 @@ export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IANews <news@${SENDER_DOM
 const REPLY_TO = process.env.EMAIL_REPLY_TO ?? "magionih@gmail.com";
 
 const ARTICLE_FIELDS = "slug, title, dek, category, why_it_matters, read_minutes, cover_image_url, published_at";
-const MAX_ARTICLES = 8;
+const MAX_ARTICLES = 20;
 
 export type NewsletterRunOptions = {
   limit?: number;
@@ -100,6 +107,7 @@ export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES)
     .lte("published_at", new Date().toISOString())
     .gte("published_at", yesterdayStart.toISOString())
     .lt("published_at", todayStart.toISOString())
+    .or("origin.is.null,origin.neq.newsletter")
     .order("published_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(`Falha ao carregar matérias: ${error.message}`);
@@ -114,6 +122,7 @@ export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES)
     .lte("published_at", new Date().toISOString())
       .gte("published_at", since.toISOString())
       .lt("published_at", todayStart.toISOString())
+      .or("origin.is.null,origin.neq.newsletter")
       .order("published_at", { ascending: false })
       .limit(limit * 2),
     supabaseAdmin
@@ -125,6 +134,72 @@ export async function articlesForEdition(now = new Date(), limit = MAX_ARTICLES)
   const used = new Set(((lastSends ?? []) as { article_slugs: string[] | null }[]).flatMap((r) => r.article_slugs ?? []));
   const fresh = ((recent ?? []) as NewsletterArticle[]).filter((a) => !used.has(a.slug)).slice(0, limit);
   return { articles: fresh, window: "72h" as const };
+}
+
+/* ---------- curadoria do dia (tabela newsletter_editions) ---------- */
+
+export type EditionExtras = {
+  feature: NewsletterFeature | null;
+  briefs: NewsletterBrief[];
+  ranking: NewsletterRankItem[];
+  rankingAnalysis: NewsletterRankingAnalysis | null;
+};
+
+/** Lê a curadoria da data (Destaque, Em 30 segundos, Ranking). Sem curadoria, usa o Ranking do site. */
+export async function loadEditionExtras(editionDate: string): Promise<EditionExtras> {
+  type EditionRow = { destaque: any; briefs: any; ranking: any };
+  let row = null as EditionRow | null;
+  try {
+    const { data } = await supabaseAdmin
+      .from("newsletter_editions" as never)
+      .select("destaque, briefs, ranking")
+      .eq("edition_date", editionDate)
+      .maybeSingle();
+    row = (data as EditionRow | null) ?? null;
+  } catch {
+    row = null;
+  }
+  const d = row?.destaque;
+  const feature: NewsletterFeature | null =
+    d && typeof d.title === "string" && typeof d.url === "string"
+      ? {
+          title: String(d.title).slice(0, 220),
+          dek: d.dek ?? null,
+          why_it_matters: d.why_it_matters ?? null,
+          category: d.category ?? null,
+          image_url: typeof d.image_url === "string" && /^https:\/\//.test(d.image_url) ? d.image_url : null,
+          image_credit: d.image_credit ?? null,
+          url: String(d.url),
+          source_name: d.source_name ?? null,
+        }
+      : null;
+  const briefs: NewsletterBrief[] = Array.isArray(row?.briefs)
+    ? (row!.briefs as any[])
+        .filter((b) => b && typeof b.title === "string")
+        .slice(0, 6)
+        .map((b) => ({ title: String(b.title), summary: b.summary ?? null, source_name: b.source_name ?? null, url: typeof b.url === "string" ? b.url : null }))
+    : [];
+  const r = row?.ranking;
+  const curatedItems: NewsletterRankItem[] = Array.isArray(r?.items)
+    ? (r.items as any[]).slice(0, 3).map((it, i) => ({
+        name: String(it.name ?? ""),
+        maker: it.maker ?? null,
+        position: Number(it.position ?? i + 1),
+        previous: it.previous ?? null,
+        score: null,
+        note: it.note ?? null,
+      }))
+    : [];
+  const rankingAnalysis: NewsletterRankingAnalysis | null =
+    r && typeof r.analysis === "string"
+      ? { analysis: r.analysis, source_name: r.source_name ?? null, source_url: r.source_url ?? null, as_of: r.as_of ?? null }
+      : null;
+  return {
+    feature,
+    briefs,
+    ranking: curatedItems.length ? curatedItems : await rankingTop(),
+    rankingAnalysis,
+  };
 }
 
 /* ---------- renderização ---------- */
@@ -139,19 +214,24 @@ function escapeHtml(v: string) {
 export const unsubscribeUrlFor = (token: string) => `${SITE_URL}/descadastrar?t=${token}`;
 const oneClickUrlFor = (token: string) => `${SITE_URL}/api/public/unsubscribe?t=${token}`;
 
-function plainText(articles: NewsletterArticle[], label: string, unsub: string) {
-  return [
-    `IANews — edição de ${label}`,
-    "",
-    ...articles.map((a, i) => `${i + 1}. ${a.title}\n${a.dek ?? ""}\n${SITE_URL}/materia/${a.slug}\n`),
-    "",
-    `Cancelar inscrição: ${unsub}`,
-  ].join("\n");
+function plainText(articles: NewsletterArticle[], label: string, unsub: string, extras?: EditionExtras) {
+  const lines = [`IANews — ${label}`, ""];
+  if (extras?.feature) lines.push("DESTAQUE DA SEMANA", extras.feature.title, extras.feature.dek ?? "", extras.feature.url, "");
+  if (extras?.briefs.length) {
+    lines.push("EM 30 SEGUNDOS");
+    extras.briefs.forEach((b, i) => lines.push(`${i + 1}. ${b.title}${b.summary ? ` ${b.summary}` : ""}${b.url ? ` ${b.url}` : ""}`));
+    lines.push("");
+  }
+  if (articles.length) {
+    lines.push("ONTEM NA IANEWS");
+    articles.forEach((a, i) => lines.push(`${i + 1}. ${a.title}\n${a.dek ?? ""}\n${SITE_URL}/materia/${a.slug}\n`));
+  }
+  lines.push("", `Cancelar inscrição: ${unsub}`);
+  return lines.join("\n");
 }
 
-async function renderVariants(articles: NewsletterArticle[], label: string) {
-  const ranking = await rankingTop();
-  const base = { editionLabel: label, siteUrl: SITE_URL, articles, unsubscribeUrl: UNSUB_TOKEN, ranking };
+async function renderVariants(articles: NewsletterArticle[], label: string, extras: EditionExtras) {
+  const base = { editionLabel: label, siteUrl: SITE_URL, articles, unsubscribeUrl: UNSUB_TOKEN, ...extras };
   const [withName, noName] = await Promise.all([
     render(React.createElement(DailyNewsletter, { ...base, recipientName: NAME_TOKEN })),
     render(React.createElement(DailyNewsletter, { ...base, recipientName: null })),
@@ -159,7 +239,7 @@ async function renderVariants(articles: NewsletterArticle[], label: string) {
   return (name: string | null, token: string | null) => {
     const unsub = token ? unsubscribeUrlFor(token) : `${SITE_URL}/newsletter`;
     const html = (name ? withName.split(NAME_TOKEN).join(escapeHtml(name)) : noName).split(UNSUB_TOKEN).join(unsub);
-    return { html, text: plainText(articles, label, unsub) };
+    return { html, text: plainText(articles, label, unsub, extras) };
   };
 }
 
@@ -187,10 +267,12 @@ function isFatal(err: unknown) {
 
 /** HTML da newsletter para visualização no painel (usa as matérias de ontem ou as mais recentes). */
 export async function renderNewsletterPreview(
-  opts: { latest?: number } = {},
+  opts: { latest?: number; date?: string } = {},
 ): Promise<{ html: string; subject: string; live: boolean }> {
-  const label = editionLabel();
-  let { articles } = opts.latest ? { articles: [] as NewsletterArticle[] } : await articlesForEdition();
+  // Data da edição (YYYY-MM-DD, Brasília). Edição de uma data = matérias do dia anterior + curadoria da data.
+  const at = opts.date && /^\d{4}-\d{2}-\d{2}$/.test(opts.date) ? new Date(`${opts.date}T10:00:00Z`) : new Date();
+  const label = editionLabel(at);
+  let { articles } = opts.latest ? { articles: [] as NewsletterArticle[] } : await articlesForEdition(at);
   if (articles.length === 0) {
     const { data } = await supabaseAdmin
       .from("articles")
@@ -201,11 +283,12 @@ export async function renderNewsletterPreview(
       .limit(Math.min(8, Math.max(1, opts.latest ?? 5)));
     articles = (data ?? []) as NewsletterArticle[];
   }
-  const live = articles.length > 0;
+  const extras = await loadEditionExtras(brtDateISO(at));
+  const live = articles.length > 0 || Boolean(extras.feature);
   if (!live) articles = NEWSLETTER_PREVIEW_ARTICLES;
   const html = await render(
     React.createElement(DailyNewsletter, {
-      ranking: await rankingTop(),
+      ...extras,
       editionLabel: label,
       siteUrl: SITE_URL,
       articles,
@@ -213,19 +296,20 @@ export async function renderNewsletterPreview(
       unsubscribeUrl: `${SITE_URL}/newsletter`,
     }),
   );
-  return { html, subject: subjectFor(articles), live };
+  return { html, subject: subjectFor(articles, extras.feature), live };
 }
 
-function subjectFor(articles: NewsletterArticle[]) {
-  const first = articles[0]?.title ?? "As notícias de IA de ontem";
-  const more = articles.length > 1 ? ` (+${articles.length - 1})` : "";
+function subjectFor(articles: NewsletterArticle[], feature?: NewsletterFeature | null) {
+  const first = feature?.title ?? articles[0]?.title ?? "As notícias de IA de ontem";
+  const others = feature ? articles.length : articles.length - 1;
+  const more = others > 0 ? ` (+${others})` : "";
   return `${first}${more}`.slice(0, 180);
 }
 
 /* ---------- envio ---------- */
 
 export async function runDailyNewsletter(options: NewsletterRunOptions = {}): Promise<NewsletterRunResult> {
-  const limit = Math.max(1, Math.min(10, options.limit ?? MAX_ARTICLES));
+  const limit = Math.max(1, Math.min(25, options.limit ?? MAX_ARTICLES));
   const triggeredBy = options.triggeredBy ?? "cron";
   const now = new Date();
   const label = editionLabel(now);
@@ -253,13 +337,14 @@ export async function runDailyNewsletter(options: NewsletterRunOptions = {}): Pr
     .lte("published_at", new Date().toISOString()).order("published_at", { ascending: false }).limit(limit);
     articles = (data ?? []) as NewsletterArticle[];
   }
-  if (articles.length === 0) {
-    return empty("Nenhuma matéria nova desde a última edição. Edição de hoje não enviada.", { ok: true, skipped: true });
+  const extras = await loadEditionExtras(editionDate);
+  if (articles.length === 0 && !extras.feature) {
+    return empty("Nenhuma matéria nova desde a última edição e sem curadoria do dia. Edição não enviada.", { ok: true, skipped: true });
   }
 
-  const subject = subjectFor(articles);
+  const subject = subjectFor(articles, extras.feature);
   const apiKey = process.env.RESEND_API_KEY;
-  const build = await renderVariants(articles, label);
+  const build = await renderVariants(articles, label, extras);
 
   // Envio de teste: um único e-mail, sem registro de edição.
   if (options.testEmail) {
