@@ -41,6 +41,7 @@ import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/eng
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
+import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hooks/cover'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
@@ -208,6 +209,11 @@ const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
   path: '/api/public/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksCoverRoute = ApiPublicHooksCoverRouteImport.update({
+  id: '/api/public/hooks/cover',
+  path: '/api/public/hooks/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksDailyNewsletterRoute =
   ApiPublicHooksDailyNewsletterRouteImport.update({
     id: '/api/public/hooks/daily-newsletter',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
@@ -514,6 +526,7 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
+  ApiPublicHooksCoverRoute: typeof ApiPublicHooksCoverRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
@@ -748,6 +761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/cover': {
+      id: '/api/public/hooks/cover'
+      path: '/api/public/hooks/cover'
+      fullPath: '/api/public/hooks/cover'
+      preLoaderRoute: typeof ApiPublicHooksCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-newsletter': {
       id: '/api/public/hooks/daily-newsletter'
       path: '/api/public/hooks/daily-newsletter'
@@ -838,6 +858,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
+  ApiPublicHooksCoverRoute: ApiPublicHooksCoverRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
