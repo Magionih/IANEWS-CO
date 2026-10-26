@@ -61,12 +61,33 @@ export async function findPageImage(pageUrl: string): Promise<string | null> {
   return null;
 }
 
+// Wikimedia exige um User-Agent identificado e limita o ritmo de downloads.
+const WIKI_UA = "IANewsCoverBot/1.0 (https://ianewsbr.com/contato; magionih@gmail.com)";
+let lastWiki = 0;
+
 async function download(imageUrl: string, referer?: string) {
-  const res = await fetch(imageUrl, {
-    headers: { "user-agent": UA, accept: "image/avif,image/webp,image/*,*/*;q=0.8", ...(referer ? { referer } : {}) },
-    redirect: "follow",
-    signal: AbortSignal.timeout(25000),
-  });
+  const isWiki = /(^|\.)wiki(m|p)edia\.org\//i.test(new URL(imageUrl).host + "/");
+  if (isWiki) {
+    const wait = lastWiki + 2500 - Date.now();
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    lastWiki = Date.now();
+  }
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(imageUrl, {
+      headers: {
+        "user-agent": isWiki ? WIKI_UA : UA,
+        accept: "image/avif,image/webp,image/*,*/*;q=0.8",
+        ...(referer && !isWiki ? { referer } : {}),
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(25000),
+    });
+    if (res.status !== 429) break;
+    const retry = Number(res.headers.get("retry-after")) || 5 * (attempt + 1);
+    await new Promise((r) => setTimeout(r, Math.min(retry, 20) * 1000));
+  }
+  res = res!;
   if (!res.ok) throw new Error(`Imagem respondeu ${res.status}`);
   const type = (res.headers.get("content-type") ?? "").split(";")[0]!.trim().toLowerCase();
   if (!type.startsWith("image/") || type === "image/svg+xml") throw new Error(`Não é imagem (${type || "sem tipo"})`);
