@@ -20,6 +20,9 @@ export type CoverRequest = {
   credit?: string | null;
   /** Substitui a capa mesmo se já houver uma no nosso storage. */
   force?: boolean;
+  /** Imagem enviada diretamente (base64, sem o prefixo data:), ex.: recorte de um post. */
+  image_base64?: string | null;
+  image_type?: string | null;
 };
 
 export type CoverResult = { slug: string; ok: boolean; url?: string; error?: string; from?: string };
@@ -127,13 +130,23 @@ export async function saveCover(req: CoverRequest): Promise<CoverResult> {
   if (isHttps(row.cover_image_url) && !isOwnCover(row.cover_image_url)) candidates.push({ url: row.cover_image_url, from: "capa atual" });
 
   const errors: string[] = [];
+  if (req.image_base64) {
+    const type = (req.image_type ?? "image/jpeg").toLowerCase();
+    const buf = Buffer.from(req.image_base64, "base64");
+    if (!EXT[type]) errors.push(`base64: tipo ${type} não aceito`);
+    else if (buf.length < MIN_BYTES || buf.length > MAX_BYTES) errors.push("base64: tamanho inválido");
+    else candidates.unshift({ url: `data:${type}`, from: "base64" });
+    if (candidates[0]?.from === "base64") (candidates[0] as { buf?: Buffer; type?: string }).buf = buf;
+    if (candidates[0]?.from === "base64") (candidates[0] as { buf?: Buffer; type?: string }).type = type;
+  }
   for (const c of candidates) {
     if (!c.url) {
       errors.push(c.from);
       continue;
     }
     try {
-      const { buf, type } = await download(c.url, c.referer);
+      const pre = c as { buf?: Buffer; type?: string };
+      const { buf, type } = pre.buf ? { buf: pre.buf, type: pre.type! } : await download(c.url, c.referer);
       const hash = createHash("sha1").update(buf).digest("hex").slice(0, 12);
       const path = `${slug}/${hash}.${EXT[type] ?? "jpg"}`;
       const up = await supabaseAdmin.storage.from(BUCKET).upload(path, buf, { contentType: type, upsert: true, cacheControl: "31536000" });
