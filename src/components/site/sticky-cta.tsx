@@ -7,7 +7,7 @@ import { useConsent } from "@/components/site/consent-banner";
 import { trackCta } from "@/lib/cta-tracking";
 
 const DISMISS_KEY = "ianews_sticky_dismissed";
-const HIDDEN_PREFIXES = ["/admin", "/auth", "/cadastro", "/habitos"];
+const HIDDEN_PREFIXES = ["/admin", "/auth", "/cadastro", "/habitos", "/pauta"];
 
 /** Barra fixa de captação que aparece após 35% de rolagem. */
 export function StickyCta() {
