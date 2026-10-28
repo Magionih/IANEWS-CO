@@ -988,7 +988,7 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 .pt-card h3{font-size:18px;font-weight:900;letter-spacing:-.01em}
 .pt-card p{color:var(--p-ink-2);margin-top:8px;font-size:15.5px}
 .pt-steps{list-style:none;margin:0;padding:0;counter-reset:pt;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.pt-steps li{counter-increment:pt;display:grid;gap:6px;padding:18px 0 0;border-top:2px solid var(--p-ink)}
+.pt-steps li{counter-increment:pt;display:grid;align-content:start;gap:6px;padding:18px 0 0;border-top:2px solid var(--p-ink)}
 .pt-steps li::before{content:counter(pt);font-size:28px;font-weight:900;color:var(--p-blue);line-height:1;font-variant-numeric:tabular-nums}
 .pt-steps b{font-size:17px}
 .pt-steps span{color:var(--p-ink-2);font-size:15px}
@@ -1000,7 +1000,8 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 .pt-ex:hover .thumb img{transform:scale(1.03)}
 .pt-form-sec{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:24px 56px;align-items:start;scroll-margin-top:80px}
 .pt-form-head h2{font-size:clamp(26px,3.2vw,36px);font-weight:900;letter-spacing:-.02em;margin-top:10px}
-.pt-form-head p{color:var(--p-ink-2);margin-top:10px;font-family:var(--p-serif);font-size:18px;line-height:1.45}
+.pt-form-head p:not(.kick){color:var(--p-ink-2);margin-top:10px;font-family:var(--p-serif);font-size:18px;line-height:1.45}
+.pt-card-form{grid-area:auto}
 .pt-opt{font-weight:400;color:var(--p-ink-3);font-size:12.5px}
 .pt-err{display:block;color:var(--p-bad);font-size:13px;font-weight:500}
 .field.pt-bad{border-color:var(--p-bad)}
