@@ -14,9 +14,12 @@ export function useAdminAccess() {
     retry: false,
     staleTime: 60_000,
   });
+  const roles = data?.roles ?? [];
   return {
-    roles: data?.roles ?? [],
+    roles,
     isAdmin: !!data?.isAdmin,
     isEditor: !!data?.isEditor,
+    /** Equipe do CRM interno: admin, comercial e editorial. */
+    hasCrm: roles.some((r) => ["admin", "comercial", "editorial", "editor"].includes(r)),
   };
 }

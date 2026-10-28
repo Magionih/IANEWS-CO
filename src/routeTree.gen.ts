@@ -36,6 +36,7 @@ import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
 import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
 import { Route as SCodeRouteImport } from './routes/s.$code'
+import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated/admin_.crm'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
@@ -43,13 +44,27 @@ import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
+import { Route as AuthenticatedAdminCrmIndexRouteImport } from './routes/_authenticated/admin_.crm.index'
+import { Route as AuthenticatedAdminCrmAudienciaRouteImport } from './routes/_authenticated/admin_.crm.audiencia'
+import { Route as AuthenticatedAdminCrmConfigRouteImport } from './routes/_authenticated/admin_.crm.config'
+import { Route as AuthenticatedAdminCrmNegociosRouteImport } from './routes/_authenticated/admin_.crm.negocios'
+import { Route as AuthenticatedAdminCrmPautasRouteImport } from './routes/_authenticated/admin_.crm.pautas'
+import { Route as AuthenticatedAdminCrmPublicidadeRouteImport } from './routes/_authenticated/admin_.crm.publicidade'
+import { Route as AuthenticatedAdminCrmRelatoriosRouteImport } from './routes/_authenticated/admin_.crm.relatorios'
+import { Route as AuthenticatedAdminCrmTarefasRouteImport } from './routes/_authenticated/admin_.crm.tarefas'
 import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hooks/cover'
+import { Route as ApiPublicHooksCrmDailyRouteImport } from './routes/api/public/hooks/crm-daily'
+import { Route as ApiPublicHooksCrmWeeklyRouteImport } from './routes/api/public/hooks/crm-weekly'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
 import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
 import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
+import { Route as AuthenticatedAdminCrmEmpresasIndexRouteImport } from './routes/_authenticated/admin_.crm.empresas.index'
+import { Route as AuthenticatedAdminCrmEmpresasIdRouteImport } from './routes/_authenticated/admin_.crm.empresas.$id'
+import { Route as AuthenticatedAdminCrmPessoasIndexRouteImport } from './routes/_authenticated/admin_.crm.pessoas.index'
+import { Route as AuthenticatedAdminCrmPessoasIdRouteImport } from './routes/_authenticated/admin_.crm.pessoas.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -186,6 +201,11 @@ const SCodeRoute = SCodeRouteImport.update({
   path: '/s/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
+  id: '/admin_/crm',
+  path: '/admin/crm',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicAdMetricsRoute = ApiPublicAdMetricsRouteImport.update({
   id: '/api/public/ad-metrics',
   path: '/api/public/ad-metrics',
@@ -221,9 +241,67 @@ const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
   path: '/api/public/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminCrmIndexRoute =
+  AuthenticatedAdminCrmIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmAudienciaRoute =
+  AuthenticatedAdminCrmAudienciaRouteImport.update({
+    id: '/audiencia',
+    path: '/audiencia',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmConfigRoute =
+  AuthenticatedAdminCrmConfigRouteImport.update({
+    id: '/config',
+    path: '/config',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmNegociosRoute =
+  AuthenticatedAdminCrmNegociosRouteImport.update({
+    id: '/negocios',
+    path: '/negocios',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmPautasRoute =
+  AuthenticatedAdminCrmPautasRouteImport.update({
+    id: '/pautas',
+    path: '/pautas',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmPublicidadeRoute =
+  AuthenticatedAdminCrmPublicidadeRouteImport.update({
+    id: '/publicidade',
+    path: '/publicidade',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmRelatoriosRoute =
+  AuthenticatedAdminCrmRelatoriosRouteImport.update({
+    id: '/relatorios',
+    path: '/relatorios',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmTarefasRoute =
+  AuthenticatedAdminCrmTarefasRouteImport.update({
+    id: '/tarefas',
+    path: '/tarefas',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
 const ApiPublicHooksCoverRoute = ApiPublicHooksCoverRouteImport.update({
   id: '/api/public/hooks/cover',
   path: '/api/public/hooks/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksCrmDailyRoute = ApiPublicHooksCrmDailyRouteImport.update({
+  id: '/api/public/hooks/crm-daily',
+  path: '/api/public/hooks/crm-daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksCrmWeeklyRoute = ApiPublicHooksCrmWeeklyRouteImport.update({
+  id: '/api/public/hooks/crm-weekly',
+  path: '/api/public/hooks/crm-weekly',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksDailyNewsletterRoute =
@@ -260,6 +338,30 @@ const ApiPublicHooksWeeklyRankingRoute =
     path: '/api/public/hooks/weekly-ranking',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminCrmEmpresasIndexRoute =
+  AuthenticatedAdminCrmEmpresasIndexRouteImport.update({
+    id: '/empresas/',
+    path: '/empresas/',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmEmpresasIdRoute =
+  AuthenticatedAdminCrmEmpresasIdRouteImport.update({
+    id: '/empresas/$id',
+    path: '/empresas/$id',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmPessoasIndexRoute =
+  AuthenticatedAdminCrmPessoasIndexRouteImport.update({
+    id: '/pessoas/',
+    path: '/pessoas/',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
+const AuthenticatedAdminCrmPessoasIdRoute =
+  AuthenticatedAdminCrmPessoasIdRouteImport.update({
+    id: '/pessoas/$id',
+    path: '/pessoas/$id',
+    getParentRoute: () => AuthenticatedAdminCrmRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -288,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
+  '/admin/crm': typeof AuthenticatedAdminCrmRouteWithChildren
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
@@ -295,13 +398,27 @@ export interface FileRoutesByFullPath {
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/admin/crm/audiencia': typeof AuthenticatedAdminCrmAudienciaRoute
+  '/admin/crm/config': typeof AuthenticatedAdminCrmConfigRoute
+  '/admin/crm/negocios': typeof AuthenticatedAdminCrmNegociosRoute
+  '/admin/crm/pautas': typeof AuthenticatedAdminCrmPautasRoute
+  '/admin/crm/publicidade': typeof AuthenticatedAdminCrmPublicidadeRoute
+  '/admin/crm/relatorios': typeof AuthenticatedAdminCrmRelatoriosRoute
+  '/admin/crm/tarefas': typeof AuthenticatedAdminCrmTarefasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
+  '/api/public/hooks/crm-daily': typeof ApiPublicHooksCrmDailyRoute
+  '/api/public/hooks/crm-weekly': typeof ApiPublicHooksCrmWeeklyRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
+  '/admin/crm/': typeof AuthenticatedAdminCrmIndexRoute
+  '/admin/crm/empresas/$id': typeof AuthenticatedAdminCrmEmpresasIdRoute
+  '/admin/crm/pessoas/$id': typeof AuthenticatedAdminCrmPessoasIdRoute
+  '/admin/crm/empresas/': typeof AuthenticatedAdminCrmEmpresasIndexRoute
+  '/admin/crm/pessoas/': typeof AuthenticatedAdminCrmPessoasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -337,13 +454,27 @@ export interface FileRoutesByTo {
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/admin/crm/audiencia': typeof AuthenticatedAdminCrmAudienciaRoute
+  '/admin/crm/config': typeof AuthenticatedAdminCrmConfigRoute
+  '/admin/crm/negocios': typeof AuthenticatedAdminCrmNegociosRoute
+  '/admin/crm/pautas': typeof AuthenticatedAdminCrmPautasRoute
+  '/admin/crm/publicidade': typeof AuthenticatedAdminCrmPublicidadeRoute
+  '/admin/crm/relatorios': typeof AuthenticatedAdminCrmRelatoriosRoute
+  '/admin/crm/tarefas': typeof AuthenticatedAdminCrmTarefasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
+  '/api/public/hooks/crm-daily': typeof ApiPublicHooksCrmDailyRoute
+  '/api/public/hooks/crm-weekly': typeof ApiPublicHooksCrmWeeklyRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
+  '/admin/crm': typeof AuthenticatedAdminCrmIndexRoute
+  '/admin/crm/empresas/$id': typeof AuthenticatedAdminCrmEmpresasIdRoute
+  '/admin/crm/pessoas/$id': typeof AuthenticatedAdminCrmPessoasIdRoute
+  '/admin/crm/empresas': typeof AuthenticatedAdminCrmEmpresasIndexRoute
+  '/admin/crm/pessoas': typeof AuthenticatedAdminCrmPessoasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -374,6 +505,7 @@ export interface FileRoutesById {
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
+  '/_authenticated/admin_/crm': typeof AuthenticatedAdminCrmRouteWithChildren
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
@@ -381,13 +513,27 @@ export interface FileRoutesById {
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/_authenticated/admin_/crm/audiencia': typeof AuthenticatedAdminCrmAudienciaRoute
+  '/_authenticated/admin_/crm/config': typeof AuthenticatedAdminCrmConfigRoute
+  '/_authenticated/admin_/crm/negocios': typeof AuthenticatedAdminCrmNegociosRoute
+  '/_authenticated/admin_/crm/pautas': typeof AuthenticatedAdminCrmPautasRoute
+  '/_authenticated/admin_/crm/publicidade': typeof AuthenticatedAdminCrmPublicidadeRoute
+  '/_authenticated/admin_/crm/relatorios': typeof AuthenticatedAdminCrmRelatoriosRoute
+  '/_authenticated/admin_/crm/tarefas': typeof AuthenticatedAdminCrmTarefasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
+  '/api/public/hooks/crm-daily': typeof ApiPublicHooksCrmDailyRoute
+  '/api/public/hooks/crm-weekly': typeof ApiPublicHooksCrmWeeklyRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
+  '/_authenticated/admin_/crm/': typeof AuthenticatedAdminCrmIndexRoute
+  '/_authenticated/admin_/crm/empresas/$id': typeof AuthenticatedAdminCrmEmpresasIdRoute
+  '/_authenticated/admin_/crm/pessoas/$id': typeof AuthenticatedAdminCrmPessoasIdRoute
+  '/_authenticated/admin_/crm/empresas/': typeof AuthenticatedAdminCrmEmpresasIndexRoute
+  '/_authenticated/admin_/crm/pessoas/': typeof AuthenticatedAdminCrmPessoasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -418,6 +564,7 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
+    | '/admin/crm'
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
@@ -425,13 +572,27 @@ export interface FileRouteTypes {
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/admin/crm/audiencia'
+    | '/admin/crm/config'
+    | '/admin/crm/negocios'
+    | '/admin/crm/pautas'
+    | '/admin/crm/publicidade'
+    | '/admin/crm/relatorios'
+    | '/admin/crm/tarefas'
     | '/api/public/hooks/cover'
+    | '/api/public/hooks/crm-daily'
+    | '/api/public/hooks/crm-weekly'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
+    | '/admin/crm/'
+    | '/admin/crm/empresas/$id'
+    | '/admin/crm/pessoas/$id'
+    | '/admin/crm/empresas/'
+    | '/admin/crm/pessoas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -467,13 +628,27 @@ export interface FileRouteTypes {
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/admin/crm/audiencia'
+    | '/admin/crm/config'
+    | '/admin/crm/negocios'
+    | '/admin/crm/pautas'
+    | '/admin/crm/publicidade'
+    | '/admin/crm/relatorios'
+    | '/admin/crm/tarefas'
     | '/api/public/hooks/cover'
+    | '/api/public/hooks/crm-daily'
+    | '/api/public/hooks/crm-weekly'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
+    | '/admin/crm'
+    | '/admin/crm/empresas/$id'
+    | '/admin/crm/pessoas/$id'
+    | '/admin/crm/empresas'
+    | '/admin/crm/pessoas'
   id:
     | '__root__'
     | '/'
@@ -503,6 +678,7 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
+    | '/_authenticated/admin_/crm'
     | '/api/public/ad-metrics'
     | '/api/public/cta'
     | '/api/public/engagement'
@@ -510,13 +686,27 @@ export interface FileRouteTypes {
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/_authenticated/admin_/crm/audiencia'
+    | '/_authenticated/admin_/crm/config'
+    | '/_authenticated/admin_/crm/negocios'
+    | '/_authenticated/admin_/crm/pautas'
+    | '/_authenticated/admin_/crm/publicidade'
+    | '/_authenticated/admin_/crm/relatorios'
+    | '/_authenticated/admin_/crm/tarefas'
     | '/api/public/hooks/cover'
+    | '/api/public/hooks/crm-daily'
+    | '/api/public/hooks/crm-weekly'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
+    | '/_authenticated/admin_/crm/'
+    | '/_authenticated/admin_/crm/empresas/$id'
+    | '/_authenticated/admin_/crm/pessoas/$id'
+    | '/_authenticated/admin_/crm/empresas/'
+    | '/_authenticated/admin_/crm/pessoas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -553,6 +743,8 @@ export interface RootRouteChildren {
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
   ApiPublicHooksCoverRoute: typeof ApiPublicHooksCoverRoute
+  ApiPublicHooksCrmDailyRoute: typeof ApiPublicHooksCrmDailyRoute
+  ApiPublicHooksCrmWeeklyRoute: typeof ApiPublicHooksCrmWeeklyRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
@@ -752,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin_/crm': {
+      id: '/_authenticated/admin_/crm'
+      path: '/admin/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/ad-metrics': {
       id: '/api/public/ad-metrics'
       path: '/api/public/ad-metrics'
@@ -801,11 +1000,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin_/crm/': {
+      id: '/_authenticated/admin_/crm/'
+      path: '/'
+      fullPath: '/admin/crm/'
+      preLoaderRoute: typeof AuthenticatedAdminCrmIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/audiencia': {
+      id: '/_authenticated/admin_/crm/audiencia'
+      path: '/audiencia'
+      fullPath: '/admin/crm/audiencia'
+      preLoaderRoute: typeof AuthenticatedAdminCrmAudienciaRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/config': {
+      id: '/_authenticated/admin_/crm/config'
+      path: '/config'
+      fullPath: '/admin/crm/config'
+      preLoaderRoute: typeof AuthenticatedAdminCrmConfigRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/negocios': {
+      id: '/_authenticated/admin_/crm/negocios'
+      path: '/negocios'
+      fullPath: '/admin/crm/negocios'
+      preLoaderRoute: typeof AuthenticatedAdminCrmNegociosRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/pautas': {
+      id: '/_authenticated/admin_/crm/pautas'
+      path: '/pautas'
+      fullPath: '/admin/crm/pautas'
+      preLoaderRoute: typeof AuthenticatedAdminCrmPautasRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/publicidade': {
+      id: '/_authenticated/admin_/crm/publicidade'
+      path: '/publicidade'
+      fullPath: '/admin/crm/publicidade'
+      preLoaderRoute: typeof AuthenticatedAdminCrmPublicidadeRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/relatorios': {
+      id: '/_authenticated/admin_/crm/relatorios'
+      path: '/relatorios'
+      fullPath: '/admin/crm/relatorios'
+      preLoaderRoute: typeof AuthenticatedAdminCrmRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/tarefas': {
+      id: '/_authenticated/admin_/crm/tarefas'
+      path: '/tarefas'
+      fullPath: '/admin/crm/tarefas'
+      preLoaderRoute: typeof AuthenticatedAdminCrmTarefasRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
     '/api/public/hooks/cover': {
       id: '/api/public/hooks/cover'
       path: '/api/public/hooks/cover'
       fullPath: '/api/public/hooks/cover'
       preLoaderRoute: typeof ApiPublicHooksCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/crm-daily': {
+      id: '/api/public/hooks/crm-daily'
+      path: '/api/public/hooks/crm-daily'
+      fullPath: '/api/public/hooks/crm-daily'
+      preLoaderRoute: typeof ApiPublicHooksCrmDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/crm-weekly': {
+      id: '/api/public/hooks/crm-weekly'
+      path: '/api/public/hooks/crm-weekly'
+      fullPath: '/api/public/hooks/crm-weekly'
+      preLoaderRoute: typeof ApiPublicHooksCrmWeeklyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/daily-newsletter': {
@@ -850,17 +1119,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWeeklyRankingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin_/crm/empresas/': {
+      id: '/_authenticated/admin_/crm/empresas/'
+      path: '/empresas'
+      fullPath: '/admin/crm/empresas/'
+      preLoaderRoute: typeof AuthenticatedAdminCrmEmpresasIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/empresas/$id': {
+      id: '/_authenticated/admin_/crm/empresas/$id'
+      path: '/empresas/$id'
+      fullPath: '/admin/crm/empresas/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCrmEmpresasIdRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/pessoas/': {
+      id: '/_authenticated/admin_/crm/pessoas/'
+      path: '/pessoas'
+      fullPath: '/admin/crm/pessoas/'
+      preLoaderRoute: typeof AuthenticatedAdminCrmPessoasIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
+    '/_authenticated/admin_/crm/pessoas/$id': {
+      id: '/_authenticated/admin_/crm/pessoas/$id'
+      path: '/pessoas/$id'
+      fullPath: '/admin/crm/pessoas/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCrmPessoasIdRouteImport
+      parentRoute: typeof AuthenticatedAdminCrmRoute
+    }
   }
 }
+
+interface AuthenticatedAdminCrmRouteChildren {
+  AuthenticatedAdminCrmAudienciaRoute: typeof AuthenticatedAdminCrmAudienciaRoute
+  AuthenticatedAdminCrmConfigRoute: typeof AuthenticatedAdminCrmConfigRoute
+  AuthenticatedAdminCrmNegociosRoute: typeof AuthenticatedAdminCrmNegociosRoute
+  AuthenticatedAdminCrmPautasRoute: typeof AuthenticatedAdminCrmPautasRoute
+  AuthenticatedAdminCrmPublicidadeRoute: typeof AuthenticatedAdminCrmPublicidadeRoute
+  AuthenticatedAdminCrmRelatoriosRoute: typeof AuthenticatedAdminCrmRelatoriosRoute
+  AuthenticatedAdminCrmTarefasRoute: typeof AuthenticatedAdminCrmTarefasRoute
+  AuthenticatedAdminCrmIndexRoute: typeof AuthenticatedAdminCrmIndexRoute
+  AuthenticatedAdminCrmEmpresasIdRoute: typeof AuthenticatedAdminCrmEmpresasIdRoute
+  AuthenticatedAdminCrmPessoasIdRoute: typeof AuthenticatedAdminCrmPessoasIdRoute
+  AuthenticatedAdminCrmEmpresasIndexRoute: typeof AuthenticatedAdminCrmEmpresasIndexRoute
+  AuthenticatedAdminCrmPessoasIndexRoute: typeof AuthenticatedAdminCrmPessoasIndexRoute
+}
+
+const AuthenticatedAdminCrmRouteChildren: AuthenticatedAdminCrmRouteChildren = {
+  AuthenticatedAdminCrmAudienciaRoute: AuthenticatedAdminCrmAudienciaRoute,
+  AuthenticatedAdminCrmConfigRoute: AuthenticatedAdminCrmConfigRoute,
+  AuthenticatedAdminCrmNegociosRoute: AuthenticatedAdminCrmNegociosRoute,
+  AuthenticatedAdminCrmPautasRoute: AuthenticatedAdminCrmPautasRoute,
+  AuthenticatedAdminCrmPublicidadeRoute: AuthenticatedAdminCrmPublicidadeRoute,
+  AuthenticatedAdminCrmRelatoriosRoute: AuthenticatedAdminCrmRelatoriosRoute,
+  AuthenticatedAdminCrmTarefasRoute: AuthenticatedAdminCrmTarefasRoute,
+  AuthenticatedAdminCrmIndexRoute: AuthenticatedAdminCrmIndexRoute,
+  AuthenticatedAdminCrmEmpresasIdRoute: AuthenticatedAdminCrmEmpresasIdRoute,
+  AuthenticatedAdminCrmPessoasIdRoute: AuthenticatedAdminCrmPessoasIdRoute,
+  AuthenticatedAdminCrmEmpresasIndexRoute:
+    AuthenticatedAdminCrmEmpresasIndexRoute,
+  AuthenticatedAdminCrmPessoasIndexRoute:
+    AuthenticatedAdminCrmPessoasIndexRoute,
+}
+
+const AuthenticatedAdminCrmRouteWithChildren =
+  AuthenticatedAdminCrmRoute._addFileChildren(
+    AuthenticatedAdminCrmRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedHabitosRoute: typeof AuthenticatedHabitosRoute
+  AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedHabitosRoute: AuthenticatedHabitosRoute,
+  AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -901,6 +1237,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
   ApiPublicHooksCoverRoute: ApiPublicHooksCoverRoute,
+  ApiPublicHooksCrmDailyRoute: ApiPublicHooksCrmDailyRoute,
+  ApiPublicHooksCrmWeeklyRoute: ApiPublicHooksCrmWeeklyRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
