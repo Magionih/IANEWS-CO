@@ -381,6 +381,16 @@ export function DailyNewsletter({
                 </tr>
                 <tr>
                   <td valign="top" style={{ paddingBottom: "14px" }}>
+                    <Link href={utm(siteUrl, "/pauta", "pauta")} style={{ fontFamily: SANS, fontSize: "15px", fontWeight: 700, color: C.ink, textDecoration: "none" }}>
+                      Sua empresa usa IA? Envie sua pauta →
+                    </Link>
+                    <Text style={{ fontFamily: SANS, fontSize: "13.5px", lineHeight: "1.5", color: C.ink3, margin: "4px 0 0" }}>
+                      Conte o que vocês fazem com IA. A redação avalia e responde em até 2 dias úteis.
+                    </Text>
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top" style={{ paddingBottom: "14px" }}>
                     <Text style={{ fontFamily: SANS, fontSize: "15px", fontWeight: 700, color: C.ink, margin: 0 }}>Responda este e-mail</Text>
                     <Text style={{ fontFamily: SANS, fontSize: "13.5px", lineHeight: "1.5", color: C.ink3, margin: "4px 0 0" }}>
                       Uma pauta, uma dúvida ou um caso de IA na sua empresa. A redação lê todas as respostas.
@@ -408,6 +418,7 @@ export function DailyNewsletter({
             <Text style={{ fontFamily: SANS, fontSize: "12px", lineHeight: "1.7", color: C.ink3, margin: 0 }}>
               <Link href={utm(siteUrl, "/", "rodape")} style={{ color: C.ink3 }}>ianewsbr.com</Link> ·{" "}
               <Link href="https://www.instagram.com/ianews.co/" style={{ color: C.ink3 }}>Instagram</Link> ·{" "}
+              <Link href={utm(siteUrl, "/pauta", "pauta-rodape")} style={{ color: C.ink3 }}>Envie sua pauta</Link> ·{" "}
               <Link href={`${siteUrl}/termos`} style={{ color: C.ink3 }}>Privacidade</Link>
               <br />
               Você recebe este e-mail porque assinou a newsletter da IANews.

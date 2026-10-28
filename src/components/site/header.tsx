@@ -174,6 +174,13 @@ export function SiteHeader() {
             <Link to="/empresas" aria-current={cur("/empresas")}>
               Para empresas
             </Link>
+            <Link
+              to="/pauta"
+              search={{ utm_source: "site", utm_medium: "menu", utm_campaign: "pauta" }}
+              aria-current={cur("/pauta")}
+            >
+              Envie sua pauta
+            </Link>
             {isAdmin && (
               <Link to="/admin" aria-current={cur("/admin")}>
                 Painel
@@ -224,6 +231,14 @@ export function SiteHeader() {
               </Link>
               <Link className="m" to="/empresas" aria-current={cur("/empresas")}>
                 Para empresas
+              </Link>
+              <Link
+                className="m"
+                to="/pauta"
+                search={{ utm_source: "site", utm_medium: "menu", utm_campaign: "pauta" }}
+                aria-current={cur("/pauta")}
+              >
+                Envie sua pauta
               </Link>
               <Link className="m" to="/newsletter" aria-current={cur("/newsletter")}>
                 Newsletter

@@ -4,6 +4,8 @@ import { template as leadWelcomeTemplate } from './lead-welcome'
 import { template as leadReminderTemplate } from './lead-reminder'
 import { weeklyRankingTemplate } from './weekly-ranking'
 import { template as contactNotificationTemplate } from './contact-notification'
+import { template as pautaNotificationTemplate } from './pauta-notification'
+import { template as pautaConfirmationTemplate } from './pauta-confirmation'
 
 
 export interface TemplateEntry {
@@ -29,5 +31,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'lead-reminder': leadReminderTemplate,
   'weekly-ranking': weeklyRankingTemplate,
   'contact-notification': contactNotificationTemplate,
+  'pauta-notification': pautaNotificationTemplate,
+  'pauta-confirmation': pautaConfirmationTemplate,
 }
 

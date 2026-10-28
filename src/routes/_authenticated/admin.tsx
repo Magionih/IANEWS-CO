@@ -56,6 +56,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { NewsletterPanel } from "@/components/admin/newsletter-panel";
 import { MessagesPanel } from "@/components/admin/messages-panel";
+import { PautasPanel } from "@/components/admin/pautas-panel";
 import { SharePanel } from "@/components/admin/share-panel";
 import { AnalyticsPanel } from "@/components/admin/analytics-panel";
 import { ConversionPanel } from "@/components/admin/conversion-panel";
@@ -416,7 +417,14 @@ function AdminPage() {
                 />
               </div>
 
-              <Tabs defaultValue="audience" className="mt-6">
+              <Tabs
+                defaultValue={
+                  typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aba") === "pautas"
+                    ? "pautas"
+                    : "audience"
+                }
+                className="mt-6"
+              >
                 <TabsList className="h-11 w-full justify-start overflow-x-auto">
                   <TabsTrigger value="audience">Audiência</TabsTrigger>
                   <TabsTrigger value="conversion">Conversão</TabsTrigger>
@@ -426,6 +434,7 @@ function AdminPage() {
                   <TabsTrigger value="activity">Atividade</TabsTrigger>
                   <TabsTrigger value="ops">Automação</TabsTrigger>
                   <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
+                  <TabsTrigger value="pautas">Pautas</TabsTrigger>
                   <TabsTrigger value="messages">Mensagens</TabsTrigger>
                   <TabsTrigger value="share">Stories</TabsTrigger>
                 </TabsList>
@@ -669,6 +678,10 @@ function AdminPage() {
 
                 <TabsContent value="newsletter" className="mt-5">
                   <NewsletterPanel />
+                </TabsContent>
+
+                <TabsContent value="pautas" className="mt-5">
+                  <PautasPanel />
                 </TabsContent>
 
                 <TabsContent value="messages" className="mt-5">

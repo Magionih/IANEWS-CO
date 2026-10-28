@@ -376,6 +376,20 @@ function ArticlePage() {
                 </section>
               ) : null}
 
+              <aside className="art-pauta" aria-label="Envie sua pauta">
+                <p>
+                  Sua empresa usa IA de um jeito que merece ser contado?
+                  <small>Envie sua pauta para a IA News. A redação avalia e responde em até 2 dias úteis.</small>
+                </p>
+                <Link
+                  className="btn blue"
+                  to="/pauta"
+                  search={{ utm_source: "site", utm_medium: "materia", utm_campaign: "pauta", materia: article.slug }}
+                >
+                  Envie sua pauta
+                </Link>
+              </aside>
+
               {article.analysis_markdown ? (
                 <section className="art-block">
                   <h2 className="h-sm" id="s-analise">

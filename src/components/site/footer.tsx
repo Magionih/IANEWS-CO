@@ -47,6 +47,9 @@ export function SiteFooter() {
             <Link to="/newsletter">Newsletter</Link>
             <Link to="/empresas">Para empresas</Link>
             <Link to="/anuncie">Anuncie</Link>
+            <Link to="/pauta" search={{ utm_source: "site", utm_medium: "rodape", utm_campaign: "pauta" }}>
+              Envie sua pauta
+            </Link>
             <Link to="/sobre">Como fazemos</Link>
             <Link to="/contato">Contato</Link>
             <a href="https://www.instagram.com/ianews.co/" target="_blank" rel="noopener noreferrer">

@@ -121,10 +121,15 @@ function LinksPage() {
             </span>
             <Arrow />
           </Link>
-          <Link to="/contato" search={{ assunto: "pauta" }} className="lk-card lk-row" onClick={click("pauta")}>
+          <Link
+            to="/pauta"
+            search={{ utm_source: "instagram", utm_medium: "bio", utm_campaign: "pauta" }}
+            className="lk-card lk-row"
+            onClick={click("pauta")}
+          >
             <span>
-              <b>Sugira uma pauta à redação</b>
-              <small>Uma notícia, um caso real ou uma dúvida sobre IA. A redação avalia cada sugestão e decide o que vira matéria.</small>
+              <b>Sua empresa usa IA? Envie sua pauta</b>
+              <small>Conte o que sua empresa faz com IA. A redação avalia cada pauta e responde em até 2 dias úteis.</small>
             </span>
             <Arrow />
           </Link>
