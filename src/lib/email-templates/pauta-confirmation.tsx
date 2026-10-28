@@ -28,8 +28,8 @@ const Email = (p: Props) => (
     </Text>
     <Text style={s.small}>
       Outro assunto? Escreva para{' '}
-      <Link href="mailto:comercial@ianews.site" style={{ color: C.blueInk }}>
-        comercial@ianews.site
+      <Link href="mailto:ianewscomercial@gmail.com" style={{ color: C.blueInk }}>
+        ianewscomercial@gmail.com
       </Link>
       .
     </Text>

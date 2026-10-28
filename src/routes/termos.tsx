@@ -77,7 +77,7 @@ const SECTIONS = [
     body: [
       "Na página Envie sua pauta (ianewsbr.com/pauta), coletamos nome, cargo, empresa, contatos (WhatsApp e e-mail), links da empresa e a descrição da pauta, além da página de origem, dos parâmetros de campanha (UTM) e do tipo de dispositivo.",
       "Esses dados são usados só para a redação avaliar a pauta e para a equipe da IA News entrar em contato. Não são compartilhados com terceiros e o envio depende do seu consentimento, marcado no formulário.",
-      "Para pedir a exclusão dos dados de uma pauta, escreva para comercial@ianews.site. O pedido é atendido apagando os dados do registro.",
+      "Para pedir a exclusão dos dados de uma pauta, escreva para ianewscomercial@gmail.com. O pedido é atendido apagando os dados do registro.",
     ],
   },
   {

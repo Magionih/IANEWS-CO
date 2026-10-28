@@ -6,7 +6,7 @@ import { validatePauta, type PautaInput } from "@/lib/pauta-validate";
 /* Recebe o formulário da página /pauta. Revalida tudo, descarta robôs (campo isca),
    limita 3 envios por hora por IP ou e-mail, grava em pauta_leads e avisa o comercial. */
 
-const NOTIFY_TO = ["comercial@ianews.site", "magionih@gmail.com"];
+const NOTIFY_TO = ["ianewscomercial@gmail.com"];
 const LIMIT_PER_HOUR = 3;
 
 const str = (v: unknown, max = 1000) => (typeof v === "string" ? v.slice(0, max) : "");
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/public/pauta")({
         const [byIp, byEmail] = await Promise.all([recent("ip_hash", ipHash), recent("email", clean.email)]);
         if (Math.max(byIp.count ?? 0, byEmail.count ?? 0) >= LIMIT_PER_HOUR) {
           return Response.json(
-            { ok: false, error: "Recebemos várias pautas suas na última hora. Tente de novo mais tarde ou escreva para comercial@ianews.site." },
+            { ok: false, error: "Recebemos várias pautas suas na última hora. Tente de novo mais tarde ou escreva para ianewscomercial@gmail.com." },
             { status: 429 },
           );
         }
@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/public/pauta")({
         if (error) {
           console.error("[pauta] insert error", error.message);
           return Response.json(
-            { ok: false, error: "Não conseguimos enviar agora. Tente de novo ou escreva para comercial@ianews.site." },
+            { ok: false, error: "Não conseguimos enviar agora. Tente de novo ou escreva para ianewscomercial@gmail.com." },
             { status: 500 },
           );
         }
@@ -109,7 +109,7 @@ export const Route = createFileRoute("/api/public/pauta")({
             ...NOTIFY_TO.map((to) => sendTemplateEmail("pauta-notification", to, { templateData: row, replyTo: row.email })),
             sendTemplateEmail("pauta-confirmation", row.email, {
               templateData: { nome: row.nome, empresa: row.empresa },
-              replyTo: "comercial@ianews.site",
+              replyTo: "ianewscomercial@gmail.com",
             }),
           ]);
         } catch (err) {
