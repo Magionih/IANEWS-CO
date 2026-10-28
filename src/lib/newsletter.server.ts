@@ -13,10 +13,10 @@ import {
 } from "@/lib/newsletter-template";
 import { NEWSLETTER_PREVIEW_ARTICLES } from "@/lib/email-templates/daily-newsletter";
 
-export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
-export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "ianewsbr.com";
-export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IANews <news@${SENDER_DOMAIN}>`;
-const REPLY_TO = process.env.EMAIL_REPLY_TO ?? "magionih@gmail.com";
+export const SITE_URL = process.env.NEWSLETTER_SITE_URL?.trim() || "https://ianewsbr.com";
+export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN?.trim() || "ianewsbr.com";
+export const FROM_ADDRESS = process.env.EMAIL_FROM?.trim() || `IA News <news@${SENDER_DOMAIN}>`;
+const REPLY_TO = process.env.EMAIL_REPLY_TO?.trim() || "magionih@gmail.com";
 
 const ARTICLE_FIELDS = "slug, title, dek, category, why_it_matters, read_minutes, cover_image_url, published_at";
 const MAX_ARTICLES = 20;

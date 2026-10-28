@@ -69,7 +69,7 @@ export async function sendTemplateEmail(
     await sendEmail(
       {
         to: recipient,
-        from: process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        from: process.env.EMAIL_FROM?.trim() || `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html,
