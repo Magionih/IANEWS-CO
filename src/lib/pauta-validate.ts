@@ -18,7 +18,7 @@ export type PautaErrors = Partial<Record<keyof PautaInput, string>>;
 
 export const DESC_MIN = 30;
 export const DESC_MAX = 800;
-export const CONTACT_EMAIL = "comercial@ianews.site";
+export const CONTACT_EMAIL = "ianewscomercial@gmail.com";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 

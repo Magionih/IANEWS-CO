@@ -6,9 +6,9 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { WeeklyRankingEmail, type RankingEmailTool } from "@/lib/ranking-email-template";
 import { RANKING_PREVIEW_TOOLS } from "@/lib/email-templates/weekly-ranking";
 
-export const SITE_URL = process.env.NEWSLETTER_SITE_URL ?? "https://ianewsbr.com";
-export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN ?? "ianewsbr.com";
-export const FROM_ADDRESS = process.env.EMAIL_FROM ?? `IA News <news@${SENDER_DOMAIN}>`;
+export const SITE_URL = process.env.NEWSLETTER_SITE_URL?.trim() || "https://ianewsbr.com";
+export const SENDER_DOMAIN = process.env.EMAIL_SENDER_DOMAIN?.trim() || "ianewsbr.com";
+export const FROM_ADDRESS = process.env.EMAIL_FROM?.trim() || `IA News <news@${SENDER_DOMAIN}>`;
 
 const TOOL_COLS =
   "slug, name, maker, category, website, about, weekly_score, previous_score, rank_position, previous_position, ratings_avg";

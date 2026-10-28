@@ -5,7 +5,7 @@ async function handle(request: Request) {
   const denied = await cronUnauthorized(request);
   if (denied) return denied;
   try {
-    const body = await readJson<{ limit: number; ingest: boolean }>(request);
+    const body = await readJson<{ limit: number; ingest: boolean; test_email: string }>(request);
     if (!emailSendingEnabled()) {
       return Response.json({ ok: true, skipped: "Envio de e-mails desligado (sem RESEND_API_KEY ou NEWSLETTER_ENABLED=false)." });
     }
@@ -20,7 +20,12 @@ async function handle(request: Request) {
       }
     }
     const { runDailyNewsletter } = await import("@/lib/newsletter.server");
-    const result = await runDailyNewsletter({ limit: body.limit ?? 20, triggeredBy: "cron" });
+    // Edição de teste: envia só para o e-mail informado, sem tocar na base nem no registro diário.
+    const testEmail =
+      typeof body.test_email === "string" && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.test_email.trim())
+        ? body.test_email.trim().toLowerCase()
+        : null;
+    const result = await runDailyNewsletter({ limit: body.limit ?? 20, triggeredBy: testEmail ? "test" : "cron", testEmail });
     return Response.json({ ingested, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

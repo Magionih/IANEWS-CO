@@ -4,8 +4,8 @@ import { Body, Container, Head, Html, Img, Link, Preview, Section, Text } from "
 import { CATEGORY_SEO } from "@/lib/categories";
 
 /* Newsletter diária IANews — edição editorial (v2).
-   Estrutura: cabeçalho de jornal → "Em 30 segundos" → matéria principal → mais de ontem
-   → Ranking IA do dia → participe → rodapé. Tudo em tabelas/estilos inline (compatível com Gmail/Outlook). */
+   Estrutura: cabeçalho de jornal → abertura → destaque da semana → ontem na IANews
+   → Ranking IA do dia (com logos) → "Em 30 segundos" da semana → participe → rodapé. Tudo em tabelas/estilos inline (compatível com Gmail/Outlook). */
 
 export type NewsletterArticle = {
   slug: string;
@@ -98,6 +98,21 @@ function Move({ pos, prev }: { pos: number; prev: number | null }) {
   return prev > pos ? <span style={{ color: C.up }}>▲ {prev - pos}</span> : <span style={{ color: C.down }}>▼ {pos - prev}</span>;
 }
 
+/** Logo da empresa (arquivos em /public/email/logos). Sem logo conhecido, mostra a inicial. */
+const LOGOS: [RegExp, string][] = [
+  [/anthropic|claude/i, "anthropic"],
+  [/\bmeta\b|muse|llama/i, "meta"],
+  [/google|gemini|deepmind/i, "google"],
+  [/\bxai\b|grok/i, "xai"],
+  [/deepseek/i, "deepseek"],
+  [/mistral/i, "mistral"],
+  [/alibaba|qwen/i, "alibaba"],
+  [/moonshot|kimi/i, "moonshot"],
+  [/nvidia|nemotron/i, "nvidia"],
+  [/perplexity/i, "perplexity"],
+];
+const makerLogo = (maker: string | null, name: string) => LOGOS.find(([re]) => re.test(`${maker ?? ""} ${name}`))?.[1] ?? null;
+
 /** Converte uma matéria do site no formato de destaque. */
 const articleAsFeature = (a: NewsletterArticle, siteUrl: string): NewsletterFeature => ({
   title: a.title,
@@ -171,55 +186,6 @@ export function DailyNewsletter({
                   ? "Esta é a notícia de inteligência artificial que saiu ontem na IANews."
                   : `Estas são as ${articles.length} notícias de inteligência artificial que saíram ontem na IANews.`}
             </Text>
-
-            {/* Em 30 segundos: notícias da semana (curadoria) ou, sem curadoria, as manchetes de ontem */}
-            {briefs.length ? (
-              <Section style={{ backgroundColor: C.soft, borderRadius: "10px", padding: "18px 20px", margin: "0 0 28px" }}>
-                <Text style={{ ...kick, color: C.ink, margin: "0 0 12px" }}>Em 30 segundos · a semana da IA</Text>
-                {briefs.map((b, i) => (
-                  <table key={i} width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ marginBottom: i < briefs.length - 1 ? "12px" : 0 }}>
-                    <tbody>
-                      <tr>
-                        <td valign="top" width="22" style={{ fontFamily: SANS, fontSize: "14px", fontWeight: 700, color: C.blue, paddingTop: "1px" }}>
-                          {i + 1}
-                        </td>
-                        <td valign="top" style={{ fontFamily: SANS, fontSize: "14.5px", lineHeight: "1.45", color: C.ink }}>
-                          {b.url ? (
-                            <Link href={withUtm(b.url, siteUrl, `semana-${i + 1}`)} style={{ color: C.ink, textDecoration: "none", fontWeight: 700 }}>
-                              {b.title}
-                            </Link>
-                          ) : (
-                            <b>{b.title}</b>
-                          )}
-                          {b.summary ? <span style={{ color: C.ink2 }}> {b.summary}</span> : null}
-                          {b.source_name ? <span style={{ color: C.ink3, fontSize: "12.5px" }}> ({b.source_name})</span> : null}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                ))}
-              </Section>
-            ) : articles.length > 1 ? (
-              <Section style={{ backgroundColor: C.soft, borderRadius: "10px", padding: "18px 20px", margin: "0 0 28px" }}>
-                <Text style={{ ...kick, color: C.ink, margin: "0 0 10px" }}>Em 30 segundos</Text>
-                {articles.map((a, i) => (
-                  <table key={a.slug} width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ marginBottom: i < articles.length - 1 ? "8px" : 0 }}>
-                    <tbody>
-                      <tr>
-                        <td valign="top" width="22" style={{ fontFamily: SANS, fontSize: "14px", fontWeight: 700, color: C.blue, paddingTop: "1px" }}>
-                          {i + 1}
-                        </td>
-                        <td valign="top">
-                          <Link href={utm(siteUrl, `/materia/${a.slug}`, `resumo-${i + 1}`)} style={{ fontFamily: SANS, fontSize: "14.5px", lineHeight: "1.45", color: C.ink, textDecoration: "none" }}>
-                            {a.title}
-                          </Link>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                ))}
-              </Section>
-            ) : null}
 
             {/* Destaque */}
             {feature ? (
@@ -305,62 +271,129 @@ export function DailyNewsletter({
             ) : null}
           </Section>
 
-          {/* Ranking IA */}
+          {/* Ranking IA: quem lidera a corrida, com a marca de cada empresa */}
           {ranking.length ? (
-            <Section style={{ backgroundColor: C.ink, padding: "26px 32px", margin: "12px 0 0" }}>
-              <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
-                <tbody>
-                  <tr>
-                    <td>
-                      <Text style={{ ...kick, color: "#7FB0FF", margin: "0 0 4px" }}>Ranking IA de hoje</Text>
-                      <Text style={{ fontFamily: SERIF, fontSize: "20px", fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>Quem lidera a corrida</Text>
-                      {rankingAnalysis?.analysis ? (
-                        <Text style={{ fontFamily: SANS, fontSize: "14px", lineHeight: "1.55", color: "#D5DAE3", margin: "0 0 14px" }}>{rankingAnalysis.analysis}</Text>
-                      ) : null}
-                    </td>
-                  </tr>
-                  {ranking.slice(0, 3).map((r) => (
-                    <tr key={r.position}>
-                      <td style={{ borderTop: "1px solid rgba(255,255,255,.12)", padding: "11px 0" }}>
-                        <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
-                          <tbody>
-                            <tr>
-                              <td width="34" style={{ fontFamily: SERIF, fontSize: "22px", fontWeight: 700, color: "#7FB0FF" }}>{r.position}</td>
-                              <td style={{ fontFamily: SANS, fontSize: "15px", color: "#fff", fontWeight: 700 }}>
-                                {r.name}
-                                {r.maker ? <span style={{ fontWeight: 400, color: "#AEB6C2" }}> · {r.maker}</span> : null}
-                                {r.note ? (
-                                  <span style={{ display: "block", fontWeight: 400, fontSize: "12.5px", color: "#AEB6C2", marginTop: "2px" }}>{r.note}</span>
-                                ) : null}
-                              </td>
-                              <td align="right" style={{ fontFamily: SANS, fontSize: "12.5px", fontWeight: 700, whiteSpace: "nowrap" as const }}>
-                                {r.previous != null ? <Move pos={r.position} prev={r.previous} /> : null}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+            <Section style={{ backgroundColor: C.ink, padding: "28px 32px 26px", margin: "12px 0 0" }}>
+              <Text style={{ ...kick, color: "#7FB0FF", margin: "0 0 4px" }}>Ranking IA de hoje</Text>
+              <Text style={{ fontFamily: SERIF, fontSize: "22px", fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>Quem lidera a corrida</Text>
+              {rankingAnalysis?.analysis ? (
+                <Text style={{ fontFamily: SANS, fontSize: "14px", lineHeight: "1.55", color: "#D5DAE3", margin: "0 0 18px" }}>{rankingAnalysis.analysis}</Text>
+              ) : null}
+              {ranking.slice(0, 3).map((r, i) => {
+                const logo = makerLogo(r.maker, r.name);
+                const first = i === 0;
+                return (
+                  <table
+                    key={r.position}
+                    width="100%"
+                    cellPadding={0}
+                    cellSpacing={0}
+                    role="presentation"
+                    style={{
+                      backgroundColor: first ? "#16233A" : "#161B23",
+                      border: `1px solid ${first ? "#2B4C80" : "#232A35"}`,
+                      borderRadius: "12px",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <tbody>
+                      <tr>
+                        <td width="44" align="center" valign="middle" style={{ padding: "14px 0 14px 14px", fontFamily: SERIF, fontSize: first ? "30px" : "24px", fontWeight: 700, color: first ? "#7FB0FF" : "#8A93A2" }}>
+                          {r.position}º
+                        </td>
+                        <td width="64" align="center" valign="middle" style={{ padding: "14px 6px" }}>
+                          {logo ? (
+                            <Img src={`${siteUrl}/email/logos/${logo}.png`} width={first ? "48" : "42"} height={first ? "48" : "42"} alt={r.maker ?? r.name} style={{ display: "block", borderRadius: "11px" }} />
+                          ) : (
+                            <div style={{ width: "42px", height: "42px", lineHeight: "42px", borderRadius: "11px", backgroundColor: "#fff", color: C.ink, fontFamily: SANS, fontSize: "18px", fontWeight: 700, textAlign: "center" as const }}>
+                              {(r.maker ?? r.name).slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                        </td>
+                        <td valign="middle" style={{ padding: "14px 6px" }}>
+                          <Text style={{ fontFamily: SANS, fontSize: first ? "17px" : "15.5px", fontWeight: 700, color: "#fff", margin: 0, lineHeight: "1.3" }}>{r.name}</Text>
+                          <Text style={{ fontFamily: SANS, fontSize: "12.5px", color: "#AEB6C2", margin: "2px 0 0", lineHeight: "1.4" }}>
+                            {[r.maker, r.note].filter(Boolean).join(" · ")}
+                          </Text>
+                        </td>
+                        <td align="right" valign="middle" style={{ padding: "14px 16px 14px 6px", fontFamily: SANS, fontSize: "12.5px", fontWeight: 700, whiteSpace: "nowrap" as const }}>
+                          {first ? (
+                            <span style={{ display: "inline-block", backgroundColor: C.blue, color: "#fff", borderRadius: "999px", padding: "4px 10px", fontSize: "11px", letterSpacing: "0.6px", textTransform: "uppercase" as const }}>
+                              Líder
+                            </span>
+                          ) : r.previous != null ? (
+                            <Move pos={r.position} prev={r.previous} />
+                          ) : null}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                );
+              })}
+              <Link href={utm(siteUrl, "/ranking", "ranking")} style={{ display: "inline-block", marginTop: "8px", fontFamily: SANS, fontSize: "14px", fontWeight: 700, color: "#7FB0FF", textDecoration: "none" }}>
+                Ver o Ranking IA completo →
+              </Link>
+              {rankingAnalysis?.source_name ? (
+                <Text style={{ fontFamily: SANS, fontSize: "11.5px", color: "#8A93A2", margin: "10px 0 0" }}>
+                  Fonte: {rankingAnalysis.source_url ? (
+                    <Link href={rankingAnalysis.source_url} style={{ color: "#8A93A2", textDecoration: "underline" }}>{rankingAnalysis.source_name}</Link>
+                  ) : (
+                    rankingAnalysis.source_name
+                  )}
+                  {rankingAnalysis.as_of ? `, ${rankingAnalysis.as_of}` : ""}
+                </Text>
+              ) : null}
+            </Section>
+          ) : null}
+
+          {/* Em 30 segundos: as notícias da semana (curadoria), no fim da edição */}
+          {briefs.length ? (
+            <Section style={{ padding: "30px 32px 6px" }}>
+              <Text style={{ ...kick, margin: "0 0 4px" }}>Em 30 segundos</Text>
+              <Text style={{ fontFamily: SERIF, fontSize: "22px", fontWeight: 700, color: C.ink, margin: "0 0 16px" }}>A semana da IA</Text>
+              {briefs.map((b, i) => (
+                <table
+                  key={i}
+                  width="100%"
+                  cellPadding={0}
+                  cellSpacing={0}
+                  role="presentation"
+                  style={{ borderTop: `1px solid ${C.rule}`, ...(i === briefs.length - 1 ? { borderBottom: `1px solid ${C.rule}` } : {}) }}
+                >
+                  <tbody>
+                    <tr>
+                      <td valign="top" width="40" style={{ padding: "14px 0" }}>
+                        <div style={{ width: "28px", height: "28px", lineHeight: "28px", borderRadius: "14px", backgroundColor: C.blueSoft, color: C.blueInk, fontFamily: SANS, fontSize: "13px", fontWeight: 700, textAlign: "center" as const }}>
+                          {i + 1}
+                        </div>
+                      </td>
+                      <td valign="top" style={{ padding: "14px 0" }}>
+                        {b.url ? (
+                          <Link href={withUtm(b.url, siteUrl, `semana-${i + 1}`)} style={{ textDecoration: "none" }}>
+                            <Text style={{ fontFamily: SANS, fontSize: "15.5px", lineHeight: "1.4", fontWeight: 700, color: C.ink, margin: 0 }}>{b.title}</Text>
+                          </Link>
+                        ) : (
+                          <Text style={{ fontFamily: SANS, fontSize: "15.5px", lineHeight: "1.4", fontWeight: 700, color: C.ink, margin: 0 }}>{b.title}</Text>
+                        )}
+                        {b.summary ? (
+                          <Text style={{ fontFamily: SANS, fontSize: "14px", lineHeight: "1.55", color: C.ink2, margin: "4px 0 0" }}>{b.summary}</Text>
+                        ) : null}
+                        {b.source_name ? (
+                          <Text style={{ fontFamily: SANS, fontSize: "11.5px", letterSpacing: "0.3px", color: C.ink3, margin: "6px 0 0" }}>
+                            {b.url ? (
+                              <Link href={withUtm(b.url, siteUrl, `semana-${i + 1}-fonte`)} style={{ color: C.ink3, textDecoration: "underline" }}>
+                                {b.source_name}
+                              </Link>
+                            ) : (
+                              b.source_name
+                            )}
+                          </Text>
+                        ) : null}
                       </td>
                     </tr>
-                  ))}
-                  <tr>
-                    <td style={{ paddingTop: "8px" }}>
-                      <Link href={utm(siteUrl, "/ranking", "ranking")} style={{ fontFamily: SANS, fontSize: "14px", fontWeight: 700, color: "#7FB0FF", textDecoration: "none" }}>
-                        Ver o Ranking IA completo →
-                      </Link>
-                      {rankingAnalysis?.source_name ? (
-                        <Text style={{ fontFamily: SANS, fontSize: "11.5px", color: "#8A93A2", margin: "10px 0 0" }}>
-                          Fonte: {rankingAnalysis.source_url ? (
-                            <Link href={rankingAnalysis.source_url} style={{ color: "#8A93A2", textDecoration: "underline" }}>{rankingAnalysis.source_name}</Link>
-                          ) : (
-                            rankingAnalysis.source_name
-                          )}
-                          {rankingAnalysis.as_of ? `, ${rankingAnalysis.as_of}` : ""}
-                        </Text>
-                      ) : null}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              ))}
             </Section>
           ) : null}
 
