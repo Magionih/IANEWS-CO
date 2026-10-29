@@ -6,8 +6,6 @@ import { weeklyRankingTemplate } from './weekly-ranking'
 import { template as contactNotificationTemplate } from './contact-notification'
 import { template as pautaNotificationTemplate } from './pauta-notification'
 import { template as pautaConfirmationTemplate } from './pauta-confirmation'
-import { template as crmDailyTemplate } from './crm-daily'
-import { template as crmWeeklyTemplate } from './crm-weekly'
 
 
 export interface TemplateEntry {
@@ -35,7 +33,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-notification': contactNotificationTemplate,
   'pauta-notification': pautaNotificationTemplate,
   'pauta-confirmation': pautaConfirmationTemplate,
-  'crm-daily': crmDailyTemplate,
-  'crm-weekly': crmWeeklyTemplate,
 }
 

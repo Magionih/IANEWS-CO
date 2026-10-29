@@ -103,7 +103,7 @@ export function SiteHeader() {
   const [search, setSearch] = useState(false);
   const [ddOff, setDdOff] = useState(false);
   const { isAuthenticated } = useAuth();
-  const { isAdmin, hasCrm } = useAdminAccess();
+  const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -186,11 +186,6 @@ export function SiteHeader() {
                 Painel
               </Link>
             )}
-            {hasCrm && (
-              <Link to="/admin/crm" aria-current={cur("/admin/crm")}>
-                CRM
-              </Link>
-            )}
           </nav>
           <div className="top-act">
             <button className="icon-btn" type="button" aria-label="Buscar" onClick={() => setSearch(true)}>
@@ -259,11 +254,6 @@ export function SiteHeader() {
                   {isAdmin && (
                     <Link className="m" to="/admin">
                       Painel
-                    </Link>
-                  )}
-                  {hasCrm && (
-                    <Link className="m" to="/admin/crm">
-                      CRM
                     </Link>
                   )}
                   <a

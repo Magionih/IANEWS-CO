@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type AdminRole = "admin" | "editor" | "reader" | "comercial" | "editorial";
+export type AdminRole = "admin" | "editor" | "reader";
 
 export type AdminArticle = {
   id: string;
@@ -266,7 +266,7 @@ export const setUserRole = createServerFn({ method: "POST" })
     if (delError) throw new Error(delError.message);
     const { error } = await context.supabase
       .from("user_roles")
-      .insert({ user_id: data.user_id, role: data.role as never });
+      .insert({ user_id: data.user_id, role: data.role });
     if (error) throw new Error(error.message);
     return { ok: true };
   });

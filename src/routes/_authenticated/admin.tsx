@@ -335,9 +335,6 @@ function AdminPage() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <Button variant="outline" className="h-11 rounded-lg font-bold" onClick={() => navigate({ to: "/admin/crm" })}>
-              <Users className="mr-2 h-4 w-4" /> CRM
-            </Button>
             <Button
               variant="outline"
               onClick={() => refetch()}
@@ -561,7 +558,7 @@ function AdminPage() {
                             </td>
                             <td className="px-4 py-3">
                               <Select
-                                value={(["admin", "comercial", "editorial", "editor"] as const).find((p) => r.roles.includes(p)) ?? "reader"}
+                                value={r.roles.includes("admin") ? "admin" : r.roles.includes("editor") ? "editor" : "reader"}
                                 onValueChange={(v) => changeRole(r.user_id, v as AdminRole)}
                               >
                                 <SelectTrigger className="h-9 w-[140px]">
@@ -570,8 +567,6 @@ function AdminPage() {
                                 <SelectContent>
                                   <SelectItem value="reader">Leitor</SelectItem>
                                   <SelectItem value="editor">Editor</SelectItem>
-                                  <SelectItem value="editorial">Editorial (CRM)</SelectItem>
-                                  <SelectItem value="comercial">Comercial (CRM)</SelectItem>
                                   <SelectItem value="admin">Administrador</SelectItem>
                                 </SelectContent>
                               </Select>
