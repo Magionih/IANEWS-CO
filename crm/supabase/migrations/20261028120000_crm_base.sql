@@ -1405,3 +1405,20 @@ begin
     perform public.crm_ingerir_contato(c);
   end loop;
 end $$;
+
+-- ---------------------------------------------------------------------
+-- 24. Funções de gatilho e de cálculo interno não são chamadas pela API
+--     (alerta do Supabase "SECURITY DEFINER executável"); os gatilhos continuam funcionando.
+-- ---------------------------------------------------------------------
+do $$
+declare f text;
+begin
+  foreach f in array array[
+    'crm_campanhas_antes()', 'crm_contact_messages_entrada()', 'crm_empresas_antes()', 'crm_entregas_antes()',
+    'crm_leads_entrada()', 'crm_negocios_antes()', 'crm_negocios_depois()', 'crm_pauta_leads_entrada()',
+    'crm_pessoas_antes()', 'crm_tocar_empresas()', 'crm_tarefas_antes()', 'crm_set_updated_at()',
+    'crm_pontuacao_empresa(uuid, boolean, text, boolean, date)', 'crm_recalcular_empresa(uuid)'] loop
+    execute format('revoke execute on function public.%s from public, anon, authenticated', f);
+    execute format('grant execute on function public.%s to service_role', f);
+  end loop;
+end $$;
