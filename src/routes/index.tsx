@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SinceLastVisit } from "@/components/site/reader-hooks";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -131,6 +132,7 @@ function HomePage() {
       <SiteHeader />
       <main id="main">
         <div className="wrap">
+          <SinceLastVisit dates={articles.map((a) => a.published_at)} />
           <HomeHero lead={lead} latest={latest} />
           <HomeSlimBand />
           <HomeNews items={news} />

@@ -16,7 +16,6 @@ import { SubscribeDialog } from "@/components/site/subscribe-dialog";
 import { VisitTracker } from "@/components/site/visit-tracker";
 import { ExitIntent } from "@/components/site/exit-intent";
 import { PwaManager } from "@/components/site/pwa";
-import { InstallPwaDialog } from "@/components/site/install-pwa-dialog";
 import { ConsentBanner } from "@/components/site/consent-banner";
 import { ScrollToTop } from "@/components/site/scroll-to-top";
 import { supabase } from "@/integrations/supabase/client";
@@ -248,7 +247,6 @@ function RootComponent() {
       <ConsentBanner />
       <ExitIntent />
       <PwaManager />
-      <InstallPwaDialog />
 
       <Toaster />
     </QueryClientProvider>

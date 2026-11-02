@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { SiteHeader } from "@/components/site/header";
 import { ReadingTracker } from "@/components/site/reading-tracker";
 import { ContentEngagement } from "@/components/site/content-engagement";
+import { ReadingProgress, ReadNextNudge, ReadStreak, SelectionShare } from "@/components/site/reader-hooks";
 import { SiteFooter } from "@/components/site/footer";
 import { ArticleThumb } from "@/components/portal/article-thumb";
 import { ArticleToc, type TocItem } from "@/components/portal/article-toc";
@@ -325,6 +326,8 @@ function ArticlePage() {
                 <span>Análise própria IA News</span>
               </div>
 
+              <ReadStreak articleSlug={article.slug} />
+
               <figure className="cover">
                 <ArticleThumb
                   src={article.cover_image_url}
@@ -348,6 +351,14 @@ function ArticlePage() {
                   </figcaption>
                 ) : null}
               </figure>
+
+              <ReadingProgress />
+              <ReadNextNudge
+                next={next}
+                currentSlug={article.slug}
+                label={next ? labelOf(next.category) : ""}
+              />
+              <SelectionShare url={url} title={article.title} articleSlug={article.slug} />
 
               <ContentEngagement
                 slug={article.slug}
