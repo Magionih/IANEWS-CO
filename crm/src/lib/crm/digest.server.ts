@@ -1,6 +1,8 @@
-// Rotinas agendadas do CRM. Só servidor (usa a chave de serviço do Supabase e o Resend).
-//  - diária (8h): automações (lead aquecido, sem resposta) + e-mail para a equipe comercial;
-//  - semanal (segunda): resumo para o admin.
+// E-mails agendados do CRM. Só servidor.
+//  - diário (8h): resumo para a equipe comercial; - semanal (segunda): resumo para o admin.
+// As automações do dia (lead aquecido, "Sem resposta") rodam no próprio banco pelo pg_cron.
+// Os e-mails só funcionam se o projeto do CRM tiver SUPABASE_SERVICE_ROLE_KEY e RESEND_API_KEY;
+// sem elas, as rotinas respondem "desligado" e nada mais muda.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { emailSendingEnabled } from "@/lib/cron-auth.server";
 
@@ -34,11 +36,8 @@ async function enviar(
 }
 
 export async function runCrmDaily(opts: { enviarEmail?: boolean } = {}) {
-  const { data: rotina, error } = await db.rpc("crm_rotina_diaria");
-  if (error) throw new Error(`crm_rotina_diaria: ${error.message}`);
-
   if (opts.enviarEmail === false || !emailSendingEnabled()) {
-    return { ok: true, rotina, enviados: 0, skipped: "Envio de e-mails desligado." };
+    return { ok: true, enviados: 0, skipped: "Envio de e-mails desligado." };
   }
 
   const painel = await montarPainelHoje(db);
@@ -106,7 +105,7 @@ export async function runCrmDaily(opts: { enviarEmail?: boolean } = {}) {
       falhas.push(`${m.email}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-  return { ok: falhas.length === 0, rotina, enviados, falhas };
+  return { ok: falhas.length === 0, enviados, falhas };
 }
 
 export async function runCrmWeekly() {

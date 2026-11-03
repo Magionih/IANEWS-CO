@@ -12,9 +12,9 @@ o CRM liga as matérias, a newsletter e os formulários do site; quem pode ver o
 
 | Variável | Obrigatória | Para quê |
 |---|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | sim | Lista contas e papéis na Configuração e roda as rotinas (só servidor) |
 | `CRON_SECRET` | sim | Protege `/api/hooks/*` (mínimo 16 caracteres; a Vercel envia nas rotinas) |
-| `RESEND_API_KEY` | para e-mails | Resumo diário às 8h e semanal de segunda |
+| `SUPABASE_SERVICE_ROLE_KEY` | só para e-mails | Monta os resumos por e-mail (o CRM em si não usa chave mestra) |
+| `RESEND_API_KEY` | só para e-mails | Resumo diário às 8h e semanal de segunda |
 | `EMAIL_FROM` | não | Remetente, ex.: `IA News <crm@ianewsbr.com>` |
 | `CRM_URL` | não | Endereço do CRM usado nos links dos e-mails (padrão: domínio de produção da Vercel) |
 | `AI_API_KEY` | não | Sugestão de menções por IA na tela Pautas |
@@ -34,9 +34,16 @@ Os valores **públicos** do Supabase já estão em `crm/.env`.
 `supabase/migrations/` tem o esquema do CRM (`crm_*`), as regras de acesso, gatilhos, indicadores e a carga
 inicial. As tabelas do site não mudam; o CRM só aponta para elas.
 
-## Rotinas (Vercel Cron, `vercel.json`)
-- 11:00 UTC (8h em Brasília): `/api/hooks/crm-daily` — lead aquecido, "Sem resposta" e e-mail da equipe comercial.
-- Segunda, 11:10 UTC: `/api/hooks/crm-weekly` — resumo para o admin.
+## Rotinas
+- No banco (pg_cron), 10:50 UTC: `crm_rotina_diaria()` — lead aquecido e "Sem resposta".
+- Vercel Cron (`vercel.json`), 11:00 UTC (8h em Brasília): `/api/hooks/crm-daily` — e-mail da equipe comercial.
+- Vercel Cron, segunda 11:10 UTC: `/api/hooks/crm-weekly` — resumo para o admin.
+- Os e-mails só saem com `SUPABASE_SERVICE_ROLE_KEY` e `RESEND_API_KEY` no projeto do CRM.
+
+## Segurança
+O CRM roda só com a chave **pública** do Supabase e a sessão de quem entrou. Tudo o que é restrito
+(tabelas `crm_*`, contas e papéis, dados da newsletter, indicadores) é liberado por RLS e por funções
+do banco que conferem o papel de quem chama.
 
 ## Desenvolvimento
 ```

@@ -17,10 +17,11 @@ export function cronUnauthorized(request: Request): Response | null {
   return null;
 }
 
-/** E-mails ligados quando há chave do Resend; CRM_EMAILS=false desliga. */
+/** E-mails ligados quando há chave do Resend e chave de serviço do Supabase; CRM_EMAILS=false desliga. */
 export function emailSendingEnabled(): boolean {
   if (process.env.CRM_EMAILS === "false") return false;
-  return Boolean(process.env.RESEND_API_KEY);
+  const servico = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  return Boolean(process.env.RESEND_API_KEY && servico);
 }
 
 export async function readJson<T extends object>(request: Request): Promise<Partial<T>> {
