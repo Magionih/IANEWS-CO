@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Flame, MessageCircle, Plus, RefreshCw } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
+import { BarrasHorizontais, BarrasPorDia } from "@/components/crm/grafico";
 import { MensagemDialog, TarefaDialog, type DadosMensagem } from "@/components/crm/dialogs";
 import { NegocioDialog, NegocioPainel } from "@/components/crm/negocio";
 import { useAcao } from "@/components/crm/queries";
@@ -21,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import type { NegocioCompleto } from "@/lib/crm/carregar";
-import { getHoje, type FilaViraramPauta } from "@/lib/crm/hoje.functions";
+import { getHoje, type FilaViraramPauta, type PainelHoje } from "@/lib/crm/hoje.functions";
 import { criarLeadDeEmpresa } from "@/lib/crm/negocios.functions";
 import { concluirTarefa } from "@/lib/crm/tarefas.functions";
 import {
@@ -38,6 +39,53 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_crm/")({
   component: HojePage,
 });
+
+/** Painel visual da tela Hoje: funil aberto, entrada de leads e origem (30 dias). */
+function VisaoGeral({ visao }: { visao: PainelHoje["visao"] }) {
+  const { funilNome } = useCrm();
+  return (
+    <div className="grid gap-6 xl:grid-cols-3">
+      <Secao
+        titulo="Funil aberto"
+        contagem={visao.funis.reduce((s, f) => s + f.qtd, 0)}
+        className="xl:col-span-1"
+      >
+        <p className="mb-3 text-xs text-muted-foreground">
+          Negócios abertos por etapa · {fmtMoeda(visao.pipeline)} em negociação.
+        </p>
+        {visao.funis.length ? (
+          <div className="space-y-5">
+            {visao.funis.map((f) => (
+              <div key={f.funil_id}>
+                <p className="mb-2 flex justify-between text-xs font-semibold">
+                  <span>{funilNome(f.funil_id)}</span>
+                  <span className="text-muted-foreground">
+                    {fmtNum(f.qtd)} · {fmtMoeda(f.valor)}
+                  </span>
+                </p>
+                <BarrasHorizontais
+                  itens={f.etapas.map((e) => ({
+                    rotulo: e.nome,
+                    valor: e.qtd,
+                    detalhe: e.valor ? fmtMoeda(e.valor) : undefined,
+                  }))}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Vazio>Nenhum negócio aberto.</Vazio>
+        )}
+      </Secao>
+      <Secao titulo="Entrada de leads (30 dias)" contagem={visao.leads30}>
+        <BarrasPorDia dados={visao.leadsPorDia} rotulo="Leads por dia" />
+      </Secao>
+      <Secao titulo="De onde vêm os leads (30 dias)">
+        <BarrasHorizontais itens={visao.origens} />
+      </Secao>
+    </div>
+  );
+}
 
 function HojePage() {
   const { userId, membro } = useCrm();
@@ -124,6 +172,8 @@ function HojePage() {
           detalhe={`${fmtMoeda(data.semana.receita)} recebidos`}
         />
       </section>
+
+      <VisaoGeral visao={data.visao} />
 
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Secao

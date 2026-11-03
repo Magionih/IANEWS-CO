@@ -1,11 +1,14 @@
 import { createMiddleware } from "@tanstack/react-start";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getRequest } from "@tanstack/react-start/server";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /* Acesso ao CRM: só admin, comercial e editorial (o papel "editor" já existente conta como editorial).
    As consultas usam o token de quem está logado, então a RLS das tabelas crm_* vale sempre;
-   esta verificação só dá uma mensagem clara e libera as ações de admin. */
+   esta verificação só dá uma mensagem clara e libera as ações de admin.
+
+   Desempenho: a assinatura do token é conferida localmente com as chaves públicas do Supabase
+   (guardadas em memória pela instância) e os papéis ficam 30s em memória. Assim cada clique faz
+   só as consultas da tela, sem idas extras ao banco para conferir quem é o usuário. */
 
 export const CRM_PAPEIS = ["admin", "comercial", "editorial", "editor"] as const;
 
@@ -13,26 +16,67 @@ export const CRM_PAPEIS = ["admin", "comercial", "editorial", "editor"] as const
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CrmDb = SupabaseClient<any, "public", any>;
 
-export const requireCrmAccess = createMiddleware({ type: "function" })
-  .middleware([requireSupabaseAuth])
-  .server(async ({ next, context }) => {
-    const { data, error } = await context.supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId);
-    if (error) throw new Error(error.message);
-    const papeis = ((data ?? []) as { role: string }[]).map((r) => r.role);
-    if (!papeis.some((p) => (CRM_PAPEIS as readonly string[]).includes(p))) {
-      throw new Error("Acesso restrito à equipe do CRM (admin, comercial ou editorial).");
-    }
-    return next({
-      context: {
-        db: context.supabase as unknown as CrmDb,
-        papeis,
-        isAdmin: papeis.includes("admin"),
-      },
-    });
+const SEM_SESSAO = { storage: undefined, persistSession: false, autoRefreshToken: false };
+
+function configSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const chave = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !chave) throw new Error("Configuração do Supabase ausente no servidor do CRM.");
+  return { url, chave };
+}
+
+// Cliente só para conferir tokens: reaproveitado entre chamadas, guarda as chaves públicas (JWKS).
+let verificador: CrmDb | undefined;
+function getVerificador(): CrmDb {
+  if (!verificador) {
+    const { url, chave } = configSupabase();
+    verificador = createClient(url, chave, { auth: SEM_SESSAO }) as CrmDb;
+  }
+  return verificador;
+}
+
+const PAPEIS_TTL_MS = 30_000;
+const cachePapeis = new Map<string, { papeis: string[]; ate: number }>();
+
+async function papeisDo(db: CrmDb, userId: string): Promise<string[]> {
+  const agora = Date.now();
+  const guardado = cachePapeis.get(userId);
+  if (guardado && guardado.ate > agora) return guardado.papeis;
+  const { data, error } = await db.from("user_roles").select("role").eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  const papeis = ((data ?? []) as { role: string }[]).map((r) => r.role);
+  if (cachePapeis.size > 500) cachePapeis.clear();
+  cachePapeis.set(userId, { papeis, ate: agora + PAPEIS_TTL_MS });
+  return papeis;
+}
+
+const JWT = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
+export const requireCrmAccess = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  const auth = getRequest()?.headers.get("authorization") ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!token || token.length > 8192 || !JWT.test(token)) {
+    throw new Error("Sessão inválida. Entre novamente no CRM.");
+  }
+
+  const { data, error } = await getVerificador().auth.getClaims(token);
+  const userId = data?.claims?.sub;
+  if (error || !userId) throw new Error("Sessão expirada. Entre novamente no CRM.");
+
+  const { url, chave } = configSupabase();
+  const db = createClient(url, chave, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: SEM_SESSAO,
+  }) as CrmDb;
+
+  const papeis = await papeisDo(db, userId);
+  if (!papeis.some((p) => (CRM_PAPEIS as readonly string[]).includes(p))) {
+    throw new Error("Acesso restrito à equipe do CRM (admin, comercial ou editorial).");
+  }
+  return next({
+    context: { db, userId, papeis, isAdmin: papeis.includes("admin") },
   });
+});
 
 export function exigirAdmin(isAdmin: boolean) {
   if (!isAdmin) throw new Error("Só o administrador pode fazer esta alteração.");

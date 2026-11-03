@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { checar, requireCrmAccess, todas, type CrmDb } from "./access";
 import { carregarNegocios, hidratarTarefas, type NegocioCompleto } from "./carregar";
 import type { CrmGrupo, CrmTarefa, CrmTarefaItem } from "./types";
-import { hojeBR } from "./utils";
+import { hojeBR, ORIGENS, somarDias } from "./utils";
 
 /* Tela "Hoje": o que fazer agora. Também usada pelo e-mail diário das 8h. */
 
@@ -33,6 +33,19 @@ export type PainelHoje = {
   semAcao: NegocioCompleto[];
   viraramPauta: FilaViraramPauta[];
   aquecidos: { id: string; nome: string; email: string | null; aquecido_em: string }[];
+  /** Painel visual: funil aberto por etapa, entrada de leads por dia e por origem (30 dias). */
+  visao: {
+    funis: {
+      funil_id: string;
+      qtd: number;
+      valor: number;
+      etapas: { nome: string; ordem: number; qtd: number; valor: number }[];
+    }[];
+    leadsPorDia: { dia: string; valor: number }[];
+    origens: { rotulo: string; valor: number }[];
+    leads30: number;
+    pipeline: number;
+  };
   semana: {
     novosLeads: number;
     mensagensEnviadas: number;
@@ -49,7 +62,7 @@ export async function montarPainelHoje(db: CrmDb): Promise<PainelHoje> {
   const agora = Date.now();
   const ha = (dias: number) => new Date(agora - dias * DIA_MS).toISOString();
 
-  const [abertos, tarefasRaw, fila, aquecidos, novos7, msgs7, fechados7, feitas7] =
+  const [abertos, tarefasRaw, fila, aquecidos, novos7, msgs7, fechados7, feitas7, entradas30] =
     await Promise.all([
       carregarNegocios(db, (q) => q.eq("etapa_tipo", "aberta")),
       todas<CrmTarefa>((de, ate) =>
@@ -86,6 +99,14 @@ export async function montarPainelHoje(db: CrmDb): Promise<PainelHoje> {
         .select("id", { count: "exact", head: true })
         .eq("feita", true)
         .gte("feita_em", ha(7)),
+      todas<{ created_at: string; origem: string | null }>((de, ate) =>
+        db
+          .from("crm_negocios")
+          .select("created_at, origem")
+          .gte("created_at", `${somarDias(hoje, -29)}T03:00:00Z`)
+          .order("created_at")
+          .range(de, ate),
+      ),
     ]);
 
   const recentes = (checar(fechados7) ?? []) as {
@@ -101,6 +122,7 @@ export async function montarPainelHoje(db: CrmDb): Promise<PainelHoje> {
 
   return {
     hoje,
+    visao: montarVisao(hoje, abertos, entradas30),
     tarefas: await hidratarTarefas(db, tarefasRaw),
     novos: abertos
       .filter((n) => tempo(n.created_at) >= agora - DIA_MS)
@@ -131,6 +153,52 @@ export async function montarPainelHoje(db: CrmDb): Promise<PainelHoje> {
         .reduce((s, r) => s + Number(r.valor ?? 0), 0),
       tarefasFeitas: feitas7.count ?? 0,
     },
+  };
+}
+
+function montarVisao(
+  hoje: string,
+  abertos: NegocioCompleto[],
+  entradas: { created_at: string; origem: string | null }[],
+): PainelHoje["visao"] {
+  const funis = new Map<string, PainelHoje["visao"]["funis"][number]>();
+  for (const n of abertos) {
+    const valor = Number(n.valor ?? 0);
+    let f = funis.get(n.funil_id);
+    if (!f) {
+      f = { funil_id: n.funil_id, qtd: 0, valor: 0, etapas: [] };
+      funis.set(n.funil_id, f);
+    }
+    f.qtd += 1;
+    f.valor += valor;
+    let e = f.etapas.find((x) => x.nome === n.etapa_nome);
+    if (!e) {
+      e = { nome: n.etapa_nome, ordem: n.etapa_ordem, qtd: 0, valor: 0 };
+      f.etapas.push(e);
+    }
+    e.qtd += 1;
+    e.valor += valor;
+  }
+  for (const f of funis.values()) f.etapas.sort((a, b) => a.ordem - b.ordem);
+
+  const porDia = new Map<string, number>();
+  for (let i = 29; i >= 0; i--) porDia.set(somarDias(hoje, -i), 0);
+  const porOrigem = new Map<string, number>();
+  for (const e of entradas) {
+    const dia = hojeBR(new Date(e.created_at));
+    if (porDia.has(dia)) porDia.set(dia, (porDia.get(dia) ?? 0) + 1);
+    const rotulo = ORIGENS.find((o) => o.value === e.origem)?.label ?? "Sem origem";
+    porOrigem.set(rotulo, (porOrigem.get(rotulo) ?? 0) + 1);
+  }
+
+  return {
+    funis: [...funis.values()].sort((a, b) => b.qtd - a.qtd),
+    leadsPorDia: [...porDia].map(([dia, valor]) => ({ dia, valor })),
+    origens: [...porOrigem]
+      .map(([rotulo, valor]) => ({ rotulo, valor }))
+      .sort((a, b) => b.valor - a.valor),
+    leads30: entradas.length,
+    pipeline: abertos.reduce((s, n) => s + Number(n.valor ?? 0), 0),
   };
 }
 

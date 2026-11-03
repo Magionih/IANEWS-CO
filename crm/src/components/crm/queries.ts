@@ -36,8 +36,8 @@ export function useModelos() {
   return useQuery({ queryKey: ["crm", "modelos"], queryFn: () => fn(), staleTime: 60_000 });
 }
 
-/** Executa uma ação, mostra o aviso e recarrega as telas do CRM. */
-export function useAcao() {
+/** Executa uma ação, mostra o aviso e recarrega as telas do CRM em segundo plano. */
+export function useAcao(opts?: { contexto?: boolean }) {
   const { atualizar } = useCrm();
   const [ocupado, setOcupado] = useState(false);
   async function executar<T>(
@@ -49,7 +49,8 @@ export function useAcao() {
       const r = await acao();
       const msg = typeof sucesso === "function" ? sucesso(r) : sucesso;
       if (msg) toast.success(msg);
-      await atualizar();
+      // Não espera o recarregamento: a janela fecha na hora e as telas se atualizam em seguida.
+      void atualizar(opts);
       return r;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível concluir.");

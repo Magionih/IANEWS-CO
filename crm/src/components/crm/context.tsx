@@ -10,8 +10,8 @@ type Valor = CrmContexto & {
   etapasDo: (funil: CrmFunilId) => CrmEtapa[];
   funilNome: (id?: string | null) => string;
   membro: (id?: string | null) => string;
-  /** Recarrega todas as telas do CRM depois de uma alteração. */
-  atualizar: () => Promise<void>;
+  /** Recarrega as telas do CRM depois de uma alteração (com `contexto`, também equipe, funis e etapas). */
+  atualizar: (opts?: { contexto?: boolean }) => Promise<void>;
 };
 
 const Ctx = createContext<Valor | null>(null);
@@ -19,7 +19,14 @@ const Ctx = createContext<Valor | null>(null);
 export function CrmProvider({ valor, children }: { valor: CrmContexto; children: ReactNode }) {
   const queryClient = useQueryClient();
   const atualizar = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: ["crm"] }),
+    // Recarrega só as telas abertas; as demais ficam marcadas e recarregam quando forem abertas.
+    // O contexto (equipe, funis, etapas) só muda na Configuração, que o recarrega por conta própria.
+    (opts?: { contexto?: boolean }) =>
+      queryClient.invalidateQueries({
+        queryKey: ["crm"],
+        predicate: (q) => opts?.contexto || q.queryKey[1] !== "contexto",
+        refetchType: "active",
+      }),
     [queryClient],
   );
   const v = useMemo<Valor>(() => {
