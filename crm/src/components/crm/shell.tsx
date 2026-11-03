@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
@@ -118,11 +118,13 @@ export function CrmShell({ children }: { children: ReactNode }) {
 /** Barra superior do CRM: marca, quem está logado e sair. */
 export function TopoCrm() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState<string | null>(null);
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
   }, []);
   async function sair() {
+    queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/login", replace: true });
   }

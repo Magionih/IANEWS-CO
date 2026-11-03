@@ -96,10 +96,27 @@ export function Secao({
   );
 }
 
+/** Esqueleto de carregamento: mostra a forma da tela enquanto os dados chegam (sem tela "travada"). */
 export function Carregando({ texto = "Carregando..." }: { texto?: string }) {
   return (
-    <div className="flex items-center justify-center gap-2 p-10 text-sm text-muted-foreground">
-      <Loader2 className="h-4 w-4 animate-spin" /> {texto}
+    <div role="status" aria-live="polite" className="space-y-4 py-2">
+      <span className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> {texto}
+      </span>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-20 animate-pulse rounded-[var(--radius)] bg-muted" />
+        ))}
+      </div>
+      <div className="space-y-2">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="h-9 animate-pulse rounded-md bg-muted/70"
+            style={{ width: `${95 - i * 9}%` }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

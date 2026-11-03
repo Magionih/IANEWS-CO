@@ -45,6 +45,24 @@ O CRM roda só com a chave **pública** do Supabase e a sessão de quem entrou. 
 (tabelas `crm_*`, contas e papéis, dados da newsletter, indicadores) é liberado por RLS e por funções
 do banco que conferem o papel de quem chama.
 
+- **Cabeçalhos** (`vercel.json`): Content-Security-Policy (só o próprio CRM e o Supabase da IANews;
+  sem iframes, sem scripts ou imagens de terceiros), HSTS, X-Frame-Options DENY, nosniff,
+  Referrer-Policy no-referrer, COOP/CORP same-origin, Permissions-Policy fechada e noindex.
+- **Sem terceiros no navegador**: fontes servidas pelo próprio CRM (nada de Google Fonts).
+- **Sessão**: sai sozinho depois de 4h sem uso (em todas as abas) e limpa os dados da memória ao sair.
+- **Servidor**: confere a assinatura do token em toda chamada; o banco aplica a RLS em toda consulta.
+- **Código**: nenhum segredo vai para o navegador (só a chave pública); sem source maps em produção.
+- **Recomendado no Supabase** (Authentication → Providers/Policies): ligar *Leaked password
+  protection* e senha mínima de 8 caracteres.
+
+## Desempenho
+- Funções da Vercel em **São Paulo (`gru1`)**, a mesma região do banco (`sa-east-1`): cada consulta
+  sai do servidor e chega ao banco em poucos milissegundos.
+- Token conferido localmente (chaves públicas em memória) e papéis guardados por 30s.
+- Cache das telas (react-query, 30s): voltar a uma tela é instantâneo; salvar algo recarrega em
+  segundo plano só as telas abertas.
+- Código de cada tela carregado ao passar o mouse no menu; arquivos com hash em cache por 1 ano.
+
 ## Desenvolvimento
 ```
 cd crm

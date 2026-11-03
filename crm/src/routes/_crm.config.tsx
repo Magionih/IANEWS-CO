@@ -146,7 +146,7 @@ function Etapas() {
 
 function LinhaEtapa({ etapa, onFim }: { etapa: Partial<CrmEtapa>; onFim?: () => void }) {
   const salvar = useServerFn(saveEtapa);
-  const { executar, ocupado } = useAcao();
+  const { executar, ocupado } = useAcao({ contexto: true });
   const [f, setF] = useState<EtapaInput>({});
   useEffect(() => {
     setF({
@@ -297,7 +297,7 @@ function ModeloDialog({
 }) {
   const { funilNome } = useCrm();
   const salvar = useServerFn(saveModelo);
-  const { executar, ocupado } = useAcao();
+  const { executar, ocupado } = useAcao({ contexto: true });
   const [f, setF] = useState<ModeloInput>({});
   useEffect(() => {
     if (modelo)
@@ -401,7 +401,7 @@ function Usuarios() {
   const { userId } = useCrm();
   const fetchUsuarios = useServerFn(listUsuarios);
   const definir = useServerFn(setPapel);
-  const { executar } = useAcao();
+  const { executar } = useAcao({ contexto: true });
   const [q, setQ] = useState("");
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["crm", "usuarios"],
