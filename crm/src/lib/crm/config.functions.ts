@@ -126,43 +126,15 @@ export type UsuarioPainel = {
   created_at: string;
 };
 
-/** Contas do site com os papéis (para liberar acesso ao CRM). */
+/** Contas com os papéis (para liberar acesso ao CRM). Só admin; a função do banco confere o papel. */
 export const listUsuarios = createServerFn({ method: "GET" })
   .middleware([requireCrmAccess])
   .handler(async ({ context }): Promise<UsuarioPainel[]> => {
     exigirAdmin(context.isAdmin);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [perfis, papeis] = await Promise.all([
-      supabaseAdmin
-        .from("profiles")
-        .select("user_id, full_name, email, created_at")
-        .order("created_at", { ascending: false })
-        .limit(1000),
-      supabaseAdmin.from("user_roles").select("user_id, role"),
-    ]);
-    if (perfis.error) throw new Error(perfis.error.message);
-    if (papeis.error) throw new Error(papeis.error.message);
-    const porUsuario = new Map<string, string[]>();
-    for (const r of (papeis.data ?? []) as { user_id: string; role: string }[]) {
-      porUsuario.set(r.user_id, [...(porUsuario.get(r.user_id) ?? []), r.role]);
-    }
-    return (
-      (perfis.data ?? []) as {
-        user_id: string;
-        full_name: string | null;
-        email: string;
-        created_at: string;
-      }[]
-    ).map((p) => ({
-      user_id: p.user_id,
-      nome: p.full_name || p.email.split("@")[0],
-      email: p.email,
-      papeis: porUsuario.get(p.user_id) ?? ["reader"],
-      created_at: p.created_at,
-    }));
+    return (checar(await context.db.rpc("crm_usuarios")) ?? []) as UsuarioPainel[];
   });
 
-/** Define o papel da conta (um papel por pessoa). "reader" = sem acesso ao painel. */
+/** Define o papel da conta (um papel por pessoa). "reader" = sem acesso ao CRM. */
 export const setPapel = createServerFn({ method: "POST" })
   .middleware([requireCrmAccess])
   .inputValidator((input: { user_id: string; papel: PapelEquipe }) => ({
@@ -171,15 +143,8 @@ export const setPapel = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     exigirAdmin(context.isAdmin);
-    if (data.user_id === context.userId && data.papel !== "admin") {
-      throw new Error("Você não pode remover seu próprio acesso de administrador.");
-    }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
-    if (del.error) throw new Error(del.error.message);
-    const ins = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: data.user_id, role: data.papel as never });
-    if (ins.error) throw new Error(ins.error.message);
+    checar(
+      await context.db.rpc("crm_definir_papel", { p_user: data.user_id, p_papel: data.papel }),
+    );
     return { ok: true };
   });

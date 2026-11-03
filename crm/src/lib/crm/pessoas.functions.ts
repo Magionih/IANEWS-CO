@@ -132,16 +132,11 @@ export const getPessoa = createServerFn({ method: "GET" })
       empresa: Pick<CrmEmpresa, "id" | "nome" | "grupo" | "pontuacao"> | null;
     }[];
 
-    // Dados da newsletter (tabela leads) só são lidos pelo servidor, depois da checagem de acesso.
+    // Dados da newsletter (tabela leads) vêm por função do banco, que confere o acesso da equipe.
     let newsletter: FichaPessoa["newsletter"] = null;
     if (pessoa.newsletter_lead_id) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: lead } = await supabaseAdmin
-        .from("leads")
-        .select("email, is_active, confirmed_at, source, created_at")
-        .eq("id", pessoa.newsletter_lead_id)
-        .maybeSingle();
-      newsletter = (lead as FichaPessoa["newsletter"]) ?? null;
+      newsletter = (checar(await db.rpc("crm_newsletter_da_pessoa", { p_pessoa: data.id })) ??
+        null) as FichaPessoa["newsletter"];
     }
 
     return {
