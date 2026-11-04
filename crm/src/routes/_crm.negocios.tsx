@@ -19,6 +19,7 @@ import {
   Carregando,
   Erro,
   GrupoBadge,
+  Numero,
   Vazio,
 } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
@@ -39,16 +40,20 @@ import {
   contem,
   fmtDia,
   fmtMoeda,
+  fmtNum,
   labelDe,
+  modalidadeDe,
   ORIGENS,
   PAGAMENTO_LABEL,
   prazoRelativo,
   TIPOS_NEGOCIO,
+  type Modalidade,
 } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 const busca = z.object({
   funil: z.enum(["materia", "publicidade", "parcerias"]).optional(),
+  modalidade: z.enum(["paga", "cortesia"]).optional(),
   negocio: z.string().optional(),
 });
 
@@ -64,6 +69,7 @@ function NegociosPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const funil: CrmFunilId = search.funil ?? "materia";
+  const modalidade: Modalidade | undefined = search.modalidade;
   const fetchNegocios = useServerFn(listNegocios);
   const { moverPara, dialogo } = useMoverEtapa();
   const [modo, setModo] = useState<"kanban" | "lista">("kanban");
@@ -86,6 +92,7 @@ function NegociosPage() {
     () =>
       (data ?? []).filter(
         (n) =>
+          (!modalidade || modalidadeDe(n) === modalidade) &&
           (!dono || n.dono_id === dono) &&
           (grupo === "todos" || (n.empresa_grupo ?? "sem") === grupo) &&
           (origem === "todas" || n.origem === origem) &&
@@ -94,8 +101,33 @@ function NegociosPage() {
             (n.etapa_tipo === "aberta" && (atrasado(n.proxima_acao_em) || !n.proxima_acao_em))) &&
           contem([n.titulo, n.empresa_nome, n.pessoa_nome, n.proxima_acao], q),
       ),
-    [data, dono, grupo, origem, tipo, soAtrasados, q],
+    [data, modalidade, dono, grupo, origem, tipo, soAtrasados, q],
   );
+
+  // Contagem de pagos e cortesias no funil (para os botões do seletor).
+  const porModalidade = useMemo(() => {
+    const c = { paga: 0, cortesia: 0 };
+    for (const n of data ?? []) c[modalidadeDe(n)] += 1;
+    return c;
+  }, [data]);
+
+  const filtrosAtivos =
+    !!modalidade ||
+    !!dono ||
+    grupo !== "todos" ||
+    origem !== "todas" ||
+    tipo !== "todos" ||
+    soAtrasados ||
+    !!q.trim();
+  const limparFiltros = () => {
+    setQ("");
+    setDono(null);
+    setGrupo("todos");
+    setOrigem("todas");
+    setTipo("todos");
+    setSoAtrasados(false);
+    navigate({ search: (s) => ({ ...s, modalidade: undefined }), replace: true });
+  };
 
   const porEtapa = useMemo(() => {
     const m = new Map<string, NegocioCompleto[]>();
@@ -122,7 +154,7 @@ function NegociosPage() {
         acoes={
           <>
             <BotaoCsv
-              nome={`negocios-${funil}`}
+              nome={`negocios-${funil}${modalidade ? `-${modalidade}` : ""}`}
               linhas={filtrados}
               colunas={[
                 { titulo: "Título", valor: (n) => n.titulo },
@@ -132,6 +164,10 @@ function NegociosPage() {
                 { titulo: "Grupo", valor: (n) => n.empresa_grupo },
                 { titulo: "Pessoa", valor: (n) => n.pessoa_nome },
                 { titulo: "Tipo", valor: (n) => labelDe(TIPOS_NEGOCIO, n.tipo) },
+                {
+                  titulo: "Modalidade",
+                  valor: (n) => (modalidadeDe(n) === "cortesia" ? "Cortesia" : "Pago"),
+                },
                 { titulo: "Valor", valor: (n) => n.valor },
                 { titulo: "Pagamento", valor: (n) => PAGAMENTO_LABEL[n.status_pagamento] },
                 { titulo: "Origem", valor: (n) => labelDe(ORIGENS, n.origem) },
@@ -152,17 +188,39 @@ function NegociosPage() {
         }
       />
 
-      <Tabs value={funil} onValueChange={(v) => navigate({ search: { funil: v as CrmFunilId } })}>
-        <TabsList className="h-10 w-full justify-start overflow-x-auto sm:w-auto">
-          {funis
-            .filter((f) => f.ativo)
-            .map((f) => (
-              <TabsTrigger key={f.id} value={f.id}>
-                {f.nome}
-              </TabsTrigger>
-            ))}
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-wrap items-center gap-3">
+        <Tabs
+          value={funil}
+          onValueChange={(v) =>
+            navigate({ search: { funil: v as CrmFunilId, modalidade: search.modalidade } })
+          }
+        >
+          <TabsList className="h-10 w-full justify-start overflow-x-auto sm:w-auto">
+            {funis
+              .filter((f) => f.ativo)
+              .map((f) => (
+                <TabsTrigger key={f.id} value={f.id}>
+                  {f.nome}
+                </TabsTrigger>
+              ))}
+          </TabsList>
+        </Tabs>
+        <Tabs
+          value={modalidade ?? "todos"}
+          onValueChange={(v) =>
+            navigate({
+              search: (s) => ({ ...s, modalidade: v === "todos" ? undefined : (v as Modalidade) }),
+              replace: true,
+            })
+          }
+        >
+          <TabsList className="h-10" aria-label="Pagos ou cortesia">
+            <TabsTrigger value="todos">Todos ({fmtNum((data ?? []).length)})</TabsTrigger>
+            <TabsTrigger value="paga">Pagos ({fmtNum(porModalidade.paga)})</TabsTrigger>
+            <TabsTrigger value="cortesia">Cortesia ({fmtNum(porModalidade.cortesia)})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_0.7fr_1fr_1fr_auto_auto]">
         <Input
@@ -236,6 +294,16 @@ function NegociosPage() {
           </Button>
         </div>
       </div>
+
+      {data ? (
+        <IndicadoresFunil
+          lista={filtrados}
+          etapas={etapas}
+          modalidade={modalidade}
+          filtrosAtivos={filtrosAtivos}
+          onLimpar={limparFiltros}
+        />
+      ) : null}
 
       {isLoading ? (
         <Carregando />
@@ -368,5 +436,157 @@ function NegociosPage() {
       />
       {dialogo}
     </div>
+  );
+}
+
+/** Indicadores do que está na tela: mudam junto com o funil, o seletor Pagos/Cortesia e os filtros. */
+function IndicadoresFunil({
+  lista,
+  etapas,
+  modalidade,
+  filtrosAtivos,
+  onLimpar,
+}: {
+  lista: NegocioCompleto[];
+  etapas: { id: string; nome: string; tipo: string }[];
+  modalidade?: Modalidade;
+  filtrosAtivos: boolean;
+  onLimpar: () => void;
+}) {
+  const [foco, setFoco] = useState<string | null>(null);
+  const r = useMemo(() => {
+    const abertos = lista.filter((n) => n.etapa_tipo === "aberta");
+    const ganhos = lista.filter((n) => n.etapa_tipo === "ganha");
+    const perdidos = lista.filter((n) => n.etapa_tipo === "perdida");
+    const soma = (l: NegocioCompleto[]) => l.reduce((s, n) => s + Number(n.valor ?? 0), 0);
+    const fechados = ganhos.length + perdidos.length;
+    const porEtapa = new Map<string, number>();
+    for (const n of lista) porEtapa.set(n.etapa_id, (porEtapa.get(n.etapa_id) ?? 0) + 1);
+    return {
+      abertos: abertos.length,
+      valorAberto: soma(abertos),
+      ganhos: ganhos.length,
+      valorGanho: soma(ganhos),
+      recebido: soma(lista.filter((n) => n.status_pagamento === "pago")),
+      perdidos: perdidos.length,
+      conversao: fechados ? Math.round((ganhos.length / fechados) * 100) : null,
+      ticket: ganhos.length && soma(ganhos) ? soma(ganhos) / ganhos.length : null,
+      empresas: new Set(lista.map((n) => n.empresa_id).filter(Boolean)).size,
+      atencao: abertos.filter((n) => !n.proxima_acao_em || atrasado(n.proxima_acao_em)).length,
+      porEtapa,
+    };
+  }, [lista]);
+
+  const cortesia = modalidade === "cortesia";
+  const dinheiro = (v: number) => (v ? fmtMoeda(v) : "—");
+  const segmentos = etapas
+    .map((e) => ({ ...e, qtd: r.porEtapa.get(e.id) ?? 0 }))
+    .filter((e) => e.qtd > 0);
+  const total = segmentos.reduce((s, e) => s + e.qtd, 0);
+  const abertas = etapas.filter((e) => e.tipo === "aberta");
+  const tom = (e: { id: string; tipo: string }) => {
+    if (e.tipo === "ganha") return "bg-emerald-500";
+    if (e.tipo === "perdida") return "bg-muted-foreground/40";
+    const i = abertas.findIndex((x) => x.id === e.id);
+    const opacidades = ["opacity-40", "opacity-55", "opacity-70", "opacity-85", "opacity-100"];
+    return `bg-primary ${opacidades[Math.min(opacidades.length - 1, Math.max(0, i))]}`;
+  };
+  const destaque = segmentos.find((e) => e.id === foco);
+
+  return (
+    <section className="space-y-3" aria-label="Indicadores do funil">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>
+          {fmtNum(lista.length)} negócio(s){" "}
+          {modalidade ? (cortesia ? "de cortesia" : "pagos") : "pagos e cortesia"}
+          {filtrosAtivos ? " com os filtros aplicados" : ""}
+        </span>
+        {filtrosAtivos ? (
+          <button
+            type="button"
+            className="font-semibold text-primary hover:underline"
+            onClick={onLimpar}
+          >
+            Limpar filtros
+          </button>
+        ) : null}
+      </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Numero
+          rotulo="Em aberto"
+          valor={fmtNum(r.abertos)}
+          detalhe={cortesia ? "em andamento" : `${dinheiro(r.valorAberto)} em negociação`}
+          destaque="azul"
+        />
+        <Numero
+          rotulo={cortesia ? "Publicados / fechados" : "Ganhos"}
+          valor={fmtNum(r.ganhos)}
+          detalhe={cortesia ? undefined : dinheiro(r.valorGanho)}
+        />
+        <Numero rotulo="Perdidos" valor={fmtNum(r.perdidos)} />
+        <Numero
+          rotulo="Conversão"
+          valor={r.conversao == null ? "—" : `${r.conversao}%`}
+          detalhe="ganhos ÷ fechados"
+        />
+        {cortesia ? (
+          <Numero rotulo="Empresas" valor={fmtNum(r.empresas)} detalhe="atendidas em cortesia" />
+        ) : (
+          <Numero
+            rotulo="Recebido"
+            valor={dinheiro(r.recebido)}
+            detalhe={r.ticket ? `ticket médio ${fmtMoeda(r.ticket)}` : undefined}
+          />
+        )}
+        <Numero
+          rotulo="Precisam de ação"
+          valor={fmtNum(r.atencao)}
+          detalhe="sem próxima ação ou atrasados"
+          destaque={r.atencao ? "alerta" : undefined}
+        />
+      </div>
+      {total ? (
+        <figure
+          className="rounded-[var(--radius)] border bg-card p-3"
+          onMouseLeave={() => setFoco(null)}
+        >
+          <figcaption className="mb-2 flex justify-between text-xs text-muted-foreground">
+            <span>Distribuição por etapa</span>
+            <span className="font-medium text-foreground">
+              {destaque
+                ? `${destaque.nome}: ${fmtNum(destaque.qtd)} (${Math.round((destaque.qtd / total) * 100)}%)`
+                : "passe o mouse para ver cada etapa"}
+            </span>
+          </figcaption>
+          <div className="flex h-3 w-full gap-[2px] overflow-hidden rounded-full">
+            {segmentos.map((e) => (
+              <div
+                key={e.id}
+                className={cn(
+                  "h-full transition-opacity",
+                  tom(e),
+                  foco && foco !== e.id && "opacity-30",
+                )}
+                style={{ width: `${(e.qtd / total) * 100}%` }}
+                onMouseEnter={() => setFoco(e.id)}
+                title={`${e.nome}: ${e.qtd}`}
+              />
+            ))}
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+            {segmentos.map((e) => (
+              <li
+                key={e.id}
+                className="flex items-center gap-1.5"
+                onMouseEnter={() => setFoco(e.id)}
+              >
+                <span className={cn("h-2 w-2 rounded-full", tom(e))} />
+                {e.nome} <span className="font-semibold text-foreground">{fmtNum(e.qtd)}</span>
+              </li>
+            ))}
+          </ul>
+        </figure>
+      ) : null}
+    </section>
   );
 }

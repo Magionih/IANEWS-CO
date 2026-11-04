@@ -63,6 +63,17 @@ export const ATIVIDADES_MANUAIS: CrmAtividadeTipo[] = [
   "pagamento",
 ];
 
+/** Negócio pago ou cortesia (destaque cortesia com collab, ou pagamento marcado como cortesia). */
+export type Modalidade = "paga" | "cortesia";
+export function modalidadeDe(n: {
+  tipo: string | null;
+  status_pagamento: string | null;
+}): Modalidade {
+  return n.status_pagamento === "cortesia" || (n.tipo ?? "").includes("cortesia")
+    ? "cortesia"
+    : "paga";
+}
+
 export const PAGAMENTO_LABEL: Record<CrmStatusPagamento, string> = {
   pendente: "Pendente",
   pago: "Pago",
