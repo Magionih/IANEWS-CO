@@ -65,6 +65,7 @@ import { useCrm } from "./context";
 import { AtividadeDialog, MensagemDialog, TarefaDialog } from "./dialogs";
 import { EmpresaPicker, MembroSelect, PessoaPicker } from "./pickers";
 import { useAcao, useEmpresas } from "./queries";
+import { EditorTags, TagsDoNegocio } from "./tags";
 import { LinhaDoTempo } from "./timeline";
 import { Campo, Carregando, Erro, Etiqueta, GrupoBadge, Secao, Vazio } from "./ui";
 
@@ -515,6 +516,7 @@ export function NegocioCartao({
           </Etiqueta>
         ) : null}
       </div>
+      <TagsDoNegocio ids={n.tags} />
       <p
         className={cn(
           "mt-2 flex items-center gap-1 text-[11px]",
@@ -628,6 +630,8 @@ export function NegocioPainel({ id, onClose }: { id: string | null; onClose: () 
                     : "Defina uma data em Editar."}
                 </p>
               </div>
+
+              <EditorTags negocioId={n.id} ids={n.tags} />
 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <dt className="text-muted-foreground">Valor</dt>

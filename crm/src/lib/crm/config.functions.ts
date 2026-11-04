@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { CORES_TAG } from "./types";
 import {
   checar,
   exigirAdmin,
@@ -116,6 +117,40 @@ export const saveModelo = createServerFn({ method: "POST" })
       id: string;
     };
     return { id: novo.id };
+  });
+
+export type TagInput = {
+  id?: string;
+  nome?: string;
+  cor?: string;
+  descricao?: string | null;
+  ordem?: number | string;
+  ativo?: boolean;
+};
+
+/** Catálogo de tags estratégicas (só admin cria e edita; a equipe aplica nos negócios). */
+export const saveTag = createServerFn({ method: "POST" })
+  .middleware([requireCrmAccess])
+  .inputValidator((input: TagInput) => input)
+  .handler(async ({ data, context }) => {
+    exigirAdmin(context.isAdmin);
+    const row = {
+      nome: obrigatorio(data.nome, "o nome da tag", 40),
+      cor: umDe(data.cor, CORES_TAG, "Cor") ?? "azul",
+      descricao: texto(data.descricao, 300),
+      ordem: inteiro(data.ordem, 0, 9999) ?? 0,
+      ativo: data.ativo !== false,
+      updated_at: new Date().toISOString(),
+    };
+    if (data.id) {
+      const id = uuidObrigatorio(data.id, "a tag");
+      checar(await context.db.from("crm_tags").update(row).eq("id", id).select("id").single());
+      return { id };
+    }
+    const nova = checar(await context.db.from("crm_tags").insert(row).select("id").single()) as {
+      id: string;
+    };
+    return { id: nova.id };
   });
 
 export type UsuarioPainel = {

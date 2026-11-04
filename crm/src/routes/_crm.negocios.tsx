@@ -13,6 +13,7 @@ import {
   useMoverEtapa,
 } from "@/components/crm/negocio";
 import { MembroSelect } from "@/components/crm/pickers";
+import { FiltroTags, TagChip } from "@/components/crm/tags";
 import {
   BotaoCsv,
   CabecalhoPagina,
@@ -54,6 +55,7 @@ import { cn } from "@/lib/utils";
 const busca = z.object({
   funil: z.enum(["materia", "publicidade", "parcerias"]).optional(),
   modalidade: z.enum(["paga", "cortesia"]).optional(),
+  tags: z.array(z.string()).max(20).optional(),
   negocio: z.string().optional(),
 });
 
@@ -65,11 +67,14 @@ export const Route = createFileRoute("/_crm/negocios")({
 const PERDIDOS_VISIVEIS = 20;
 
 function NegociosPage() {
-  const { funis, etapasDo, membro, funilNome } = useCrm();
+  const { funis, etapasDo, membro, funilNome, tag } = useCrm();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const funil: CrmFunilId = search.funil ?? "materia";
   const modalidade: Modalidade | undefined = search.modalidade;
+  const tagsFiltro = useMemo(() => search.tags ?? [], [search.tags]);
+  const setTagsFiltro = (ids: string[]) =>
+    navigate({ search: (s) => ({ ...s, tags: ids.length ? ids : undefined }), replace: true });
   const fetchNegocios = useServerFn(listNegocios);
   const { moverPara, dialogo } = useMoverEtapa();
   const [modo, setModo] = useState<"kanban" | "lista">("kanban");
@@ -93,6 +98,7 @@ function NegociosPage() {
       (data ?? []).filter(
         (n) =>
           (!modalidade || modalidadeDe(n) === modalidade) &&
+          (!tagsFiltro.length || (n.tags ?? []).some((t) => tagsFiltro.includes(t))) &&
           (!dono || n.dono_id === dono) &&
           (grupo === "todos" || (n.empresa_grupo ?? "sem") === grupo) &&
           (origem === "todas" || n.origem === origem) &&
@@ -101,7 +107,7 @@ function NegociosPage() {
             (n.etapa_tipo === "aberta" && (atrasado(n.proxima_acao_em) || !n.proxima_acao_em))) &&
           contem([n.titulo, n.empresa_nome, n.pessoa_nome, n.proxima_acao], q),
       ),
-    [data, modalidade, dono, grupo, origem, tipo, soAtrasados, q],
+    [data, modalidade, tagsFiltro, dono, grupo, origem, tipo, soAtrasados, q],
   );
 
   // Contagem de pagos e cortesias no funil (para os botões do seletor).
@@ -113,6 +119,7 @@ function NegociosPage() {
 
   const filtrosAtivos =
     !!modalidade ||
+    tagsFiltro.length > 0 ||
     !!dono ||
     grupo !== "todos" ||
     origem !== "todas" ||
@@ -126,7 +133,7 @@ function NegociosPage() {
     setOrigem("todas");
     setTipo("todos");
     setSoAtrasados(false);
-    navigate({ search: (s) => ({ ...s, modalidade: undefined }), replace: true });
+    navigate({ search: (s) => ({ ...s, modalidade: undefined, tags: undefined }), replace: true });
   };
 
   const porEtapa = useMemo(() => {
@@ -163,6 +170,14 @@ function NegociosPage() {
                 { titulo: "Empresa", valor: (n) => n.empresa_nome },
                 { titulo: "Grupo", valor: (n) => n.empresa_grupo },
                 { titulo: "Pessoa", valor: (n) => n.pessoa_nome },
+                {
+                  titulo: "Tags",
+                  valor: (n) =>
+                    (n.tags ?? [])
+                      .map((id) => tag(id)?.nome)
+                      .filter(Boolean)
+                      .join(", "),
+                },
                 { titulo: "Tipo", valor: (n) => labelDe(TIPOS_NEGOCIO, n.tipo) },
                 {
                   titulo: "Modalidade",
@@ -192,7 +207,9 @@ function NegociosPage() {
         <Tabs
           value={funil}
           onValueChange={(v) =>
-            navigate({ search: { funil: v as CrmFunilId, modalidade: search.modalidade } })
+            navigate({
+              search: { funil: v as CrmFunilId, modalidade: search.modalidade, tags: search.tags },
+            })
           }
         >
           <TabsList className="h-10 w-full justify-start overflow-x-auto sm:w-auto">
@@ -222,7 +239,7 @@ function NegociosPage() {
         </Tabs>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_0.7fr_1fr_1fr_auto_auto]">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_0.7fr_1fr_1fr_auto_auto_auto]">
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -268,6 +285,7 @@ function NegociosPage() {
             ))}
           </SelectContent>
         </Select>
+        <FiltroTags selecionadas={tagsFiltro} onChange={setTagsFiltro} />
         <Button
           variant={soAtrasados ? "default" : "outline"}
           className="h-10"
@@ -302,6 +320,12 @@ function NegociosPage() {
           modalidade={modalidade}
           filtrosAtivos={filtrosAtivos}
           onLimpar={limparFiltros}
+          tagsFiltro={tagsFiltro}
+          onTag={(id) =>
+            setTagsFiltro(
+              tagsFiltro.includes(id) ? tagsFiltro.filter((x) => x !== id) : [...tagsFiltro, id],
+            )
+          }
         />
       ) : null}
 
@@ -446,7 +470,11 @@ function IndicadoresFunil({
   modalidade,
   filtrosAtivos,
   onLimpar,
+  tagsFiltro,
+  onTag,
 }: {
+  tagsFiltro: string[];
+  onTag: (id: string) => void;
   lista: NegocioCompleto[];
   etapas: { id: string; nome: string; tipo: string }[];
   modalidade?: Modalidade;
@@ -454,6 +482,12 @@ function IndicadoresFunil({
   onLimpar: () => void;
 }) {
   const [foco, setFoco] = useState<string | null>(null);
+  const { tagsAtivas } = useCrm();
+  const contagemTags = useMemo(() => {
+    const c = new Map<string, number>();
+    for (const n of lista) for (const t of n.tags ?? []) c.set(t, (c.get(t) ?? 0) + 1);
+    return c;
+  }, [lista]);
   const r = useMemo(() => {
     const abertos = lista.filter((n) => n.etapa_tipo === "aberta");
     const ganhos = lista.filter((n) => n.etapa_tipo === "ganha");
@@ -484,8 +518,11 @@ function IndicadoresFunil({
     .filter((e) => e.qtd > 0);
   const total = segmentos.reduce((s, e) => s + e.qtd, 0);
   const abertas = etapas.filter((e) => e.tipo === "aberta");
-  const tom = (e: { id: string; tipo: string }) => {
+  const tom = (e: { id: string; tipo: string; nome: string }) => {
     if (e.tipo === "ganha") return "bg-emerald-500";
+    // Etapas de recuperação ficam com cor própria para não se confundirem com o caminho principal.
+    if (e.nome === "Remarketing") return "bg-violet-500";
+    if (e.nome === "Sem resposta") return "bg-amber-400";
     if (e.tipo === "perdida") return "bg-muted-foreground/40";
     const i = abertas.findIndex((x) => x.id === e.id);
     const opacidades = ["opacity-40", "opacity-55", "opacity-70", "opacity-85", "opacity-100"];
@@ -586,6 +623,21 @@ function IndicadoresFunil({
             ))}
           </ul>
         </figure>
+      ) : null}
+      {tagsAtivas.length ? (
+        <div className="flex flex-wrap items-center gap-1.5 rounded-[var(--radius)] border bg-card p-3">
+          <span className="mr-1 text-xs text-muted-foreground">Tags neste recorte:</span>
+          {tagsAtivas.map((t) => (
+            <TagChip
+              key={t.id}
+              tag={t}
+              ativa={tagsFiltro.includes(t.id) || (contagemTags.get(t.id) ?? 0) > 0}
+              selecionada={tagsFiltro.includes(t.id)}
+              sufixo={` ${fmtNum(contagemTags.get(t.id) ?? 0)}`}
+              onClick={() => onTag(t.id)}
+            />
+          ))}
+        </div>
       ) : null}
     </section>
   );
