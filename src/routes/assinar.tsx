@@ -249,7 +249,7 @@ function AssinarPage() {
                           setDone(
                             res.alreadySubscribed
                               ? `${value} já está na lista — a próxima edição chega amanhã cedo.`
-                              : `Enviamos um e-mail para ${value}. Confirme para ativar a assinatura.`,
+                              : `Pronto! ${value} está na lista. A primeira edição chega amanhã às 7h.`,
                           );
                         })
                         .catch((err: unknown) =>

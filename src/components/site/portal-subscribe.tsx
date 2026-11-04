@@ -76,7 +76,7 @@ export function PortalSubscribeForm({
     if (sending) return;
     const value = email.trim().toLowerCase();
     if (hp.current?.value) {
-      setMsg({ t: "Pronto! Confira seu e-mail para confirmar.", ok: true });
+      setMsg({ t: "Pronto! A primeira edição chega amanhã às 7h.", ok: true });
       return;
     }
     if (!EMAIL_RE.test(value) || value.length > 254) {
@@ -106,7 +106,7 @@ export function PortalSubscribeForm({
       setMsg({
         t: res.alreadySubscribed
           ? "Este e-mail já está na lista. A próxima edição chega no seu e-mail."
-          : "Quase lá! Enviamos um e-mail para confirmar a inscrição. Confira também o spam.",
+          : "Pronto! Você está na lista. A primeira edição chega amanhã às 7h. Se não aparecer, confira o spam.",
         ok: true,
       });
       setEmail("");

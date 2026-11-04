@@ -11,7 +11,7 @@ import { markSubscribed } from "@/components/site/portal-subscribe";
 
 const emailSchema = z.string().trim().max(255).email();
 const confirmation =
-  "Quase lá! Enviamos um e-mail para confirmar sua inscrição. Confira a caixa de entrada (e o spam).";
+  "Pronto! Você está na lista. A primeira edição chega amanhã às 7h. Se não aparecer, confira o spam.";
 
 export function NewsletterForm({
   placement,

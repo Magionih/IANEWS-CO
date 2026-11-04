@@ -13,7 +13,8 @@ type LeadRow = {
   created_at: string;
 };
 
-/** Envia o e-mail de boas-vindas com o link de confirmação e marca a data de envio. */
+/** Envia o e-mail de boas-vindas (sem pedir confirmação) e marca a data de envio.
+ *  Desde 04/11/2026 não há confirmação: quem se inscreve já recebe a próxima edição. */
 export async function sendWelcomeEmail(lead: LeadRow) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   try {
@@ -21,7 +22,6 @@ export async function sendWelcomeEmail(lead: LeadRow) {
       idempotencyKey: `lead-welcome-${lead.id}`,
       templateData: {
         name: lead.full_name?.split(" ")[0] ?? undefined,
-        confirmUrl: confirmUrlFor(lead.confirm_token),
         origin: lead.source ?? undefined,
       },
     });
@@ -58,47 +58,9 @@ export async function runLeadFollowUp(options: { reminderAfterHours?: number } =
     if (await sendWelcomeEmail(lead)) welcomes += 1;
   }
 
-  const cutoff = new Date(Date.now() - reminderAfterHours * 3600 * 1000).toISOString();
-  const { data: pendingReminder } = await supabaseAdmin
-    .from("leads")
-    .select("id, email, full_name, source, confirm_token, created_at")
-    .is("confirmed_at", null)
-    .is("reminder_sent_at", null)
-    .is("unsubscribed_at", null)
-    .not("welcome_sent_at", "is", null)
-    .lte("created_at", cutoff)
-    .order("created_at", { ascending: true })
-    .limit(100);
-
-  const { data: latest } = await supabaseAdmin
-    .from("articles")
-    .select("title")
-    .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
-    .order("published_at", { ascending: false })
-    .limit(1);
-  const headline = (latest?.[0] as { title?: string } | undefined)?.title;
-
-  let reminders = 0;
-  for (const lead of (pendingReminder ?? []) as LeadRow[]) {
-    try {
-      await sendTemplateEmail("lead-reminder", lead.email, {
-        idempotencyKey: `lead-reminder-${lead.id}`,
-        templateData: {
-          name: lead.full_name?.split(" ")[0] ?? undefined,
-          confirmUrl: confirmUrlFor(lead.confirm_token),
-          headline,
-        },
-      });
-      reminders += 1;
-    } catch (err) {
-      console.error("[lead-funnel] reminder failed", err instanceof Error ? err.message : err);
-    }
-    await supabaseAdmin
-      .from("leads")
-      .update({ reminder_sent_at: new Date().toISOString() } as never)
-      .eq("id", lead.id);
-  }
+  // Lembrete de confirmação desligado: a inscrição vale sem confirmar (decisão de 04/11/2026).
+  const reminders = 0;
+  void reminderAfterHours;
 
   return { ok: true, welcomes, reminders };
 }

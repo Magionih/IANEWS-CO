@@ -87,19 +87,20 @@ export const subscribeLead = createServerFn({ method: "POST" })
         patch.is_active = true;
         patch.unsubscribed_at = null;
       }
+      if (!row.confirmed_at) patch.confirmed_at = new Date().toISOString();
       if (!row.full_name && data.full_name?.trim()) patch.full_name = data.full_name.trim().slice(0, 160);
       if (!row.phone && data.phone?.trim()) patch.phone = data.phone.trim().slice(0, 40);
       if (Object.keys(patch).length) {
         await supabaseAdmin.from("leads").update(patch as never).eq("id", row.id);
       }
-      if (!row.confirmed_at && (!row.welcome_sent_at || row.unsubscribed_at)) {
+      if (!row.welcome_sent_at || row.unsubscribed_at) {
         const { sendWelcomeEmail } = await import("@/lib/lead-funnel.server");
         await sendWelcomeEmail({ ...row, full_name: (patch.full_name as string) ?? row.full_name });
       }
       return {
         ok: true,
         alreadySubscribed: !row.unsubscribed_at,
-        confirmed: !!row.confirmed_at,
+        confirmed: true,
       };
     }
 
@@ -118,6 +119,8 @@ export const subscribeLead = createServerFn({ method: "POST" })
         utm_medium: data.utmMedium?.slice(0, 120) ?? null,
         utm_campaign: data.utmCampaign?.slice(0, 120) ?? null,
         country: country && country !== "XX" ? country.slice(0, 4) : null,
+        // Sem confirmação por e-mail: a inscrição já vale (a próxima edição chega às 7h).
+        confirmed_at: new Date().toISOString(),
       } as never)
       .select("id, email, full_name, source, confirm_token, created_at")
       .maybeSingle();
@@ -130,7 +133,7 @@ export const subscribeLead = createServerFn({ method: "POST" })
     const { sendWelcomeEmail } = await import("@/lib/lead-funnel.server");
     await sendWelcomeEmail(inserted as never);
 
-    return { ok: true, alreadySubscribed: false, confirmed: false };
+    return { ok: true, alreadySubscribed: false, confirmed: true };
   });
 
 export const confirmLead = createServerFn({ method: "POST" })

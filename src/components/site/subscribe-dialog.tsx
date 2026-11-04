@@ -96,11 +96,11 @@ export function SubscribeDialog() {
                 <path d="m5 12.5 4.5 4.5L19 7.5" />
               </svg>
             </span>
-            <h2 id="pop-title">{done.already ? "Você já está na lista" : "Quase lá!"}</h2>
+            <h2 id="pop-title">{done.already ? "Você já está na lista" : "Pronto, inscrição feita!"}</h2>
             <p className="lead-p">
               {done.already
                 ? "A próxima edição chega no seu e-mail."
-                : "Enviamos um e-mail para confirmar a sua inscrição. Confira a caixa de entrada e o spam."}
+                : "A primeira edição chega amanhã às 7h. Se não aparecer, confira o spam."}
             </p>
             <a
               className="wa-link"
