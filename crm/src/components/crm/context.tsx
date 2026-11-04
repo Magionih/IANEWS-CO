@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { CrmContexto, CrmEtapa, CrmFunilId } from "@/lib/crm/types";
+import type { CrmContexto, CrmEtapa, CrmFunilId, CrmTag } from "@/lib/crm/types";
 
 /* Contexto do CRM nas telas: equipe, funis e etapas (carregados uma vez pelo layout). */
 
@@ -10,6 +10,10 @@ type Valor = CrmContexto & {
   etapasDo: (funil: CrmFunilId) => CrmEtapa[];
   funilNome: (id?: string | null) => string;
   membro: (id?: string | null) => string;
+  /** Tag do catálogo pelo id (inclusive inativas, para negócios antigos). */
+  tag: (id: string) => CrmTag | undefined;
+  /** Tags ativas, na ordem do catálogo (para aplicar e filtrar). */
+  tagsAtivas: CrmTag[];
   /** Recarrega as telas do CRM depois de uma alteração (com `contexto`, também equipe, funis e etapas). */
   atualizar: (opts?: { contexto?: boolean }) => Promise<void>;
 };
@@ -32,6 +36,7 @@ export function CrmProvider({ valor, children }: { valor: CrmContexto; children:
   const v = useMemo<Valor>(() => {
     const etapas = new Map(valor.etapas.map((e) => [e.id, e]));
     const equipe = new Map(valor.equipe.map((m) => [m.user_id, m]));
+    const tags = new Map(valor.tags.map((t) => [t.id, t]));
     return {
       ...valor,
       etapa: (id) => (id ? etapas.get(id) : undefined),
@@ -41,6 +46,8 @@ export function CrmProvider({ valor, children }: { valor: CrmContexto; children:
           .sort((a, b) => a.ordem - b.ordem),
       funilNome: (id) => valor.funis.find((f) => f.id === id)?.nome ?? id ?? "—",
       membro: (id) => (id ? (equipe.get(id)?.nome ?? "—") : "Sem responsável"),
+      tag: (id) => tags.get(id),
+      tagsAtivas: valor.tags.filter((t) => t.ativo).sort((a, b) => a.ordem - b.ordem),
       atualizar,
     };
   }, [valor, atualizar]);

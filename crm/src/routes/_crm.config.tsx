@@ -6,6 +6,7 @@ import { Loader2, Plus, Save } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { useAcao, useModelos } from "@/components/crm/queries";
+import { COR_TAG, TagChip } from "@/components/crm/tags";
 import {
   CabecalhoPagina,
   Campo,
@@ -39,12 +40,20 @@ import {
   listUsuarios,
   saveEtapa,
   saveModelo,
+  saveTag,
   setPapel,
   type EtapaInput,
   type ModeloInput,
+  type TagInput,
   type PapelEquipe,
 } from "@/lib/crm/config.functions";
-import type { CrmEtapa, CrmFunilId, CrmModelo } from "@/lib/crm/types";
+import {
+  CORES_TAG,
+  type CrmEtapa,
+  type CrmFunilId,
+  type CrmModelo,
+  type CrmTag,
+} from "@/lib/crm/types";
 import { CANAIS, fmtDia, labelDe, VARIAVEIS_MODELO } from "@/lib/crm/utils";
 
 export const Route = createFileRoute("/_crm/config")({
@@ -66,16 +75,20 @@ function ConfigPage() {
     <div className="space-y-4">
       <CabecalhoPagina
         titulo="Configuração"
-        descricao="Funis, etapas e prazos, modelos de mensagem, usuários e papéis. Só admin."
+        descricao="Funis, etapas e prazos, tags estratégicas, modelos de mensagem, usuários e papéis. Só admin."
       />
       <Tabs defaultValue="etapas">
         <TabsList className="h-10">
           <TabsTrigger value="etapas">Funis e etapas</TabsTrigger>
+          <TabsTrigger value="tags">Tags</TabsTrigger>
           <TabsTrigger value="modelos">Modelos de mensagem</TabsTrigger>
           <TabsTrigger value="usuarios">Usuários e papéis</TabsTrigger>
         </TabsList>
         <TabsContent value="etapas" className="mt-4">
           <Etapas />
+        </TabsContent>
+        <TabsContent value="tags" className="mt-4">
+          <TagsConfig />
         </TabsContent>
         <TabsContent value="modelos" className="mt-4">
           <Modelos />
@@ -223,6 +236,139 @@ function LinhaEtapa({ etapa, onFim }: { etapa: Partial<CrmEtapa>; onFim?: () => 
         disabled={ocupado || !f.nome?.trim()}
         onClick={async () => {
           const r = await executar(() => salvar({ data: f }), "Etapa salva.");
+          if (r) onFim?.();
+        }}
+      >
+        {ocupado ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+}
+
+function TagsConfig() {
+  const { tags } = useCrm();
+  const [nova, setNova] = useState(false);
+  const proxima = Math.max(0, ...tags.map((t) => t.ordem)) + 10;
+  return (
+    <Secao
+      titulo="Tags estratégicas"
+      contagem={tags.length}
+      acoes={
+        <Button size="sm" variant="ghost" className="h-8" onClick={() => setNova(true)}>
+          <Plus className="mr-1 h-4 w-4" /> Tag
+        </Button>
+      }
+    >
+      <p className="mb-3 text-sm text-muted-foreground">
+        A equipe marca as tags na ficha do negócio, e cada mudança fica no histórico. No funil, use
+        o filtro de tags e veja quantos negócios têm cada tag. Tag desativada some das opções, mas
+        continua nos negócios que já a têm.
+      </p>
+      <div className="space-y-2">
+        <div className="hidden grid-cols-[60px_1fr_130px_1.6fr_70px_44px] gap-2 text-[11px] font-semibold text-muted-foreground lg:grid">
+          <span>Ordem</span>
+          <span>Nome</span>
+          <span>Cor</span>
+          <span>Quando usar</span>
+          <span>Ativa</span>
+          <span />
+        </div>
+        {[...tags]
+          .sort((a, b) => a.ordem - b.ordem)
+          .map((t) => (
+            <LinhaTag key={t.id} tag={t} />
+          ))}
+        {nova ? (
+          <LinhaTag
+            tag={{ nome: "", cor: "azul", descricao: "", ordem: proxima, ativo: true }}
+            onFim={() => setNova(false)}
+          />
+        ) : null}
+        {!tags.length && !nova ? <Vazio>Nenhuma tag ainda.</Vazio> : null}
+      </div>
+    </Secao>
+  );
+}
+
+function LinhaTag({ tag, onFim }: { tag: Partial<CrmTag>; onFim?: () => void }) {
+  const salvar = useServerFn(saveTag);
+  const { executar, ocupado } = useAcao({ contexto: true });
+  const [f, setF] = useState<TagInput>({});
+  useEffect(() => {
+    setF({
+      id: tag.id,
+      nome: tag.nome ?? "",
+      cor: tag.cor ?? "azul",
+      descricao: tag.descricao ?? "",
+      ordem: tag.ordem ?? 0,
+      ativo: tag.ativo ?? true,
+    });
+  }, [tag.id, tag.nome, tag.cor, tag.descricao, tag.ordem, tag.ativo]);
+  const set = <K extends keyof TagInput>(k: K, v: TagInput[K]) => setF((x) => ({ ...x, [k]: v }));
+  const previa: CrmTag = {
+    id: tag.id ?? "nova",
+    nome: f.nome?.trim() || "Nova tag",
+    cor: (f.cor as CrmTag["cor"]) ?? "azul",
+    descricao: f.descricao ?? null,
+    ordem: 0,
+    ativo: true,
+  };
+  return (
+    <div className="grid grid-cols-2 items-center gap-2 rounded-lg border p-2 lg:grid-cols-[60px_1fr_130px_1.6fr_70px_44px] lg:border-0 lg:p-0">
+      <Input
+        aria-label="Ordem"
+        inputMode="numeric"
+        value={String(f.ordem ?? "")}
+        onChange={(e) => set("ordem", e.target.value.replace(/\D/g, ""))}
+        className="h-9"
+      />
+      <div className="flex items-center gap-2">
+        <Input
+          aria-label="Nome da tag"
+          maxLength={40}
+          value={f.nome ?? ""}
+          onChange={(e) => set("nome", e.target.value)}
+          className="h-9"
+        />
+        <span className="hidden xl:inline">
+          <TagChip tag={previa} pequena />
+        </span>
+      </div>
+      <Select value={f.cor ?? "azul"} onValueChange={(v) => set("cor", v)}>
+        <SelectTrigger className="h-9" aria-label="Cor">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {CORES_TAG.map((c) => (
+            <SelectItem key={c} value={c}>
+              <span className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${COR_TAG[c].ponto}`} />
+                {COR_TAG[c].rotulo}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Input
+        aria-label="Quando usar"
+        maxLength={300}
+        placeholder="Quando usar esta tag"
+        value={f.descricao ?? ""}
+        onChange={(e) => set("descricao", e.target.value)}
+        className="h-9"
+      />
+      <label className="flex items-center gap-2 text-xs">
+        <Checkbox checked={f.ativo !== false} onCheckedChange={(v) => set("ativo", v === true)} />{" "}
+        ativa
+      </label>
+      <Button
+        size="icon"
+        variant="outline"
+        className="h-9 w-9"
+        aria-label="Salvar tag"
+        disabled={ocupado || !f.nome?.trim()}
+        onClick={async () => {
+          const r = await executar(() => salvar({ data: f }), "Tag salva.");
           if (r) onFim?.();
         }}
       >

@@ -82,6 +82,7 @@ export async function hidratarNegocios(
     return {
       ...l,
       valor: l.valor == null ? null : Number(l.valor),
+      tags: l.tags ?? [],
       empresa_nome: e?.nome ?? null,
       empresa_grupo: e?.grupo ?? null,
       empresa_seguidores: e?.seguidores_instagram ?? null,

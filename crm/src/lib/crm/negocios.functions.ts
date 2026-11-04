@@ -4,6 +4,7 @@ import {
   checar,
   dia,
   dinheiro,
+  listaIds,
   obrigatorio,
   requireCrmAccess,
   texto,
@@ -93,6 +94,7 @@ export type NegocioInput = {
   proxima_acao_em?: string | null;
   motivo_perda?: string | null;
   ativo?: boolean;
+  tags?: string[];
 };
 
 export const saveNegocio = createServerFn({ method: "POST" })
@@ -126,6 +128,7 @@ export const saveNegocio = createServerFn({ method: "POST" })
     campo("proxima_acao_em", () => dia(data.proxima_acao_em));
     campo("motivo_perda", () => texto(data.motivo_perda, 500));
     campo("ativo", () => data.ativo !== false);
+    campo("tags", () => listaIds(data.tags));
     if (!data.id && !("dono_id" in data)) row.dono_id = context.userId;
 
     if (data.id) {
@@ -152,6 +155,25 @@ export const moverNegocio = createServerFn({ method: "POST" })
     if (data.motivo_perda) row.motivo_perda = data.motivo_perda;
     checar(
       await context.db.from("crm_negocios").update(row).eq("id", data.id).select("id").single(),
+    );
+    return { ok: true };
+  });
+
+/** Tags do negócio (o banco registra cada mudança na linha do tempo). */
+export const setTagsNegocio = createServerFn({ method: "POST" })
+  .middleware([requireCrmAccess])
+  .inputValidator((input: { id: string; tags: string[] }) => ({
+    id: uuidObrigatorio(input?.id, "o negócio"),
+    tags: listaIds(input?.tags),
+  }))
+  .handler(async ({ data, context }) => {
+    checar(
+      await context.db
+        .from("crm_negocios")
+        .update({ tags: data.tags })
+        .eq("id", data.id)
+        .select("id")
+        .single(),
     );
     return { ok: true };
   });

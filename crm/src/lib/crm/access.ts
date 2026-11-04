@@ -211,4 +211,12 @@ export const umDe = <T extends string>(
   return v as T;
 };
 
+/** Lista de ids (uuid) sem repetição, com limite. */
+export const listaIds = (v: unknown, max = 20): string[] => {
+  if (!Array.isArray(v)) return [];
+  const ids = [...new Set(v.map((x) => uuid(x)).filter((x): x is string => !!x))];
+  if (ids.length > max) throw new Error(`Use no máximo ${max} tags por negócio.`);
+  return ids;
+};
+
 export const bool = (v: unknown): boolean => v === true || v === "true";

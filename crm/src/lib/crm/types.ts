@@ -123,6 +123,8 @@ export type CrmNegocio = {
   motivo_perda: string | null;
   fechado_em: string | null;
   ativo: boolean;
+  /** Tags estratégicas (ids de crm_tags). */
+  tags: string[];
   created_at: string;
   updated_at: string;
 };
@@ -237,6 +239,26 @@ export type CrmModelo = {
 };
 
 /** Contexto comum das telas: quem sou eu, equipe, funis e etapas. */
+export const CORES_TAG = [
+  "azul",
+  "verde",
+  "amarelo",
+  "laranja",
+  "vermelho",
+  "roxo",
+  "cinza",
+] as const;
+export type CrmCorTag = (typeof CORES_TAG)[number];
+
+export type CrmTag = {
+  id: string;
+  nome: string;
+  cor: CrmCorTag;
+  descricao: string | null;
+  ordem: number;
+  ativo: boolean;
+};
+
 export type CrmContexto = {
   userId: string;
   papeis: string[];
@@ -244,4 +266,5 @@ export type CrmContexto = {
   equipe: CrmMembro[];
   funis: CrmFunil[];
   etapas: CrmEtapa[];
+  tags: CrmTag[];
 };

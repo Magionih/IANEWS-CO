@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { checar, requireCrmAccess, texto } from "./access";
-import type { CrmContexto, CrmEtapa, CrmFunil, CrmMembro } from "./types";
+import type { CrmContexto, CrmEtapa, CrmFunil, CrmMembro, CrmTag } from "./types";
 
 /* Contexto comum das telas do CRM e busca global. */
 
@@ -9,7 +9,7 @@ export const getCrmContexto = createServerFn({ method: "GET" })
   .middleware([requireCrmAccess])
   .handler(async ({ context }): Promise<CrmContexto> => {
     const { db } = context;
-    const [equipe, funis, etapas] = await Promise.all([
+    const [equipe, funis, etapas, tags] = await Promise.all([
       db.rpc("crm_equipe"),
       db.from("crm_funis").select("id, nome, ordem, ativo").order("ordem"),
       db
@@ -17,6 +17,7 @@ export const getCrmContexto = createServerFn({ method: "GET" })
         .select("id, funil_id, nome, ordem, prazo_dias, acao_padrao, criterio_entrada, tipo, ativo")
         .order("funil_id")
         .order("ordem"),
+      db.from("crm_tags").select("id, nome, cor, descricao, ordem, ativo").order("ordem"),
     ]);
     return {
       userId: context.userId,
@@ -25,6 +26,8 @@ export const getCrmContexto = createServerFn({ method: "GET" })
       equipe: (checar(equipe) ?? []) as CrmMembro[],
       funis: (checar(funis) ?? []) as CrmFunil[],
       etapas: (checar(etapas) ?? []) as CrmEtapa[],
+      // Antes da migração das tags a tabela não existe: o CRM segue funcionando sem tags.
+      tags: tags.error ? [] : ((tags.data ?? []) as CrmTag[]),
     };
   });
 
