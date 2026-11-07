@@ -10,7 +10,16 @@ import { useAcao } from "@/components/crm/queries";
 import { CabecalhoPagina, Carregando, Erro, Numero, Secao, Vazio } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { briefingsAguardando, listProducoes, registrarLinkPost, type Producao } from "@/lib/crm/operacao.functions";
+import {
+  briefingsAguardando,
+  configInstagram,
+  listCarrosseis,
+  listProducoes,
+  registrarLinkPost,
+  salvarConfigInstagram,
+  type Producao,
+} from "@/lib/crm/operacao.functions";
+import { useCrm } from "@/components/crm/context";
 import { fmtDataHora } from "@/lib/crm/utils";
 
 export const Route = createFileRoute("/_crm/producoes")({
@@ -28,6 +37,12 @@ const STATUS: Record<string, { rotulo: string; cor: string }> = {
 };
 
 function ProducoesPage() {
+  const { isAdmin } = useCrm();
+  const fetchCarrosseis = useServerFn(listCarrosseis);
+  const fetchCfg = useServerFn(configInstagram);
+  const salvarCfg = useServerFn(salvarConfigInstagram);
+  const carr = useQuery({ queryKey: ["crm", "carrosseis"], queryFn: () => fetchCarrosseis() });
+  const cfg = useQuery({ queryKey: ["crm", "config-instagram"], queryFn: () => fetchCfg() });
   const fetchProducoes = useServerFn(listProducoes);
   const fetchBriefings = useServerFn(briefingsAguardando);
   const registrar = useServerFn(registrarLinkPost);
@@ -36,13 +51,18 @@ function ProducoesPage() {
   const [links, setLinks] = useState<Record<string, string>>({});
 
   const q = useQuery({ queryKey: ["crm", "producoes"], queryFn: () => fetchProducoes() });
-  const b = useQuery({ queryKey: ["crm", "briefings-aguardando"], queryFn: () => fetchBriefings() });
+  const b = useQuery({
+    queryKey: ["crm", "briefings-aguardando"],
+    queryFn: () => fetchBriefings(),
+  });
 
   if (q.isLoading) return <Carregando texto="Carregando as produções..." />;
   if (q.error) return <Erro erro={q.error} />;
   const lista = q.data ?? [];
   const por = (s: string) => lista.filter((p) => p.status === s).length;
-  const agendadas = lista.filter((p) => p.status === "agendado").sort((a, b2) => (a.data_publicacao ?? "").localeCompare(b2.data_publicacao ?? ""));
+  const agendadas = lista
+    .filter((p) => p.status === "agendado")
+    .sort((a, b2) => (a.data_publicacao ?? "").localeCompare(b2.data_publicacao ?? ""));
 
   async function copiar(texto: string) {
     try {
@@ -61,10 +81,23 @@ function ProducoesPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Numero rotulo="Briefings aguardando" valor={(b.data ?? []).filter((x) => x.status !== "aberto").length} detalhe={`${(b.data ?? []).filter((x) => x.status === "aberto").length} abertos sem envio`} />
-        <Numero rotulo="Prévias com o lead" valor={por("previa")} detalhe="aguardando aprovação" destaque="azul" />
+        <Numero
+          rotulo="Briefings aguardando"
+          valor={(b.data ?? []).filter((x) => x.status !== "aberto").length}
+          detalhe={`${(b.data ?? []).filter((x) => x.status === "aberto").length} abertos sem envio`}
+        />
+        <Numero
+          rotulo="Prévias com o lead"
+          valor={por("previa")}
+          detalhe="aguardando aprovação"
+          destaque="azul"
+        />
         <Numero rotulo="Ajustes" valor={por("ajuste")} detalhe="a IA refaz na próxima rodada" />
-        <Numero rotulo="Agendadas" valor={por("agendado")} detalhe="matéria no site + tarefa de IG" />
+        <Numero
+          rotulo="Agendadas"
+          valor={por("agendado")}
+          detalhe="matéria no site + tarefa de IG"
+        />
         <Numero rotulo="Publicadas" valor={por("publicado")} detalhe="links enviados ao lead" />
       </div>
 
@@ -74,9 +107,12 @@ function ProducoesPage() {
             {agendadas.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>
-                  <strong>{p.data_publicacao ? fmtDataHora(p.data_publicacao) : "—"}</strong> · {p.titulo}
+                  <strong>{p.data_publicacao ? fmtDataHora(p.data_publicacao) : "—"}</strong> ·{" "}
+                  {p.titulo}
                 </span>
-                <span className="text-xs text-muted-foreground">collab {p.collabs.length ? p.collabs.map((c) => "@" + c).join(", ") : "—"}</span>
+                <span className="text-xs text-muted-foreground">
+                  collab {p.collabs.length ? p.collabs.map((c) => "@" + c).join(", ") : "—"}
+                </span>
               </li>
             ))}
           </ul>
@@ -85,7 +121,9 @@ function ProducoesPage() {
 
       <Secao titulo="Todas as produções" contagem={lista.length}>
         {lista.length === 0 ? (
-          <Vazio>Nenhuma produção ainda. Quando um lead enviar o briefing, a IA gera a prévia aqui.</Vazio>
+          <Vazio>
+            Nenhuma produção ainda. Quando um lead enviar o briefing, a IA gera a prévia aqui.
+          </Vazio>
         ) : (
           <ul className="space-y-4">
             {lista.map((p: Producao) => {
@@ -96,32 +134,59 @@ function ProducoesPage() {
                     <div className="min-w-0">
                       <p className="font-bold">{p.titulo ?? "(sem título ainda)"}</p>
                       <p className="text-xs text-muted-foreground">
-                        {p.pessoa ?? "—"}{p.empresa ? ` · ${p.empresa}` : ""} · {p.tipo} · v{p.versao}
+                        {p.pessoa ?? "—"}
+                        {p.empresa ? ` · ${p.empresa}` : ""} · {p.tipo} · v{p.versao}
                         {p.data_publicacao ? ` · sai ${fmtDataHora(p.data_publicacao)}` : ""}
                       </p>
                     </div>
-                    <span className={`rounded px-2 py-0.5 text-xs font-semibold ${s.cor}`}>{s.rotulo}</span>
+                    <span className={`rounded px-2 py-0.5 text-xs font-semibold ${s.cor}`}>
+                      {s.rotulo}
+                    </span>
                   </div>
-                  {p.erro ? <p className="mt-2 text-xs text-destructive">Erro na última rodada: {p.erro}</p> : null}
-                  {p.ajuste_pedido && p.status === "ajuste" ? <p className="mt-2 text-xs">Ajuste pedido: “{p.ajuste_pedido}”</p> : null}
+                  {p.erro ? (
+                    <p className="mt-2 text-xs text-destructive">Erro na última rodada: {p.erro}</p>
+                  ) : null}
+                  {p.ajuste_pedido && p.status === "ajuste" ? (
+                    <p className="mt-2 text-xs">Ajuste pedido: “{p.ajuste_pedido}”</p>
+                  ) : null}
                   {p.telas?.length ? (
                     <div className="mt-3 flex gap-2 overflow-x-auto">
                       {p.telas.map((t, i) => (
-                        <a key={t} href={t} target="_blank" rel="noopener noreferrer" className="shrink-0" title={`Tela ${i + 1}`}>
-                          <img src={t} alt={`Tela ${i + 1}`} className="h-40 rounded border object-cover" style={{ aspectRatio: "4/5" }} />
+                        <a
+                          key={t}
+                          href={t}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0"
+                          title={`Tela ${i + 1}`}
+                        >
+                          <img
+                            src={t}
+                            alt={`Tela ${i + 1}`}
+                            className="h-40 rounded border object-cover"
+                            style={{ aspectRatio: "4/5" }}
+                          />
                         </a>
                       ))}
                     </div>
                   ) : null}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" asChild>
-                      <a href={`https://ianewsbr.com/previa/${p.token}`} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={`https://ianewsbr.com/previa/${p.token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ExternalLink className="h-4 w-4" /> Prévia
                       </a>
                     </Button>
                     {p.slug ? (
                       <Button size="sm" variant="outline" asChild>
-                        <a href={`https://ianewsbr.com/materia/${p.slug}`} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={`https://ianewsbr.com/materia/${p.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4" /> Matéria
                         </a>
                       </Button>
@@ -132,12 +197,18 @@ function ProducoesPage() {
                       </Button>
                     ) : null}
                     {p.collabs.length ? (
-                      <Button size="sm" variant="ghost" onClick={() => copiar(p.collabs.map((c) => "@" + c).join(" "))}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copiar(p.collabs.map((c) => "@" + c).join(" "))}
+                      >
                         collab: {p.collabs.map((c) => "@" + c).join(" ")}
                       </Button>
                     ) : null}
                     {p.negocio_id ? (
-                      <Button size="sm" variant="ghost" onClick={() => setNegocio(p.negocio_id)}>Ver negócio</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setNegocio(p.negocio_id)}>
+                        Ver negócio
+                      </Button>
                     ) : null}
                   </div>
                   {["agendado", "publicado"].includes(p.status) && !p.social_url ? (
@@ -148,16 +219,138 @@ function ProducoesPage() {
                         value={links[p.id] ?? ""}
                         onChange={(e) => setLinks((l) => ({ ...l, [p.id]: e.target.value }))}
                       />
-                      <Button size="sm" disabled={ocupado || !(links[p.id] ?? "").trim()} onClick={() => executar(() => registrar({ data: { id: p.id, url: links[p.id] } }), "Link registrado: vai junto no aviso ao lead.")}>
+                      <Button
+                        size="sm"
+                        disabled={ocupado || !(links[p.id] ?? "").trim()}
+                        onClick={() =>
+                          executar(
+                            () => registrar({ data: { id: p.id, url: links[p.id] } }),
+                            "Link registrado: vai junto no aviso ao lead.",
+                          )
+                        }
+                      >
                         <Link2 className="h-4 w-4" /> Registrar link
                       </Button>
                     </div>
                   ) : p.social_url ? (
-                    <p className="mt-2 text-xs"><a className="text-primary underline" href={p.social_url} target="_blank" rel="noopener noreferrer">{p.social_url}</a></p>
+                    <p className="mt-2 text-xs">
+                      <a
+                        className="text-primary underline"
+                        href={p.social_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {p.social_url}
+                      </a>
+                    </p>
                   ) : null}
                 </li>
               );
             })}
+          </ul>
+        )}
+      </Secao>
+
+      <Secao
+        titulo="Notícias: carrosséis prontos"
+        contagem={(carr.data ?? []).length}
+        acoes={
+          isAdmin ? (
+            <Button
+              size="sm"
+              variant={cfg.data?.publicar_api ? "default" : "outline"}
+              disabled={ocupado}
+              onClick={() =>
+                executar(
+                  () => salvarCfg({ data: { publicar_api: !cfg.data?.publicar_api } }),
+                  cfg.data?.publicar_api
+                    ? "Publicação pela API desligada: a equipe agenda no compositor nativo."
+                    : "Publicação pela API ligada: as notícias saem sozinhas quando a matéria entra no ar (curtidas visíveis).",
+                )
+              }
+            >
+              {cfg.data?.publicar_api ? "API do Instagram: ligada" : "API do Instagram: desligada"}
+            </Button>
+          ) : null
+        }
+      >
+        <p className="mb-3 text-xs text-muted-foreground">
+          A cada hora, as matérias que entram no ar nas próximas 48 h ganham telas e legenda
+          prontas. Com a API desligada, a equipe baixa as telas e agenda no compositor nativo
+          (curtidas ocultas); com a API ligada, o post sai sozinho no horário da matéria.
+        </p>
+        {(carr.data ?? []).length === 0 ? (
+          <Vazio>Nenhum carrossel ainda. A primeira rodada roda em até 1 hora.</Vazio>
+        ) : (
+          <ul className="space-y-3">
+            {(carr.data ?? []).map((c) => (
+              <li key={c.id} className="rounded-[var(--radius)] border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-bold">{c.article?.title ?? "(matéria)"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.article?.published_at ? `sai ${fmtDataHora(c.article.published_at)}` : ""}
+                      {c.collabs.length
+                        ? ` · collab ${c.collabs.map((x) => "@" + x).join(", ")}`
+                        : ""}
+                      {c.erro ? ` · erro: ${c.erro}` : ""}
+                    </p>
+                  </div>
+                  <span className="rounded bg-muted px-2 py-0.5 text-xs font-semibold">
+                    {c.status}
+                    {c.publicar_api ? " · via API" : ""}
+                  </span>
+                </div>
+                {c.telas?.length ? (
+                  <div className="mt-2 flex gap-2 overflow-x-auto">
+                    {c.telas.map((t, i) => (
+                      <a
+                        key={t}
+                        href={t}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0"
+                      >
+                        <img
+                          src={t}
+                          alt={`Tela ${i + 1}`}
+                          className="h-32 rounded border object-cover"
+                          style={{ aspectRatio: "4/5" }}
+                        />
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {c.legenda ? (
+                    <Button size="sm" variant="outline" onClick={() => copiar(c.legenda ?? "")}>
+                      <Copy className="h-4 w-4" /> Copiar legenda
+                    </Button>
+                  ) : null}
+                  {c.article?.slug ? (
+                    <Button size="sm" variant="ghost" asChild>
+                      <a
+                        href={`https://ianewsbr.com/materia/${c.article.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4" /> Matéria
+                      </a>
+                    </Button>
+                  ) : null}
+                  {c.social_url ? (
+                    <a
+                      className="text-xs text-primary underline"
+                      href={c.social_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {c.social_url}
+                    </a>
+                  ) : null}
+                </div>
+              </li>
+            ))}
           </ul>
         )}
       </Secao>
@@ -172,10 +365,23 @@ function ProducoesPage() {
                 <span>
                   {x.pessoa?.nome ?? x.empresa?.nome ?? "Lead"} · {x.tipo} ·{" "}
                   <span className="text-muted-foreground">
-                    {x.status === "aberto" ? "link enviado, sem preencher" : x.status === "enviado" ? "enviado, entra na próxima rodada da IA" : x.status === "em_producao" ? "a IA está escrevendo" : "ajuste pedido"}
+                    {x.status === "aberto"
+                      ? "link enviado, sem preencher"
+                      : x.status === "enviado"
+                        ? "enviado, entra na próxima rodada da IA"
+                        : x.status === "em_producao"
+                          ? "a IA está escrevendo"
+                          : "ajuste pedido"}
                   </span>
                 </span>
-                <a className="text-xs text-primary underline" href={`https://ianewsbr.com/briefing/${x.token}`} target="_blank" rel="noopener noreferrer">link do briefing</a>
+                <a
+                  className="text-xs text-primary underline"
+                  href={`https://ianewsbr.com/briefing/${x.token}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  link do briefing
+                </a>
               </li>
             ))}
           </ul>

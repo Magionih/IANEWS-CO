@@ -47,6 +47,7 @@ import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
 import { Route as ApiPublicHooksAutoLeadsRouteImport } from './routes/api/public/hooks/auto-leads'
+import { Route as ApiPublicHooksCarrosselNoticiasRouteImport } from './routes/api/public/hooks/carrossel-noticias'
 import { Route as ApiPublicHooksCobrancasRouteImport } from './routes/api/public/hooks/cobrancas'
 import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hooks/cover'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
@@ -55,11 +56,14 @@ import { Route as ApiPublicHooksEmailFrioRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksEnriquecerRouteImport } from './routes/api/public/hooks/enriquecer'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
 import { Route as ApiPublicHooksInstagramRouteImport } from './routes/api/public/hooks/instagram'
+import { Route as ApiPublicHooksInstagramPublicarRouteImport } from './routes/api/public/hooks/instagram-publicar'
 import { Route as ApiPublicHooksInstagramSubscribeRouteImport } from './routes/api/public/hooks/instagram-subscribe'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
 import { Route as ApiPublicHooksPagamentoRouteImport } from './routes/api/public/hooks/pagamento'
 import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
 import { Route as ApiPublicHooksProducaoRouteImport } from './routes/api/public/hooks/producao'
+import { Route as ApiPublicHooksRadarExternoRouteImport } from './routes/api/public/hooks/radar-externo'
+import { Route as ApiPublicHooksResumoDiarioRouteImport } from './routes/api/public/hooks/resumo-diario'
 import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 
@@ -253,6 +257,12 @@ const ApiPublicHooksAutoLeadsRoute = ApiPublicHooksAutoLeadsRouteImport.update({
   path: '/api/public/hooks/auto-leads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksCarrosselNoticiasRoute =
+  ApiPublicHooksCarrosselNoticiasRouteImport.update({
+    id: '/api/public/hooks/carrossel-noticias',
+    path: '/api/public/hooks/carrossel-noticias',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksCobrancasRoute = ApiPublicHooksCobrancasRouteImport.update({
   id: '/api/public/hooks/cobrancas',
   path: '/api/public/hooks/cobrancas',
@@ -296,6 +306,12 @@ const ApiPublicHooksInstagramRoute = ApiPublicHooksInstagramRouteImport.update({
   path: '/api/public/hooks/instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksInstagramPublicarRoute =
+  ApiPublicHooksInstagramPublicarRouteImport.update({
+    id: '/api/public/hooks/instagram-publicar',
+    path: '/api/public/hooks/instagram-publicar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksInstagramSubscribeRoute =
   ApiPublicHooksInstagramSubscribeRouteImport.update({
     id: '/api/public/hooks/instagram-subscribe',
@@ -323,6 +339,18 @@ const ApiPublicHooksProducaoRoute = ApiPublicHooksProducaoRouteImport.update({
   path: '/api/public/hooks/producao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRadarExternoRoute =
+  ApiPublicHooksRadarExternoRouteImport.update({
+    id: '/api/public/hooks/radar-externo',
+    path: '/api/public/hooks/radar-externo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksResumoDiarioRoute =
+  ApiPublicHooksResumoDiarioRouteImport.update({
+    id: '/api/public/hooks/resumo-diario',
+    path: '/api/public/hooks/resumo-diario',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWeeklyRankingRoute =
   ApiPublicHooksWeeklyRankingRouteImport.update({
     id: '/api/public/hooks/weekly-ranking',
@@ -373,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
@@ -381,11 +410,14 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
+  '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
+  '/api/public/hooks/radar-externo': typeof ApiPublicHooksRadarExternoRoute
+  '/api/public/hooks/resumo-diario': typeof ApiPublicHooksResumoDiarioRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -427,6 +459,7 @@ export interface FileRoutesByTo {
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
@@ -435,11 +468,14 @@ export interface FileRoutesByTo {
   '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
+  '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
+  '/api/public/hooks/radar-externo': typeof ApiPublicHooksRadarExternoRoute
+  '/api/public/hooks/resumo-diario': typeof ApiPublicHooksResumoDiarioRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -483,6 +519,7 @@ export interface FileRoutesById {
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
@@ -491,11 +528,14 @@ export interface FileRoutesById {
   '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
+  '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
+  '/api/public/hooks/radar-externo': typeof ApiPublicHooksRadarExternoRoute
+  '/api/public/hooks/resumo-diario': typeof ApiPublicHooksResumoDiarioRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -539,6 +579,7 @@ export interface FileRouteTypes {
     | '/api/public/track'
     | '/api/public/unsubscribe'
     | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
@@ -547,11 +588,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/enriquecer'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
+    | '/api/public/hooks/instagram-publicar'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/producao'
+    | '/api/public/hooks/radar-externo'
+    | '/api/public/hooks/resumo-diario'
     | '/api/public/hooks/weekly-ranking'
     | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
@@ -593,6 +637,7 @@ export interface FileRouteTypes {
     | '/api/public/track'
     | '/api/public/unsubscribe'
     | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
@@ -601,11 +646,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/enriquecer'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
+    | '/api/public/hooks/instagram-publicar'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/producao'
+    | '/api/public/hooks/radar-externo'
+    | '/api/public/hooks/resumo-diario'
     | '/api/public/hooks/weekly-ranking'
     | '/api/public/hooks/whatsapp'
   id:
@@ -648,6 +696,7 @@ export interface FileRouteTypes {
     | '/api/public/track'
     | '/api/public/unsubscribe'
     | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
@@ -656,11 +705,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/enriquecer'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
+    | '/api/public/hooks/instagram-publicar'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/producao'
+    | '/api/public/hooks/radar-externo'
+    | '/api/public/hooks/resumo-diario'
     | '/api/public/hooks/weekly-ranking'
     | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
@@ -702,6 +754,7 @@ export interface RootRouteChildren {
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
   ApiPublicHooksAutoLeadsRoute: typeof ApiPublicHooksAutoLeadsRoute
+  ApiPublicHooksCarrosselNoticiasRoute: typeof ApiPublicHooksCarrosselNoticiasRoute
   ApiPublicHooksCobrancasRoute: typeof ApiPublicHooksCobrancasRoute
   ApiPublicHooksCoverRoute: typeof ApiPublicHooksCoverRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
@@ -710,11 +763,14 @@ export interface RootRouteChildren {
   ApiPublicHooksEnriquecerRoute: typeof ApiPublicHooksEnriquecerRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
   ApiPublicHooksInstagramRoute: typeof ApiPublicHooksInstagramRoute
+  ApiPublicHooksInstagramPublicarRoute: typeof ApiPublicHooksInstagramPublicarRoute
   ApiPublicHooksInstagramSubscribeRoute: typeof ApiPublicHooksInstagramSubscribeRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
   ApiPublicHooksPagamentoRoute: typeof ApiPublicHooksPagamentoRoute
   ApiPublicHooksPingRoute: typeof ApiPublicHooksPingRoute
   ApiPublicHooksProducaoRoute: typeof ApiPublicHooksProducaoRoute
+  ApiPublicHooksRadarExternoRoute: typeof ApiPublicHooksRadarExternoRoute
+  ApiPublicHooksResumoDiarioRoute: typeof ApiPublicHooksResumoDiarioRoute
   ApiPublicHooksWeeklyRankingRoute: typeof ApiPublicHooksWeeklyRankingRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
@@ -987,6 +1043,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoLeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/carrossel-noticias': {
+      id: '/api/public/hooks/carrossel-noticias'
+      path: '/api/public/hooks/carrossel-noticias'
+      fullPath: '/api/public/hooks/carrossel-noticias'
+      preLoaderRoute: typeof ApiPublicHooksCarrosselNoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/cobrancas': {
       id: '/api/public/hooks/cobrancas'
       path: '/api/public/hooks/cobrancas'
@@ -1043,6 +1106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksInstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/instagram-publicar': {
+      id: '/api/public/hooks/instagram-publicar'
+      path: '/api/public/hooks/instagram-publicar'
+      fullPath: '/api/public/hooks/instagram-publicar'
+      preLoaderRoute: typeof ApiPublicHooksInstagramPublicarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/instagram-subscribe': {
       id: '/api/public/hooks/instagram-subscribe'
       path: '/api/public/hooks/instagram-subscribe'
@@ -1076,6 +1146,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/producao'
       fullPath: '/api/public/hooks/producao'
       preLoaderRoute: typeof ApiPublicHooksProducaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/radar-externo': {
+      id: '/api/public/hooks/radar-externo'
+      path: '/api/public/hooks/radar-externo'
+      fullPath: '/api/public/hooks/radar-externo'
+      preLoaderRoute: typeof ApiPublicHooksRadarExternoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/resumo-diario': {
+      id: '/api/public/hooks/resumo-diario'
+      path: '/api/public/hooks/resumo-diario'
+      fullPath: '/api/public/hooks/resumo-diario'
+      preLoaderRoute: typeof ApiPublicHooksResumoDiarioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/weekly-ranking': {
@@ -1146,6 +1230,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
   ApiPublicHooksAutoLeadsRoute: ApiPublicHooksAutoLeadsRoute,
+  ApiPublicHooksCarrosselNoticiasRoute: ApiPublicHooksCarrosselNoticiasRoute,
   ApiPublicHooksCobrancasRoute: ApiPublicHooksCobrancasRoute,
   ApiPublicHooksCoverRoute: ApiPublicHooksCoverRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
@@ -1154,11 +1239,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEnriquecerRoute: ApiPublicHooksEnriquecerRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
   ApiPublicHooksInstagramRoute: ApiPublicHooksInstagramRoute,
+  ApiPublicHooksInstagramPublicarRoute: ApiPublicHooksInstagramPublicarRoute,
   ApiPublicHooksInstagramSubscribeRoute: ApiPublicHooksInstagramSubscribeRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
   ApiPublicHooksPagamentoRoute: ApiPublicHooksPagamentoRoute,
   ApiPublicHooksPingRoute: ApiPublicHooksPingRoute,
   ApiPublicHooksProducaoRoute: ApiPublicHooksProducaoRoute,
+  ApiPublicHooksRadarExternoRoute: ApiPublicHooksRadarExternoRoute,
+  ApiPublicHooksResumoDiarioRoute: ApiPublicHooksResumoDiarioRoute,
   ApiPublicHooksWeeklyRankingRoute: ApiPublicHooksWeeklyRankingRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }

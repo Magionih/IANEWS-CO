@@ -466,3 +466,121 @@ export async function responderComoAgente(
     "resposta_agente",
   );
 }
+
+export type CarrosselNoticia = {
+  capa: { titulo: string; destaque: string; subtitulo: string };
+  texto: { eyebrow: string; titulo: string; paragrafos: string[] };
+  numeros: { valor: string; rotulo: string }[];
+  frase: { frase: string; quem: string; cargo: string } | null;
+  final: { titulo: string; texto: string };
+  legenda: string;
+};
+
+/** Telas e legenda do carrossel de uma matéria de notícia já escrita (sem inventar nada além do texto). */
+export async function redigirCarrosselNoticia(artigo: {
+  title: string;
+  dek: string | null;
+  body_markdown: string | null;
+  tags: string[] | null;
+  sources: unknown;
+}): Promise<CarrosselNoticia | null> {
+  const str = { type: "string" };
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["capa", "texto", "numeros", "frase", "final", "legenda"],
+    properties: {
+      capa: {
+        type: "object",
+        additionalProperties: false,
+        required: ["titulo", "destaque", "subtitulo"],
+        properties: { titulo: str, destaque: str, subtitulo: str },
+      },
+      texto: {
+        type: "object",
+        additionalProperties: false,
+        required: ["eyebrow", "titulo", "paragrafos"],
+        properties: { eyebrow: str, titulo: str, paragrafos: { type: "array", items: str } },
+      },
+      numeros: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["valor", "rotulo"],
+          properties: { valor: str, rotulo: str },
+        },
+      },
+      frase: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        required: ["frase", "quem", "cargo"],
+        properties: { frase: str, quem: str, cargo: str },
+      },
+      final: {
+        type: "object",
+        additionalProperties: false,
+        required: ["titulo", "texto"],
+        properties: { titulo: str, texto: str },
+      },
+      legenda: str,
+    },
+  };
+  const fontes = Array.isArray(artigo.sources)
+    ? (artigo.sources as { name?: string; url?: string }[])
+        .map((s) => s.name)
+        .filter(Boolean)
+        .join(", ")
+    : "";
+  const system = [
+    "Você é a redação da IA News (Instagram @ianews.co). Transforme a matéria abaixo em um carrossel de 4:5 e na legenda. Fonte ÚNICA: o texto da matéria. Não acrescente fato, número ou citação que não esteja nela.",
+    "capa.titulo: até 70 caracteres, frase forte com o nome da pessoa ou empresa protagonista; capa.destaque: 2 ou 3 palavras do título a realçar (normalmente o nome); capa.subtitulo: até 110 caracteres com o fato principal.",
+    "texto: eyebrow curto (ex.: 'O que aconteceu'), titulo até 80 caracteres, 2 ou 3 parágrafos de até 160 caracteres cada, em ordem: fato, como, contexto Brasil.",
+    "numeros: 0 a 3 números que estão na matéria (valor curto como 'R$ 12 mi', '900%', '1,2 milhão'; rotulo até 60 caracteres). Sem número na matéria, lista vazia.",
+    "frase: uma citação direta que esteja na matéria (até 140 caracteres), com quem e cargo; senão null.",
+    "final: titulo até 70 e texto até 150 caracteres chamando para a matéria completa.",
+    "legenda: primeira linha é o gancho em negrito (*asteriscos*), 2 parágrafos curtos, pergunta de engajamento, 'Matéria completa em ianewsbr.com (link na bio)', crédito 'Fonte: " +
+      (fontes || "IA News") +
+      "' e 5 a 7 hashtags em pt-BR.",
+  ].join("\n");
+  const texto = [
+    `Título: ${artigo.title}`,
+    artigo.dek ? `Linha fina: ${artigo.dek}` : "",
+    artigo.tags?.length ? `Tags: ${artigo.tags.join(", ")}` : "",
+    `Texto:\n${(artigo.body_markdown ?? "").slice(0, 7000)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const r = await chamarIa<CarrosselNoticia>(system, texto, schema, "carrossel_noticia", true);
+  if (!r) return null;
+  const limpa = (s: unknown, n: number) => (typeof s === "string" ? s.trim().slice(0, n) : "");
+  return {
+    capa: {
+      titulo: limpa(r.capa?.titulo, 90),
+      destaque: limpa(r.capa?.destaque, 40),
+      subtitulo: limpa(r.capa?.subtitulo, 130),
+    },
+    texto: {
+      eyebrow: limpa(r.texto?.eyebrow, 40),
+      titulo: limpa(r.texto?.titulo, 100),
+      paragrafos: (r.texto?.paragrafos ?? [])
+        .map((p) => limpa(p, 200))
+        .filter(Boolean)
+        .slice(0, 3),
+    },
+    numeros: (r.numeros ?? [])
+      .map((n) => ({ valor: limpa(n.valor, 14), rotulo: limpa(n.rotulo, 70) }))
+      .filter((n) => n.valor && n.rotulo)
+      .slice(0, 3),
+    frase:
+      r.frase && limpa(r.frase.frase, 160)
+        ? {
+            frase: limpa(r.frase.frase, 160),
+            quem: limpa(r.frase.quem, 60),
+            cargo: limpa(r.frase.cargo, 80),
+          }
+        : null,
+    final: { titulo: limpa(r.final?.titulo, 90), texto: limpa(r.final?.texto, 170) },
+    legenda: limpa(r.legenda, 2200),
+  };
+}

@@ -108,9 +108,9 @@ export const Route = createFileRoute("/api/public/track")({
             title: (body.title ?? "").slice(0, 300) || null,
             referrer: (body.referrer ?? "").slice(0, 500) || null,
             referrer_host: referrerHost,
-            utm_source: utm['utm_source'],
-            utm_medium: utm['utm_medium'],
-            utm_campaign: utm['utm_campaign'],
+            utm_source: utm["utm_source"],
+            utm_medium: utm["utm_medium"],
+            utm_campaign: utm["utm_campaign"],
             visitor_hash: visitorHash,
             session_id: (body.sessionId ?? "").slice(0, 60),
             user_id: body.userId ?? null,
@@ -121,6 +121,15 @@ export const Route = createFileRoute("/api/public/track")({
             is_new_visitor: (count ?? 0) === 0,
           });
           if (error) console.error("[track] insert", error.message);
+          // Leituras por matéria (views_count), para o painel e o ranking de mais lidas
+          const m = path.split("?")[0]!.match(/^\/materia\/([a-z0-9-]+)\/?$/);
+          if (m) {
+            const { error: e2 } = await supabaseAdmin.rpc(
+              "article_view" as never,
+              { p_slug: m[1] } as never,
+            );
+            if (e2) console.error("[track] view", e2.message);
+          }
           return Response.json({ ok: !error });
         } catch (err) {
           console.error("[track] failed", err instanceof Error ? err.message : String(err));

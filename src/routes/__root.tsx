@@ -112,8 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href:
-          "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Roboto+Mono:wght@400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Roboto+Mono:wght@400;500;600&display=swap",
       },
       {
         rel: "stylesheet",
@@ -185,7 +184,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             { name: "IA no Brasil", url: "https://ianewsbr.com/categoria/brasil" },
             { name: "Regulação da IA", url: "https://ianewsbr.com/categoria/regulacao" },
             { name: "Ferramentas de IA", url: "https://ianewsbr.com/categoria/ferramentas" },
-            { name: "IA para empresas", url: "https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas" },
+            {
+              name: "IA para empresas",
+              url: "https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas",
+            },
             { name: "Newsletter", url: "https://ianewsbr.com/newsletter" },
             { name: "Sobre o IA News", url: "https://ianewsbr.com/sobre" },
           ].map((item, i) => ({
@@ -197,9 +199,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           })),
         ),
       },
+      // Pixel da Meta (só quando VITE_META_PIXEL_ID estiver definido na Vercel)
+      ...(import.meta.env.VITE_META_PIXEL_ID
+        ? [
+            {
+              children: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${String(import.meta.env.VITE_META_PIXEL_ID).replace(/[^0-9]/g, "")}');fbq('track','PageView');`,
+            },
+          ]
+        : []),
     ],
-
-
   }),
   shellComponent: RootShell,
   component: RootComponent,

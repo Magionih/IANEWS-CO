@@ -49,7 +49,12 @@ export const listLista = createServerFn({ method: "GET" })
         .order("posicao")
         .limit(400),
     ) as (ListaItem & {
-      pessoa: { nome: string; instagram: string | null; email: string | null; linkedin: string | null } | null;
+      pessoa: {
+        nome: string;
+        instagram: string | null;
+        email: string | null;
+        linkedin: string | null;
+      } | null;
       empresa: { nome: string; instagram: string | null; linkedin: string | null } | null;
     })[];
     return {
@@ -119,7 +124,11 @@ export const listProducoes = createServerFn({ method: "GET" })
   .middleware([requireCrmAccess])
   .handler(async ({ context }): Promise<Producao[]> => {
     return checar(
-      await context.db.from("auto_producoes_painel").select("*").order("updated_at", { ascending: false }).limit(200),
+      await context.db
+        .from("auto_producoes_painel")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(200),
     ) as Producao[];
   });
 
@@ -127,11 +136,14 @@ export const registrarLinkPost = createServerFn({ method: "POST" })
   .middleware([requireCrmAccess])
   .inputValidator((input: { id: string; url: string }) => {
     const url = texto(input?.url, 500) ?? "";
-    if (!/^https:\/\/(www\.)?instagram\.com\//.test(url)) throw new Error("Cole o link do post no Instagram.");
+    if (!/^https:\/\/(www\.)?instagram\.com\//.test(url))
+      throw new Error("Cole o link do post no Instagram.");
     return { id: uuidObrigatorio(input?.id, "a produção"), url };
   })
   .handler(async ({ data, context }) => {
-    return checar(await context.db.rpc("auto_producao_link", { p_producao: data.id, p_url: data.url }));
+    return checar(
+      await context.db.rpc("auto_producao_link", { p_producao: data.id, p_url: data.url }),
+    );
   });
 
 export const briefingsAguardando = createServerFn({ method: "GET" })
@@ -140,13 +152,21 @@ export const briefingsAguardando = createServerFn({ method: "GET" })
     return checar(
       await context.db
         .from("auto_briefings")
-        .select("id, status, tipo, enviado_em, created_at, token, pessoa:crm_pessoas(nome), empresa:crm_empresas(nome)")
+        .select(
+          "id, status, tipo, enviado_em, created_at, token, pessoa:crm_pessoas(nome), empresa:crm_empresas(nome)",
+        )
         .in("status", ["aberto", "enviado", "em_producao", "ajuste"])
         .order("enviado_em", { ascending: false, nullsFirst: false })
         .limit(100),
     ) as unknown as {
-      id: string; status: string; tipo: string; enviado_em: string | null; created_at: string; token: string;
-      pessoa: { nome: string } | null; empresa: { nome: string } | null;
+      id: string;
+      status: string;
+      tipo: string;
+      enviado_em: string | null;
+      created_at: string;
+      token: string;
+      pessoa: { nome: string } | null;
+      empresa: { nome: string } | null;
     }[];
   });
 
@@ -163,7 +183,13 @@ export type Metricas = {
     agenda: { hora: string; titulo: string; slug: string }[];
     posts: Record<string, number>;
     newsletter: { envios: number; destinatarios: number; entregues: number };
-    fila: { primeiros: number; followups: number; enviados: number; respondeu: number; por_canal: Record<string, number> };
+    fila: {
+      primeiros: number;
+      followups: number;
+      enviados: number;
+      respondeu: number;
+      por_canal: Record<string, number>;
+    };
     briefings: { criados: number; enviados: number; aprovados: number };
     negocios: { total: number; por_funil: Record<string, number> };
     lista: { total: number; contatados: number; responderam: number };
@@ -188,19 +214,103 @@ export const painelOperacao = createServerFn({ method: "GET" })
     futuro: Math.min(Math.max(Number(input?.futuro ?? 30) || 30, 0), 60),
   }))
   .handler(async ({ data, context }): Promise<Metricas> => {
-    return checar(await context.db.rpc("auto_metricas", { p_dias: data.dias, p_futuro: data.futuro })) as Metricas;
+    return checar(
+      await context.db.rpc("auto_metricas", { p_dias: data.dias, p_futuro: data.futuro }),
+    ) as Metricas;
   });
 
 export const salvarConfigLista = createServerFn({ method: "POST" })
   .middleware([requireCrmAccess])
-  .inputValidator((input: { lista_tamanho?: number; lista_nota_minima?: number; horario_destaque_lead?: string }) => input ?? {})
+  .inputValidator(
+    (input: {
+      lista_tamanho?: number;
+      lista_nota_minima?: number;
+      horario_destaque_lead?: string;
+    }) => input ?? {},
+  )
   .handler(async ({ data, context }) => {
     exigirAdmin(context.isAdmin);
     const { db } = context;
     const salvar = async (chave: string, valor: unknown) =>
-      checar(await db.from("auto_config").update({ valor, updated_at: new Date().toISOString() }).eq("chave", chave).select("chave"));
-    if (data.lista_tamanho !== undefined) await salvar("lista_tamanho", Math.min(Math.max(Math.round(data.lista_tamanho), 20), 500));
-    if (data.lista_nota_minima !== undefined) await salvar("lista_nota_minima", Math.min(Math.max(Math.round(data.lista_nota_minima), 0), 100));
-    if (data.horario_destaque_lead && /^\d{2}:\d{2}$/.test(data.horario_destaque_lead)) await salvar("horario_destaque_lead", data.horario_destaque_lead);
+      checar(
+        await db
+          .from("auto_config")
+          .update({ valor, updated_at: new Date().toISOString() })
+          .eq("chave", chave)
+          .select("chave"),
+      );
+    if (data.lista_tamanho !== undefined)
+      await salvar("lista_tamanho", Math.min(Math.max(Math.round(data.lista_tamanho), 20), 500));
+    if (data.lista_nota_minima !== undefined)
+      await salvar(
+        "lista_nota_minima",
+        Math.min(Math.max(Math.round(data.lista_nota_minima), 0), 100),
+      );
+    if (data.horario_destaque_lead && /^\d{2}:\d{2}$/.test(data.horario_destaque_lead))
+      await salvar("horario_destaque_lead", data.horario_destaque_lead);
     return { ok: true };
+  });
+
+export type Carrossel = {
+  id: string;
+  status: string;
+  telas: string[];
+  legenda: string | null;
+  collabs: string[];
+  publicar_api: boolean;
+  social_url: string | null;
+  publicado_em: string | null;
+  erro: string | null;
+  article: { slug: string; title: string; published_at: string } | null;
+};
+
+export const listCarrosseis = createServerFn({ method: "GET" })
+  .middleware([requireCrmAccess])
+  .handler(async ({ context }): Promise<Carrossel[]> => {
+    return checar(
+      await context.db
+        .from("auto_carrosseis")
+        .select(
+          "id, status, telas, legenda, collabs, publicar_api, social_url, publicado_em, erro, article:articles(slug, title, published_at)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(60),
+    ) as unknown as Carrossel[];
+  });
+
+export const salvarConfigInstagram = createServerFn({ method: "POST" })
+  .middleware([requireCrmAccess])
+  .inputValidator((input: { publicar_api: boolean }) => ({
+    publicar_api: input?.publicar_api === true,
+  }))
+  .handler(async ({ data, context }) => {
+    exigirAdmin(context.isAdmin);
+    checar(
+      await context.db
+        .from("auto_config")
+        .update({ valor: data.publicar_api, updated_at: new Date().toISOString() })
+        .eq("chave", "instagram_api_publicar")
+        .select("chave"),
+    );
+    // Vale também para os carrosséis já prontos e ainda não publicados
+    checar(
+      await context.db
+        .from("auto_carrosseis")
+        .update({ publicar_api: data.publicar_api })
+        .eq("status", "pronto")
+        .select("id"),
+    );
+    return { ok: true };
+  });
+
+export const configInstagram = createServerFn({ method: "GET" })
+  .middleware([requireCrmAccess])
+  .handler(async ({ context }) => {
+    const rows = checar(
+      await context.db
+        .from("auto_config")
+        .select("chave, valor")
+        .in("chave", ["instagram_api_publicar"]),
+    ) as { chave: string; valor: unknown }[];
+    return { publicar_api: rows.find((r) => r.chave === "instagram_api_publicar")?.valor === true };
   });

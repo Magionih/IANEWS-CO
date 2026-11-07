@@ -74,3 +74,56 @@ export async function responderComentarioNoDirect(
   });
   if (!res.ok) throw new Error(`Instagram ${res.status}: ${(await res.text()).slice(0, 300)}`);
 }
+
+/** Publica um carrossel no Instagram pela API oficial (até 3 collabs). Devolve o id da mídia e o link. */
+export async function publicarCarrosselInstagram(
+  imagens: string[],
+  legenda: string,
+  collabs: string[],
+): Promise<{ mediaId: string; url: string | null }> {
+  const token = process.env.INSTAGRAM_TOKEN;
+  const userId = process.env.INSTAGRAM_USER_ID;
+  if (!token || !userId) throw new Error("INSTAGRAM_TOKEN ou INSTAGRAM_USER_ID ausente.");
+  const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+  const post = async (path: string, body: Record<string, unknown>) => {
+    const res = await fetch(`${GRAPH}/${path}`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify(body),
+    });
+    const json = (await res.json().catch(() => ({}))) as Record<string, unknown> & {
+      error?: { message?: string };
+    };
+    if (!res.ok)
+      throw new Error(
+        `Instagram ${res.status}: ${json.error?.message ?? JSON.stringify(json).slice(0, 200)}`,
+      );
+    return json;
+  };
+  // 1. Um contêiner por imagem
+  const filhos: string[] = [];
+  for (const url of imagens.slice(0, 10)) {
+    const r = await post(`${userId}/media`, { image_url: url, is_carousel_item: true });
+    filhos.push(String(r.id));
+  }
+  // 2. Contêiner do carrossel (com legenda e colaboradores)
+  const carrossel = await post(`${userId}/media`, {
+    media_type: "CAROUSEL",
+    children: filhos,
+    caption: legenda.slice(0, 2200),
+    ...(collabs.length ? { collaborators: collabs.slice(0, 3) } : {}),
+  });
+  // 3. Espera o processamento e publica
+  for (let i = 0; i < 10; i++) {
+    const st = await fetch(`${GRAPH}/${carrossel.id}?fields=status_code`, { headers: auth });
+    const sj = (await st.json().catch(() => ({}))) as { status_code?: string };
+    if (sj.status_code === "FINISHED") break;
+    if (sj.status_code === "ERROR") throw new Error("Instagram: contêiner com erro.");
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  const pub = await post(`${userId}/media_publish`, { creation_id: carrossel.id });
+  const mediaId = String(pub.id);
+  const info = await fetch(`${GRAPH}/${mediaId}?fields=permalink`, { headers: auth });
+  const ij = (await info.json().catch(() => ({}))) as { permalink?: string };
+  return { mediaId, url: ij.permalink ?? null };
+}
