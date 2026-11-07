@@ -53,6 +53,7 @@ import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksEmailFrioRouteImport } from './routes/api/public/hooks/email-frio'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
 import { Route as ApiPublicHooksInstagramRouteImport } from './routes/api/public/hooks/instagram'
+import { Route as ApiPublicHooksInstagramSubscribeRouteImport } from './routes/api/public/hooks/instagram-subscribe'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
 import { Route as ApiPublicHooksPagamentoRouteImport } from './routes/api/public/hooks/pagamento'
 import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
@@ -281,6 +282,12 @@ const ApiPublicHooksInstagramRoute = ApiPublicHooksInstagramRouteImport.update({
   path: '/api/public/hooks/instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksInstagramSubscribeRoute =
+  ApiPublicHooksInstagramSubscribeRouteImport.update({
+    id: '/api/public/hooks/instagram-subscribe',
+    path: '/api/public/hooks/instagram-subscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLeadFollowupRoute =
   ApiPublicHooksLeadFollowupRouteImport.update({
     id: '/api/public/hooks/lead-followup',
@@ -353,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
+  '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
@@ -403,6 +411,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
+  '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
@@ -455,6 +464,7 @@ export interface FileRoutesById {
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
+  '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/email-frio'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
+    | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
@@ -557,6 +568,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/email-frio'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
+    | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
@@ -608,6 +620,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/email-frio'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
+    | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
@@ -658,6 +671,7 @@ export interface RootRouteChildren {
   ApiPublicHooksEmailFrioRoute: typeof ApiPublicHooksEmailFrioRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
   ApiPublicHooksInstagramRoute: typeof ApiPublicHooksInstagramRoute
+  ApiPublicHooksInstagramSubscribeRoute: typeof ApiPublicHooksInstagramSubscribeRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
   ApiPublicHooksPagamentoRoute: typeof ApiPublicHooksPagamentoRoute
   ApiPublicHooksPingRoute: typeof ApiPublicHooksPingRoute
@@ -975,6 +989,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksInstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/instagram-subscribe': {
+      id: '/api/public/hooks/instagram-subscribe'
+      path: '/api/public/hooks/instagram-subscribe'
+      fullPath: '/api/public/hooks/instagram-subscribe'
+      preLoaderRoute: typeof ApiPublicHooksInstagramSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lead-followup': {
       id: '/api/public/hooks/lead-followup'
       path: '/api/public/hooks/lead-followup'
@@ -1070,6 +1091,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEmailFrioRoute: ApiPublicHooksEmailFrioRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
   ApiPublicHooksInstagramRoute: ApiPublicHooksInstagramRoute,
+  ApiPublicHooksInstagramSubscribeRoute: ApiPublicHooksInstagramSubscribeRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
   ApiPublicHooksPagamentoRoute: ApiPublicHooksPagamentoRoute,
   ApiPublicHooksPingRoute: ApiPublicHooksPingRoute,
