@@ -83,13 +83,13 @@ const LEVA = [
 ];
 
 const AGENDA = [
-  { time: "14h", title: "Credenciamento e café" },
-  { time: "14h30", title: "Abertura com dados da IA News" },
-  { time: "15h", title: "Da pauta ao palco" },
-  { time: "16h", title: "Cases em operação" },
-  { time: "17h", title: "Rodada de expositores" },
-  { time: "17h30", title: "Mesa IANews ao vivo" },
-  { time: "18h45", title: "Networking até as 20h" },
+  { time: "14h", title: "Credenciamento e café", tag: "Chegada" },
+  { time: "14h30", title: "Abertura com dados da IA News", tag: "Palco" },
+  { time: "15h", title: "Da pauta ao palco", tag: "Palco" },
+  { time: "16h", title: "Cases em operação", tag: "Palco" },
+  { time: "17h", title: "Rodada de expositores", tag: "Expositores" },
+  { time: "17h30", title: "Mesa IANews ao vivo", tag: "Destaque", hi: true },
+  { time: "18h45", title: "Networking até as 20h", tag: "Conexões" },
 ];
 
 const FAQ = [
@@ -197,7 +197,11 @@ function PalcoPage() {
     if (Object.keys(found).length) {
       setErrors(found);
       const first = ORDER.find((k) => found[k]);
-      if (first) document.getElementById(first === "papel" ? "pc-papel-1" : `pc-${first}`)?.focus();
+      if (first) {
+        const sel = document.getElementById("pc-papel-sel");
+        const papelEl = sel && sel.offsetParent !== null ? sel : document.getElementById("pc-papel-1");
+        (first === "papel" ? papelEl : document.getElementById(`pc-${first}`))?.focus();
+      }
       return;
     }
     setSending(true);
@@ -381,6 +385,22 @@ function PalcoPage() {
 
                   <fieldset aria-describedby={errors.papel ? "pc-papel-err" : undefined}>
                     <legend className="pc2-legend">Você vem como</legend>
+                    <label className="pc2-select-wrap" htmlFor="pc-papel-sel">
+                      <span className="pc2-sr">Você vem como</span>
+                      <select
+                        id="pc-papel-sel"
+                        className={"field pc2-select" + (errors.papel ? " pt-bad" : "")}
+                        value={form.papel}
+                        onChange={(e) => set("papel", e.target.value as PalcoInput["papel"])}
+                      >
+                        <option value="">Selecione</option>
+                        {PAPEIS.map((p) => (
+                          <option key={p.value} value={p.value}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <div className="pc2-pills">
                       {PAPEIS.map((p, i) => (
                         <label className="pc2-pill" key={p.value} title={p.hint}>
@@ -529,11 +549,15 @@ function PalcoPage() {
             <h2 id="pc2-prog" className="pc2-h2">
               Das 14h às 20h, sem enrolação.
             </h2>
-            <ol className="pc2-agenda">
+            <ol className="pc2-tl">
               {AGENDA.map((a) => (
-                <li key={a.time}>
+                <li key={a.time} className={a.hi ? "hi" : undefined}>
                   <time>{a.time}</time>
-                  <b>{a.title}</b>
+                  <span className="pc2-tl-dot" aria-hidden="true" />
+                  <div>
+                    <small>{a.tag}</small>
+                    <b>{a.title}</b>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -542,7 +566,7 @@ function PalcoPage() {
 
           {/* 5. Para quem é */}
           <section className="pc2-sec pc2-who" aria-labelledby="pc2-quem">
-            <img src={IMG(8761650, 900)} alt="" loading="lazy" width={900} height={600} />
+            <img src={IMG(3143850, 1000)} alt="" loading="lazy" width={1000} height={1500} />
             <div>
               <p className="pc2-eyebrow">Para quem é</p>
               <h2 id="pc2-quem" className="pc2-h2">
