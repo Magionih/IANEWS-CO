@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as CrmIndexRouteImport } from './routes/_crm.index'
 import { Route as CrmAudienciaRouteImport } from './routes/_crm.audiencia'
 import { Route as CrmConfigRouteImport } from './routes/_crm.config'
+import { Route as CrmFilaRouteImport } from './routes/_crm.fila'
 import { Route as CrmNegociosRouteImport } from './routes/_crm.negocios'
 import { Route as CrmPautasRouteImport } from './routes/_crm.pautas'
 import { Route as CrmPublicidadeRouteImport } from './routes/_crm.publicidade'
@@ -48,6 +49,11 @@ const CrmAudienciaRoute = CrmAudienciaRouteImport.update({
 const CrmConfigRoute = CrmConfigRouteImport.update({
   id: '/config',
   path: '/config',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmFilaRoute = CrmFilaRouteImport.update({
+  id: '/fila',
+  path: '/fila',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmNegociosRoute = CrmNegociosRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/audiencia': typeof CrmAudienciaRoute
   '/config': typeof CrmConfigRoute
+  '/fila': typeof CrmFilaRoute
   '/negocios': typeof CrmNegociosRoute
   '/pautas': typeof CrmPautasRoute
   '/publicidade': typeof CrmPublicidadeRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/audiencia': typeof CrmAudienciaRoute
   '/config': typeof CrmConfigRoute
+  '/fila': typeof CrmFilaRoute
   '/negocios': typeof CrmNegociosRoute
   '/pautas': typeof CrmPautasRoute
   '/publicidade': typeof CrmPublicidadeRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_crm/audiencia': typeof CrmAudienciaRoute
   '/_crm/config': typeof CrmConfigRoute
+  '/_crm/fila': typeof CrmFilaRoute
   '/_crm/negocios': typeof CrmNegociosRoute
   '/_crm/pautas': typeof CrmPautasRoute
   '/_crm/publicidade': typeof CrmPublicidadeRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/audiencia'
     | '/config'
+    | '/fila'
     | '/negocios'
     | '/pautas'
     | '/publicidade'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/audiencia'
     | '/config'
+    | '/fila'
     | '/negocios'
     | '/pautas'
     | '/publicidade'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_crm/audiencia'
     | '/_crm/config'
+    | '/_crm/fila'
     | '/_crm/negocios'
     | '/_crm/pautas'
     | '/_crm/publicidade'
@@ -256,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/config'
       fullPath: '/config'
       preLoaderRoute: typeof CrmConfigRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/fila': {
+      id: '/_crm/fila'
+      path: '/fila'
+      fullPath: '/fila'
+      preLoaderRoute: typeof CrmFilaRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/negocios': {
@@ -341,6 +360,7 @@ declare module '@tanstack/react-router' {
 interface CrmRouteChildren {
   CrmAudienciaRoute: typeof CrmAudienciaRoute
   CrmConfigRoute: typeof CrmConfigRoute
+  CrmFilaRoute: typeof CrmFilaRoute
   CrmNegociosRoute: typeof CrmNegociosRoute
   CrmPautasRoute: typeof CrmPautasRoute
   CrmPublicidadeRoute: typeof CrmPublicidadeRoute
@@ -356,6 +376,7 @@ interface CrmRouteChildren {
 const CrmRouteChildren: CrmRouteChildren = {
   CrmAudienciaRoute: CrmAudienciaRoute,
   CrmConfigRoute: CrmConfigRoute,
+  CrmFilaRoute: CrmFilaRoute,
   CrmNegociosRoute: CrmNegociosRoute,
   CrmPautasRoute: CrmPautasRoute,
   CrmPublicidadeRoute: CrmPublicidadeRoute,

@@ -32,24 +32,32 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
 import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './routes/artigos.inteligencia-artificial-nas-empresas'
+import { Route as BriefingTokenRouteImport } from './routes/briefing.$token'
 import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
 import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
+import { Route as ApiPublicBriefingRouteImport } from './routes/api/public/briefing'
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
+import { Route as ApiPublicHooksAutoLeadsRouteImport } from './routes/api/public/hooks/auto-leads'
+import { Route as ApiPublicHooksCobrancasRouteImport } from './routes/api/public/hooks/cobrancas'
 import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hooks/cover'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
+import { Route as ApiPublicHooksEmailFrioRouteImport } from './routes/api/public/hooks/email-frio'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
+import { Route as ApiPublicHooksInstagramRouteImport } from './routes/api/public/hooks/instagram'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
+import { Route as ApiPublicHooksPagamentoRouteImport } from './routes/api/public/hooks/pagamento'
 import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
 import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
+import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -166,6 +174,11 @@ const ArtigosInteligenciaArtificialNasEmpresasRoute =
     path: '/artigos/inteligencia-artificial-nas-empresas',
     getParentRoute: () => rootRouteImport,
   } as any)
+const BriefingTokenRoute = BriefingTokenRouteImport.update({
+  id: '/briefing/$token',
+  path: '/briefing/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriaCatRoute = CategoriaCatRouteImport.update({
   id: '/categoria/$cat',
   path: '/categoria/$cat',
@@ -189,6 +202,11 @@ const SCodeRoute = SCodeRouteImport.update({
 const ApiPublicAdMetricsRoute = ApiPublicAdMetricsRouteImport.update({
   id: '/api/public/ad-metrics',
   path: '/api/public/ad-metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBriefingRoute = ApiPublicBriefingRouteImport.update({
+  id: '/api/public/briefing',
+  path: '/api/public/briefing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicCtaRoute = ApiPublicCtaRouteImport.update({
@@ -221,6 +239,16 @@ const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
   path: '/api/public/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksAutoLeadsRoute = ApiPublicHooksAutoLeadsRouteImport.update({
+  id: '/api/public/hooks/auto-leads',
+  path: '/api/public/hooks/auto-leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksCobrancasRoute = ApiPublicHooksCobrancasRouteImport.update({
+  id: '/api/public/hooks/cobrancas',
+  path: '/api/public/hooks/cobrancas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksCoverRoute = ApiPublicHooksCoverRouteImport.update({
   id: '/api/public/hooks/cover',
   path: '/api/public/hooks/cover',
@@ -237,18 +265,33 @@ const ApiPublicHooksDailyPushRoute = ApiPublicHooksDailyPushRouteImport.update({
   path: '/api/public/hooks/daily-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksEmailFrioRoute = ApiPublicHooksEmailFrioRouteImport.update({
+  id: '/api/public/hooks/email-frio',
+  path: '/api/public/hooks/email-frio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksIngestNewsRoute =
   ApiPublicHooksIngestNewsRouteImport.update({
     id: '/api/public/hooks/ingest-news',
     path: '/api/public/hooks/ingest-news',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksInstagramRoute = ApiPublicHooksInstagramRouteImport.update({
+  id: '/api/public/hooks/instagram',
+  path: '/api/public/hooks/instagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksLeadFollowupRoute =
   ApiPublicHooksLeadFollowupRouteImport.update({
     id: '/api/public/hooks/lead-followup',
     path: '/api/public/hooks/lead-followup',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPagamentoRoute = ApiPublicHooksPagamentoRouteImport.update({
+  id: '/api/public/hooks/pagamento',
+  path: '/api/public/hooks/pagamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksPingRoute = ApiPublicHooksPingRouteImport.update({
   id: '/api/public/hooks/ping',
   path: '/api/public/hooks/ping',
@@ -260,6 +303,11 @@ const ApiPublicHooksWeeklyRankingRoute =
     path: '/api/public/hooks/weekly-ranking',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
+  id: '/api/public/hooks/whatsapp',
+  path: '/api/public/hooks/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -284,24 +332,32 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
+  '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
+  '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
+  '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -326,24 +382,32 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
+  '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
+  '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
+  '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -370,24 +434,32 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
+  '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
+  '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
+  '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -414,24 +486,32 @@ export interface FileRouteTypes {
     | '/admin'
     | '/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
+    | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
     | '/api/public/ad-metrics'
+    | '/api/public/briefing'
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
+    | '/api/public/hooks/email-frio'
     | '/api/public/hooks/ingest-news'
+    | '/api/public/hooks/instagram'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
+    | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -456,24 +536,32 @@ export interface FileRouteTypes {
     | '/admin'
     | '/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
+    | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
     | '/api/public/ad-metrics'
+    | '/api/public/briefing'
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
+    | '/api/public/hooks/email-frio'
     | '/api/public/hooks/ingest-news'
+    | '/api/public/hooks/instagram'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
+    | '/api/public/hooks/whatsapp'
   id:
     | '__root__'
     | '/'
@@ -499,24 +587,32 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
+    | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
     | '/materia/$slug'
     | '/s/$code'
     | '/api/public/ad-metrics'
+    | '/api/public/briefing'
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
+    | '/api/public/hooks/email-frio'
     | '/api/public/hooks/ingest-news'
+    | '/api/public/hooks/instagram'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/weekly-ranking'
+    | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -541,24 +637,32 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   ArtigosInteligenciaArtificialNasEmpresasRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  BriefingTokenRoute: typeof BriefingTokenRoute
   CategoriaCatRoute: typeof CategoriaCatRoute
   GuiasHubRoute: typeof GuiasHubRoute
   MateriaSlugRoute: typeof MateriaSlugRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAdMetricsRoute: typeof ApiPublicAdMetricsRoute
+  ApiPublicBriefingRoute: typeof ApiPublicBriefingRoute
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPautaRoute: typeof ApiPublicPautaRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
+  ApiPublicHooksAutoLeadsRoute: typeof ApiPublicHooksAutoLeadsRoute
+  ApiPublicHooksCobrancasRoute: typeof ApiPublicHooksCobrancasRoute
   ApiPublicHooksCoverRoute: typeof ApiPublicHooksCoverRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
+  ApiPublicHooksEmailFrioRoute: typeof ApiPublicHooksEmailFrioRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
+  ApiPublicHooksInstagramRoute: typeof ApiPublicHooksInstagramRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
+  ApiPublicHooksPagamentoRoute: typeof ApiPublicHooksPagamentoRoute
   ApiPublicHooksPingRoute: typeof ApiPublicHooksPingRoute
   ApiPublicHooksWeeklyRankingRoute: typeof ApiPublicHooksWeeklyRankingRoute
+  ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -724,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/briefing/$token': {
+      id: '/briefing/$token'
+      path: '/briefing/$token'
+      fullPath: '/briefing/$token'
+      preLoaderRoute: typeof BriefingTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categoria/$cat': {
       id: '/categoria/$cat'
       path: '/categoria/$cat'
@@ -757,6 +868,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/ad-metrics'
       fullPath: '/api/public/ad-metrics'
       preLoaderRoute: typeof ApiPublicAdMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/briefing': {
+      id: '/api/public/briefing'
+      path: '/api/public/briefing'
+      fullPath: '/api/public/briefing'
+      preLoaderRoute: typeof ApiPublicBriefingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cta': {
@@ -801,6 +919,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/auto-leads': {
+      id: '/api/public/hooks/auto-leads'
+      path: '/api/public/hooks/auto-leads'
+      fullPath: '/api/public/hooks/auto-leads'
+      preLoaderRoute: typeof ApiPublicHooksAutoLeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/cobrancas': {
+      id: '/api/public/hooks/cobrancas'
+      path: '/api/public/hooks/cobrancas'
+      fullPath: '/api/public/hooks/cobrancas'
+      preLoaderRoute: typeof ApiPublicHooksCobrancasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/cover': {
       id: '/api/public/hooks/cover'
       path: '/api/public/hooks/cover'
@@ -822,6 +954,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDailyPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/email-frio': {
+      id: '/api/public/hooks/email-frio'
+      path: '/api/public/hooks/email-frio'
+      fullPath: '/api/public/hooks/email-frio'
+      preLoaderRoute: typeof ApiPublicHooksEmailFrioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/ingest-news': {
       id: '/api/public/hooks/ingest-news'
       path: '/api/public/hooks/ingest-news'
@@ -829,11 +968,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksIngestNewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/instagram': {
+      id: '/api/public/hooks/instagram'
+      path: '/api/public/hooks/instagram'
+      fullPath: '/api/public/hooks/instagram'
+      preLoaderRoute: typeof ApiPublicHooksInstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lead-followup': {
       id: '/api/public/hooks/lead-followup'
       path: '/api/public/hooks/lead-followup'
       fullPath: '/api/public/hooks/lead-followup'
       preLoaderRoute: typeof ApiPublicHooksLeadFollowupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/pagamento': {
+      id: '/api/public/hooks/pagamento'
+      path: '/api/public/hooks/pagamento'
+      fullPath: '/api/public/hooks/pagamento'
+      preLoaderRoute: typeof ApiPublicHooksPagamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/ping': {
@@ -848,6 +1001,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/weekly-ranking'
       fullPath: '/api/public/hooks/weekly-ranking'
       preLoaderRoute: typeof ApiPublicHooksWeeklyRankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/whatsapp': {
+      id: '/api/public/hooks/whatsapp'
+      path: '/api/public/hooks/whatsapp'
+      fullPath: '/api/public/hooks/whatsapp'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -889,24 +1049,32 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   ArtigosInteligenciaArtificialNasEmpresasRoute:
     ArtigosInteligenciaArtificialNasEmpresasRoute,
+  BriefingTokenRoute: BriefingTokenRoute,
   CategoriaCatRoute: CategoriaCatRoute,
   GuiasHubRoute: GuiasHubRoute,
   MateriaSlugRoute: MateriaSlugRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAdMetricsRoute: ApiPublicAdMetricsRoute,
+  ApiPublicBriefingRoute: ApiPublicBriefingRoute,
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPautaRoute: ApiPublicPautaRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
+  ApiPublicHooksAutoLeadsRoute: ApiPublicHooksAutoLeadsRoute,
+  ApiPublicHooksCobrancasRoute: ApiPublicHooksCobrancasRoute,
   ApiPublicHooksCoverRoute: ApiPublicHooksCoverRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
+  ApiPublicHooksEmailFrioRoute: ApiPublicHooksEmailFrioRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
+  ApiPublicHooksInstagramRoute: ApiPublicHooksInstagramRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
+  ApiPublicHooksPagamentoRoute: ApiPublicHooksPagamentoRoute,
   ApiPublicHooksPingRoute: ApiPublicHooksPingRoute,
   ApiPublicHooksWeeklyRankingRoute: ApiPublicHooksWeeklyRankingRoute,
+  ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
