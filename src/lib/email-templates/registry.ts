@@ -6,6 +6,7 @@ import { weeklyRankingTemplate } from './weekly-ranking'
 import { template as contactNotificationTemplate } from './contact-notification'
 import { template as pautaNotificationTemplate } from './pauta-notification'
 import { template as pautaConfirmationTemplate } from './pauta-confirmation'
+import { template as fgiaListaConfirmationTemplate } from './fgia-lista-confirmation'
 
 
 export interface TemplateEntry {
@@ -33,5 +34,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-notification': contactNotificationTemplate,
   'pauta-notification': pautaNotificationTemplate,
   'pauta-confirmation': pautaConfirmationTemplate,
+  'fgia-lista-confirmation': fgiaListaConfirmationTemplate,
 }
 
