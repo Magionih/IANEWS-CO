@@ -31,11 +31,11 @@ language sql stable security definer set search_path = public as $$
    where e.ativo and coalesce(e.brasileira, true) and not e.e_cliente and not e.e_anunciante
      and coalesce(e.instagram, '') = '' and coalesce(e.linkedin, '') = ''
      and coalesce(p.instagram, '') = '' and coalesce(p.linkedin, '') = ''
-     and (exists (select 1 from crm_negocios n join crm_etapas et on et.id = n.etapa_id where n.empresa_id = e.id and n.ativo and et.tipo = 'aberta')
-          or e.noticia_recente_em >= crm_hoje() - 30)
+     and exists (select 1 from crm_negocios n join crm_etapas et on et.id = n.etapa_id where n.empresa_id = e.id and n.ativo and et.tipo = 'aberta')
+     and not exists (select 1 from auto_exclusoes ex where ex.empresa_id = e.id)
      and coalesce(x.tentativas, 0) < 2
      and (x.ultimo_em is null or x.ultimo_em < now() - interval '14 days')
-   order by e.noticia_recente_em desc nulls last, e.pontuacao desc nulls last, e.created_at desc
+   order by e.pontuacao desc nulls last, e.noticia_recente_em desc nulls last, e.created_at desc
    limit greatest(1, least(p_limite, 15));
 $$;
 
