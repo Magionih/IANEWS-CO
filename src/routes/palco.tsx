@@ -47,63 +47,62 @@ export const Route = createFileRoute("/palco")({
   component: PalcoPage,
 });
 
+const IMG = (id: number, w: number) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
+
+const EVENT_START = new Date("2026-12-16T14:00:00-03:00").getTime();
+
 const FACTS = [
-  { label: "Data", value: "Quarta, 16 de dezembro" },
-  { label: "Horário", value: "Das 14h às 20h" },
-  { label: "Cidade", value: "Belo Horizonte · local a confirmar" },
+  { label: "Quando", value: "16 de dezembro · 14h às 20h" },
+  { label: "Onde", value: "Belo Horizonte" },
+  { label: "Lugares", value: "Limitados" },
 ];
 
-const PARA_QUEM = [
+const PROVAS = [
+  { n: "100 mil+", t: "seguidores da IA News no Instagram" },
+  { n: "170+", t: "matérias sobre IA nas empresas" },
+  { n: "7h", t: "newsletter diária para quem decide" },
+];
+
+const LEVA = [
   {
-    title: "Empresários",
-    text: "Que querem colocar IA no atendimento, nas vendas e na operação, e preferem aprender com quem já fez.",
+    t: "Cases com números",
+    d: "Empresários que viraram destaque na IA News mostram o que funcionou e o que não funcionou.",
+    img: 9275222,
   },
   {
-    title: "Fornecedores de IA",
-    text: "Que querem conhecer empresários com problemas reais e mostrar o que fazem, com mesa de expositor.",
+    t: "Mesa IANews ao vivo",
+    d: "Você leva um desafio da sua empresa e sai com um caminho para resolver com IA.",
+    img: 29335353,
   },
   {
-    title: "Empresas e marcas",
-    text: "Que querem estar no palco e na cobertura da IA News, com cotas de patrocínio.",
+    t: "Networking que vira negócio",
+    d: "Empresários, fornecedores de IA e marcas na mesma sala, com mesas de expositores.",
+    img: 7648057,
   },
 ];
 
 const AGENDA = [
-  { time: "14h", title: "Credenciamento e café", text: "Com as mesas dos expositores abertas." },
-  {
-    time: "14h30",
-    title: "Abertura",
-    text: "O que os empresários brasileiros estão fazendo com IA, com os dados da IA News.",
-  },
-  {
-    time: "15h",
-    title: "Da pauta ao palco",
-    text: "Empresários que viraram destaque na IA News contam o que a IA mudou no negócio.",
-  },
-  { time: "16h", title: "Cases em operação", text: "IA no atendimento, nas vendas e na operação, com números." },
-  { time: "17h", title: "Intervalo e rodada de expositores", text: "" },
-  { time: "17h30", title: "Mesa IANews ao vivo", text: "Você leva um desafio da sua empresa e sai com um caminho." },
-  { time: "18h30", title: "Encerramento", text: "" },
-  { time: "18h45", title: "Networking", text: "Até as 20h." },
+  { time: "14h", title: "Credenciamento e café" },
+  { time: "14h30", title: "Abertura com dados da IA News" },
+  { time: "15h", title: "Da pauta ao palco" },
+  { time: "16h", title: "Cases em operação" },
+  { time: "17h", title: "Rodada de expositores" },
+  { time: "17h30", title: "Mesa IANews ao vivo" },
+  { time: "18h45", title: "Networking até as 20h" },
 ];
 
 const FAQ = [
   {
-    q: "Onde vai ser?",
-    a: "Em Belo Horizonte. O local sai na abertura das inscrições, primeiro para quem está na lista.",
+    q: "Entrar na lista tem custo?",
+    a: "Não. A lista antecipada é gratuita e garante o aviso antes de todo mundo, com a condição do 1º lote.",
   },
+  { q: "Onde vai ser?", a: "Em Belo Horizonte. O local sai primeiro para quem está na lista." },
   {
-    q: "Quanto custa?",
-    a: "O valor do ingresso sai na abertura do 1º lote. Quem está na lista recebe o aviso antes e garante a condição do 1º lote.",
+    q: "Quero expor ou patrocinar.",
+    a: "Escolha \"Empresa ou marca\" ou \"Fornecedor de IA\" no formulário. A equipe da IA News te procura com as opções.",
   },
-  {
-    q: "Quero expor ou patrocinar. Como faço?",
-    a: "Marque \"Fornecedor de IA\" ou \"Empresa ou marca\" no formulário. A equipe da IA News te procura com as opções de mesa e de cotas.",
-  },
-  {
-    q: "Quem organiza?",
-    a: "A FGIA Educação, o palco da IA News, portal e newsletter sobre inteligência artificial no Brasil.",
-  },
+  { q: "Quem organiza?", a: "A FGIA Educação, o palco da IA News." },
 ];
 
 const EMPTY: PalcoInput = {
@@ -122,7 +121,7 @@ const EMPTY: PalcoInput = {
 const ORDER: (keyof PalcoInput)[] = ["nome", "empresa", "cargo", "whatsapp", "email", "papel", "consentimento"];
 
 function scrollToForm() {
-  document.getElementById("lista")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById("lista")?.scrollIntoView({ behavior: "smooth", block: "center" });
   setTimeout(() => document.getElementById("pc-nome")?.focus({ preventScroll: true }), 450);
 }
 
@@ -136,6 +135,38 @@ function PalcoPage() {
   const hp = useRef<HTMLInputElement>(null);
   const origem = useRef<string | null>(null);
   const doneRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const [left, setLeft] = useState<{ d: number; h: number; m: number } | null>(null);
+  const [showBar, setShowBar] = useState(false);
+
+  useEffect(() => {
+    // Contagem regressiva até 16/12, 14h (só no navegador, para não divergir do HTML do servidor).
+    const tick = () => {
+      const ms = Math.max(0, EVENT_START - Date.now());
+      setLeft({ d: Math.floor(ms / 864e5), h: Math.floor((ms % 864e5) / 36e5), m: Math.floor((ms % 36e5) / 6e4) });
+    };
+    tick();
+    const t = window.setInterval(tick, 30000);
+    return () => window.clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    // Barra fixa "Entrar na lista": aparece depois do topo e some quando o formulário está na tela.
+    const el = formRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    let formVisible = true;
+    const io = new IntersectionObserver(([e]) => {
+      formVisible = e.isIntersecting;
+      setShowBar(!formVisible && window.scrollY > 500);
+    });
+    io.observe(el);
+    const onScroll = () => setShowBar(!formVisible && window.scrollY > 500);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [done]);
 
   useEffect(() => {
     // Página de origem: de onde a pessoa veio (outra página do site ou site externo).
@@ -236,95 +267,54 @@ function PalcoPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="page pt pc">
-        {/* 1. Topo */}
-        <section className="pt-hero">
-          <div className="wrap">
-            <p className="kick">Palco IA News · FGIA Educação</p>
-            <h1>Quem faz, ensina.</h1>
-            <p className="sub">
-              No dia 16 de dezembro, em Belo Horizonte, empresários que já colocaram IA para trabalhar sobem ao palco
-              para contar como fizeram. Você sai com um plano para a sua empresa.
-            </p>
-            <ul className="pc-facts">
-              {FACTS.map((f) => (
-                <li key={f.label}>
-                  <small>{f.label}</small>
-                  <b>{f.value}</b>
-                </li>
-              ))}
-            </ul>
-            <button className="btn blue" type="button" onClick={scrollToForm}>
-              Quero meu lugar na lista
-            </button>
-          </div>
-        </section>
-
-        <div className="wrap">
-          {/* 2. Para quem é */}
-          <section className="pt-sec" aria-labelledby="pc-para">
-            <div className="sec-head">
-              <h2 id="pc-para">Para quem é</h2>
-            </div>
-            <div className="pt-cards">
-              {PARA_QUEM.map((w) => (
-                <div className="pt-card" key={w.title}>
-                  <h3>{w.title}</h3>
-                  <p>{w.text}</p>
+      <main id="main" className="pc2">
+        {/* 1. Topo com o formulário à mão */}
+        <section className="pc2-hero" style={{ backgroundImage: `url(${IMG(9275222, 1600)})` }}>
+          <div className="pc2-shade" aria-hidden="true" />
+          <div className="wrap pc2-hero-grid">
+            <div className="pc2-hero-copy">
+              <p className="pc2-kick">IA News apresenta · FGIA Educação</p>
+              <h1>
+                Palco IA News
+                <span>Quem faz, ensina.</span>
+              </h1>
+              <p className="pc2-sub">
+                Uma tarde em Belo Horizonte com empresários que já colocaram IA para trabalhar. Você sai com um plano
+                para a sua empresa.
+              </p>
+              <ul className="pc2-facts">
+                {FACTS.map((f) => (
+                  <li key={f.label}>
+                    <small>{f.label}</small>
+                    <b>{f.value}</b>
+                  </li>
+                ))}
+              </ul>
+              {left ? (
+                <div className="pc2-count" aria-label="Contagem regressiva para o evento">
+                  <span>
+                    <b>{left.d}</b>dias
+                  </span>
+                  <span>
+                    <b>{String(left.h).padStart(2, "0")}</b>horas
+                  </span>
+                  <span>
+                    <b>{String(left.m).padStart(2, "0")}</b>min
+                  </span>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 3. Programação */}
-          <section className="pt-sec" aria-labelledby="pc-prog">
-            <div className="sec-head">
-              <h2 id="pc-prog">Programação</h2>
-            </div>
-            <ol className="pc-agenda">
-              {AGENDA.map((a) => (
-                <li key={a.time}>
-                  <time>{a.time}</time>
-                  <div>
-                    <b>{a.title}</b>
-                    {a.text ? <span>{a.text}</span> : null}
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <p className="pc-note">Programação proposta. Os nomes do palco saem em breve, primeiro para quem está na lista.</p>
-          </section>
-
-          {/* 4. Como funciona a lista */}
-          <section className="pt-sec" aria-labelledby="pc-how">
-            <div className="sec-head">
-              <h2 id="pc-how">Como funciona a lista antecipada</h2>
-            </div>
-            <ol className="pt-steps">
-              <li>
-                <b>Você entra na lista</b>
-                <span>Leva um minuto, pelo formulário abaixo. Entrar na lista não custa nada.</span>
-              </li>
-              <li>
-                <b>Recebe o 1º lote antes</b>
-                <span>Quando as inscrições abrirem, você recebe o aviso antes de todo mundo, pelo WhatsApp e por e-mail.</span>
-              </li>
-              <li>
-                <b>Dia 16/12, você no Palco</b>
-                <span>Uma tarde de cases, Mesa IANews e networking em Belo Horizonte.</span>
-              </li>
-            </ol>
-          </section>
-
-          {/* 5. Formulário */}
-          <section className="pt-sec pt-form-sec" id="lista" aria-labelledby="pc-form-t">
-            <div className="pt-form-head">
-              <p className="kick">Lista antecipada</p>
-              <h2 id="pc-form-t">Garanta seu lugar na lista</h2>
-              <p>O local, a programação completa e o 1º lote saem primeiro para quem está aqui.</p>
+              ) : null}
+              <a className="pc2-link" href="#programacao">
+                Ver a programação ↓
+              </a>
             </div>
 
-            <div className="biz-card pt-card-form">
+            <div className="pc2-form" id="lista" ref={formRef}>
+              <div className="pc2-form-head">
+                <span className="pc2-badge">Lista antecipada · gratuita</span>
+                <h2>Garanta seu lugar</h2>
+                <p>Quem está na lista recebe o local e o 1º lote antes de todo mundo.</p>
+              </div>
+              <div className="biz-card pt-card-form">
               {done ? (
                 <div className="biz-done" ref={doneRef} role="status">
                   <span className="ok-mark" aria-hidden="true">
@@ -368,18 +358,10 @@ function PalcoPage() {
                     aria-hidden="true"
                   />
                   <fieldset>
-                    <legend className="step-l">
-                      <i>1</i>Quem é você
-                    </legend>
+                    <legend className="pc2-sr">Seus dados</legend>
                     <div className="biz-fields">
                       {field("nome", "Nome completo", { autoComplete: "name", maxLength: 160, placeholder: "Seu nome", full: true })}
                       {field("empresa", "Empresa", { autoComplete: "organization", maxLength: 160, placeholder: "Nome da empresa" })}
-                      {field("cargo", "Cargo", {
-                        autoComplete: "organization-title",
-                        maxLength: 120,
-                        placeholder: "Sócio, CEO, gerente...",
-                        optional: true,
-                      })}
                       {field("whatsapp", "WhatsApp", {
                         type: "tel",
                         inputMode: "tel",
@@ -398,12 +380,10 @@ function PalcoPage() {
                   </fieldset>
 
                   <fieldset aria-describedby={errors.papel ? "pc-papel-err" : undefined}>
-                    <legend className="step-l">
-                      <i>2</i>Você vem como
-                    </legend>
-                    <div className="picks">
+                    <legend className="pc2-legend">Você vem como</legend>
+                    <div className="pc2-pills">
                       {PAPEIS.map((p, i) => (
-                        <label className="pick" key={p.value}>
+                        <label className="pc2-pill" key={p.value} title={p.hint}>
                           <input
                             type="radio"
                             name="papel"
@@ -412,10 +392,7 @@ function PalcoPage() {
                             checked={form.papel === p.value}
                             onChange={() => set("papel", p.value)}
                           />
-                          <span>
-                            <b>{p.label}</b>
-                            <small>{p.hint}</small>
-                          </span>
+                          <span>{p.label}</span>
                         </label>
                       ))}
                     </div>
@@ -426,11 +403,15 @@ function PalcoPage() {
                     ) : null}
                   </fieldset>
 
-                  <fieldset>
-                    <legend className="step-l">
-                      <i>3</i>Sobre a empresa <small>opcional, ajuda a preparar a Mesa IANews</small>
-                    </legend>
+                  <details className="pc2-more">
+                    <summary>Quer levar um desafio para a Mesa IANews? <small>opcional</small></summary>
                     <div className="biz-fields">
+                      {field("cargo", "Cargo", {
+                        autoComplete: "organization-title",
+                        maxLength: 120,
+                        placeholder: "Sócio, CEO, gerente...",
+                        optional: true,
+                      })}
                       <label className="f" htmlFor="pc-setor">
                         <span>Setor</span>
                         <select
@@ -476,7 +457,7 @@ function PalcoPage() {
                         />
                       </label>
                     </div>
-                  </fieldset>
+                  </details>
 
                   <label className="pt-consent" htmlFor="pc-consentimento">
                     <input
@@ -487,32 +468,109 @@ function PalcoPage() {
                       aria-invalid={errors.consentimento ? true : undefined}
                     />
                     <span>
-                      Concordo que a IA News use estes dados para a minha inscrição no Palco IA News e para me mandar
-                      mensagens sobre o evento pelo WhatsApp e por e-mail. Nada é compartilhado com terceiros.{" "}
+                      Aceito receber as novidades do Palco IA News por WhatsApp e e-mail. Nada é compartilhado com
+                      terceiros.{" "}
                       <Link to="/termos">Política de privacidade</Link>.
                       {errors.consentimento ? <span className="pt-err">{errors.consentimento}</span> : null}
                     </span>
                   </label>
 
                   <div className="biz-submit">
-                    <button className="btn blue" type="submit" disabled={sending}>
-                      {sending ? "Enviando…" : "Entrar na lista"}
+                    <button className="btn blue pc2-submit" type="submit" disabled={sending}>
+                      {sending ? "Enviando…" : "Garantir meu lugar na lista"}
                     </button>
-                    <span className="fine">Você recebe a confirmação por e-mail.</span>
+                    <span className="fine">Gratuito. Leva 30 segundos.</span>
                     <p className="msg err" role="status" aria-live="polite">
                       {failMsg ?? ""}
                     </p>
                   </div>
                 </form>
               )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 2. Prova */}
+        <section className="pc2-proof" aria-label="A IA News em números">
+          <div className="wrap pc2-proof-row">
+            {PROVAS.map((p) => (
+              <div key={p.t}>
+                <b>{p.n}</b>
+                <span>{p.t}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="wrap">
+          {/* 3. O que você leva */}
+          <section className="pc2-sec" aria-labelledby="pc2-leva">
+            <p className="pc2-eyebrow">O que você leva</p>
+            <h2 id="pc2-leva" className="pc2-h2">
+              Uma tarde. Cases reais. Um plano para a sua empresa.
+            </h2>
+            <div className="pc2-cards">
+              {LEVA.map((c) => (
+                <article className="pc2-card" key={c.t}>
+                  <img src={IMG(c.img, 800)} alt="" loading="lazy" width={800} height={533} />
+                  <div>
+                    <h3>{c.t}</h3>
+                    <p>{c.d}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* 4. Programação */}
+          <section className="pc2-sec" id="programacao" aria-labelledby="pc2-prog">
+            <p className="pc2-eyebrow">Programação · 16/12</p>
+            <h2 id="pc2-prog" className="pc2-h2">
+              Das 14h às 20h, sem enrolação.
+            </h2>
+            <ol className="pc2-agenda">
+              {AGENDA.map((a) => (
+                <li key={a.time}>
+                  <time>{a.time}</time>
+                  <b>{a.title}</b>
+                </li>
+              ))}
+            </ol>
+            <p className="pc2-note">Os nomes do palco saem em 23/11, primeiro para quem está na lista.</p>
+          </section>
+
+          {/* 5. Para quem é */}
+          <section className="pc2-sec pc2-who" aria-labelledby="pc2-quem">
+            <img src={IMG(8761650, 900)} alt="" loading="lazy" width={900} height={600} />
+            <div>
+              <p className="pc2-eyebrow">Para quem é</p>
+              <h2 id="pc2-quem" className="pc2-h2">
+                Para quem decide e quer ver a IA funcionando.
+              </h2>
+              <ul className="pc2-list">
+                <li>
+                  <b>Empresários</b> que querem IA no atendimento, nas vendas e na operação.
+                </li>
+                <li>
+                  <b>Fornecedores de IA</b> que querem conhecer quem tem o problema.
+                </li>
+                <li>
+                  <b>Marcas</b> que querem estar no palco e na cobertura da IA News.
+                </li>
+              </ul>
+              <button className="btn blue" type="button" onClick={scrollToForm}>
+                Quero meu lugar na lista
+              </button>
             </div>
           </section>
 
           {/* 6. Perguntas frequentes */}
-          <section className="pt-sec" aria-labelledby="pc-faq">
-            <div className="sec-head">
-              <h2 id="pc-faq">Perguntas frequentes</h2>
-            </div>
+          <section className="pc2-sec" aria-labelledby="pc-faq">
+            <p className="pc2-eyebrow">Dúvidas</p>
+            <h2 id="pc-faq" className="pc2-h2">
+              Perguntas frequentes
+            </h2>
             <div className="faq">
               {FAQ.map((f) => (
                 <details key={f.q}>
@@ -529,6 +587,30 @@ function PalcoPage() {
             </div>
           </section>
         </div>
+
+        {/* 7. Chamada final */}
+        <section className="pc2-final" style={{ backgroundImage: `url(${IMG(20733081, 1600)})` }}>
+          <div className="pc2-shade" aria-hidden="true" />
+          <div className="wrap pc2-final-in">
+            <h2>Os lugares são limitados. A lista é gratuita.</h2>
+            <p>16 de dezembro · Belo Horizonte · 14h às 20h</p>
+            <button className="btn blue pc2-submit" type="button" onClick={scrollToForm}>
+              Garantir meu lugar na lista
+            </button>
+          </div>
+        </section>
+
+        {/* Barra fixa */}
+        {!done ? (
+          <div className={"pc2-bar" + (showBar ? " on" : "")} aria-hidden={!showBar}>
+            <span>
+              <b>Palco IA News</b> · 16/12 · BH
+            </span>
+            <button className="btn blue" type="button" onClick={scrollToForm} tabIndex={showBar ? 0 : -1}>
+              Entrar na lista
+            </button>
+          </div>
+        ) : null}
       </main>
       <SiteFooter />
     </>
