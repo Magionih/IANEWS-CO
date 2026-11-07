@@ -11,8 +11,14 @@ const FALLBACK_MODEL = process.env.AI_FALLBACK_MODEL ?? "gemini-3.6-flash";
 const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5-5";
 const CLAUDE_FAST = process.env.ANTHROPIC_FAST_MODEL ?? "claude-haiku-5-5";
 
+/** Chave da Anthropic. Aceita o nome salvo na Vercel por engano (IANewws) até ser recriada como ANTHROPIC_API_KEY. */
+export function chaveAnthropic(): string | undefined {
+  const k = process.env.ANTHROPIC_API_KEY ?? process.env.IANewws;
+  return k && k.startsWith("sk-ant-") ? k : undefined;
+}
+
 export function claudeConfigurado(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+  return Boolean(chaveAnthropic());
 }
 
 async function chamarClaude<T>(
@@ -22,7 +28,7 @@ async function chamarClaude<T>(
   nome: string,
   rapido: boolean,
 ): Promise<T> {
-  const apiKey = process.env.ANTHROPIC_API_KEY!;
+  const apiKey = chaveAnthropic()!;
   let ultimoErro: unknown = null;
   const modelos = rapido ? [CLAUDE_FAST, CLAUDE_MODEL] : [CLAUDE_MODEL, CLAUDE_FAST];
   for (const model of modelos) {
