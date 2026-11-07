@@ -37,21 +37,30 @@ type Previa = {
   } | null;
 };
 
-async function api<T = any>(token: string, acao: string, extra: Record<string, unknown> = {}): Promise<T> {
+async function api<T = any>(
+  token: string,
+  acao: string,
+  extra: Record<string, unknown> = {},
+): Promise<T> {
   const res = await fetch("/api/public/briefing", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, acao, ...extra }),
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok || json.ok === false) throw new Error(json.error ?? json.erro ?? "Não foi possível concluir.");
+  if (!res.ok || json.ok === false)
+    throw new Error(json.error ?? json.erro ?? "Não foi possível concluir.");
   return json as T;
 }
 
 function quando(iso: string | null) {
   if (!iso) return null;
   return new Date(iso).toLocaleString("pt-BR", {
-    timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -105,54 +114,109 @@ function PreviaPage() {
         <section className="pt-hero">
           <div className="wrap">
             <p className="kick">Prévia do destaque</p>
-            <h1>{primeiro ? `${primeiro}, assim vai sair o seu destaque.` : "Assim vai sair o seu destaque."}</h1>
+            <h1>
+              {primeiro
+                ? `${primeiro}, assim vai sair o seu destaque.`
+                : "Assim vai sair o seu destaque."}
+            </h1>
             <p className="sub">
-              Veja as telas do post, a matéria e a legenda. Se estiver tudo certo, aprove; se quiser mudar algo, peça o ajuste aqui mesmo.
+              Veja as telas do post, a matéria e a legenda. Se estiver tudo certo, aprove; se quiser
+              mudar algo, peça o ajuste aqui mesmo.
             </p>
           </div>
         </section>
 
         <div className="wrap bf-corpo pv">
           {erro ? (
-            <p className="bf-aviso" role="alert">{erro}</p>
+            <p className="bf-aviso" role="alert">
+              {erro}
+            </p>
           ) : !p ? (
             <p className="bf-status">Carregando…</p>
-          ) : !pr || !["previa", "aprovado", "agendado", "publicado", "ajuste"].includes(pr.status) ? (
-            <p className="bf-ok">A prévia ainda está em produção. Você recebe o aviso assim que ficar pronta.</p>
+          ) : !pr ||
+            !["previa", "aprovado", "agendado", "publicado", "ajuste"].includes(pr.status) ? (
+            <p className="bf-ok">
+              A prévia ainda está em produção. Você recebe o aviso assim que ficar pronta.
+            </p>
           ) : (
             <>
               {p.status === "aprovado" && pr.data_publicacao ? (
                 <p className="bf-ok" role="status">
-                  Aprovado! Publicação marcada para <strong>{quando(pr.data_publicacao)}</strong> (horário de Brasília) no Instagram, no site, no Facebook, no LinkedIn e no Threads, e na newsletter da manhã seguinte.
-                  {pr.collabs.length ? ` Vai chegar um convite de colaboração no Instagram @${pr.collabs[0]}: é só aceitar.` : ""}
+                  Aprovado! Publicação marcada para <strong>{quando(pr.data_publicacao)}</strong>{" "}
+                  (horário de Brasília) no Instagram, no site, no Facebook, no LinkedIn e no
+                  Threads, e na newsletter da manhã seguinte.
+                  {pr.collabs.length
+                    ? ` Vai chegar um convite de colaboração no Instagram @${pr.collabs[0]}: é só aceitar.`
+                    : ""}
                 </p>
               ) : p.status === "aprovado" ? (
-                <p className="bf-ok" role="status">Aprovado! A equipe confirma com você a data de publicação.</p>
+                <p className="bf-ok" role="status">
+                  Aprovado! A equipe confirma com você a data de publicação.
+                </p>
               ) : null}
               {pr.status === "publicado" && pr.slug ? (
                 <p className="bf-ok">
-                  No ar: <a href={`https://ianewsbr.com/materia/${pr.slug}`}>ianewsbr.com/materia/{pr.slug}</a>
-                  {pr.social_url ? <> · <a href={pr.social_url}>post no Instagram</a></> : null}
+                  No ar:{" "}
+                  <a href={`https://ianewsbr.com/materia/${pr.slug}`}>
+                    ianewsbr.com/materia/{pr.slug}
+                  </a>
+                  {pr.social_url ? (
+                    <>
+                      {" "}
+                      · <a href={pr.social_url}>post no Instagram</a>
+                    </>
+                  ) : null}
                 </p>
               ) : null}
               {p.status === "ajuste" ? (
-                <p className="bf-ok">Pedido de ajuste recebido: “{p.ajuste_pedido}”. A nova versão chega em breve por este mesmo link.</p>
+                <p className="bf-ok">
+                  Pedido de ajuste recebido: “{p.ajuste_pedido}”. A nova versão chega em breve por
+                  este mesmo link.
+                </p>
               ) : null}
 
               <section className="pt-card pv-telas">
                 <h2>O post no Instagram</h2>
-                <p className="bf-dica">Carrossel com {telas.length} telas, em collab {pr.collabs.length ? pr.collabs.map((x) => "@" + x).join(" e ") : "com o seu perfil"}.</p>
+                <p className="bf-dica">
+                  Carrossel com {telas.length} telas, em collab{" "}
+                  {pr.collabs.length
+                    ? pr.collabs.map((x) => "@" + x).join(" e ")
+                    : "com o seu perfil"}
+                  .
+                </p>
                 {telas.length ? (
                   <div className="pv-carrossel">
                     <img src={telas[tela]} alt={`Tela ${tela + 1} de ${telas.length}`} />
                     <div className="pv-nav">
-                      <button className="btn" type="button" disabled={tela === 0} onClick={() => setTela((t) => t - 1)}>Anterior</button>
-                      <span className="bf-status">{tela + 1} / {telas.length}</span>
-                      <button className="btn" type="button" disabled={tela >= telas.length - 1} onClick={() => setTela((t) => t + 1)}>Próxima</button>
+                      <button
+                        className="btn"
+                        type="button"
+                        disabled={tela === 0}
+                        onClick={() => setTela((t) => t - 1)}
+                      >
+                        Anterior
+                      </button>
+                      <span className="bf-status">
+                        {tela + 1} / {telas.length}
+                      </span>
+                      <button
+                        className="btn"
+                        type="button"
+                        disabled={tela >= telas.length - 1}
+                        onClick={() => setTela((t) => t + 1)}
+                      >
+                        Próxima
+                      </button>
                     </div>
                     <div className="pv-thumbs">
                       {telas.map((t, i) => (
-                        <button key={t} type="button" className={i === tela ? "on" : ""} onClick={() => setTela(i)} aria-label={`Ver tela ${i + 1}`}>
+                        <button
+                          key={t}
+                          type="button"
+                          className={i === tela ? "on" : ""}
+                          onClick={() => setTela(i)}
+                          aria-label={`Ver tela ${i + 1}`}
+                        >
                           <img src={t} alt="" />
                         </button>
                       ))}
@@ -196,18 +260,41 @@ function PreviaPage() {
               {p.status === "previa" ? (
                 <section className="pt-card bf-previa">
                   <h2>Está tudo certo?</h2>
-                  <p>Ao aprovar, a publicação é marcada na primeira vaga do nosso calendário e você recebe a data na hora.</p>
-                  {aviso ? <p className="bf-aviso" role="alert">{aviso}</p> : null}
+                  <p>
+                    Ao aprovar, a publicação é marcada na primeira vaga do nosso calendário e você
+                    recebe a data na hora.
+                  </p>
+                  {aviso ? (
+                    <p className="bf-aviso" role="alert">
+                      {aviso}
+                    </p>
+                  ) : null}
                   <div className="bf-acoes">
-                    <button className="btn blue" type="button" disabled={enviando} onClick={() => decidir(true)}>
+                    <button
+                      className="btn blue"
+                      type="button"
+                      disabled={enviando}
+                      onClick={() => decidir(true)}
+                    >
                       Aprovar e publicar
                     </button>
                   </div>
                   <label className="f full" htmlFor="pv-ajuste">
                     <span>Prefere ajustar algo? Descreva aqui (uma rodada de ajustes)</span>
-                    <textarea id="pv-ajuste" className="field" rows={4} value={ajuste} onChange={(e) => setAjuste(e.target.value)} />
+                    <textarea
+                      id="pv-ajuste"
+                      className="field"
+                      rows={4}
+                      value={ajuste}
+                      onChange={(e) => setAjuste(e.target.value)}
+                    />
                   </label>
-                  <button className="btn" type="button" disabled={enviando || ajuste.trim().length < 5} onClick={() => decidir(false)}>
+                  <button
+                    className="btn"
+                    type="button"
+                    disabled={enviando || ajuste.trim().length < 5}
+                    onClick={() => decidir(false)}
+                  >
                     Pedir ajuste
                   </button>
                 </section>

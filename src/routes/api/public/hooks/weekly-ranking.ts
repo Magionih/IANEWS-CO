@@ -6,11 +6,16 @@ async function handle(request: Request) {
   if (denied) return denied;
   try {
     if (!emailSendingEnabled()) {
-      return Response.json({ ok: true, skipped: "Envio de e-mails desligado (sem RESEND_API_KEY ou NEWSLETTER_ENABLED=false)." });
+      return Response.json({
+        ok: true,
+        skipped: "Envio de e-mails desligado (sem RESEND_API_KEY ou NEWSLETTER_ENABLED=false).",
+      });
     }
     const body = await readJson<{ limit: number }>(request);
     const { runWeeklyRanking } = await import("@/lib/ranking-newsletter.server");
-    return Response.json(await runWeeklyRanking({ limit: body.limit ?? 8, triggeredBy: "cron-ranking" }));
+    return Response.json(
+      await runWeeklyRanking({ limit: body.limit ?? 8, triggeredBy: "cron-ranking" }),
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[ranking-newsletter] failed", message);
@@ -19,5 +24,7 @@ async function handle(request: Request) {
 }
 
 export const Route = createFileRoute("/api/public/hooks/weekly-ranking")({
-  server: { handlers: { GET: ({ request }) => handle(request), POST: ({ request }) => handle(request) } },
+  server: {
+    handlers: { GET: ({ request }) => handle(request), POST: ({ request }) => handle(request) },
+  },
 });

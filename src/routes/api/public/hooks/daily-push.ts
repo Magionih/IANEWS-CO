@@ -15,5 +15,7 @@ async function handle(request: Request) {
 }
 
 export const Route = createFileRoute("/api/public/hooks/daily-push")({
-  server: { handlers: { GET: ({ request }) => handle(request), POST: ({ request }) => handle(request) } },
+  server: {
+    handlers: { GET: ({ request }) => handle(request), POST: ({ request }) => handle(request) },
+  },
 });

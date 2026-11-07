@@ -6,12 +6,87 @@ const AI_BASE_URL =
 const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-3.8-flash";
 const FALLBACK_MODEL = process.env.AI_FALLBACK_MODEL ?? "gemini-3.6-flash";
 
+// Claude (API da Anthropic) tem prioridade quando ANTHROPIC_API_KEY existe; senão, o provedor
+// OpenAI-compatible (Gemini). A resposta estruturada vem como chamada de ferramenta com o schema.
+const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5-5";
+const CLAUDE_FAST = process.env.ANTHROPIC_FAST_MODEL ?? "claude-haiku-5-5";
+
+export function claudeConfigurado(): boolean {
+  return Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
+async function chamarClaude<T>(
+  system: string,
+  user: string,
+  schema: object,
+  nome: string,
+  rapido: boolean,
+): Promise<T> {
+  const apiKey = process.env.ANTHROPIC_API_KEY!;
+  let ultimoErro: unknown = null;
+  const modelos = rapido ? [CLAUDE_FAST, CLAUDE_MODEL] : [CLAUDE_MODEL, CLAUDE_FAST];
+  for (const model of modelos) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 55_000);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 4096,
+          system,
+          messages: [{ role: "user", content: user }],
+          tools: [
+            {
+              name: nome,
+              description: "Devolve a resposta no formato pedido.",
+              input_schema: schema,
+            },
+          ],
+          tool_choice: { type: "tool", name: nome },
+        }),
+      });
+      if (!res.ok) {
+        const texto = (await res.text()).slice(0, 200);
+        if ([404, 429, 500, 503, 529].includes(res.status)) {
+          ultimoErro = new Error(`Claude ${res.status} (${model}): ${texto}`);
+          continue;
+        }
+        throw new Error(`Claude ${res.status}: ${texto}`);
+      }
+      const json = (await res.json()) as {
+        content?: { type: string; name?: string; input?: unknown }[];
+      };
+      const tool = (json.content ?? []).find((c) => c.type === "tool_use");
+      if (!tool?.input) throw new Error("Claude não devolveu a resposta estruturada.");
+      return tool.input as T;
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        ultimoErro = new Error(`Claude tempo esgotado (${model})`);
+        continue;
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw ultimoErro instanceof Error ? ultimoErro : new Error("Claude indisponível.");
+}
+
 async function chamarIa<T>(
   system: string,
   user: string,
   schema: object,
   nome: string,
+  rapido = true,
 ): Promise<T | null> {
+  if (claudeConfigurado()) return chamarClaude<T>(system, user, schema, nome, rapido);
   const apiKey = process.env.AI_API_KEY ?? process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   let ultimoErro: unknown = null;
@@ -190,21 +265,73 @@ export async function redigirDestaque(input: {
   const schema = {
     type: "object",
     additionalProperties: false,
-    required: ["titulo", "dek", "body_markdown", "why_it_matters", "category", "tags", "seo_title", "seo_description", "legenda", "capa", "texto", "numeros", "frase", "final"],
+    required: [
+      "titulo",
+      "dek",
+      "body_markdown",
+      "why_it_matters",
+      "category",
+      "tags",
+      "seo_title",
+      "seo_description",
+      "legenda",
+      "capa",
+      "texto",
+      "numeros",
+      "frase",
+      "final",
+    ],
     properties: {
-      titulo: str, dek: str, body_markdown: str, why_it_matters: str,
-      category: { type: "string", enum: ["brasil", "startup", "mercado", "ferramentas", "generativa"] },
+      titulo: str,
+      dek: str,
+      body_markdown: str,
+      why_it_matters: str,
+      category: {
+        type: "string",
+        enum: ["brasil", "startup", "mercado", "ferramentas", "generativa"],
+      },
       tags: { type: "array", items: str },
-      seo_title: str, seo_description: str, legenda: str,
-      capa: { type: "object", additionalProperties: false, required: ["titulo", "destaque", "subtitulo"], properties: { titulo: str, destaque: str, subtitulo: str } },
-      texto: { type: "object", additionalProperties: false, required: ["eyebrow", "titulo", "paragrafos"], properties: { eyebrow: str, titulo: str, paragrafos: { type: "array", items: str } } },
-      numeros: { type: "array", items: { type: "object", additionalProperties: false, required: ["valor", "rotulo"], properties: { valor: str, rotulo: str } } },
-      frase: { type: ["object", "null"], additionalProperties: false, required: ["frase", "quem", "cargo"], properties: { frase: str, quem: str, cargo: str } },
-      final: { type: "object", additionalProperties: false, required: ["titulo", "texto"], properties: { titulo: str, texto: str } },
+      seo_title: str,
+      seo_description: str,
+      legenda: str,
+      capa: {
+        type: "object",
+        additionalProperties: false,
+        required: ["titulo", "destaque", "subtitulo"],
+        properties: { titulo: str, destaque: str, subtitulo: str },
+      },
+      texto: {
+        type: "object",
+        additionalProperties: false,
+        required: ["eyebrow", "titulo", "paragrafos"],
+        properties: { eyebrow: str, titulo: str, paragrafos: { type: "array", items: str } },
+      },
+      numeros: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["valor", "rotulo"],
+          properties: { valor: str, rotulo: str },
+        },
+      },
+      frase: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        required: ["frase", "quem", "cargo"],
+        properties: { frase: str, quem: str, cargo: str },
+      },
+      final: {
+        type: "object",
+        additionalProperties: false,
+        required: ["titulo", "texto"],
+        properties: { titulo: str, texto: str },
+      },
     },
   };
   const d = input.dados;
-  const campo = (k: string) => (typeof d[k] === "string" && (d[k] as string).trim() ? (d[k] as string).trim() : null);
+  const campo = (k: string) =>
+    typeof d[k] === "string" && (d[k] as string).trim() ? (d[k] as string).trim() : null;
   const briefing = [
     `Nome: ${campo("nome") ?? input.pessoa ?? "-"}`,
     `Cargo: ${campo("cargo") ?? "-"}`,
@@ -216,7 +343,9 @@ export async function redigirDestaque(input: {
     campo("frase") ? `Frase sobre IA: ${campo("frase")}` : "",
     campo("site") ? `Site: ${campo("site")}` : "",
     campo("observacoes") ? `Observações: ${campo("observacoes")}` : "",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
   const system = [
     "Você é a redação da IA News (mídia brasileira sobre IA e negócios: portal ianewsbr.com, Instagram @ianews.co). Escreve em português do Brasil, padrão jornalístico, sem adjetivos vazios, sem clichê de release.",
     "Fonte ÚNICA de fatos: o briefing abaixo, preenchido pela própria pessoa. Nunca invente número, cargo, cliente, data ou citação. Se faltar número, escreva sem número. Não prometa nada e não use 'revolucionário', 'disruptivo', 'inovador'.",
@@ -224,10 +353,16 @@ export async function redigirDestaque(input: {
     "Legenda do Instagram: primeira linha é o gancho em negrito (use *asteriscos*), 2 parágrafos curtos, uma frase em aspas da pessoa se houver, pergunta de engajamento, 'Matéria completa em ianewsbr.com (link na bio)' e 5 a 7 hashtags em pt-BR no fim.",
     "Telas do carrossel (4:5): capa.titulo até 70 caracteres em frase forte com o nome da pessoa (capa.destaque = as 2 ou 3 palavras do título a realçar, normalmente o nome); capa.subtitulo = empresa + o que fez, até 110 caracteres. texto: eyebrow curto (ex.: 'O que mudou com IA'), titulo até 80 caracteres, 2 ou 3 parágrafos de até 160 caracteres cada. numeros: 0 a 3 itens só com números que estão no briefing (valor curto como 'R$ 3 mi' ou '900%', rotulo até 60 caracteres); se não houver número, lista vazia. frase: a frase da pessoa sobre IA se houver (até 140 caracteres), senão null. final: titulo até 70 e texto até 150 caracteres chamando para a matéria.",
     "tags: 4 a 7 termos minúsculos (pessoa, empresa, tema, 'brasileiros na ia'). seo_title até 65 caracteres, seo_description até 155.",
-    input.tipo === "cortesia" ? "Este é um destaque de cortesia: tom editorial, sem linguagem de anúncio." : "Este é um destaque contratado: tom editorial; a sinalização de parceria é colocada pela equipe, não escreva 'publicidade'.",
-    input.ajuste && input.anterior ? `A pessoa pediu este ajuste na prévia anterior: "${input.ajuste}". Reescreva atendendo ao pedido e mantendo o resto. Versão anterior (JSON): ${JSON.stringify(input.anterior).slice(0, 6000)}` : "",
-  ].filter(Boolean).join("\n");
-  const r = await chamarIa<Destaque>(system, `Briefing:\n${briefing}`, schema, "destaque");
+    input.tipo === "cortesia"
+      ? "Este é um destaque de cortesia: tom editorial, sem linguagem de anúncio."
+      : "Este é um destaque contratado: tom editorial; a sinalização de parceria é colocada pela equipe, não escreva 'publicidade'.",
+    input.ajuste && input.anterior
+      ? `A pessoa pediu este ajuste na prévia anterior: "${input.ajuste}". Reescreva atendendo ao pedido e mantendo o resto. Versão anterior (JSON): ${JSON.stringify(input.anterior).slice(0, 6000)}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const r = await chamarIa<Destaque>(system, `Briefing:\n${briefing}`, schema, "destaque", false);
   if (!r) return null;
   const limpa = (s: unknown, n: number) => (typeof s === "string" ? s.trim().slice(0, n) : "");
   return {
@@ -235,15 +370,41 @@ export async function redigirDestaque(input: {
     dek: limpa(r.dek, 260),
     body_markdown: limpa(r.body_markdown, 8000),
     why_it_matters: limpa(r.why_it_matters, 400),
-    category: ["brasil", "startup", "mercado", "ferramentas", "generativa"].includes(r.category) ? r.category : "brasil",
-    tags: (r.tags ?? []).map((t) => limpa(t, 40).toLowerCase()).filter(Boolean).slice(0, 7),
+    category: ["brasil", "startup", "mercado", "ferramentas", "generativa"].includes(r.category)
+      ? r.category
+      : "brasil",
+    tags: (r.tags ?? [])
+      .map((t) => limpa(t, 40).toLowerCase())
+      .filter(Boolean)
+      .slice(0, 7),
     seo_title: limpa(r.seo_title, 70),
     seo_description: limpa(r.seo_description, 160),
     legenda: limpa(r.legenda, 2200),
-    capa: { titulo: limpa(r.capa?.titulo, 90), destaque: limpa(r.capa?.destaque, 40), subtitulo: limpa(r.capa?.subtitulo, 130) },
-    texto: { eyebrow: limpa(r.texto?.eyebrow, 40), titulo: limpa(r.texto?.titulo, 100), paragrafos: (r.texto?.paragrafos ?? []).map((p) => limpa(p, 200)).filter(Boolean).slice(0, 3) },
-    numeros: (r.numeros ?? []).map((n) => ({ valor: limpa(n.valor, 14), rotulo: limpa(n.rotulo, 70) })).filter((n) => n.valor && n.rotulo).slice(0, 3),
-    frase: r.frase && limpa(r.frase.frase, 160) ? { frase: limpa(r.frase.frase, 160), quem: limpa(r.frase.quem, 60), cargo: limpa(r.frase.cargo, 80) } : null,
+    capa: {
+      titulo: limpa(r.capa?.titulo, 90),
+      destaque: limpa(r.capa?.destaque, 40),
+      subtitulo: limpa(r.capa?.subtitulo, 130),
+    },
+    texto: {
+      eyebrow: limpa(r.texto?.eyebrow, 40),
+      titulo: limpa(r.texto?.titulo, 100),
+      paragrafos: (r.texto?.paragrafos ?? [])
+        .map((p) => limpa(p, 200))
+        .filter(Boolean)
+        .slice(0, 3),
+    },
+    numeros: (r.numeros ?? [])
+      .map((n) => ({ valor: limpa(n.valor, 14), rotulo: limpa(n.rotulo, 70) }))
+      .filter((n) => n.valor && n.rotulo)
+      .slice(0, 3),
+    frase:
+      r.frase && limpa(r.frase.frase, 160)
+        ? {
+            frase: limpa(r.frase.frase, 160),
+            quem: limpa(r.frase.quem, 60),
+            cargo: limpa(r.frase.cargo, 80),
+          }
+        : null,
     final: { titulo: limpa(r.final?.titulo, 90), texto: limpa(r.final?.texto, 170) },
   };
 }

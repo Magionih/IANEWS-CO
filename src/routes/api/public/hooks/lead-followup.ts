@@ -6,11 +6,16 @@ async function handle(request: Request) {
   if (denied) return denied;
   try {
     if (!emailSendingEnabled()) {
-      return Response.json({ ok: true, skipped: "Envio de e-mails desligado (NEWSLETTER_ENABLED)." });
+      return Response.json({
+        ok: true,
+        skipped: "Envio de e-mails desligado (NEWSLETTER_ENABLED).",
+      });
     }
     const body = await readJson<{ reminderAfterHours: number }>(request);
     const { runLeadFollowUp } = await import("@/lib/lead-funnel.server");
-    return Response.json(await runLeadFollowUp({ reminderAfterHours: body.reminderAfterHours ?? 24 }));
+    return Response.json(
+      await runLeadFollowUp({ reminderAfterHours: body.reminderAfterHours ?? 24 }),
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[lead-followup] failed", message);
@@ -19,5 +24,7 @@ async function handle(request: Request) {
 }
 
 export const Route = createFileRoute("/api/public/hooks/lead-followup")({
-  server: { handlers: { GET: ({ request }) => handle(request), POST: ({ request }) => handle(request) } },
+  server: {
+    handlers: { GET: ({ request }) => handle(request), POST: ({ request }) => handle(request) },
+  },
 });

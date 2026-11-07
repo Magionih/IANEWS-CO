@@ -15,28 +15,52 @@ async function handle(request: Request) {
     const db = supabaseAdmin as any;
     const { enriquecerLead } = await import("@/lib/automacao/enriquecer.server");
 
-    const { data: pendentes, error } = await db.rpc("auto_enriquecer_pendentes", { p_limite: limite });
+    const { data: pendentes, error } = await db.rpc("auto_enriquecer_pendentes", {
+      p_limite: limite,
+    });
     if (error) throw new Error(error.message);
     type Pendente = {
-      empresa_id: string; empresa: string; site: string | null;
-      pessoa_id: string | null; pessoa: string | null; cargo: string | null; contexto: string | null;
+      empresa_id: string;
+      empresa: string;
+      site: string | null;
+      pessoa_id: string | null;
+      pessoa: string | null;
+      cargo: string | null;
+      contexto: string | null;
     };
     const resultado: unknown[] = [];
     for (const p of (pendentes ?? []) as Pendente[]) {
       try {
         const r = await enriquecerLead({
-          empresa: p.empresa, site: p.site, pessoa: p.pessoa, cargo: p.cargo, contexto: p.contexto,
+          empresa: p.empresa,
+          site: p.site,
+          pessoa: p.pessoa,
+          cargo: p.cargo,
+          contexto: p.contexto,
         });
-        if (!r) return Response.json({ ok: false, error: "AI_API_KEY não configurada." }, { status: 500 });
+        if (!r)
+          return Response.json(
+            { ok: false, error: "AI_API_KEY não configurada." },
+            { status: 500 },
+          );
         const { data, error: e2 } = await db.rpc("auto_enriquecer_salvar", {
-          p_empresa: p.empresa_id, p_pessoa: p.pessoa_id, p_dados: r,
+          p_empresa: p.empresa_id,
+          p_pessoa: p.pessoa_id,
+          p_dados: r,
         });
         if (e2) throw new Error(e2.message);
         resultado.push({ empresa: p.empresa, ...data });
       } catch (err) {
-        resultado.push({ empresa: p.empresa, erro: err instanceof Error ? err.message : String(err) });
+        resultado.push({
+          empresa: p.empresa,
+          erro: err instanceof Error ? err.message : String(err),
+        });
         try {
-          await db.rpc("auto_enriquecer_salvar", { p_empresa: p.empresa_id, p_pessoa: p.pessoa_id, p_dados: null });
+          await db.rpc("auto_enriquecer_salvar", {
+            p_empresa: p.empresa_id,
+            p_pessoa: p.pessoa_id,
+            p_dados: null,
+          });
         } catch {
           /* registra a tentativa quando der */
         }
