@@ -286,8 +286,8 @@ type Curated = {
 // IA própria (sem gateway do Lovable). Padrão: API do Google Gemini no formato OpenAI.
 // Para trocar de provedor, ajuste AI_BASE_URL / AI_API_KEY / AI_*_MODEL na Vercel.
 const AI_BASE_URL = process.env.AI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai";
-const WRITER_MODEL = process.env.AI_WRITER_MODEL ?? "gemini-2.5-pro";
-const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-2.5-flash";
+const WRITER_MODEL = process.env.AI_WRITER_MODEL ?? "gemini-3.8-flash";
+const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-3.8-flash";
 
 /** Nota mínima (0-10) exigida para uma matéria ir ao ar. */
 export const QUALITY_THRESHOLD = 8.2;

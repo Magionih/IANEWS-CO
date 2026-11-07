@@ -3,7 +3,7 @@
 
 const AI_BASE_URL =
   process.env.AI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai";
-const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-2.5-flash";
+const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-3.8-flash";
 
 async function chamarIa<T>(
   system: string,
