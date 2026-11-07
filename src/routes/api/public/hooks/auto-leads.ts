@@ -9,8 +9,10 @@ async function handle(request: Request) {
   const denied = await cronUnauthorized(request);
   if (denied) return denied;
   try {
-    const body = await readJson<{ dias: number }>(request);
+    const body = await readJson<{ dias: number; limite: number }>(request);
     const dias = Math.min(Math.max(Number(body.dias ?? 3) || 3, 1), 14);
+    // Poucas matérias por rodada: a IA pode levar mais de 1 minuto por matéria quando está lenta.
+    const limite = Math.min(Math.max(Number(body.limite ?? 5) || 5, 1), 20);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { extrairMencoes } = await import("@/lib/automacao/ia.server");
@@ -24,7 +26,7 @@ async function handle(request: Request) {
       dek: string | null;
       tags: string[] | null;
       body_markdown: string | null;
-    }[]) {
+    }[]).slice(0, limite)) {
       let m: Awaited<ReturnType<typeof extrairMencoes>>;
       try {
         m = await extrairMencoes(a);
