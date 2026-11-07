@@ -277,3 +277,9 @@ select cron.schedule('ianews-auto-leads', '30 9 * * *', $$select public.call_sit
 select cron.schedule('ianews-auto-email-frio', '5 12-20 * * 1-5', $$select public.call_site_hook('/api/public/hooks/email-frio', '{"lote":4}')$$);
 -- A cada 30 minutos: cobranças das prévias aprovadas (só se o gateway estiver ligado)
 select cron.schedule('ianews-auto-cobrancas', '*/30 11-23 * * *', $$select public.call_site_hook('/api/public/hooks/cobrancas')$$);
+
+-- Funções de gatilho não são chamadas pela API
+revoke execute on function public.auto_briefing_na_etapa() from public, anon, authenticated;
+revoke execute on function public.auto_pagamento_baixa() from public, anon, authenticated;
+revoke execute on function public.auto_parar_ao_responder() from public, anon, authenticated;
+revoke execute on function public.auto_exigir_valor_no_fechamento() from public, anon, authenticated;
