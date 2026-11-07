@@ -20,13 +20,14 @@ async function handle(request: Request) {
     const { data: artigos, error } = await db.rpc("auto_artigos_sem_mencao", { p_dias: dias });
     if (error) throw new Error(error.message);
     const resultado: unknown[] = [];
-    for (const a of (artigos ?? []) as {
+    type Artigo = {
       id: string;
       title: string;
       dek: string | null;
       tags: string[] | null;
       body_markdown: string | null;
-    }[]).slice(0, limite)) {
+    };
+    for (const a of ((artigos ?? []) as Artigo[]).slice(0, limite)) {
       let m: Awaited<ReturnType<typeof extrairMencoes>>;
       try {
         m = await extrairMencoes(a);
