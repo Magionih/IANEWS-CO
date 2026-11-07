@@ -35,7 +35,11 @@ async function handle(request: Request) {
         resultado.push({ empresa: p.empresa, ...data });
       } catch (err) {
         resultado.push({ empresa: p.empresa, erro: err instanceof Error ? err.message : String(err) });
-        await db.rpc("auto_enriquecer_salvar", { p_empresa: p.empresa_id, p_pessoa: p.pessoa_id, p_dados: null }).catch(() => null);
+        try {
+          await db.rpc("auto_enriquecer_salvar", { p_empresa: p.empresa_id, p_pessoa: p.pessoa_id, p_dados: null });
+        } catch {
+          /* registra a tentativa quando der */
+        }
       }
     }
     return Response.json({ ok: true, leads: resultado.length, resultado });

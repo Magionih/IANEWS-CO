@@ -100,7 +100,7 @@ async function handle(request: Request) {
         try {
           await enviarWhatsApp(f.destino, f.mensagem);
           await db.from("auto_fila").update({ status: "enviado", enviado_em: new Date().toISOString() }).eq("id", f.id);
-          await db.rpc("auto_whatsapp_enviado", { p_negocio: f.negocio_id, p_pessoa: f.pessoa_id, p_texto: f.mensagem }).catch(() => null);
+          await db.rpc("auto_whatsapp_enviado", { p_negocio: f.negocio_id, p_pessoa: f.pessoa_id, p_texto: f.mensagem });
           avisos.push({ id: f.id, ok: true });
         } catch (err) {
           // Fora da janela de 24 h o WhatsApp recusa texto livre: fica na fila para a Renata enviar
