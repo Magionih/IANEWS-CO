@@ -20,6 +20,7 @@ import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as EdicaoRouteImport } from './routes/edicao'
 import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as GenteRouteImport } from './routes/gente'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
@@ -43,6 +44,7 @@ import { Route as ApiPublicBriefingRouteImport } from './routes/api/public/brief
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicListaEsperaRouteImport } from './routes/api/public/lista-espera'
 import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
@@ -115,6 +117,11 @@ const EdicaoRoute = EdicaoRouteImport.update({
 const EmpresasRoute = EmpresasRouteImport.update({
   id: '/empresas',
   path: '/empresas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GenteRoute = GenteRouteImport.update({
@@ -233,6 +240,11 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicListaEsperaRoute = ApiPublicListaEsperaRouteImport.update({
+  id: '/api/public/lista-espera',
+  path: '/api/public/lista-espera',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPautaRoute = ApiPublicPautaRouteImport.update({
   id: '/api/public/pauta',
   path: '/api/public/pauta',
@@ -346,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/eventos': typeof EventosRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
@@ -369,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/lista-espera': typeof ApiPublicListaEsperaRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
@@ -400,6 +414,7 @@ export interface FileRoutesByTo {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/eventos': typeof EventosRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
@@ -423,6 +438,7 @@ export interface FileRoutesByTo {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/lista-espera': typeof ApiPublicListaEsperaRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
@@ -456,6 +472,7 @@ export interface FileRoutesById {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/eventos': typeof EventosRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
@@ -479,6 +496,7 @@ export interface FileRoutesById {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/lista-espera': typeof ApiPublicListaEsperaRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
@@ -512,6 +530,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/eventos'
     | '/gente'
     | '/links'
     | '/newsletter'
@@ -535,6 +554,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/lista-espera'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
@@ -566,6 +586,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/eventos'
     | '/gente'
     | '/links'
     | '/newsletter'
@@ -589,6 +610,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/lista-espera'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
@@ -621,6 +643,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/eventos'
     | '/gente'
     | '/links'
     | '/newsletter'
@@ -644,6 +667,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/lista-espera'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
@@ -677,6 +701,7 @@ export interface RootRouteChildren {
   DescadastrarRoute: typeof DescadastrarRoute
   EdicaoRoute: typeof EdicaoRoute
   EmpresasRoute: typeof EmpresasRoute
+  EventosRoute: typeof EventosRoute
   GenteRoute: typeof GenteRoute
   LinksRoute: typeof LinksRoute
   NewsletterRoute: typeof NewsletterRoute
@@ -698,6 +723,7 @@ export interface RootRouteChildren {
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicListaEsperaRoute: typeof ApiPublicListaEsperaRoute
   ApiPublicPautaRoute: typeof ApiPublicPautaRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
@@ -796,6 +822,13 @@ declare module '@tanstack/react-router' {
       path: '/empresas'
       fullPath: '/empresas'
       preLoaderRoute: typeof EmpresasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gente': {
@@ -959,6 +992,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lista-espera': {
+      id: '/api/public/lista-espera'
+      path: '/api/public/lista-espera'
+      fullPath: '/api/public/lista-espera'
+      preLoaderRoute: typeof ApiPublicListaEsperaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/pauta': {
       id: '/api/public/pauta'
       path: '/api/public/pauta'
@@ -1120,6 +1160,7 @@ const rootRouteChildren: RootRouteChildren = {
   DescadastrarRoute: DescadastrarRoute,
   EdicaoRoute: EdicaoRoute,
   EmpresasRoute: EmpresasRoute,
+  EventosRoute: EventosRoute,
   GenteRoute: GenteRoute,
   LinksRoute: LinksRoute,
   NewsletterRoute: NewsletterRoute,
@@ -1142,6 +1183,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicListaEsperaRoute: ApiPublicListaEsperaRoute,
   ApiPublicPautaRoute: ApiPublicPautaRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,

@@ -378,3 +378,4 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 @import "./styles/portal.css";
+@import "./styles/fgia.css";
