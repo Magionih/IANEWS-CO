@@ -24,6 +24,7 @@ import { Route as GenteRouteImport } from './routes/gente'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
 import { Route as NoticiasRouteImport } from './routes/noticias'
+import { Route as PalcoRouteImport } from './routes/palco'
 import { Route as PautaRouteImport } from './routes/pauta'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -43,6 +44,7 @@ import { Route as ApiPublicBriefingRouteImport } from './routes/api/public/brief
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicPalcoRouteImport } from './routes/api/public/palco'
 import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
@@ -141,6 +143,11 @@ const NoticiasRoute = NoticiasRouteImport.update({
   path: '/noticias',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PalcoRoute = PalcoRouteImport.update({
+  id: '/palco',
+  path: '/palco',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PautaRoute = PautaRouteImport.update({
   id: '/pauta',
   path: '/pauta',
@@ -235,6 +242,11 @@ const ApiPublicEngagementRoute = ApiPublicEngagementRouteImport.update({
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPalcoRoute = ApiPublicPalcoRouteImport.update({
+  id: '/api/public/palco',
+  path: '/api/public/palco',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPautaRoute = ApiPublicPautaRouteImport.update({
@@ -378,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
+  '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -397,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/palco': typeof ApiPublicPalcoRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
@@ -436,6 +450,7 @@ export interface FileRoutesByTo {
   '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
+  '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -455,6 +470,7 @@ export interface FileRoutesByTo {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/palco': typeof ApiPublicPalcoRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
@@ -496,6 +512,7 @@ export interface FileRoutesById {
   '/links': typeof LinksRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
+  '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -515,6 +532,7 @@ export interface FileRoutesById {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/palco': typeof ApiPublicPalcoRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
@@ -556,6 +574,7 @@ export interface FileRouteTypes {
     | '/links'
     | '/newsletter'
     | '/noticias'
+    | '/palco'
     | '/pauta'
     | '/ranking'
     | '/sitemap.xml'
@@ -575,6 +594,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/palco'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
@@ -614,6 +634,7 @@ export interface FileRouteTypes {
     | '/links'
     | '/newsletter'
     | '/noticias'
+    | '/palco'
     | '/pauta'
     | '/ranking'
     | '/sitemap.xml'
@@ -633,6 +654,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/palco'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
@@ -673,6 +695,7 @@ export interface FileRouteTypes {
     | '/links'
     | '/newsletter'
     | '/noticias'
+    | '/palco'
     | '/pauta'
     | '/ranking'
     | '/sitemap.xml'
@@ -692,6 +715,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/palco'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
@@ -733,6 +757,7 @@ export interface RootRouteChildren {
   LinksRoute: typeof LinksRoute
   NewsletterRoute: typeof NewsletterRoute
   NoticiasRoute: typeof NoticiasRoute
+  PalcoRoute: typeof PalcoRoute
   PautaRoute: typeof PautaRoute
   RankingRoute: typeof RankingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -750,6 +775,7 @@ export interface RootRouteChildren {
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicPalcoRoute: typeof ApiPublicPalcoRoute
   ApiPublicPautaRoute: typeof ApiPublicPautaRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
@@ -880,6 +906,13 @@ declare module '@tanstack/react-router' {
       path: '/noticias'
       fullPath: '/noticias'
       preLoaderRoute: typeof NoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/palco': {
+      id: '/palco'
+      path: '/palco'
+      fullPath: '/palco'
+      preLoaderRoute: typeof PalcoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pauta': {
@@ -1013,6 +1046,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/palco': {
+      id: '/api/public/palco'
+      path: '/api/public/palco'
+      fullPath: '/api/public/palco'
+      preLoaderRoute: typeof ApiPublicPalcoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/pauta': {
@@ -1208,6 +1248,7 @@ const rootRouteChildren: RootRouteChildren = {
   LinksRoute: LinksRoute,
   NewsletterRoute: NewsletterRoute,
   NoticiasRoute: NoticiasRoute,
+  PalcoRoute: PalcoRoute,
   PautaRoute: PautaRoute,
   RankingRoute: RankingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -1226,6 +1267,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicPalcoRoute: ApiPublicPalcoRoute,
   ApiPublicPautaRoute: ApiPublicPautaRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,

@@ -73,11 +73,24 @@ export const listLista = createServerFn({ method: "GET" })
 export const montarLista = createServerFn({ method: "POST" })
   .middleware([requireCrmAccess])
   .handler(async ({ context }) => {
-    return checar(await context.db.rpc("auto_montar_lista", {})) as {
+    const res = checar(await context.db.rpc("auto_montar_lista", {})) as {
       ok?: boolean;
       total?: number;
       blocos?: Record<string, number>;
     };
+    // A lista refeita apaga o bloco do Palco IA News (montado às 7h05); remonta com a chave de serviço,
+    // porque a função do Palco não é exposta a usuários. O acesso já foi conferido pelo requireCrmAccess.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const palco = checar(await (supabaseAdmin as any).rpc("palco_lista_do_dia", {})) as { palco?: number };
+      if (palco?.palco) {
+        res.total = (res.total ?? 0) + palco.palco;
+        res.blocos = { ...(res.blocos ?? {}), "Palco IA News": palco.palco };
+      }
+    } catch (err) {
+      console.error("[lista] palco_lista_do_dia", err instanceof Error ? err.message : err);
+    }
+    return res;
   });
 
 export const descartarDaLista = createServerFn({ method: "POST" })
