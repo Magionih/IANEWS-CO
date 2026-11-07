@@ -13,6 +13,7 @@ import {
   Megaphone,
   Newspaper,
   Search,
+  Send,
   Settings,
   Shield,
   Users,
@@ -41,6 +42,7 @@ type Item = {
 
 const MENU: Item[] = [
   { to: "/", rotulo: "Hoje", icone: Home, exato: true },
+  { to: "/fila", rotulo: "Fila do dia", icone: Send },
   { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
   { to: "/empresas", rotulo: "Empresas", icone: Building2 },
   { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
