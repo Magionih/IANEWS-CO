@@ -14,19 +14,16 @@ async function copiarFotos(db: any, producaoId: string, paths: string[]): Promis
     try {
       const { data, error } = await db.storage.from("briefings").download(path);
       if (error || !data) continue;
-      const ext = (path.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const tipo =
-        ext === "png"
-          ? "image/png"
-          : ext === "webp"
-            ? "image/webp"
-            : ext === "svg"
-              ? "image/svg+xml"
-              : "image/jpeg";
-      const dest = `${producaoId}/foto-${i + 1}.${ext}`;
+      const { default: sharp } = await import("sharp");
+      const jpg = await sharp(Buffer.from(await data.arrayBuffer()))
+        .rotate()
+        .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 86 })
+        .toBuffer();
+      const dest = `${producaoId}/foto-${i + 1}.jpg`;
       const { error: e2 } = await db.storage
         .from("producoes")
-        .upload(dest, data, { contentType: tipo, upsert: true });
+        .upload(dest, jpg, { contentType: "image/jpeg", upsert: true });
       if (e2) continue;
       urls.push(db.storage.from("producoes").getPublicUrl(dest).data.publicUrl);
     } catch {

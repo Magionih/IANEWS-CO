@@ -16,7 +16,7 @@ async function handle(request: Request) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { redigirCarrosselNoticia } = await import("@/lib/automacao/ia.server");
-    const { renderTelaPng } = await import("@/lib/automacao/telas.server");
+    const { renderTelaPng, fotoPublicaJpeg } = await import("@/lib/automacao/telas.server");
 
     const { data: pendentes, error } = await db.rpc("auto_carrosseis_pendentes", {
       p_limite: limite,
@@ -36,6 +36,12 @@ async function handle(request: Request) {
     for (const a of (pendentes ?? []) as Art[]) {
       try {
         const c = await redigirCarrosselNoticia(a);
+        // Capa em JPEG (as capas do site podem ser AVIF/WebP, que o renderizador não lê)
+        const foto = await fotoPublicaJpeg(
+          db,
+          a.cover_image_url,
+          `noticias/${a.article_id}/capa.jpg`,
+        );
         if (!c) return Response.json({ ok: false, error: "IA não configurada." }, { status: 500 });
         // Collab: empresas e pessoas protagonistas da matéria com Instagram no CRM
         const { data: menc } = await db
@@ -73,7 +79,7 @@ async function handle(request: Request) {
             titulo: c.capa.titulo,
             destaque: c.capa.destaque,
             subtitulo: c.capa.subtitulo,
-            foto: a.cover_image_url,
+            foto,
             credito: null,
           },
           {
@@ -81,7 +87,7 @@ async function handle(request: Request) {
             eyebrow: c.texto.eyebrow || "O que aconteceu",
             titulo: c.texto.titulo,
             paragrafos: c.texto.paragrafos,
-            foto: a.cover_image_url,
+            foto,
           },
           ...(c.numeros.length
             ? [
@@ -100,7 +106,7 @@ async function handle(request: Request) {
                   frase: c.frase.frase,
                   quem: c.frase.quem,
                   cargo: c.frase.cargo || null,
-                  foto: a.cover_image_url,
+                  foto,
                 },
               ]
             : []),

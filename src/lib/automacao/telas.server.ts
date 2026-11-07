@@ -427,3 +427,26 @@ export async function renderTelaPng(tela: Tela): Promise<Buffer> {
   const png = new Resvg(svg, { fitTo: { mode: "width", value: W } }).render().asPng();
   return Buffer.from(png);
 }
+
+/** Garante uma imagem JPEG (o satori não lê AVIF/WebP/HEIC): baixa, converte com sharp e devolve os bytes. */
+export async function imagemComoJpeg(url: string, maxLado = 1600): Promise<Buffer> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Imagem ${res.status}: ${url}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const { default: sharp } = await import("sharp");
+  return sharp(buf)
+    .rotate()
+    .resize({ width: maxLado, height: maxLado, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 86 })
+    .toBuffer();
+}
+
+/** Publica a versão JPEG de uma foto no bucket de produções e devolve a URL pública. */
+export async function fotoPublicaJpeg(db: any, url: string, dest: string): Promise<string> {
+  const jpg = await imagemComoJpeg(url);
+  const { error } = await db.storage
+    .from("producoes")
+    .upload(dest, jpg, { contentType: "image/jpeg", upsert: true });
+  if (error) throw new Error(`Foto: ${error.message}`);
+  return db.storage.from("producoes").getPublicUrl(dest).data.publicUrl as string;
+}
