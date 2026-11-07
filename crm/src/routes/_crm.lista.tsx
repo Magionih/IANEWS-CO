@@ -27,6 +27,7 @@ export const Route = createFileRoute("/_crm/lista")({
 
 const BLOCOS: { id: string; titulo: string; dica: string }[] = [
   { id: "Quentes", titulo: "1 · Quentes", dica: "Já responderam, têm ação prevista para hoje ou briefing/prévia aguardando. Resposta no mesmo dia." },
+  { id: "Palco IA News", titulo: "1 · Palco IA News", dica: "Convites, lista antecipada e lembretes do Palco IA News (16/12, BH). A mensagem é o modelo indicado no motivo, que está no negócio de cada pessoa." },
   { id: "Virou pauta", titulo: "2 · Virou pauta", dica: "Protagonistas das matérias da IA News. Oferta de destaque com a matéria como gancho." },
   { id: "Prospecção", titulo: "2 · Prospecção", dica: "Fundadores e empresas das listas, da maior nota para a menor. Entram na fila do dia dentro do limite de cada canal." },
   { id: "Inbound", titulo: "3 · Inbound", dica: "Vieram pelo site, formulário de pauta ou newsletter. Responder hoje." },
