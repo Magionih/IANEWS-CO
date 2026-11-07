@@ -1082,3 +1082,20 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 .pv-corpo{font-size:16px;line-height:1.65}
 .pv-corpo h2{font-size:19px;margin:22px 0 8px}
 .pv-corpo p{margin:0 0 12px}
+
+/* ---------- Palco IA News (/palco) ---------- */
+.pc-facts{list-style:none;margin:0 0 26px;padding:0;display:flex;flex-wrap:wrap;gap:12px 32px}
+.pc-facts li{display:grid;gap:2px}
+.pc-facts small{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9CC3FF}
+.pc-facts b{font-size:17px;color:#fff}
+.pc-agenda{list-style:none;margin:0;padding:0;border-top:1px solid var(--p-rule)}
+.pc-agenda li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 18px;padding:14px 0;border-bottom:1px solid var(--p-rule)}
+.pc-agenda time{font-weight:900;color:var(--p-blue-ink);font-variant-numeric:tabular-nums}
+.pc-agenda b{display:block;font-size:16.5px}
+.pc-agenda span{display:block;color:var(--p-ink-2);font-size:15px;margin-top:2px}
+.pc-note{color:var(--p-ink-3);font-size:14px;margin-top:12px}
+.pc fieldset > .pt-err{margin-top:8px}
+@media (max-width:540px){
+  .pc-facts{gap:12px 22px}
+  .pc-agenda li{grid-template-columns:1fr}
+}

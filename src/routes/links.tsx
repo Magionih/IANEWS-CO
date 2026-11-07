@@ -114,6 +114,18 @@ function LinksPage() {
         {/* 4. Participe: interação com quem acompanha, com curadoria da redação */}
         <section aria-labelledby="lk-part-t">
           <h2 id="lk-part-t" className="lk-h">Participe da IANews</h2>
+          <Link
+            to="/palco"
+            search={{ utm_source: "instagram", utm_medium: "bio", utm_campaign: "palco" }}
+            className="lk-card lk-row"
+            onClick={click("palco")}
+          >
+            <span>
+              <b>Palco IA News · 16/12 em Belo Horizonte</b>
+              <small>Empresários que já colocaram IA para trabalhar contam como fizeram. Entre na lista antecipada.</small>
+            </span>
+            <Arrow />
+          </Link>
           <Link to="/gente" hash="indicar" className="lk-card lk-row" onClick={click("indicar-gente")}>
             <span>
               <b>Indique quem faz a IA acontecer no Brasil</b>
