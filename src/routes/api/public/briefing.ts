@@ -122,6 +122,11 @@ export const Route = createFileRoute("/api/public/briefing")({
               if (body.acao === "remover") await db.storage.from("briefings").remove([path]);
               return Response.json({ ok: true });
             }
+            case "previa": {
+              const { data, error } = await db.rpc("auto_previa_get", { p_token: token });
+              if (error) throw new Error(error.message);
+              return Response.json({ ok: true, previa: data });
+            }
             case "aprovar":
             case "ajuste": {
               const { data, error } = await db.rpc("auto_briefing_decidir", {

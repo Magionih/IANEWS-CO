@@ -61,6 +61,12 @@ const CANAIS: { id: FilaCanal; rotulo: string; icone: typeof Instagram; dica: st
     icone: Mail,
     dica: "Enquanto o domínio de prospecção não estiver aquecido, envie pelo e-mail comercial e marque aqui.",
   },
+  {
+    id: "whatsapp",
+    rotulo: "WhatsApp",
+    icone: MessageCircle,
+    dica: "Só para quem já conversa com a gente (prévia pronta, data marcada, publicado). Com a API oficial ligada, o envio é automático; sem ela, copie e envie pelo WhatsApp comercial.",
+  },
 ];
 
 const PASSO_LABEL: Record<string, string> = {
@@ -69,6 +75,10 @@ const PASSO_LABEL: Record<string, string> = {
   D7: "Valor D7",
   D15: "Outro canal D15",
   D21: "Encerramento D21",
+  previa: "Prévia pronta",
+  data: "Data marcada",
+  publicado: "Publicado",
+  resposta: "Resposta",
 };
 
 function FilaPage() {

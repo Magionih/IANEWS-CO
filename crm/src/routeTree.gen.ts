@@ -15,8 +15,11 @@ import { Route as CrmIndexRouteImport } from './routes/_crm.index'
 import { Route as CrmAudienciaRouteImport } from './routes/_crm.audiencia'
 import { Route as CrmConfigRouteImport } from './routes/_crm.config'
 import { Route as CrmFilaRouteImport } from './routes/_crm.fila'
+import { Route as CrmListaRouteImport } from './routes/_crm.lista'
 import { Route as CrmNegociosRouteImport } from './routes/_crm.negocios'
+import { Route as CrmPainelRouteImport } from './routes/_crm.painel'
 import { Route as CrmPautasRouteImport } from './routes/_crm.pautas'
+import { Route as CrmProducoesRouteImport } from './routes/_crm.producoes'
 import { Route as CrmPublicidadeRouteImport } from './routes/_crm.publicidade'
 import { Route as CrmRelatoriosRouteImport } from './routes/_crm.relatorios'
 import { Route as CrmTarefasRouteImport } from './routes/_crm.tarefas'
@@ -56,14 +59,29 @@ const CrmFilaRoute = CrmFilaRouteImport.update({
   path: '/fila',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmListaRoute = CrmListaRouteImport.update({
+  id: '/lista',
+  path: '/lista',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmNegociosRoute = CrmNegociosRouteImport.update({
   id: '/negocios',
   path: '/negocios',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmPainelRoute = CrmPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmPautasRoute = CrmPautasRouteImport.update({
   id: '/pautas',
   path: '/pautas',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmProducoesRoute = CrmProducoesRouteImport.update({
+  id: '/producoes',
+  path: '/producoes',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmPublicidadeRoute = CrmPublicidadeRouteImport.update({
@@ -118,8 +136,11 @@ export interface FileRoutesByFullPath {
   '/audiencia': typeof CrmAudienciaRoute
   '/config': typeof CrmConfigRoute
   '/fila': typeof CrmFilaRoute
+  '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
+  '/painel': typeof CrmPainelRoute
   '/pautas': typeof CrmPautasRoute
+  '/producoes': typeof CrmProducoesRoute
   '/publicidade': typeof CrmPublicidadeRoute
   '/relatorios': typeof CrmRelatoriosRoute
   '/tarefas': typeof CrmTarefasRoute
@@ -135,8 +156,11 @@ export interface FileRoutesByTo {
   '/audiencia': typeof CrmAudienciaRoute
   '/config': typeof CrmConfigRoute
   '/fila': typeof CrmFilaRoute
+  '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
+  '/painel': typeof CrmPainelRoute
   '/pautas': typeof CrmPautasRoute
+  '/producoes': typeof CrmProducoesRoute
   '/publicidade': typeof CrmPublicidadeRoute
   '/relatorios': typeof CrmRelatoriosRoute
   '/tarefas': typeof CrmTarefasRoute
@@ -155,8 +179,11 @@ export interface FileRoutesById {
   '/_crm/audiencia': typeof CrmAudienciaRoute
   '/_crm/config': typeof CrmConfigRoute
   '/_crm/fila': typeof CrmFilaRoute
+  '/_crm/lista': typeof CrmListaRoute
   '/_crm/negocios': typeof CrmNegociosRoute
+  '/_crm/painel': typeof CrmPainelRoute
   '/_crm/pautas': typeof CrmPautasRoute
+  '/_crm/producoes': typeof CrmProducoesRoute
   '/_crm/publicidade': typeof CrmPublicidadeRoute
   '/_crm/relatorios': typeof CrmRelatoriosRoute
   '/_crm/tarefas': typeof CrmTarefasRoute
@@ -176,8 +203,11 @@ export interface FileRouteTypes {
     | '/audiencia'
     | '/config'
     | '/fila'
+    | '/lista'
     | '/negocios'
+    | '/painel'
     | '/pautas'
+    | '/producoes'
     | '/publicidade'
     | '/relatorios'
     | '/tarefas'
@@ -193,8 +223,11 @@ export interface FileRouteTypes {
     | '/audiencia'
     | '/config'
     | '/fila'
+    | '/lista'
     | '/negocios'
+    | '/painel'
     | '/pautas'
+    | '/producoes'
     | '/publicidade'
     | '/relatorios'
     | '/tarefas'
@@ -212,8 +245,11 @@ export interface FileRouteTypes {
     | '/_crm/audiencia'
     | '/_crm/config'
     | '/_crm/fila'
+    | '/_crm/lista'
     | '/_crm/negocios'
+    | '/_crm/painel'
     | '/_crm/pautas'
+    | '/_crm/producoes'
     | '/_crm/publicidade'
     | '/_crm/relatorios'
     | '/_crm/tarefas'
@@ -277,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmFilaRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/lista': {
+      id: '/_crm/lista'
+      path: '/lista'
+      fullPath: '/lista'
+      preLoaderRoute: typeof CrmListaRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/negocios': {
       id: '/_crm/negocios'
       path: '/negocios'
@@ -284,11 +327,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmNegociosRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/painel': {
+      id: '/_crm/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof CrmPainelRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/pautas': {
       id: '/_crm/pautas'
       path: '/pautas'
       fullPath: '/pautas'
       preLoaderRoute: typeof CrmPautasRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/producoes': {
+      id: '/_crm/producoes'
+      path: '/producoes'
+      fullPath: '/producoes'
+      preLoaderRoute: typeof CrmProducoesRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/publicidade': {
@@ -361,8 +418,11 @@ interface CrmRouteChildren {
   CrmAudienciaRoute: typeof CrmAudienciaRoute
   CrmConfigRoute: typeof CrmConfigRoute
   CrmFilaRoute: typeof CrmFilaRoute
+  CrmListaRoute: typeof CrmListaRoute
   CrmNegociosRoute: typeof CrmNegociosRoute
+  CrmPainelRoute: typeof CrmPainelRoute
   CrmPautasRoute: typeof CrmPautasRoute
+  CrmProducoesRoute: typeof CrmProducoesRoute
   CrmPublicidadeRoute: typeof CrmPublicidadeRoute
   CrmRelatoriosRoute: typeof CrmRelatoriosRoute
   CrmTarefasRoute: typeof CrmTarefasRoute
@@ -377,8 +437,11 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmAudienciaRoute: CrmAudienciaRoute,
   CrmConfigRoute: CrmConfigRoute,
   CrmFilaRoute: CrmFilaRoute,
+  CrmListaRoute: CrmListaRoute,
   CrmNegociosRoute: CrmNegociosRoute,
+  CrmPainelRoute: CrmPainelRoute,
   CrmPautasRoute: CrmPautasRoute,
+  CrmProducoesRoute: CrmProducoesRoute,
   CrmPublicidadeRoute: CrmPublicidadeRoute,
   CrmRelatoriosRoute: CrmRelatoriosRoute,
   CrmTarefasRoute: CrmTarefasRoute,

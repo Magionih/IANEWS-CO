@@ -36,6 +36,7 @@ import { Route as BriefingTokenRouteImport } from './routes/briefing.$token'
 import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
 import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
+import { Route as PreviaTokenRouteImport } from './routes/previa.$token'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
 import { Route as ApiPublicBriefingRouteImport } from './routes/api/public/briefing'
@@ -51,12 +52,14 @@ import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hoo
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksEmailFrioRouteImport } from './routes/api/public/hooks/email-frio'
+import { Route as ApiPublicHooksEnriquecerRouteImport } from './routes/api/public/hooks/enriquecer'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
 import { Route as ApiPublicHooksInstagramRouteImport } from './routes/api/public/hooks/instagram'
 import { Route as ApiPublicHooksInstagramSubscribeRouteImport } from './routes/api/public/hooks/instagram-subscribe'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
 import { Route as ApiPublicHooksPagamentoRouteImport } from './routes/api/public/hooks/pagamento'
 import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
+import { Route as ApiPublicHooksProducaoRouteImport } from './routes/api/public/hooks/producao'
 import { Route as ApiPublicHooksWeeklyRankingRouteImport } from './routes/api/public/hooks/weekly-ranking'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 
@@ -195,6 +198,11 @@ const MateriaSlugRoute = MateriaSlugRouteImport.update({
   path: '/materia/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviaTokenRoute = PreviaTokenRouteImport.update({
+  id: '/previa/$token',
+  path: '/previa/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SCodeRoute = SCodeRouteImport.update({
   id: '/s/$code',
   path: '/s/$code',
@@ -271,6 +279,12 @@ const ApiPublicHooksEmailFrioRoute = ApiPublicHooksEmailFrioRouteImport.update({
   path: '/api/public/hooks/email-frio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksEnriquecerRoute =
+  ApiPublicHooksEnriquecerRouteImport.update({
+    id: '/api/public/hooks/enriquecer',
+    path: '/api/public/hooks/enriquecer',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksIngestNewsRoute =
   ApiPublicHooksIngestNewsRouteImport.update({
     id: '/api/public/hooks/ingest-news',
@@ -302,6 +316,11 @@ const ApiPublicHooksPagamentoRoute = ApiPublicHooksPagamentoRouteImport.update({
 const ApiPublicHooksPingRoute = ApiPublicHooksPingRouteImport.update({
   id: '/api/public/hooks/ping',
   path: '/api/public/hooks/ping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksProducaoRoute = ApiPublicHooksProducaoRouteImport.update({
+  id: '/api/public/hooks/producao',
+  path: '/api/public/hooks/producao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksWeeklyRankingRoute =
@@ -343,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
+  '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/briefing': typeof ApiPublicBriefingRoute
@@ -358,12 +378,14 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
+  '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
+  '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -394,6 +416,7 @@ export interface FileRoutesByTo {
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
+  '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/briefing': typeof ApiPublicBriefingRoute
@@ -409,12 +432,14 @@ export interface FileRoutesByTo {
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
+  '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
+  '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -447,6 +472,7 @@ export interface FileRoutesById {
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/materia/$slug': typeof MateriaSlugRoute
+  '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/briefing': typeof ApiPublicBriefingRoute
@@ -462,12 +488,14 @@ export interface FileRoutesById {
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
+  '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
+  '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
   '/api/public/hooks/weekly-ranking': typeof ApiPublicHooksWeeklyRankingRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -500,6 +528,7 @@ export interface FileRouteTypes {
     | '/categoria/$cat'
     | '/guias/$hub'
     | '/materia/$slug'
+    | '/previa/$token'
     | '/s/$code'
     | '/api/public/ad-metrics'
     | '/api/public/briefing'
@@ -515,12 +544,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
+    | '/api/public/hooks/enriquecer'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
+    | '/api/public/hooks/producao'
     | '/api/public/hooks/weekly-ranking'
     | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
@@ -551,6 +582,7 @@ export interface FileRouteTypes {
     | '/categoria/$cat'
     | '/guias/$hub'
     | '/materia/$slug'
+    | '/previa/$token'
     | '/s/$code'
     | '/api/public/ad-metrics'
     | '/api/public/briefing'
@@ -566,12 +598,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
+    | '/api/public/hooks/enriquecer'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
+    | '/api/public/hooks/producao'
     | '/api/public/hooks/weekly-ranking'
     | '/api/public/hooks/whatsapp'
   id:
@@ -603,6 +637,7 @@ export interface FileRouteTypes {
     | '/categoria/$cat'
     | '/guias/$hub'
     | '/materia/$slug'
+    | '/previa/$token'
     | '/s/$code'
     | '/api/public/ad-metrics'
     | '/api/public/briefing'
@@ -618,12 +653,14 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
+    | '/api/public/hooks/enriquecer'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
+    | '/api/public/hooks/producao'
     | '/api/public/hooks/weekly-ranking'
     | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
@@ -654,6 +691,7 @@ export interface RootRouteChildren {
   CategoriaCatRoute: typeof CategoriaCatRoute
   GuiasHubRoute: typeof GuiasHubRoute
   MateriaSlugRoute: typeof MateriaSlugRoute
+  PreviaTokenRoute: typeof PreviaTokenRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAdMetricsRoute: typeof ApiPublicAdMetricsRoute
   ApiPublicBriefingRoute: typeof ApiPublicBriefingRoute
@@ -669,12 +707,14 @@ export interface RootRouteChildren {
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksEmailFrioRoute: typeof ApiPublicHooksEmailFrioRoute
+  ApiPublicHooksEnriquecerRoute: typeof ApiPublicHooksEnriquecerRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
   ApiPublicHooksInstagramRoute: typeof ApiPublicHooksInstagramRoute
   ApiPublicHooksInstagramSubscribeRoute: typeof ApiPublicHooksInstagramSubscribeRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
   ApiPublicHooksPagamentoRoute: typeof ApiPublicHooksPagamentoRoute
   ApiPublicHooksPingRoute: typeof ApiPublicHooksPingRoute
+  ApiPublicHooksProducaoRoute: typeof ApiPublicHooksProducaoRoute
   ApiPublicHooksWeeklyRankingRoute: typeof ApiPublicHooksWeeklyRankingRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
@@ -870,6 +910,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MateriaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/previa/$token': {
+      id: '/previa/$token'
+      path: '/previa/$token'
+      fullPath: '/previa/$token'
+      preLoaderRoute: typeof PreviaTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$code': {
       id: '/s/$code'
       path: '/s/$code'
@@ -975,6 +1022,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksEmailFrioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/enriquecer': {
+      id: '/api/public/hooks/enriquecer'
+      path: '/api/public/hooks/enriquecer'
+      fullPath: '/api/public/hooks/enriquecer'
+      preLoaderRoute: typeof ApiPublicHooksEnriquecerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/ingest-news': {
       id: '/api/public/hooks/ingest-news'
       path: '/api/public/hooks/ingest-news'
@@ -1015,6 +1069,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/ping'
       fullPath: '/api/public/hooks/ping'
       preLoaderRoute: typeof ApiPublicHooksPingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/producao': {
+      id: '/api/public/hooks/producao'
+      path: '/api/public/hooks/producao'
+      fullPath: '/api/public/hooks/producao'
+      preLoaderRoute: typeof ApiPublicHooksProducaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/weekly-ranking': {
@@ -1074,6 +1135,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriaCatRoute: CategoriaCatRoute,
   GuiasHubRoute: GuiasHubRoute,
   MateriaSlugRoute: MateriaSlugRoute,
+  PreviaTokenRoute: PreviaTokenRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAdMetricsRoute: ApiPublicAdMetricsRoute,
   ApiPublicBriefingRoute: ApiPublicBriefingRoute,
@@ -1089,12 +1151,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksEmailFrioRoute: ApiPublicHooksEmailFrioRoute,
+  ApiPublicHooksEnriquecerRoute: ApiPublicHooksEnriquecerRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
   ApiPublicHooksInstagramRoute: ApiPublicHooksInstagramRoute,
   ApiPublicHooksInstagramSubscribeRoute: ApiPublicHooksInstagramSubscribeRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
   ApiPublicHooksPagamentoRoute: ApiPublicHooksPagamentoRoute,
   ApiPublicHooksPingRoute: ApiPublicHooksPingRoute,
+  ApiPublicHooksProducaoRoute: ApiPublicHooksProducaoRoute,
   ApiPublicHooksWeeklyRankingRoute: ApiPublicHooksWeeklyRankingRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }

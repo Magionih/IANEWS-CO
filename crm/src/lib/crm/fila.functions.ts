@@ -12,7 +12,7 @@ export type FilaItem = {
   id: string;
   dia: string;
   canal: FilaCanal;
-  passo: "D0" | "D3" | "D7" | "D15" | "D21";
+  passo: "D0" | "D3" | "D7" | "D15" | "D21" | "previa" | "data" | "publicado" | "resposta";
   negocio_id: string;
   empresa_id: string | null;
   pessoa_id: string | null;

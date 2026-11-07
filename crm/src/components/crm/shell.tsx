@@ -18,6 +18,9 @@ import {
   Shield,
   Users,
   UsersRound,
+  Clapperboard,
+  Gauge,
+  ListOrdered,
 } from "lucide-react";
 
 import logo from "@/assets/ianews-logo-white.png";
@@ -42,7 +45,9 @@ type Item = {
 
 const MENU: Item[] = [
   { to: "/", rotulo: "Hoje", icone: Home, exato: true },
+  { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
   { to: "/fila", rotulo: "Fila do dia", icone: Send },
+  { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
   { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
   { to: "/empresas", rotulo: "Empresas", icone: Building2 },
   { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
@@ -50,6 +55,7 @@ const MENU: Item[] = [
   { to: "/publicidade", rotulo: "Publicidade", icone: Megaphone },
   { to: "/audiencia", rotulo: "Audiência", icone: Users },
   { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
+  { to: "/painel", rotulo: "Painel", icone: Gauge },
   { to: "/relatorios", rotulo: "Relatórios", icone: BarChart3 },
   { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
 ];
