@@ -10,9 +10,10 @@ alter table public.crm_modelos add column if not exists perfil text check (perfi
 -- Perfil do negócio pela etiqueta "Perfil X · ..."
 create or replace function public.auto_perfil(p_negocio uuid)
 returns text language sql stable set search_path = public as $$
-  select substring(t from '^Perfil ([A-E]) ')
-    from crm_negocios n, unnest(coalesce(n.tags, '{}')) t
-   where n.id = p_negocio and t like 'Perfil _ %'
+  select substring(tg.nome from '^Perfil ([A-E]) ')
+    from crm_negocios n
+    join crm_tags tg on tg.id = any (coalesce(n.tags, '{}'))
+   where n.id = p_negocio and tg.nome like 'Perfil _ %'
    limit 1;
 $$;
 
@@ -108,7 +109,7 @@ begin
        and not exists (select 1 from crm_negocios n join crm_etapas et on et.id = n.etapa_id where n.empresa_id = v_emp and n.ativo and et.tipo = 'aberta') then
       insert into crm_negocios (titulo, funil_id, etapa_id, etapa_desde, empresa_id, pessoa_id, tipo, origem, canal_origem, ativo, tags)
       values ('Radar · ' || v_nome, 'materia', v_etapa, now(), v_emp, v_pes, 'destaque_cortesia', 'radar_externo', 'crm', true,
-              array['Perfil A · Fornecedor de IA'])
+              (select coalesce(array_agg(id), '{}') from crm_tags where nome = 'Perfil A · Fornecedor de IA'))
       returning id into v_neg;
       insert into crm_atividades (tipo, canal, texto, empresa_id, pessoa_id, negocio_id)
       values ('sistema', 'interno', 'Achada pelo radar externo (' || p_segmento || ', ' || p_cidade || '). Fontes: ' || left(coalesce(e->>'fontes', ''), 400), v_emp, v_pes, v_neg);
