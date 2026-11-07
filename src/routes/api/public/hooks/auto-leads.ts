@@ -25,7 +25,14 @@ async function handle(request: Request) {
       tags: string[] | null;
       body_markdown: string | null;
     }[]) {
-      const m = await extrairMencoes(a);
+      let m: Awaited<ReturnType<typeof extrairMencoes>>;
+      try {
+        m = await extrairMencoes(a);
+      } catch (err) {
+        // Uma matéria com falha na IA não derruba as outras; ela volta na próxima rodada.
+        resultado.push({ artigo: a.title, erro: err instanceof Error ? err.message : String(err) });
+        continue;
+      }
       if (!m)
         return Response.json({ ok: false, error: "AI_API_KEY não configurada." }, { status: 500 });
       const { data, error: e2 } = await db.rpc("auto_registrar_pauta", {

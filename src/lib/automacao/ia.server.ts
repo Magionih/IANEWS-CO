@@ -4,6 +4,7 @@
 const AI_BASE_URL =
   process.env.AI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai";
 const FAST_MODEL = process.env.AI_FAST_MODEL ?? "gemini-3.8-flash";
+const FALLBACK_MODEL = process.env.AI_FALLBACK_MODEL ?? "gemini-3.6-flash";
 
 async function chamarIa<T>(
   system: string,
@@ -13,29 +14,50 @@ async function chamarIa<T>(
 ): Promise<T | null> {
   const apiKey = process.env.AI_API_KEY ?? process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
-  try {
-    const res = await fetch(`${AI_BASE_URL.replace(/\/$/, "")}/chat/completions`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: FAST_MODEL,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        response_format: { type: "json_schema", json_schema: { name: nome, strict: true, schema } },
-      }),
-    });
-    if (!res.ok) throw new Error(`IA ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const content = json.choices?.[0]?.message?.content;
-    return content ? (JSON.parse(content) as T) : null;
-  } finally {
-    clearTimeout(timer);
+  let ultimoErro: unknown = null;
+  for (const model of [FAST_MODEL, FALLBACK_MODEL]) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45_000);
+    try {
+      const res = await fetch(`${AI_BASE_URL.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: { name: nome, strict: true, schema },
+          },
+        }),
+      });
+      if (!res.ok) {
+        const texto = (await res.text()).slice(0, 200);
+        // Modelo indisponível ou sobrecarregado: tenta o reserva
+        if ([404, 429, 503].includes(res.status)) {
+          ultimoErro = new Error(`IA ${res.status} (${model}): ${texto}`);
+          continue;
+        }
+        throw new Error(`IA ${res.status}: ${texto}`);
+      }
+      const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const content = json.choices?.[0]?.message?.content;
+      return content ? (JSON.parse(content) as T) : null;
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        ultimoErro = new Error(`IA tempo esgotado (${model})`);
+        continue;
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
   }
+  throw ultimoErro instanceof Error ? ultimoErro : new Error("IA indisponível.");
 }
 
 export type Mencoes = {
