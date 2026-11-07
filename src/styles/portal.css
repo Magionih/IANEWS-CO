@@ -1197,7 +1197,7 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 
 /* Palco v2 · ajustes de 07/11: programação em linha do tempo, seletor nativo no celular, números em linha */
 .pc2-select-wrap{display:none}
-.pc2-select{width:100%;min-height:48px;font-size:16px;appearance:auto}
+.pc2-select{width:100%;min-height:48px;font-size:16px}
 .pc2-tl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;position:relative}
 .pc2-tl::before{content:"";position:absolute;left:0;right:0;top:46px;height:2px;background:linear-gradient(90deg,var(--p-blue),#9CC3FF)}
 .pc2-tl li{position:relative;display:grid;grid-template-rows:auto 26px auto;justify-items:start;gap:8px;padding-right:12px}
