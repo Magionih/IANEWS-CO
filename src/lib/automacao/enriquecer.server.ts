@@ -69,7 +69,8 @@ export async function enriquecerLead(input: {
   cargo: string | null;
   contexto: string | null;
 }): Promise<Enriquecido | null> {
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const { chaveAnthropic } = await import("@/lib/automacao/ia.server");
+  const anthropicKey = chaveAnthropic();
   const apiKey = process.env.AI_API_KEY ?? process.env.GEMINI_API_KEY;
   if (!anthropicKey && !apiKey) return null;
   const prompt = [
