@@ -2,6 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { cronUnauthorized, readJson } from "@/lib/cron-auth.server";
 
+/** Upload com uma repetição: o storage às vezes falha sem mensagem. */
+async function subir(db: any, dest: string, png: Buffer): Promise<void> {
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    const { error } = await db.storage
+      .from("producoes")
+      .upload(dest, png, { contentType: "image/png", upsert: true });
+    if (!error) return;
+    if (tentativa === 2) throw new Error(error.message || "falha no envio da imagem");
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+}
+
 /* Carrossel automático das matérias de notícia: para cada matéria agendada (próximas 48 h) com capa,
    a IA monta as telas e a legenda a partir do próprio texto; as telas viram PNG 1080x1350 e ficam
    prontas no CRM (Produções → Notícias). Com a chave instagram_api_publicar ligada, o post sai pela API
@@ -116,10 +128,9 @@ async function handle(request: Request) {
         for (const [i, t] of telas.entries()) {
           const png = await renderTelaPng(t);
           const dest = `noticias/${a.article_id}/tela-${i + 1}.png`;
-          const { error: e3 } = await db.storage
-            .from("producoes")
-            .upload(dest, png, { contentType: "image/png", upsert: true });
-          if (e3) throw new Error(`Tela ${i + 1}: ${e3.message}`);
+          await subir(db, dest, png).catch((e) => {
+            throw new Error(`Tela ${i + 1}: ${e instanceof Error ? e.message : e}`);
+          });
           urls.push(db.storage.from("producoes").getPublicUrl(dest).data.publicUrl);
         }
         const { error: e4 } = await db.rpc("auto_carrossel_salvar", {

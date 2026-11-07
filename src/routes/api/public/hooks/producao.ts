@@ -2,6 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { cronUnauthorized, readJson } from "@/lib/cron-auth.server";
 
+/** Upload com uma repetição: o storage às vezes falha sem mensagem. */
+async function subir(db: any, dest: string, png: Buffer): Promise<void> {
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    const { error } = await db.storage
+      .from("producoes")
+      .upload(dest, png, { contentType: "image/png", upsert: true });
+    if (!error) return;
+    if (tentativa === 2) throw new Error(error.message || "falha no envio da imagem");
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+}
+
 /* Esteira de produção do destaque: para cada briefing enviado (ou com ajuste pedido), a IA escreve a
    matéria, a legenda e as telas; as fotos do briefing viram capa e imagens públicas; as telas viram PNG;
    o banco grava a prévia e avisa o lead. Depois, envia pelo WhatsApp os avisos automáticos pendentes. */
@@ -137,10 +149,9 @@ async function handle(request: Request) {
         for (const [i, t] of telas.entries()) {
           const png = await renderTelaPng(t);
           const dest = `${producaoId}/v${p.versao + 1}-tela-${i + 1}.png`;
-          const { error: e3 } = await db.storage
-            .from("producoes")
-            .upload(dest, png, { contentType: "image/png", upsert: true });
-          if (e3) throw new Error(`Tela ${i + 1}: ${e3.message}`);
+          await subir(db, dest, png).catch((e) => {
+            throw new Error(`Tela ${i + 1}: ${e instanceof Error ? e.message : e}`);
+          });
           urls.push(db.storage.from("producoes").getPublicUrl(dest).data.publicUrl);
         }
         const { data: salvo, error: e4 } = await db.rpc("auto_producao_salvar", {

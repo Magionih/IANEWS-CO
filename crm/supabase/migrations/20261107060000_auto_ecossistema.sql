@@ -635,3 +635,17 @@ begin
     (select jsonb_object_agg(bloco, n) from (select bloco, count(*) n from auto_lista_diaria where dia = v_dia group by bloco) b));
 end $$;
 
+
+-- Carrossel que falhou volta a ser candidato depois de 1 hora
+create or replace function public.auto_carrosseis_pendentes(p_limite integer default 3)
+returns table (article_id uuid, slug text, title text, dek text, body_markdown text, category text, cover_image_url text, tags text[], published_at timestamptz, sources jsonb)
+language sql stable security definer set search_path = public as $$
+  select a.id, a.slug, a.title, a.dek, a.body_markdown, a.category, a.cover_image_url, a.tags, a.published_at, a.sources
+    from articles a
+   where a.status = 'published' and a.published_at > now() and a.published_at < now() + interval '48 hours'
+     and a.cover_image_url like '%/storage/v1/object/public/covers/%'
+     and not exists (select 1 from auto_carrosseis c where c.article_id = a.id and (c.status <> 'falhou' or c.updated_at > now() - interval '1 hour'))
+     and not exists (select 1 from auto_producoes p where p.article_id = a.id)
+   order by a.published_at
+   limit greatest(1, least(p_limite, 10));
+$$;
