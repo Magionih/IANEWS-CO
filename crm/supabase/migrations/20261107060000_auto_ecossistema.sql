@@ -64,7 +64,7 @@ returns table (segmento text, cidade text) language sql stable security definer 
   select p.segmento, p.cidade
     from pares p
     left join lateral (select max(created_at) ultimo, count(*) n from auto_radar_rodadas r where r.segmento = p.segmento and r.cidade = p.cidade) r on true
-   order by r.n nulls first, r.ultimo nulls first, p.so, p.co
+   order by r.n nulls first, r.ultimo nulls first, p.co, p.so
    limit 1;
 $$;
 
