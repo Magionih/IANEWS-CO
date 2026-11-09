@@ -1,4 +1,5 @@
 import { isValidElement, type ReactNode } from "react";
+import { trackCta } from "@/lib/cta-tracking";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -398,6 +399,21 @@ function ArticlePage() {
                   search={{ utm_source: "site", utm_medium: "materia", utm_campaign: "pauta", materia: article.slug }}
                 >
                   Envie sua pauta
+                </Link>
+              </aside>
+
+              <aside className="art-pauta art-projeto" aria-label="Balcão de Projetos IA News">
+                <p>
+                  Quer fazer isso na sua empresa?
+                  <small>Conte o que você quer resolver. A IA News apresenta especialistas que já fizeram projetos parecidos, sem custo para você.</small>
+                </p>
+                <Link
+                  className="btn blue"
+                  to="/projetos"
+                  search={{ materia: article.slug }}
+                  onClick={() => trackCta({ event: "click", placement: "materia-projeto", articleSlug: article.slug })}
+                >
+                  Quero fazer isso
                 </Link>
               </aside>
 

@@ -1229,3 +1229,60 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
   .pc2-proof-row span{font-size:11.5px;line-height:1.3}
   .pc2-who img{max-height:320px}
 }
+
+/* Inscrições (09/11): /lista100, /aula, /conselho, /projetos — peças sobre a base do /palco (pc2) */
+.ins-modo{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--p-soft,#F4F6F9);border-radius:10px;padding:4px;margin:0 0 14px}
+.ins-modo button{min-height:42px;border:0;border-radius:8px;background:none;font-weight:700;font-size:14px;color:var(--p-ink-2);cursor:pointer}
+.ins-modo button.on{background:#fff;color:var(--p-blue-ink);box-shadow:0 1px 4px rgba(11,14,19,.12)}
+.ins-dica{display:block;font-size:12.5px;color:var(--p-ink-3);margin:-2px 0 4px}
+.ins-conta{display:block;text-align:right;font-size:12px;color:var(--p-ink-3)}
+.ins-vazio{visibility:hidden}
+.ins-pills-1{grid-template-columns:1fr}
+.ins-ind{border:0;margin:0;padding:0;display:grid;gap:10px}
+.ins-ind-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ins-ind-row .pt-err{grid-column:1/-1}
+.ins-mais{justify-self:start;border:0;background:none;color:var(--p-blue-ink);font-weight:700;font-size:14px;cursor:pointer;padding:4px 0}
+.ins-canal{margin-top:10px;padding:14px 16px;border-radius:10px;background:var(--p-blue-soft);display:grid;gap:10px;justify-items:start}
+.ins-canal p{margin:0;font-size:14.5px;color:var(--p-ink-2)}
+.ins-slots{border:0;margin:0;padding:0;display:grid;gap:10px}
+.ins-dias{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.ins-dias button{flex:0 0 auto;min-height:40px;padding:0 12px;border:1px solid var(--p-rule);border-radius:8px;background:#fff;font-weight:700;font-size:13.5px;color:var(--p-ink-2);cursor:pointer;text-transform:capitalize}
+.ins-dias button.on{border-color:var(--p-blue);background:var(--p-blue-soft);color:var(--p-blue-ink)}
+.ins-horas{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
+.ins-horas button{min-height:40px;border:1px solid var(--p-rule);border-radius:8px;background:#fff;font-weight:700;font-size:14px;color:var(--p-ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.ins-horas button.on{border-color:var(--p-blue);background:var(--p-blue);color:#fff}
+.ins-escolhido{margin:0;font-size:13.5px;color:var(--p-ink-2)}
+.ins-passos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.ins-passos li{border:1px solid var(--p-rule);border-radius:12px;padding:18px;display:grid;gap:6px;align-content:start}
+.ins-passos span{width:32px;height:32px;border-radius:50%;background:var(--p-blue);color:#fff;display:grid;place-items:center;font-weight:900}
+.ins-passos b{font-size:16.5px}
+.ins-passos p{margin:0;color:var(--p-ink-2);font-size:14.5px;line-height:1.45}
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.ins-tile{border:1px solid var(--p-rule);border-radius:12px;padding:18px 20px;background:#fff}
+.ins-tile h3{font-size:17px;font-weight:900;letter-spacing:-.01em;margin:0 0 6px}
+.ins-tile p{margin:0;color:var(--p-ink-2);font-size:14.5px;line-height:1.5}
+.ins-doc{max-width:820px;padding-top:48px;padding-bottom:64px}
+.ins-doc section{margin-top:40px}
+.ins-doc h2{font-size:24px;font-weight:900;letter-spacing:-.015em;margin:0 0 12px}
+.ins-doc p{color:var(--p-ink-2);line-height:1.6}
+.ins-lead{font-size:18px}
+.ins-crit{margin:0;padding-left:22px;display:grid;gap:10px;color:var(--p-ink-2);line-height:1.55}
+.ins-crit b{color:var(--p-ink)}
+.ins-juri{list-style:none;margin:14px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.ins-juri li{border:1px solid var(--p-rule);border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.ins-juri span{font-size:13.5px;color:var(--p-ink-3)}
+.ins-datas{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ins-datas li{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:baseline;border-bottom:1px solid var(--p-rule);padding:8px 0}
+.ins-datas time{font-weight:900;color:var(--p-blue-ink);font-variant-numeric:tabular-nums}
+.ins-cta{margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;color:var(--p-ink-3);font-size:14px}
+.art-projeto{background:#0B0E13;border-color:#0B0E13}
+.art-projeto p{color:#fff}
+.art-projeto small{color:#C9CFD8}
+@media (max-width:960px){.ins-passos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){
+  .ins-passos{grid-template-columns:1fr}
+  .ins-ind-row{grid-template-columns:1fr}
+  .ins-vazio{display:none}
+  .ins-datas li{grid-template-columns:1fr;gap:2px}
+}
+.pc2-hero h1.ins-h1-longo{font-size:clamp(34px,4.8vw,62px);line-height:1.02}

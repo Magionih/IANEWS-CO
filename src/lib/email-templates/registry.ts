@@ -8,6 +8,8 @@ import { template as pautaNotificationTemplate } from './pauta-notification'
 import { template as pautaConfirmationTemplate } from './pauta-confirmation'
 import { template as palcoNotificationTemplate } from './palco-notification'
 import { template as palcoConfirmationTemplate } from './palco-confirmation'
+import { template as inscricaoConfirmationTemplate } from './inscricao-confirmation'
+import { template as inscricaoNotificationTemplate } from './inscricao-notification'
 
 
 export interface TemplateEntry {
@@ -37,5 +39,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'pauta-confirmation': pautaConfirmationTemplate,
   'palco-notification': palcoNotificationTemplate,
   'palco-confirmation': palcoConfirmationTemplate,
+  'inscricao-confirmation': inscricaoConfirmationTemplate,
+  'inscricao-notification': inscricaoNotificationTemplate,
 }
 

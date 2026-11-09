@@ -13,19 +13,23 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AnuncieRouteImport } from './routes/anuncie'
 import { Route as AssinarRouteImport } from './routes/assinar'
+import { Route as AulaRouteImport } from './routes/aula'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
+import { Route as ConselhoRouteImport } from './routes/conselho'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as EdicaoRouteImport } from './routes/edicao'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as GenteRouteImport } from './routes/gente'
 import { Route as LinksRouteImport } from './routes/links'
+import { Route as Lista100RouteImport } from './routes/lista100'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
 import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as PalcoRouteImport } from './routes/palco'
 import { Route as PautaRouteImport } from './routes/pauta'
+import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SobreRouteImport } from './routes/sobre'
@@ -36,6 +40,7 @@ import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './
 import { Route as BriefingTokenRouteImport } from './routes/briefing.$token'
 import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
+import { Route as Lista100CriteriosRouteImport } from './routes/lista100_.criterios'
 import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
 import { Route as PreviaTokenRouteImport } from './routes/previa.$token'
 import { Route as SCodeRouteImport } from './routes/s.$code'
@@ -44,6 +49,7 @@ import { Route as ApiPublicBriefingRouteImport } from './routes/api/public/brief
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicInscricaoRouteImport } from './routes/api/public/inscricao'
 import { Route as ApiPublicPalcoRouteImport } from './routes/api/public/palco'
 import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
@@ -88,6 +94,11 @@ const AssinarRoute = AssinarRouteImport.update({
   path: '/assinar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AulaRoute = AulaRouteImport.update({
+  id: '/aula',
+  path: '/aula',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -101,6 +112,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const ConfirmarRoute = ConfirmarRouteImport.update({
   id: '/confirmar',
   path: '/confirmar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConselhoRoute = ConselhoRouteImport.update({
+  id: '/conselho',
+  path: '/conselho',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContatoRoute = ContatoRouteImport.update({
@@ -133,6 +149,11 @@ const LinksRoute = LinksRouteImport.update({
   path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Lista100Route = Lista100RouteImport.update({
+  id: '/lista100',
+  path: '/lista100',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsletterRoute = NewsletterRouteImport.update({
   id: '/newsletter',
   path: '/newsletter',
@@ -151,6 +172,11 @@ const PalcoRoute = PalcoRouteImport.update({
 const PautaRoute = PautaRouteImport.update({
   id: '/pauta',
   path: '/pauta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RankingRoute = RankingRouteImport.update({
@@ -204,6 +230,11 @@ const GuiasHubRoute = GuiasHubRouteImport.update({
   path: '/guias/$hub',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Lista100CriteriosRoute = Lista100CriteriosRouteImport.update({
+  id: '/lista100_/criterios',
+  path: '/lista100/criterios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MateriaSlugRoute = MateriaSlugRouteImport.update({
   id: '/materia/$slug',
   path: '/materia/$slug',
@@ -242,6 +273,11 @@ const ApiPublicEngagementRoute = ApiPublicEngagementRouteImport.update({
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicInscricaoRoute = ApiPublicInscricaoRouteImport.update({
+  id: '/api/public/inscricao',
+  path: '/api/public/inscricao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPalcoRoute = ApiPublicPalcoRouteImport.update({
@@ -379,19 +415,23 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anuncie': typeof AnuncieRoute
   '/assinar': typeof AssinarRoute
+  '/aula': typeof AulaRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
+  '/conselho': typeof ConselhoRoute
   '/contato': typeof ContatoRoute
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
+  '/lista100': typeof Lista100Route
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
+  '/projetos': typeof ProjetosRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -402,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
+  '/lista100/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
@@ -410,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
@@ -439,19 +481,23 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anuncie': typeof AnuncieRoute
   '/assinar': typeof AssinarRoute
+  '/aula': typeof AulaRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
+  '/conselho': typeof ConselhoRoute
   '/contato': typeof ContatoRoute
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
+  '/lista100': typeof Lista100Route
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
+  '/projetos': typeof ProjetosRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -462,6 +508,7 @@ export interface FileRoutesByTo {
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
+  '/lista100/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
@@ -470,6 +517,7 @@ export interface FileRoutesByTo {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
@@ -501,19 +549,23 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/anuncie': typeof AnuncieRoute
   '/assinar': typeof AssinarRoute
+  '/aula': typeof AulaRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/confirmar': typeof ConfirmarRoute
+  '/conselho': typeof ConselhoRoute
   '/contato': typeof ContatoRoute
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
+  '/lista100': typeof Lista100Route
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
+  '/projetos': typeof ProjetosRoute
   '/ranking': typeof RankingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -524,6 +576,7 @@ export interface FileRoutesById {
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
+  '/lista100_/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
@@ -532,6 +585,7 @@ export interface FileRoutesById {
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
@@ -563,19 +617,23 @@ export interface FileRouteTypes {
     | '/'
     | '/anuncie'
     | '/assinar'
+    | '/aula'
     | '/auth'
     | '/cadastro'
     | '/confirmar'
+    | '/conselho'
     | '/contato'
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
     | '/gente'
     | '/links'
+    | '/lista100'
     | '/newsletter'
     | '/noticias'
     | '/palco'
     | '/pauta'
+    | '/projetos'
     | '/ranking'
     | '/sitemap.xml'
     | '/sobre'
@@ -586,6 +644,7 @@ export interface FileRouteTypes {
     | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
+    | '/lista100/criterios'
     | '/materia/$slug'
     | '/previa/$token'
     | '/s/$code'
@@ -594,6 +653,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/inscricao'
     | '/api/public/palco'
     | '/api/public/pauta'
     | '/api/public/track'
@@ -623,19 +683,23 @@ export interface FileRouteTypes {
     | '/'
     | '/anuncie'
     | '/assinar'
+    | '/aula'
     | '/auth'
     | '/cadastro'
     | '/confirmar'
+    | '/conselho'
     | '/contato'
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
     | '/gente'
     | '/links'
+    | '/lista100'
     | '/newsletter'
     | '/noticias'
     | '/palco'
     | '/pauta'
+    | '/projetos'
     | '/ranking'
     | '/sitemap.xml'
     | '/sobre'
@@ -646,6 +710,7 @@ export interface FileRouteTypes {
     | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
+    | '/lista100/criterios'
     | '/materia/$slug'
     | '/previa/$token'
     | '/s/$code'
@@ -654,6 +719,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/inscricao'
     | '/api/public/palco'
     | '/api/public/pauta'
     | '/api/public/track'
@@ -684,19 +750,23 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/anuncie'
     | '/assinar'
+    | '/aula'
     | '/auth'
     | '/cadastro'
     | '/confirmar'
+    | '/conselho'
     | '/contato'
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
     | '/gente'
     | '/links'
+    | '/lista100'
     | '/newsletter'
     | '/noticias'
     | '/palco'
     | '/pauta'
+    | '/projetos'
     | '/ranking'
     | '/sitemap.xml'
     | '/sobre'
@@ -707,6 +777,7 @@ export interface FileRouteTypes {
     | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
+    | '/lista100_/criterios'
     | '/materia/$slug'
     | '/previa/$token'
     | '/s/$code'
@@ -715,6 +786,7 @@ export interface FileRouteTypes {
     | '/api/public/cta'
     | '/api/public/engagement'
     | '/api/public/health'
+    | '/api/public/inscricao'
     | '/api/public/palco'
     | '/api/public/pauta'
     | '/api/public/track'
@@ -746,19 +818,23 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AnuncieRoute: typeof AnuncieRoute
   AssinarRoute: typeof AssinarRoute
+  AulaRoute: typeof AulaRoute
   AuthRoute: typeof AuthRoute
   CadastroRoute: typeof CadastroRoute
   ConfirmarRoute: typeof ConfirmarRoute
+  ConselhoRoute: typeof ConselhoRoute
   ContatoRoute: typeof ContatoRoute
   DescadastrarRoute: typeof DescadastrarRoute
   EdicaoRoute: typeof EdicaoRoute
   EmpresasRoute: typeof EmpresasRoute
   GenteRoute: typeof GenteRoute
   LinksRoute: typeof LinksRoute
+  Lista100Route: typeof Lista100Route
   NewsletterRoute: typeof NewsletterRoute
   NoticiasRoute: typeof NoticiasRoute
   PalcoRoute: typeof PalcoRoute
   PautaRoute: typeof PautaRoute
+  ProjetosRoute: typeof ProjetosRoute
   RankingRoute: typeof RankingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
@@ -767,6 +843,7 @@ export interface RootRouteChildren {
   BriefingTokenRoute: typeof BriefingTokenRoute
   CategoriaCatRoute: typeof CategoriaCatRoute
   GuiasHubRoute: typeof GuiasHubRoute
+  Lista100CriteriosRoute: typeof Lista100CriteriosRoute
   MateriaSlugRoute: typeof MateriaSlugRoute
   PreviaTokenRoute: typeof PreviaTokenRoute
   SCodeRoute: typeof SCodeRoute
@@ -775,6 +852,7 @@ export interface RootRouteChildren {
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicInscricaoRoute: typeof ApiPublicInscricaoRoute
   ApiPublicPalcoRoute: typeof ApiPublicPalcoRoute
   ApiPublicPautaRoute: typeof ApiPublicPautaRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
@@ -831,6 +909,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssinarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aula': {
+      id: '/aula'
+      path: '/aula'
+      fullPath: '/aula'
+      preLoaderRoute: typeof AulaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -850,6 +935,13 @@ declare module '@tanstack/react-router' {
       path: '/confirmar'
       fullPath: '/confirmar'
       preLoaderRoute: typeof ConfirmarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conselho': {
+      id: '/conselho'
+      path: '/conselho'
+      fullPath: '/conselho'
+      preLoaderRoute: typeof ConselhoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contato': {
@@ -894,6 +986,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lista100': {
+      id: '/lista100'
+      path: '/lista100'
+      fullPath: '/lista100'
+      preLoaderRoute: typeof Lista100RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/newsletter': {
       id: '/newsletter'
       path: '/newsletter'
@@ -920,6 +1019,13 @@ declare module '@tanstack/react-router' {
       path: '/pauta'
       fullPath: '/pauta'
       preLoaderRoute: typeof PautaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ranking': {
@@ -992,6 +1098,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuiasHubRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lista100_/criterios': {
+      id: '/lista100_/criterios'
+      path: '/lista100/criterios'
+      fullPath: '/lista100/criterios'
+      preLoaderRoute: typeof Lista100CriteriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/materia/$slug': {
       id: '/materia/$slug'
       path: '/materia/$slug'
@@ -1046,6 +1159,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/inscricao': {
+      id: '/api/public/inscricao'
+      path: '/api/public/inscricao'
+      fullPath: '/api/public/inscricao'
+      preLoaderRoute: typeof ApiPublicInscricaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/palco': {
@@ -1237,19 +1357,23 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AnuncieRoute: AnuncieRoute,
   AssinarRoute: AssinarRoute,
+  AulaRoute: AulaRoute,
   AuthRoute: AuthRoute,
   CadastroRoute: CadastroRoute,
   ConfirmarRoute: ConfirmarRoute,
+  ConselhoRoute: ConselhoRoute,
   ContatoRoute: ContatoRoute,
   DescadastrarRoute: DescadastrarRoute,
   EdicaoRoute: EdicaoRoute,
   EmpresasRoute: EmpresasRoute,
   GenteRoute: GenteRoute,
   LinksRoute: LinksRoute,
+  Lista100Route: Lista100Route,
   NewsletterRoute: NewsletterRoute,
   NoticiasRoute: NoticiasRoute,
   PalcoRoute: PalcoRoute,
   PautaRoute: PautaRoute,
+  ProjetosRoute: ProjetosRoute,
   RankingRoute: RankingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
@@ -1259,6 +1383,7 @@ const rootRouteChildren: RootRouteChildren = {
   BriefingTokenRoute: BriefingTokenRoute,
   CategoriaCatRoute: CategoriaCatRoute,
   GuiasHubRoute: GuiasHubRoute,
+  Lista100CriteriosRoute: Lista100CriteriosRoute,
   MateriaSlugRoute: MateriaSlugRoute,
   PreviaTokenRoute: PreviaTokenRoute,
   SCodeRoute: SCodeRoute,
@@ -1267,6 +1392,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicInscricaoRoute: ApiPublicInscricaoRoute,
   ApiPublicPalcoRoute: ApiPublicPalcoRoute,
   ApiPublicPautaRoute: ApiPublicPautaRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
