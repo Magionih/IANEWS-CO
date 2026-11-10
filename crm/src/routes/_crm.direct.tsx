@@ -22,7 +22,7 @@ const NOME_FLUXO: Record<string, string> = {
   radar: "Radar do setor",
   lista: "Lista 100",
   aula: "Aula ao vivo",
-  palco: "Palco 16/12",
+  palco: "Palco Online 16/12",
   conselho: "Conselho",
   projeto: "Balcão de Projetos",
   anunciar: "Publicidade",

@@ -3,7 +3,7 @@ import { Link, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import { C, CtaButton, Shell, SITE, s } from './layout'
 
-/* Confirmação para quem entrou na lista antecipada do Palco IA News. Sem preço: o 1º lote chega depois. */
+/* Confirmação da inscrição no Palco IA News Online (16/12, 19h, R$ 97). O link de pagamento segue pelo WhatsApp. */
 
 interface Props {
   nome?: string
@@ -12,17 +12,19 @@ interface Props {
 const first = (n?: string) => (n ?? '').trim().split(/\s+/)[0] || 'tudo bem'
 
 const Email = (p: Props) => (
-  <Shell preview="Seu nome está na lista do Palco IA News, dia 16/12, em Belo Horizonte.">
-    <Text style={s.kick}>Palco IA News · 16/12 · Belo Horizonte</Text>
-    <Text style={s.h1}>Seu nome está na lista</Text>
+  <Shell preview="Sua inscrição no Palco IA News Online, dia 16/12, às 19h, foi recebida.">
+    <Text style={s.kick}>Palco IA News Online · 16/12 · 19h às 20h30</Text>
+    <Text style={s.h1}>Inscrição recebida</Text>
     <Text style={s.p}>Olá, {first(p.nome)}.</Text>
     <Text style={s.p}>
-      Obrigada por entrar na lista antecipada do Palco IA News: uma tarde, no dia 16 de dezembro, em Belo Horizonte,
-      em que só sobe ao palco quem já colocou IA para trabalhar numa empresa.
+      Obrigada por se inscrever no Palco IA News Online: um workshop ao vivo de 1h30, no dia 16 de dezembro, às 19h,
+      com o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, três cases com números e o Playbook IA
+      2027.
     </Text>
     <Text style={s.p}>
-      Quando o 1º lote abrir, você recebe o aviso antes de todo mundo, pelo WhatsApp e por aqui. O local e a programação
-      completa saem junto.
+      O ingresso é R$ 97 e inclui a gravação por 30 dias. O link de pagamento chega pelo WhatsApp e por aqui, e o link
+      de acesso vai na véspera e 2 horas antes do início. Esse valor ainda vira desconto no Palco presencial, em Belo
+      Horizonte, em fevereiro de 2027.
     </Text>
     <CtaButton href={`${SITE}/palco`}>Ver a página do evento</CtaButton>
     <Text style={{ ...s.p, marginTop: '18px' }}>Renata, da IA News</Text>
@@ -38,7 +40,7 @@ const Email = (p: Props) => (
 
 export const template = {
   component: Email,
-  subject: 'Seu nome está na lista do Palco IA News',
-  displayName: 'Confirmação da lista antecipada do Palco IA News',
+  subject: 'Sua inscrição no Palco IA News Online (16/12, 19h)',
+  displayName: 'Confirmação de inscrição no Palco IA News Online',
   previewData: { nome: 'Ana Souza' },
 } satisfies TemplateEntry

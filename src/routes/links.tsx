@@ -121,8 +121,8 @@ function LinksPage() {
             onClick={click("palco")}
           >
             <span>
-              <b>Palco IA News · 16/12 em Belo Horizonte</b>
-              <small>Empresários que já colocaram IA para trabalhar contam como fizeram. Entre na lista antecipada.</small>
+              <b>Palco IA News Online · 16/12, às 19h</b>
+              <small>Workshop ao vivo: o Raio-X da IA nas empresas brasileiras em 2026, três cases e o Playbook IA 2027. R$ 97.</small>
             </span>
             <Arrow />
           </Link>

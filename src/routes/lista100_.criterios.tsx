@@ -39,7 +39,7 @@ const DATAS = [
   { d: "Até 07/12", t: "Candidaturas e indicações abertas" },
   { d: LISTA.avaliacao, t: "Avaliação da redação e do júri" },
   { d: "Até 12/12", t: "Aviso aos escolhidos, em sigilo" },
-  { d: LISTA.anuncio, t: "Anúncio no Palco IA News, em Belo Horizonte" },
+  { d: LISTA.anuncio, t: "Anúncio ao vivo no Palco IA News Online" },
   { d: "17/12", t: "Matéria especial no site e posts com cada escolhido" },
 ];
 

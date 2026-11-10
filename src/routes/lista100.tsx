@@ -21,7 +21,7 @@ import { CATEGORIAS_LISTA, CONTATO, LISTA, MAX } from "@/lib/inscricao";
 const PAGE_URL = "https://ianewsbr.com/lista100";
 const TITLE = "Lista IA News 100 · Quem faz IA no Brasil | IA News";
 const DESCRIPTION =
-  "Os 100 nomes que estão fazendo IA de verdade nos negócios no Brasil. Candidaturas e indicações gratuitas até 07/12. Anúncio no Palco IA News, em 16/12.";
+  "Os 100 nomes que estão fazendo IA de verdade nos negócios no Brasil. Candidaturas e indicações gratuitas até 07/12. Anúncio ao vivo no Palco IA News Online, em 16/12.";
 
 export const Route = createFileRoute("/lista100")({
   head: () => ({
@@ -44,15 +44,15 @@ const IMG = (id: number, w: number) =>
 
 const FACTS = [
   { label: "Inscrições", value: `Até ${LISTA.fecha}` },
-  { label: "Anúncio", value: `${LISTA.anuncio}, no Palco IA News` },
+  { label: "Anúncio", value: `${LISTA.anuncio}, ao vivo e online` },
   { label: "Custo", value: "Nenhum, em nenhuma etapa" },
 ];
 
 const PASSOS = [
   { n: "1", t: "Candidatura ou indicação", d: `Qualquer pessoa pode se candidatar ou indicar alguém até ${LISTA.fecha}.` },
   { n: "2", t: "Avaliação", d: `A redação e o júri leem cada caso de ${LISTA.avaliacao}. Vale o que a IA já entrega, com resultado.` },
-  { n: "3", t: "Aviso", d: "Os escolhidos recebem o aviso antes, em sigilo, com o convite para o Palco." },
-  { n: "4", t: "Anúncio", d: `A lista sai no Palco IA News, em ${LISTA.anuncio}, em Belo Horizonte, e no dia seguinte no site.` },
+  { n: "3", t: "Aviso", d: "Os escolhidos recebem o aviso antes, em sigilo, com o convite para o Palco IA News Online." },
+  { n: "4", t: "Anúncio", d: `A lista sai ao vivo no Palco IA News Online, em ${LISTA.anuncio}, às 19h, e no dia seguinte no site.` },
 ];
 
 const FAQ = [

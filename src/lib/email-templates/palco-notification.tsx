@@ -3,7 +3,7 @@ import { Link, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import { C, CtaButton, Shell, s } from './layout'
 
-/* Aviso interno: nova inscrição na lista antecipada do Palco IA News (/palco). O CRM já recebeu a pessoa. */
+/* Aviso interno: nova inscrição no Palco IA News Online (/palco). O CRM já recebeu a pessoa. */
 
 interface Props {
   nome?: string
@@ -73,7 +73,7 @@ const Email = (p: Props) => {
       <Row label="UTM" value={utm || 'sem UTM (acesso direto)'} />
       <Row label="Dispositivo" value={p.device} />
       <Text style={{ ...s.small, marginTop: '10px' }}>
-        A pessoa já está no CRM, no funil "Palco IA News · BH 16/12", na etapa Na lista.
+        A pessoa já está no CRM, no funil "Palco IA News Online · 16/12", na etapa Na lista. Próximo passo: enviar o link de pagamento (R$ 97).
       </Text>
       <CtaButton href="https://ianews-crm.vercel.app/lista">Abrir a lista do dia</CtaButton>
     </Shell>

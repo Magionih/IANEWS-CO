@@ -23,7 +23,7 @@ export const PAPEIS: { value: PalcoPapel; label: string; hint: string }[] = [
   { value: "empresario", label: "Empresário", hint: "Quero colocar IA para trabalhar na minha empresa" },
   { value: "fornecedor", label: "Fornecedor de IA", hint: "Vendo soluções, agentes ou consultoria de IA" },
   { value: "criador", label: "Criador ou educador", hint: "Ensino ou produzo conteúdo sobre IA" },
-  { value: "marca", label: "Empresa ou marca", hint: "Quero expor ou patrocinar o evento" },
+  { value: "marca", label: "Empresa ou marca", hint: "Quero patrocinar o evento" },
 ];
 
 export const SETORES = [

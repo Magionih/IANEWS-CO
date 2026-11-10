@@ -41,7 +41,7 @@ const TEXTO: Record<string, { kick: string; h1: string; corpo: (p: Props) => str
     h1: 'Recebemos sua candidatura',
     corpo: (p) => [
       'Obrigada por se candidatar à Lista IA News 100: os 100 nomes que estão fazendo IA de verdade nos negócios no Brasil.',
-      'O júri avalia as candidaturas de 08 a 12/12, e quem for escolhido recebe o aviso antes do anúncio, que acontece no Palco IA News, em 16/12. Não se paga nada para entrar, em nenhuma etapa.',
+      'O júri avalia as candidaturas de 08 a 12/12, e quem for escolhido recebe o aviso antes do anúncio, que acontece ao vivo no Palco IA News Online, em 16/12, às 19h. Não se paga nada para entrar, em nenhuma etapa.',
       ...(p.indicados ? [`Recebemos também ${p.indicados === 1 ? 'a sua indicação' : `as suas ${p.indicados} indicações`}. Vamos convidar cada pessoa e contar que foi você quem indicou.`] : []),
     ],
     cta: { href: `${SITE}/lista100/criterios`, label: 'Ver os critérios da Lista' },

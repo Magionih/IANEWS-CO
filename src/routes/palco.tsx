@@ -14,13 +14,14 @@ import {
   type PalcoInput,
 } from "@/lib/palco-validate";
 
-/* Palco IA News · 16/12 · Belo Horizonte. Lista antecipada: sem preço e sem local até a abertura do 1º lote.
+/* Palco IA News Online · 16/12, 19h às 20h30, ao vivo. Ingresso de R$ 97 (o link de pagamento vai por WhatsApp e
+   e-mail depois da inscrição). O presencial em Belo Horizonte ficou para fevereiro de 2027.
    A inscrição vai para /api/public/palco e cai sozinha no CRM. */
 
 const PAGE_URL = "https://ianewsbr.com/palco";
-const TITLE = "Palco IA News · 16 de dezembro em Belo Horizonte | IA News";
+const TITLE = "Palco IA News Online · 16 de dezembro, ao vivo | IA News";
 const DESCRIPTION =
-  "Uma tarde em que só sobe ao palco quem já colocou IA para trabalhar numa empresa. 16/12, em Belo Horizonte. Entre na lista antecipada.";
+  "Workshop online e ao vivo, em 16/12, às 19h: o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, três cases com números e o Playbook IA 2027. Ingresso de R$ 97.";
 
 type PalcoSearch = { utm_source?: string; utm_medium?: string; utm_campaign?: string };
 
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/palco")({
     meta: [
       { title: TITLE },
       { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: "Palco IA News · Quem faz, ensina" },
+      { property: "og:title", content: "Palco IA News Online · Raio-X 2026 da IA nas empresas" },
       { property: "og:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
       { property: "og:url", content: PAGE_URL },
@@ -50,56 +51,60 @@ export const Route = createFileRoute("/palco")({
 const IMG = (id: number, w: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
 
-const EVENT_START = new Date("2026-12-16T14:00:00-03:00").getTime();
+const EVENT_START = new Date("2026-12-16T19:00:00-03:00").getTime();
 
 const FACTS = [
-  { label: "Quando", value: "16 de dezembro · 14h às 20h" },
-  { label: "Onde", value: "Belo Horizonte" },
-  { label: "Lugares", value: "Limitados" },
+  { label: "Quando", value: "16 de dezembro · 19h às 20h30" },
+  { label: "Onde", value: "Online e ao vivo" },
+  { label: "Ingresso", value: "R$ 97" },
 ];
 
 const PROVAS = [
-  { n: "100 mil+", t: "seguidores da IA News no Instagram" },
-  { n: "170+", t: "matérias sobre IA nas empresas" },
+  { n: "108 mil", t: "seguidores da IA News no Instagram" },
+  { n: "320+", t: "matérias sobre IA nas empresas" },
   { n: "7h", t: "newsletter diária para quem decide" },
 ];
 
 const LEVA = [
   {
-    t: "Cases com números",
-    d: "Empresários que viraram destaque na IA News mostram o que funcionou e o que não funcionou.",
+    t: "Raio-X IA News 2026",
+    d: "O que as empresas brasileiras fizeram com IA este ano, a partir das matérias e da base da IA News: setores, usos e o que virou resultado.",
     img: 9275222,
   },
   {
-    t: "Mesa IANews ao vivo",
-    d: "Você leva um desafio da sua empresa e sai com um caminho para resolver com IA.",
+    t: "Três cases com números",
+    d: "Empresas que colocaram IA para trabalhar mostram o problema, o que fizeram, quanto investiram e o resultado.",
     img: 29335353,
   },
   {
-    t: "Networking que vira negócio",
-    d: "Empresários, fornecedores de IA e marcas na mesma sala, com mesas de expositores.",
+    t: "Playbook IA 2027 e gravação",
+    d: "Um roteiro para escolher, contratar e medir projetos de IA, e outro para quem vende IA. Gravação disponível por 30 dias.",
     img: 7648057,
   },
 ];
 
 const AGENDA = [
-  { time: "14h", title: "Credenciamento e café", tag: "Chegada" },
-  { time: "14h30", title: "Abertura com dados da IA News", tag: "Palco" },
-  { time: "15h", title: "Da pauta ao palco", tag: "Palco" },
-  { time: "16h", title: "Cases em operação", tag: "Palco" },
-  { time: "17h", title: "Rodada de expositores", tag: "Expositores" },
-  { time: "17h30", title: "Mesa IANews ao vivo", tag: "Destaque", hi: true },
-  { time: "18h45", title: "Networking até as 20h", tag: "Conexões" },
+  { time: "19h", title: "Abertura com Henrique Magioni", tag: "Abertura" },
+  { time: "19h05", title: "Raio-X IA News 2026", tag: "Dados" },
+  { time: "19h25", title: "Três cases: quem faz, ensina", tag: "Cases" },
+  { time: "19h50", title: "Playbook IA 2027", tag: "Plano" },
+  { time: "20h05", title: "Anúncio da Lista IA News 100", tag: "Ao vivo", hi: true },
+  { time: "20h15", title: "Mesa IA News: perguntas ao vivo", tag: "Mesa" },
+  { time: "20h25", title: "Encerramento e próximos passos", tag: "Fim" },
 ];
 
 const FAQ = [
   {
-    q: "Entrar na lista tem custo?",
-    a: "Não. A lista antecipada é gratuita e garante o aviso antes de todo mundo, com a condição do 1º lote.",
+    q: "Quanto custa?",
+    a: "R$ 97. Inclui o evento ao vivo, a gravação por 30 dias, os slides do Raio-X e o Playbook IA 2027. Depois da inscrição, você recebe o link de pagamento por WhatsApp e e-mail.",
   },
-  { q: "Onde vai ser?", a: "Em Belo Horizonte. O local sai primeiro para quem está na lista." },
+  { q: "Como eu assisto?", a: "É online e ao vivo. O link de acesso chega por WhatsApp e e-mail, na véspera e 2 horas antes do início." },
   {
-    q: "Quero expor ou patrocinar.",
+    q: "E o evento presencial?",
+    a: "O Palco IA News presencial acontece em Belo Horizonte, em fevereiro de 2027. Quem participar do online tem prioridade e usa os R$ 97 como desconto no ingresso.",
+  },
+  {
+    q: "Quero patrocinar.",
     a: "Escolha \"Empresa ou marca\" ou \"Fornecedor de IA\" no formulário. A equipe da IA News te procura com as opções.",
   },
   { q: "Quem organiza?", a: "A FGIA Educação, o palco da IA News." },
@@ -140,7 +145,7 @@ function PalcoPage() {
   const [showBar, setShowBar] = useState(false);
 
   useEffect(() => {
-    // Contagem regressiva até 16/12, 14h (só no navegador, para não divergir do HTML do servidor).
+    // Contagem regressiva até 16/12, 19h (só no navegador, para não divergir do HTML do servidor).
     const tick = () => {
       const ms = Math.max(0, EVENT_START - Date.now());
       setLeft({ d: Math.floor(ms / 864e5), h: Math.floor((ms % 864e5) / 36e5), m: Math.floor((ms % 36e5) / 6e4) });
@@ -277,14 +282,14 @@ function PalcoPage() {
           <div className="pc2-shade" aria-hidden="true" />
           <div className="wrap pc2-hero-grid">
             <div className="pc2-hero-copy">
-              <p className="pc2-kick">IA News apresenta · FGIA Educação</p>
+              <p className="pc2-kick">IA News apresenta · FGIA Educação · Online e ao vivo</p>
               <h1>
                 Palco IA News
                 <span>Quem faz, ensina.</span>
               </h1>
               <p className="pc2-sub">
-                Uma tarde em Belo Horizonte com empresários que já colocaram IA para trabalhar. Você sai com um plano
-                para a sua empresa.
+                Um workshop online de 1h30 com o Raio-X do que deu certo com IA nas empresas brasileiras em 2026 e um
+                plano para 2027.
               </p>
               <ul className="pc2-facts">
                 {FACTS.map((f) => (
@@ -314,9 +319,9 @@ function PalcoPage() {
 
             <div className="pc2-form" id="lista" ref={formRef}>
               <div className="pc2-form-head">
-                <span className="pc2-badge">Lista antecipada · gratuita</span>
-                <h2>Garanta seu lugar</h2>
-                <p>Quem está na lista recebe o local e o 1º lote antes de todo mundo.</p>
+                <span className="pc2-badge">Online · ao vivo · R$ 97</span>
+                <h2>Garanta sua vaga</h2>
+                <p>Inscreva-se e receba o link de pagamento e de acesso por WhatsApp e e-mail.</p>
               </div>
               <div className="biz-card pt-card-form">
               {done ? (
@@ -335,11 +340,11 @@ function PalcoPage() {
                       <path d="m5 12.5 4.5 4.5L19 7.5" />
                     </svg>
                   </span>
-                  <h2>{done.already ? "Você já está na lista" : "Seu nome está na lista!"}</h2>
+                  <h2>{done.already ? "Você já está inscrito" : "Inscrição recebida!"}</h2>
                   <p>
                     {done.already
-                      ? "Este e-mail já estava inscrito. Quando o 1º lote abrir, você recebe o aviso antes de todo mundo."
-                      : `Pronto${done.name ? `, ${done.name}` : ""}. Quando o 1º lote abrir, você recebe o aviso antes de todo mundo, pelo WhatsApp e por e-mail.`}
+                      ? "Este e-mail já estava inscrito. O link de pagamento (R$ 97) e o de acesso chegam pelo WhatsApp e por e-mail."
+                      : `Pronto${done.name ? `, ${done.name}` : ""}. Em instantes você recebe pelo WhatsApp e por e-mail o link de pagamento (R$ 97) para confirmar a vaga.`}
                   </p>
                   <div className="actions">
                     <Link className="btn blue" to="/noticias" search={{ q: "", cat: "all" }}>
@@ -424,7 +429,7 @@ function PalcoPage() {
                   </fieldset>
 
                   <details className="pc2-more">
-                    <summary>Quer levar um desafio para a Mesa IANews? <small>opcional</small></summary>
+                    <summary>Quer levar uma pergunta para a Mesa IA News? <small>opcional</small></summary>
                     <div className="biz-fields">
                       {field("cargo", "Cargo", {
                         autoComplete: "organization-title",
@@ -497,9 +502,9 @@ function PalcoPage() {
 
                   <div className="biz-submit">
                     <button className="btn blue pc2-submit" type="submit" disabled={sending}>
-                      {sending ? "Enviando…" : "Garantir meu lugar na lista"}
+                      {sending ? "Enviando…" : "Garantir minha vaga"}
                     </button>
-                    <span className="fine">Gratuito. Leva 30 segundos.</span>
+                    <span className="fine">R$ 97, pago depois pelo link. Leva 30 segundos.</span>
                     <p className="msg err" role="status" aria-live="polite">
                       {failMsg ?? ""}
                     </p>
@@ -528,7 +533,7 @@ function PalcoPage() {
           <section className="pc2-sec" aria-labelledby="pc2-leva">
             <p className="pc2-eyebrow">O que você leva</p>
             <h2 id="pc2-leva" className="pc2-h2">
-              Uma tarde. Cases reais. Um plano para a sua empresa.
+              1h30 ao vivo. Dados, cases reais e um plano para 2027.
             </h2>
             <div className="pc2-cards">
               {LEVA.map((c) => (
@@ -545,9 +550,9 @@ function PalcoPage() {
 
           {/* 4. Programação */}
           <section className="pc2-sec" id="programacao" aria-labelledby="pc2-prog">
-            <p className="pc2-eyebrow">Programação · 16/12</p>
+            <p className="pc2-eyebrow">Programação · 16/12 · online</p>
             <h2 id="pc2-prog" className="pc2-h2">
-              Das 14h às 20h, sem enrolação.
+              Das 19h às 20h30, ao vivo e sem enrolação.
             </h2>
             <ol className="pc2-tl">
               {AGENDA.map((a) => (
@@ -561,7 +566,7 @@ function PalcoPage() {
                 </li>
               ))}
             </ol>
-            <p className="pc2-note">Os nomes do palco saem em 23/11, primeiro para quem está na lista.</p>
+            <p className="pc2-note">Os convidados dos cases saem em 30/11, primeiro para quem está inscrito.</p>
           </section>
 
           {/* 5. Para quem é */}
@@ -577,14 +582,14 @@ function PalcoPage() {
                   <b>Empresários</b> que querem IA no atendimento, nas vendas e na operação.
                 </li>
                 <li>
-                  <b>Fornecedores de IA</b> que querem conhecer quem tem o problema.
+                  <b>Fornecedores de IA</b> que querem saber o que as empresas estão comprando.
                 </li>
                 <li>
-                  <b>Marcas</b> que querem estar no palco e na cobertura da IA News.
+                  <b>Marcas</b> que querem apresentar o evento e estar na cobertura da IA News.
                 </li>
               </ul>
               <button className="btn blue" type="button" onClick={scrollToForm}>
-                Quero meu lugar na lista
+                Quero minha vaga
               </button>
             </div>
           </section>
@@ -616,10 +621,10 @@ function PalcoPage() {
         <section className="pc2-final" style={{ backgroundImage: `url(${IMG(20733081, 1600)})` }}>
           <div className="pc2-shade" aria-hidden="true" />
           <div className="wrap pc2-final-in">
-            <h2>Os lugares são limitados. A lista é gratuita.</h2>
-            <p>16 de dezembro · Belo Horizonte · 14h às 20h</p>
+            <h2>Ao vivo, online, por R$ 97.</h2>
+            <p>16 de dezembro · 19h às 20h30 · O presencial em BH vem em fevereiro de 2027</p>
             <button className="btn blue pc2-submit" type="button" onClick={scrollToForm}>
-              Garantir meu lugar na lista
+              Garantir minha vaga
             </button>
           </div>
         </section>
@@ -628,10 +633,10 @@ function PalcoPage() {
         {!done ? (
           <div className={"pc2-bar" + (showBar ? " on" : "")} aria-hidden={!showBar}>
             <span>
-              <b>Palco IA News</b> · 16/12 · BH
+              <b>Palco IA News Online</b> · 16/12 · 19h · R$ 97
             </span>
             <button className="btn blue" type="button" onClick={scrollToForm} tabIndex={showBar ? 0 : -1}>
-              Entrar na lista
+              Garantir vaga
             </button>
           </div>
         ) : null}

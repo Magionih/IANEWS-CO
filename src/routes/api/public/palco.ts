@@ -5,7 +5,7 @@ import { validatePalco, type PalcoInput } from "@/lib/palco-validate";
 
 /* Recebe a inscrição da página /palco. Revalida tudo, descarta robôs (campo isca), limita 3 envios por hora
    por IP ou e-mail, não duplica quem já está na lista e grava em palco_inscricoes. Um gatilho no banco leva a
-   pessoa para o CRM (funil "Palco IA News · BH 16/12", etapa Na lista) com perfil e papel. */
+   pessoa para o CRM (funil "Palco IA News Online · 16/12", etapa Na lista) com perfil e papel. */
 
 const NOTIFY_TO = ["ianewscomercial@gmail.com"];
 const LIMIT_PER_HOUR = 3;

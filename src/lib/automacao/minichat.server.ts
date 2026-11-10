@@ -63,7 +63,7 @@ const MENU: Botao[] = [
   { titulo: "IA no meu setor", payload: "F:radar" },
   { titulo: "Lista 100", payload: "F:lista" },
   { titulo: "Aula ao vivo", payload: "F:aula" },
-  { titulo: "Palco 16/12", payload: "F:palco" },
+  { titulo: "Palco Online 16/12", payload: "F:palco" },
   { titulo: "Conselho", payload: "F:conselho" },
   { titulo: "IA na minha empresa", payload: "F:projeto" },
   { titulo: "Anunciar", payload: "F:anunciar" },
@@ -129,7 +129,7 @@ function abertura(fluxo: string, c: Conversa): Resultado {
       return {
         saidas: [
           {
-            texto: `${oi(c)} Aqui é a Renata, da IA News. A Lista IA News 100 vai reunir os 100 nomes que estão fazendo IA de verdade nos negócios no Brasil. Ninguém paga para entrar, e o anúncio é no Palco IA News, em 16/12. Você quer:`,
+            texto: `${oi(c)} Aqui é a Renata, da IA News. A Lista IA News 100 vai reunir os 100 nomes que estão fazendo IA de verdade nos negócios no Brasil. Ninguém paga para entrar, e o anúncio é ao vivo no Palco IA News Online, em 16/12. Você quer:`,
             botoes: [
               { titulo: "Me candidatar", payload: "L:cand" },
               { titulo: "Indicar alguém", payload: "L:ind" },
@@ -157,11 +157,11 @@ function abertura(fluxo: string, c: Conversa): Resultado {
       return {
         saidas: [
           {
-            texto: `${oi(c)} Aqui é a Renata, da IA News. O Palco IA News é em 16/12, em Belo Horizonte: só sobe ao palco quem já colocou IA para trabalhar numa empresa. Você vai como:`,
+            texto: `${oi(c)} Aqui é a Renata, da IA News. O Palco IA News deste ano é online e ao vivo, em 16/12, às 19h: 1h30 com o Raio-X do que deu certo com IA nas empresas brasileiras, três cases com números e o Playbook IA 2027. Você vai como:`,
             botoes: [
               { titulo: "Empresário", payload: "P:empresario" },
               { titulo: "Fornecedor de IA", payload: "P:fornecedor" },
-              { titulo: "Marca/patrocinador", payload: "P:marca" },
+              { titulo: "Marca/patrocínio", payload: "P:marca" },
             ],
           },
         ],
@@ -331,7 +331,7 @@ async function continuar(db: any, c: Conversa, e: Entrada): Promise<Resultado | 
       if (perfil === "marca")
         return { saidas: [{ texto: "Perfeito. Qual é a empresa e o seu melhor e-mail? Te mando as cotas de patrocínio." }], passo: "palco.marca", dados: { ...d, perfil } };
       return {
-        saidas: [{ texto: `A programação e a lista antecipada estão aqui: ${utm(`/palco?papel=${perfil}`, "palco")}\n\nO 1º lote é o mais em conta e vai até 30/11.` }],
+        saidas: [{ texto: `A programação e a inscrição estão aqui: ${utm(`/palco?papel=${perfil}`, "palco")}\n\nO ingresso é R$ 97, com a gravação por 30 dias. O presencial em BH vem em fevereiro, e quem participar do online tem prioridade.` }],
         passo: null,
         lead: { fluxo: "palco", perfil, nota: `Palco: interesse como ${perfil} (Direct)` },
         entregarComPortao: true,
