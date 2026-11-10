@@ -24,7 +24,7 @@ async function handle(request: Request) {
   if (!me.ok) return Response.json({ ok: false, etapa: "token", detalhe: meJson }, { status: 500 });
 
   const sub = await fetch(
-    `${GRAPH}/${userId}/subscribed_apps?subscribed_fields=comments,messages`,
+    `${GRAPH}/${userId}/subscribed_apps?subscribed_fields=comments,messages,messaging_postbacks`,
     {
       method: "POST",
       headers: auth,

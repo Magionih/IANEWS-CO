@@ -67,6 +67,7 @@ import { Route as ApiPublicHooksInstagramRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksInstagramPublicarRouteImport } from './routes/api/public/hooks/instagram-publicar'
 import { Route as ApiPublicHooksInstagramSubscribeRouteImport } from './routes/api/public/hooks/instagram-subscribe'
 import { Route as ApiPublicHooksLeadFollowupRouteImport } from './routes/api/public/hooks/lead-followup'
+import { Route as ApiPublicHooksMinichatTesteRouteImport } from './routes/api/public/hooks/minichat-teste'
 import { Route as ApiPublicHooksPagamentoRouteImport } from './routes/api/public/hooks/pagamento'
 import { Route as ApiPublicHooksPingRouteImport } from './routes/api/public/hooks/ping'
 import { Route as ApiPublicHooksProducaoRouteImport } from './routes/api/public/hooks/producao'
@@ -372,6 +373,12 @@ const ApiPublicHooksLeadFollowupRoute =
     path: '/api/public/hooks/lead-followup',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMinichatTesteRoute =
+  ApiPublicHooksMinichatTesteRouteImport.update({
+    id: '/api/public/hooks/minichat-teste',
+    path: '/api/public/hooks/minichat-teste',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPagamentoRoute = ApiPublicHooksPagamentoRouteImport.update({
   id: '/api/public/hooks/pagamento',
   path: '/api/public/hooks/pagamento',
@@ -469,6 +476,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/minichat-teste': typeof ApiPublicHooksMinichatTesteRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
@@ -535,6 +543,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/minichat-teste': typeof ApiPublicHooksMinichatTesteRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
@@ -603,6 +612,7 @@ export interface FileRoutesById {
   '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
   '/api/public/hooks/instagram-subscribe': typeof ApiPublicHooksInstagramSubscribeRoute
   '/api/public/hooks/lead-followup': typeof ApiPublicHooksLeadFollowupRoute
+  '/api/public/hooks/minichat-teste': typeof ApiPublicHooksMinichatTesteRoute
   '/api/public/hooks/pagamento': typeof ApiPublicHooksPagamentoRoute
   '/api/public/hooks/ping': typeof ApiPublicHooksPingRoute
   '/api/public/hooks/producao': typeof ApiPublicHooksProducaoRoute
@@ -671,6 +681,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/instagram-publicar'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/minichat-teste'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/producao'
@@ -737,6 +748,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/instagram-publicar'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/minichat-teste'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/producao'
@@ -804,6 +816,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/instagram-publicar'
     | '/api/public/hooks/instagram-subscribe'
     | '/api/public/hooks/lead-followup'
+    | '/api/public/hooks/minichat-teste'
     | '/api/public/hooks/pagamento'
     | '/api/public/hooks/ping'
     | '/api/public/hooks/producao'
@@ -870,6 +883,7 @@ export interface RootRouteChildren {
   ApiPublicHooksInstagramPublicarRoute: typeof ApiPublicHooksInstagramPublicarRoute
   ApiPublicHooksInstagramSubscribeRoute: typeof ApiPublicHooksInstagramSubscribeRoute
   ApiPublicHooksLeadFollowupRoute: typeof ApiPublicHooksLeadFollowupRoute
+  ApiPublicHooksMinichatTesteRoute: typeof ApiPublicHooksMinichatTesteRoute
   ApiPublicHooksPagamentoRoute: typeof ApiPublicHooksPagamentoRoute
   ApiPublicHooksPingRoute: typeof ApiPublicHooksPingRoute
   ApiPublicHooksProducaoRoute: typeof ApiPublicHooksProducaoRoute
@@ -1287,6 +1301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLeadFollowupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/minichat-teste': {
+      id: '/api/public/hooks/minichat-teste'
+      path: '/api/public/hooks/minichat-teste'
+      fullPath: '/api/public/hooks/minichat-teste'
+      preLoaderRoute: typeof ApiPublicHooksMinichatTesteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/pagamento': {
       id: '/api/public/hooks/pagamento'
       path: '/api/public/hooks/pagamento'
@@ -1410,6 +1431,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksInstagramPublicarRoute: ApiPublicHooksInstagramPublicarRoute,
   ApiPublicHooksInstagramSubscribeRoute: ApiPublicHooksInstagramSubscribeRoute,
   ApiPublicHooksLeadFollowupRoute: ApiPublicHooksLeadFollowupRoute,
+  ApiPublicHooksMinichatTesteRoute: ApiPublicHooksMinichatTesteRoute,
   ApiPublicHooksPagamentoRoute: ApiPublicHooksPagamentoRoute,
   ApiPublicHooksPingRoute: ApiPublicHooksPingRoute,
   ApiPublicHooksProducaoRoute: ApiPublicHooksProducaoRoute,
