@@ -5,6 +5,10 @@ import { maskPhone, phoneDigits } from "@/lib/pauta-validate";
 /* Link de pagamento do ingresso do Palco IA News Online (Asaas: Pix, cartão ou boleto). */
 export const PALCO_PAGAMENTO_URL = "https://www.asaas.com/000/c/lpcqp7cryd6i4zzg";
 
+/* Valor do ingresso cobrado pelo checkout próprio (/palco/checkout), em reais. */
+export const PALCO_VALOR = 97;
+export const PALCO_DESCRICAO = "Palco IA News Online · 16/12/2026, 19h às 20h30";
+
 export type PalcoPapel = "empresario" | "fornecedor" | "criador" | "marca";
 
 export type PalcoInput = {

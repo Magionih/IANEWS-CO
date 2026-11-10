@@ -8,6 +8,7 @@ import { PALCO_PAGAMENTO_URL } from '../palco-validate'
 
 interface Props {
   nome?: string
+  checkout?: string
 }
 
 const first = (n?: string) => (n ?? '').trim().split(/\s+/)[0] || 'tudo bem'
@@ -27,7 +28,7 @@ const Email = (p: Props) => (
       boleto, no botão abaixo. O link de acesso vai na véspera e 2 horas antes do início. Esse valor ainda vira desconto no Palco presencial, em Belo
       Horizonte, em fevereiro de 2027.
     </Text>
-    <CtaButton href={PALCO_PAGAMENTO_URL}>Pagar e confirmar minha vaga</CtaButton>
+    <CtaButton href={p.checkout || PALCO_PAGAMENTO_URL}>Pagar e confirmar minha vaga</CtaButton>
     <Text style={s.small}>
       Já pagou? Não precisa fazer nada. A programação está em{' '}
       <Link href={`${SITE}/palco`} style={{ color: C.blueInk }}>

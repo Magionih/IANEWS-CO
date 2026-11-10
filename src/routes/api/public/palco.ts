@@ -59,8 +59,18 @@ export const Route = createFileRoute("/api/public/palco")({
         const db = supabaseAdmin as any;
 
         // Quem já está na lista não entra de novo.
-        const already = await db.from("palco_inscricoes").select("id", { count: "exact", head: true }).eq("email", clean.email);
-        if ((already.count ?? 0) > 0) return Response.json({ ok: true, already: true });
+        // Quem já está inscrito volta para o checkout do próprio pedido (ou vê que já pagou).
+        const already = await db
+          .from("palco_inscricoes")
+          .select("id, checkout_token, status")
+          .eq("email", clean.email)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (already.data) {
+          const a = already.data as { id: string; checkout_token: string; status: string };
+          return Response.json({ ok: true, already: true, id: a.id, token: a.checkout_token, pago: a.status === "pago" || a.status === "cortesia" });
+        }
 
         const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
         const recent = (col: "ip_hash" | "email", value: string) =>
@@ -92,9 +102,9 @@ export const Route = createFileRoute("/api/public/palco")({
           ip_hash: ipHash,
         };
 
-        const { error } = await db.from("palco_inscricoes").insert(row);
-        if (error) {
-          console.error("[palco] insert error", error.message);
+        const { data: criado, error } = await db.from("palco_inscricoes").insert(row).select("id, checkout_token").single();
+        if (error || !criado) {
+          console.error("[palco] insert error", error?.message);
           return Response.json({ ok: false, error: FAIL }, { status: 500 });
         }
 
@@ -104,7 +114,7 @@ export const Route = createFileRoute("/api/public/palco")({
           await Promise.allSettled([
             ...NOTIFY_TO.map((to) => sendTemplateEmail("palco-notification", to, { templateData: row, replyTo: row.email })),
             sendTemplateEmail("palco-confirmation", row.email, {
-              templateData: { nome: row.nome },
+              templateData: { nome: row.nome, checkout: `https://ianewsbr.com/palco/checkout?i=${criado.id}&t=${criado.checkout_token}` },
               replyTo: "ianewscomercial@gmail.com",
             }),
           ]);
@@ -112,7 +122,7 @@ export const Route = createFileRoute("/api/public/palco")({
           console.error("[palco] notify failed", err instanceof Error ? err.message : err);
         }
 
-        return Response.json({ ok: true });
+        return Response.json({ ok: true, id: criado.id, token: criado.checkout_token });
       },
     },
   },

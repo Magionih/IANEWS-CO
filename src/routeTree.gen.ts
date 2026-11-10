@@ -42,6 +42,7 @@ import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
 import { Route as Lista100CriteriosRouteImport } from './routes/lista100_.criterios'
 import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
+import { Route as PalcoCheckoutRouteImport } from './routes/palco_.checkout'
 import { Route as PreviaTokenRouteImport } from './routes/previa.$token'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-metrics'
@@ -51,9 +52,12 @@ import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/eng
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicInscricaoRouteImport } from './routes/api/public/inscricao'
 import { Route as ApiPublicPalcoRouteImport } from './routes/api/public/palco'
+import { Route as ApiPublicPalcoCheckoutRouteImport } from './routes/api/public/palco-checkout'
 import { Route as ApiPublicPautaRouteImport } from './routes/api/public/pauta'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
+import { Route as ApiPublicHooksAsaasRouteImport } from './routes/api/public/hooks/asaas'
+import { Route as ApiPublicHooksAsaasSetupRouteImport } from './routes/api/public/hooks/asaas-setup'
 import { Route as ApiPublicHooksAutoLeadsRouteImport } from './routes/api/public/hooks/auto-leads'
 import { Route as ApiPublicHooksCarrosselNoticiasRouteImport } from './routes/api/public/hooks/carrossel-noticias'
 import { Route as ApiPublicHooksCobrancasRouteImport } from './routes/api/public/hooks/cobrancas'
@@ -241,6 +245,11 @@ const MateriaSlugRoute = MateriaSlugRouteImport.update({
   path: '/materia/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PalcoCheckoutRoute = PalcoCheckoutRouteImport.update({
+  id: '/palco_/checkout',
+  path: '/palco/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PreviaTokenRoute = PreviaTokenRouteImport.update({
   id: '/previa/$token',
   path: '/previa/$token',
@@ -286,6 +295,11 @@ const ApiPublicPalcoRoute = ApiPublicPalcoRouteImport.update({
   path: '/api/public/palco',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPalcoCheckoutRoute = ApiPublicPalcoCheckoutRouteImport.update({
+  id: '/api/public/palco-checkout',
+  path: '/api/public/palco-checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPautaRoute = ApiPublicPautaRouteImport.update({
   id: '/api/public/pauta',
   path: '/api/public/pauta',
@@ -301,6 +315,17 @@ const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
   path: '/api/public/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksAsaasRoute = ApiPublicHooksAsaasRouteImport.update({
+  id: '/api/public/hooks/asaas',
+  path: '/api/public/hooks/asaas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksAsaasSetupRoute =
+  ApiPublicHooksAsaasSetupRouteImport.update({
+    id: '/api/public/hooks/asaas-setup',
+    path: '/api/public/hooks/asaas-setup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoLeadsRoute = ApiPublicHooksAutoLeadsRouteImport.update({
   id: '/api/public/hooks/auto-leads',
   path: '/api/public/hooks/auto-leads',
@@ -451,6 +476,7 @@ export interface FileRoutesByFullPath {
   '/guias/$hub': typeof GuiasHubRoute
   '/lista100/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
+  '/palco/checkout': typeof PalcoCheckoutRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
@@ -460,9 +486,12 @@ export interface FileRoutesByFullPath {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
+  '/api/public/palco-checkout': typeof ApiPublicPalcoCheckoutRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/asaas': typeof ApiPublicHooksAsaasRoute
+  '/api/public/hooks/asaas-setup': typeof ApiPublicHooksAsaasSetupRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
@@ -518,6 +547,7 @@ export interface FileRoutesByTo {
   '/guias/$hub': typeof GuiasHubRoute
   '/lista100/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
+  '/palco/checkout': typeof PalcoCheckoutRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
@@ -527,9 +557,12 @@ export interface FileRoutesByTo {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
+  '/api/public/palco-checkout': typeof ApiPublicPalcoCheckoutRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/asaas': typeof ApiPublicHooksAsaasRoute
+  '/api/public/hooks/asaas-setup': typeof ApiPublicHooksAsaasSetupRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
@@ -587,6 +620,7 @@ export interface FileRoutesById {
   '/guias/$hub': typeof GuiasHubRoute
   '/lista100_/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
+  '/palco_/checkout': typeof PalcoCheckoutRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
@@ -596,9 +630,12 @@ export interface FileRoutesById {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
+  '/api/public/palco-checkout': typeof ApiPublicPalcoCheckoutRoute
   '/api/public/pauta': typeof ApiPublicPautaRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/public/hooks/asaas': typeof ApiPublicHooksAsaasRoute
+  '/api/public/hooks/asaas-setup': typeof ApiPublicHooksAsaasSetupRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
@@ -656,6 +693,7 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/lista100/criterios'
     | '/materia/$slug'
+    | '/palco/checkout'
     | '/previa/$token'
     | '/s/$code'
     | '/api/public/ad-metrics'
@@ -665,9 +703,12 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/inscricao'
     | '/api/public/palco'
+    | '/api/public/palco-checkout'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/asaas'
+    | '/api/public/hooks/asaas-setup'
     | '/api/public/hooks/auto-leads'
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
@@ -723,6 +764,7 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/lista100/criterios'
     | '/materia/$slug'
+    | '/palco/checkout'
     | '/previa/$token'
     | '/s/$code'
     | '/api/public/ad-metrics'
@@ -732,9 +774,12 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/inscricao'
     | '/api/public/palco'
+    | '/api/public/palco-checkout'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/asaas'
+    | '/api/public/hooks/asaas-setup'
     | '/api/public/hooks/auto-leads'
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
@@ -791,6 +836,7 @@ export interface FileRouteTypes {
     | '/guias/$hub'
     | '/lista100_/criterios'
     | '/materia/$slug'
+    | '/palco_/checkout'
     | '/previa/$token'
     | '/s/$code'
     | '/api/public/ad-metrics'
@@ -800,9 +846,12 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/inscricao'
     | '/api/public/palco'
+    | '/api/public/palco-checkout'
     | '/api/public/pauta'
     | '/api/public/track'
     | '/api/public/unsubscribe'
+    | '/api/public/hooks/asaas'
+    | '/api/public/hooks/asaas-setup'
     | '/api/public/hooks/auto-leads'
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
@@ -858,6 +907,7 @@ export interface RootRouteChildren {
   GuiasHubRoute: typeof GuiasHubRoute
   Lista100CriteriosRoute: typeof Lista100CriteriosRoute
   MateriaSlugRoute: typeof MateriaSlugRoute
+  PalcoCheckoutRoute: typeof PalcoCheckoutRoute
   PreviaTokenRoute: typeof PreviaTokenRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAdMetricsRoute: typeof ApiPublicAdMetricsRoute
@@ -867,9 +917,12 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicInscricaoRoute: typeof ApiPublicInscricaoRoute
   ApiPublicPalcoRoute: typeof ApiPublicPalcoRoute
+  ApiPublicPalcoCheckoutRoute: typeof ApiPublicPalcoCheckoutRoute
   ApiPublicPautaRoute: typeof ApiPublicPautaRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
+  ApiPublicHooksAsaasRoute: typeof ApiPublicHooksAsaasRoute
+  ApiPublicHooksAsaasSetupRoute: typeof ApiPublicHooksAsaasSetupRoute
   ApiPublicHooksAutoLeadsRoute: typeof ApiPublicHooksAutoLeadsRoute
   ApiPublicHooksCarrosselNoticiasRoute: typeof ApiPublicHooksCarrosselNoticiasRoute
   ApiPublicHooksCobrancasRoute: typeof ApiPublicHooksCobrancasRoute
@@ -1126,6 +1179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MateriaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/palco_/checkout': {
+      id: '/palco_/checkout'
+      path: '/palco/checkout'
+      fullPath: '/palco/checkout'
+      preLoaderRoute: typeof PalcoCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/previa/$token': {
       id: '/previa/$token'
       path: '/previa/$token'
@@ -1189,6 +1249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPalcoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/palco-checkout': {
+      id: '/api/public/palco-checkout'
+      path: '/api/public/palco-checkout'
+      fullPath: '/api/public/palco-checkout'
+      preLoaderRoute: typeof ApiPublicPalcoCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/pauta': {
       id: '/api/public/pauta'
       path: '/api/public/pauta'
@@ -1208,6 +1275,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/unsubscribe'
       fullPath: '/api/public/unsubscribe'
       preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/asaas': {
+      id: '/api/public/hooks/asaas'
+      path: '/api/public/hooks/asaas'
+      fullPath: '/api/public/hooks/asaas'
+      preLoaderRoute: typeof ApiPublicHooksAsaasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/asaas-setup': {
+      id: '/api/public/hooks/asaas-setup'
+      path: '/api/public/hooks/asaas-setup'
+      fullPath: '/api/public/hooks/asaas-setup'
+      preLoaderRoute: typeof ApiPublicHooksAsaasSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/auto-leads': {
@@ -1406,6 +1487,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuiasHubRoute: GuiasHubRoute,
   Lista100CriteriosRoute: Lista100CriteriosRoute,
   MateriaSlugRoute: MateriaSlugRoute,
+  PalcoCheckoutRoute: PalcoCheckoutRoute,
   PreviaTokenRoute: PreviaTokenRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAdMetricsRoute: ApiPublicAdMetricsRoute,
@@ -1415,9 +1497,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicInscricaoRoute: ApiPublicInscricaoRoute,
   ApiPublicPalcoRoute: ApiPublicPalcoRoute,
+  ApiPublicPalcoCheckoutRoute: ApiPublicPalcoCheckoutRoute,
   ApiPublicPautaRoute: ApiPublicPautaRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
+  ApiPublicHooksAsaasRoute: ApiPublicHooksAsaasRoute,
+  ApiPublicHooksAsaasSetupRoute: ApiPublicHooksAsaasSetupRoute,
   ApiPublicHooksAutoLeadsRoute: ApiPublicHooksAutoLeadsRoute,
   ApiPublicHooksCarrosselNoticiasRoute: ApiPublicHooksCarrosselNoticiasRoute,
   ApiPublicHooksCobrancasRoute: ApiPublicHooksCobrancasRoute,

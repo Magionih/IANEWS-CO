@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { SiteHeader } from "@/components/site/header";
@@ -170,6 +170,7 @@ function Check() {
 
 function PalcoPage() {
   const search = Route.useSearch();
+  const navigate = useNavigate();
   const [form, setForm] = useState<PalcoInput>({ ...EMPTY, papel: search.papel ?? "" });
   const [errors, setErrors] = useState<PalcoErrors>({});
   const [failMsg, setFailMsg] = useState<string | null>(null);
@@ -229,10 +230,6 @@ function PalcoPage() {
   useEffect(() => {
     if (!done) return;
     doneRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-    // Inscrição nova: leva a pessoa ao pagamento em seguida (o botão fica na tela se o redirecionamento falhar).
-    if (done.already) return;
-    const t = window.setTimeout(() => window.location.assign(PALCO_PAGAMENTO_URL), 2500);
-    return () => window.clearTimeout(t);
   }, [done]);
 
   function set<K extends keyof PalcoInput>(key: K, value: PalcoInput[K]) {
@@ -270,7 +267,14 @@ function PalcoPage() {
         already?: boolean;
         error?: string;
         errors?: PalcoErrors;
+        id?: string;
+        token?: string;
       };
+      if (res.ok && json.ok && json.id && json.token) {
+        // Vai direto para o checkout da IA News, com o pedido desta inscrição.
+        navigate({ to: "/palco/checkout", search: { i: json.id, t: json.token } });
+        return;
+      }
       if (res.ok && json.ok) {
         setDone({ name: form.nome.trim().split(/\s+/)[0] ?? "", already: json.already === true });
         setForm(EMPTY);
