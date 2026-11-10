@@ -5,6 +5,22 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 const GRAPH = `https://graph.facebook.com/${process.env.META_GRAPH_VERSION ?? "v21.0"}`;
 
+/** Endereço da API do Instagram. Token do "Login do Instagram" (começa com IG) só funciona em
+    graph.instagram.com; token de página do Facebook, em graph.facebook.com. META_GRAPH_HOST força um deles. */
+export function graphInstagram(): string {
+  const host =
+    process.env.META_GRAPH_HOST ??
+    (process.env.INSTAGRAM_TOKEN?.trim().startsWith("IG") ? "graph.instagram.com" : "graph.facebook.com");
+  return `https://${host}/${process.env.META_GRAPH_VERSION ?? "v21.0"}`;
+}
+
+/** Assinatura do webhook: vale o segredo do app do Facebook ou o do Instagram (Login do Instagram). */
+export function assinaturaMetaValida(corpo: string, assinatura: string | null): boolean {
+  return [process.env.META_APP_SECRET, process.env.INSTAGRAM_APP_SECRET].some(
+    (seg) => !!seg && assinaturaValida(corpo, assinatura, seg),
+  );
+}
+
 /** Confere a assinatura X-Hub-Signature-256 com o segredo do app da Meta. */
 export function assinaturaValida(
   corpo: string,
@@ -61,7 +77,7 @@ export async function responderComentarioNoDirect(
   comentarioId: string,
   texto: string,
 ): Promise<void> {
-  const res = await fetch(`${GRAPH}/${process.env.INSTAGRAM_USER_ID}/messages`, {
+  const res = await fetch(`${graphInstagram()}/${process.env.INSTAGRAM_USER_ID}/messages`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.INSTAGRAM_TOKEN}`,
@@ -86,7 +102,7 @@ export async function publicarCarrosselInstagram(
   if (!token || !userId) throw new Error("INSTAGRAM_TOKEN ou INSTAGRAM_USER_ID ausente.");
   const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
   const post = async (path: string, body: Record<string, unknown>) => {
-    const res = await fetch(`${GRAPH}/${path}`, {
+    const res = await fetch(`${graphInstagram()}/${path}`, {
       method: "POST",
       headers: auth,
       body: JSON.stringify(body),
@@ -115,7 +131,7 @@ export async function publicarCarrosselInstagram(
   });
   // 3. Espera o processamento e publica
   for (let i = 0; i < 10; i++) {
-    const st = await fetch(`${GRAPH}/${carrossel.id}?fields=status_code`, { headers: auth });
+    const st = await fetch(`${graphInstagram()}/${carrossel.id}?fields=status_code`, { headers: auth });
     const sj = (await st.json().catch(() => ({}))) as { status_code?: string };
     if (sj.status_code === "FINISHED") break;
     if (sj.status_code === "ERROR") throw new Error("Instagram: contêiner com erro.");
@@ -123,7 +139,7 @@ export async function publicarCarrosselInstagram(
   }
   const pub = await post(`${userId}/media_publish`, { creation_id: carrossel.id });
   const mediaId = String(pub.id);
-  const info = await fetch(`${GRAPH}/${mediaId}?fields=permalink`, { headers: auth });
+  const info = await fetch(`${graphInstagram()}/${mediaId}?fields=permalink`, { headers: auth });
   const ij = (await info.json().catch(() => ({}))) as { permalink?: string };
   return { mediaId, url: ij.permalink ?? null };
 }

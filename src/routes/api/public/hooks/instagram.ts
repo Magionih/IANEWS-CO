@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { assinaturaValida, instagramConfigurado, verificarWebhook } from "@/lib/automacao/meta.server";
+import { assinaturaMetaValida, instagramConfigurado, verificarWebhook } from "@/lib/automacao/meta.server";
 import { canalInstagram, processar, respostaPublica, type Entrada } from "@/lib/automacao/minichat.server";
 
 /* Webhook do Instagram da @ianews.co: comentários, mensagens no Direct, respostas e menções em stories.
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/api/public/hooks/instagram")({
       GET: ({ request }) => verificarWebhook(request, process.env.META_VERIFY_TOKEN ?? process.env.WHATSAPP_VERIFY_TOKEN),
       POST: async ({ request }) => {
         const corpo = await request.text();
-        if (!assinaturaValida(corpo, request.headers.get("x-hub-signature-256"), process.env.META_APP_SECRET)) {
+        if (!assinaturaMetaValida(corpo, request.headers.get("x-hub-signature-256"))) {
           return new Response("Assinatura inválida.", { status: 401 });
         }
         if (!instagramConfigurado()) return Response.json({ ok: true, ignorado: "Instagram não configurado" });

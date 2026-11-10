@@ -5,6 +5,7 @@
    abrem-se 24 horas de conversa. Por isso a primeira mensagem sempre termina com botões ou uma pergunta. */
 
 import { AULA } from "@/lib/inscricao";
+import { graphInstagram } from "@/lib/automacao/meta.server";
 
 export type Botao = { titulo: string; payload: string };
 export type Saida = { texto: string; botoes?: Botao[] };
@@ -651,7 +652,6 @@ export const respostaPublica = () => RESPOSTAS_PUBLICAS[Math.floor(Math.random()
 
 /* ---------------- Canal real (Graph API) ---------------- */
 
-const GRAPH = `https://${process.env.META_GRAPH_HOST ?? "graph.facebook.com"}/${process.env.META_GRAPH_VERSION ?? "v21.0"}`;
 
 function corpoMensagem(s: Saida, comBotoes: boolean) {
   if (comBotoes && s.botoes?.length) {
@@ -665,7 +665,7 @@ function corpoMensagem(s: Saida, comBotoes: boolean) {
 }
 
 async function graphPost(path: string, body: unknown) {
-  const res = await fetch(`${GRAPH}/${path}`, {
+  const res = await fetch(`${graphInstagram()}/${path}`, {
     method: "POST",
     headers: { "content-type": "application/json", Authorization: `Bearer ${process.env.INSTAGRAM_TOKEN}` },
     body: JSON.stringify(body),
@@ -692,7 +692,7 @@ export const canalInstagram: Canal = {
     await graphPost(`${comentarioId}/replies`, { message: texto });
   },
   async perfil(igsid) {
-    const res = await fetch(`${GRAPH}/${igsid}?fields=name,username,is_user_follow_business`, {
+    const res = await fetch(`${graphInstagram()}/${igsid}?fields=name,username,is_user_follow_business`, {
       headers: { Authorization: `Bearer ${process.env.INSTAGRAM_TOKEN}` },
     });
     if (!res.ok) return null;
