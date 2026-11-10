@@ -559,7 +559,8 @@ export async function processar(db: any, canal: Canal, e: Entrada): Promise<{ fl
   if (!r && e.tipo !== "comentario") {
     const ocupado = await emConversa(db, c.username);
     const menuRecente = c.menu_em && agora - Date.parse(c.menu_em) < 24 * 3600 * 1000;
-    if (ocupado || menuRecente || e.tipo === "mencao") {
+    const pergunta = texto.includes("?") || texto.trim().split(/\s+/).length >= 6;
+    if (ocupado || menuRecente || pergunta || e.tipo === "mencao") {
       if (e.tipo === "mencao") {
         r = { saidas: [{ texto: `${oi(c)} Obrigada por marcar a IA News! Se quiser, posso te ajudar com alguma destas:`, botoes: MENU }], passo: "menu" };
         fluxo = "menu";
