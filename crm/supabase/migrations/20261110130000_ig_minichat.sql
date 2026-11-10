@@ -40,7 +40,7 @@ insert into ig_palavras (palavra, fluxo) values
   ('PROJETO', 'projeto'),
   ('ANUNCIAR', 'anunciar'), ('MIDIAKIT', 'anunciar'), ('PUBLICIDADE', 'anunciar'),
   ('PAUTA', 'pauta'), ('DESTAQUE', 'pauta'),
-  ('MENU', 'menu'), ('OI', 'menu'), ('OLA', 'menu'),
+  ('MENU', 'menu'),
   ('FALAR', 'humano'), ('ATENDIMENTO', 'humano'),
   ('SAIR', 'sair'), ('PARAR', 'sair')
 on conflict (palavra) do nothing;
