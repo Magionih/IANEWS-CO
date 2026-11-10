@@ -331,7 +331,7 @@ async function continuar(db: any, c: Conversa, e: Entrada): Promise<Resultado | 
       if (perfil === "marca")
         return { saidas: [{ texto: "Perfeito. Qual é a empresa e o seu melhor e-mail? Te mando as cotas de patrocínio." }], passo: "palco.marca", dados: { ...d, perfil } };
       return {
-        saidas: [{ texto: `A programação e a inscrição estão aqui: ${utm(`/palco?papel=${perfil}`, "palco")}\n\nO ingresso é R$ 97, com a gravação por 30 dias. O presencial em BH vem em fevereiro, e quem participar do online tem prioridade.` }],
+        saidas: [{ texto: `A programação e a inscrição estão aqui: ${utm(`/palco?papel=${perfil}`, "palco")}\n\nO ingresso é R$ 97, com a gravação por 30 dias, e você paga por Pix, cartão ou boleto logo depois da inscrição. O presencial em BH vem em fevereiro, e quem participar do online tem prioridade.` }],
         passo: null,
         lead: { fluxo: "palco", perfil, nota: `Palco: interesse como ${perfil} (Direct)` },
         entregarComPortao: true,

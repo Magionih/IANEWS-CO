@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import { C, CtaButton, Shell, SITE, s } from './layout'
+import { PALCO_PAGAMENTO_URL } from '../palco-validate'
 
 /* Confirmação da inscrição no Palco IA News Online (16/12, 19h, R$ 97). O link de pagamento segue pelo WhatsApp. */
 
@@ -22,11 +23,18 @@ const Email = (p: Props) => (
       2027.
     </Text>
     <Text style={s.p}>
-      O ingresso é R$ 97 e inclui a gravação por 30 dias. O link de pagamento chega pelo WhatsApp e por aqui, e o link
-      de acesso vai na véspera e 2 horas antes do início. Esse valor ainda vira desconto no Palco presencial, em Belo
+      O ingresso é R$ 97 e inclui a gravação por 30 dias. Sua vaga é confirmada com o pagamento, por Pix, cartão ou
+      boleto, no botão abaixo. O link de acesso vai na véspera e 2 horas antes do início. Esse valor ainda vira desconto no Palco presencial, em Belo
       Horizonte, em fevereiro de 2027.
     </Text>
-    <CtaButton href={`${SITE}/palco`}>Ver a página do evento</CtaButton>
+    <CtaButton href={PALCO_PAGAMENTO_URL}>Pagar e confirmar minha vaga</CtaButton>
+    <Text style={s.small}>
+      Já pagou? Não precisa fazer nada. A programação está em{' '}
+      <Link href={`${SITE}/palco`} style={{ color: C.blueInk }}>
+        ianewsbr.com/palco
+      </Link>
+      .
+    </Text>
     <Text style={{ ...s.p, marginTop: '18px' }}>Renata, da IA News</Text>
     <Text style={s.small}>
       Dúvidas? Escreva para{' '}

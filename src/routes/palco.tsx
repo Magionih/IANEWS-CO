@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { CONTACT_EMAIL, maskPhone } from "@/lib/pauta-validate";
 import {
   DESAFIO_MAX,
+  PALCO_PAGAMENTO_URL,
   PAPEIS,
   PORTES,
   SETORES,
@@ -124,7 +125,7 @@ const INCLUI = [
 const FAQ = [
   {
     q: "Como eu pago?",
-    a: "Depois da inscrição, você recebe o link de pagamento de R$ 97 pelo WhatsApp e por e-mail. A vaga é confirmada com o pagamento.",
+    a: "Logo depois da inscrição, você vai direto para a página de pagamento, com Pix, cartão ou boleto. O mesmo link também chega por e-mail. A vaga é confirmada com o pagamento.",
   },
   { q: "Como eu assisto?", a: "É online e ao vivo. O link de acesso chega por WhatsApp e e-mail, na véspera e 2 horas antes do início." },
   { q: "E se eu não puder ver ao vivo?", a: "A gravação fica disponível por 30 dias para quem se inscreveu." },
@@ -226,7 +227,12 @@ function PalcoPage() {
   }, []);
 
   useEffect(() => {
-    if (done) doneRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (!done) return;
+    doneRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    // Inscrição nova: leva a pessoa ao pagamento em seguida (o botão fica na tela se o redirecionamento falhar).
+    if (done.already) return;
+    const t = window.setTimeout(() => window.location.assign(PALCO_PAGAMENTO_URL), 2500);
+    return () => window.clearTimeout(t);
   }, [done]);
 
   function set<K extends keyof PalcoInput>(key: K, value: PalcoInput[K]) {
@@ -512,7 +518,7 @@ function PalcoPage() {
               <div className="plv-price">
                 <span>Tudo isso por</span>
                 <b>{PRECO}</b>
-                <small>pagamento único, pelo link que chega no seu WhatsApp</small>
+                <small>pagamento único, por Pix, cartão ou boleto</small>
               </div>
             </div>
 
@@ -526,23 +532,21 @@ function PalcoPage() {
                     <h2>{done.already ? "Você já está inscrito" : "Inscrição recebida"}</h2>
                     <p>
                       {done.already
-                        ? `Este e-mail já estava inscrito. O link de pagamento (${PRECO}) e o de acesso chegam pelo WhatsApp e por e-mail.`
-                        : `Pronto${done.name ? `, ${done.name}` : ""}. Em instantes você recebe pelo WhatsApp e por e-mail o link de pagamento (${PRECO}) para confirmar a vaga.`}
+                        ? "Este e-mail já estava inscrito. Se ainda não pagou, conclua o pagamento para confirmar a vaga."
+                        : `Pronto${done.name ? `, ${done.name}` : ""}. Falta só o pagamento para confirmar sua vaga. Estamos te levando para a página de pagamento, com Pix, cartão ou boleto.`}
                     </p>
                     <div className="actions">
-                      <Link className="btn blue" to="/noticias" search={{ q: "", cat: "all" }}>
-                        Ler a IA News
-                      </Link>
-                      <a className="btn line" href="https://www.instagram.com/ianews.co/" target="_blank" rel="noopener noreferrer">
-                        Instagram @ianews.co
+                      <a className="btn blue plv-btn plv-btn-full" href={PALCO_PAGAMENTO_URL}>
+                        Pagar {PRECO} e confirmar a vaga
                       </a>
                     </div>
+                    <p className="fine">O link de pagamento também foi para o seu e-mail.</p>
                   </div>
                 ) : (
                   <form className="biz-form" onSubmit={onSubmit} noValidate>
                     <div className="plv-form-head">
                       <h3>Garanta sua vaga</h3>
-                      <p>Preencha em 30 segundos. O link de pagamento chega em seguida.</p>
+                      <p>Preencha em 30 segundos e siga para o pagamento.</p>
                     </div>
                     <input
                       ref={hp}
@@ -671,7 +675,7 @@ function PalcoPage() {
                       <button className="btn blue pc2-submit" type="submit" disabled={sending}>
                         {sending ? "Enviando…" : `Garantir minha vaga por ${PRECO}`}
                       </button>
-                      <span className="fine">Você paga depois, pelo link enviado no WhatsApp.</span>
+                      <span className="fine">Em seguida, você paga por Pix, cartão ou boleto.</span>
                       <p className="msg err" role="status" aria-live="polite">
                         {failMsg ?? ""}
                       </p>
