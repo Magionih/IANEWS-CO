@@ -29,12 +29,13 @@ export async function asaas<T = Record<string, any>>(path: string, init: { metho
   return json as T;
 }
 
-/* Token que o Asaas manda no cabeçalho "asaas-access-token" do webhook. Derivado do CRON_SECRET,
-   para não exigir mais uma variável na Vercel; a rota /api/public/hooks/asaas-setup registra o webhook com ele. */
+/* Token que o Asaas manda no cabeçalho "asaas-access-token" do webhook, sem exigir mais uma variável na Vercel;
+   a rota /api/public/hooks/asaas-setup registra o webhook com ele. */
 export function asaasWebhookToken(): string | null {
   const proprio = process.env.ASAAS_WEBHOOK_TOKEN?.trim();
   if (proprio) return proprio;
-  const s = process.env.CRON_SECRET;
+  // Derivado da própria chave do Asaas (ou do CRON_SECRET, se a chave faltar). Se a chave mudar, rode /api/public/hooks/asaas-setup de novo.
+  const s = asaasKey() || process.env.CRON_SECRET;
   return s ? createHmac("sha256", s).update("ianews-asaas-webhook").digest("hex") : null;
 }
 
