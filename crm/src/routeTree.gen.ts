@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as CrmIndexRouteImport } from './routes/_crm.index'
 import { Route as CrmAudienciaRouteImport } from './routes/_crm.audiencia'
 import { Route as CrmConfigRouteImport } from './routes/_crm.config'
+import { Route as CrmDirectRouteImport } from './routes/_crm.direct'
 import { Route as CrmFilaRouteImport } from './routes/_crm.fila'
 import { Route as CrmListaRouteImport } from './routes/_crm.lista'
 import { Route as CrmNegociosRouteImport } from './routes/_crm.negocios'
@@ -52,6 +53,11 @@ const CrmAudienciaRoute = CrmAudienciaRouteImport.update({
 const CrmConfigRoute = CrmConfigRouteImport.update({
   id: '/config',
   path: '/config',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDirectRoute = CrmDirectRouteImport.update({
+  id: '/direct',
+  path: '/direct',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmFilaRoute = CrmFilaRouteImport.update({
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/audiencia': typeof CrmAudienciaRoute
   '/config': typeof CrmConfigRoute
+  '/direct': typeof CrmDirectRoute
   '/fila': typeof CrmFilaRoute
   '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/audiencia': typeof CrmAudienciaRoute
   '/config': typeof CrmConfigRoute
+  '/direct': typeof CrmDirectRoute
   '/fila': typeof CrmFilaRoute
   '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_crm/audiencia': typeof CrmAudienciaRoute
   '/_crm/config': typeof CrmConfigRoute
+  '/_crm/direct': typeof CrmDirectRoute
   '/_crm/fila': typeof CrmFilaRoute
   '/_crm/lista': typeof CrmListaRoute
   '/_crm/negocios': typeof CrmNegociosRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/audiencia'
     | '/config'
+    | '/direct'
     | '/fila'
     | '/lista'
     | '/negocios'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/audiencia'
     | '/config'
+    | '/direct'
     | '/fila'
     | '/lista'
     | '/negocios'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_crm/audiencia'
     | '/_crm/config'
+    | '/_crm/direct'
     | '/_crm/fila'
     | '/_crm/lista'
     | '/_crm/negocios'
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       path: '/config'
       fullPath: '/config'
       preLoaderRoute: typeof CrmConfigRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/direct': {
+      id: '/_crm/direct'
+      path: '/direct'
+      fullPath: '/direct'
+      preLoaderRoute: typeof CrmDirectRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/fila': {
@@ -417,6 +436,7 @@ declare module '@tanstack/react-router' {
 interface CrmRouteChildren {
   CrmAudienciaRoute: typeof CrmAudienciaRoute
   CrmConfigRoute: typeof CrmConfigRoute
+  CrmDirectRoute: typeof CrmDirectRoute
   CrmFilaRoute: typeof CrmFilaRoute
   CrmListaRoute: typeof CrmListaRoute
   CrmNegociosRoute: typeof CrmNegociosRoute
@@ -436,6 +456,7 @@ interface CrmRouteChildren {
 const CrmRouteChildren: CrmRouteChildren = {
   CrmAudienciaRoute: CrmAudienciaRoute,
   CrmConfigRoute: CrmConfigRoute,
+  CrmDirectRoute: CrmDirectRoute,
   CrmFilaRoute: CrmFilaRoute,
   CrmListaRoute: CrmListaRoute,
   CrmNegociosRoute: CrmNegociosRoute,

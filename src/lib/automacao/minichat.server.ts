@@ -469,9 +469,15 @@ async function inscreverAula(db: any, c: Conversa, email: string, w: string) {
 
 /* ---------------- Motor ---------------- */
 
-async function palavraDe(db: any, texto: string, mediaId?: string | null): Promise<string | null> {
-  const tokens = norm(texto).split(/\s+/).filter(Boolean);
-  if (!tokens.length) return null;
+/** Palavra-chave na mensagem. Comentário: vale em qualquer posição das 8 primeiras palavras.
+    Direct: só a mensagem inteira (ou até 3 palavras), e durante uma pergunta em andamento só a palavra exata,
+    para que uma resposta como "agentes de atendimento" não vire pedido de atendimento. */
+async function palavraDe(db: any, texto: string, mediaId: string | null | undefined, modo: "comentario" | "direct" | "resposta"): Promise<string | null> {
+  const todos = norm(texto).split(/\s+/).filter(Boolean);
+  if (!todos.length) return null;
+  if (modo === "resposta" && todos.length > 1) return null;
+  if (modo === "direct" && todos.length > 3) return null;
+  const tokens = modo === "comentario" ? todos.slice(0, 8) : todos;
   const juntos = tokens.join("");
   const { data } = await db.from("ig_palavras").select("palavra, fluxo, media_id").eq("ativo", true);
   const lista = (data ?? []) as { palavra: string; fluxo: string; media_id: string | null }[];
@@ -510,7 +516,9 @@ export async function processar(db: any, canal: Canal, e: Entrada): Promise<{ fl
   }
 
   const texto = e.texto ?? "";
-  const fluxoPalavra = e.payload?.startsWith("F:") ? e.payload.slice(2) : await palavraDe(db, texto, e.mediaId);
+  const fluxoPalavra = e.payload?.startsWith("F:")
+    ? e.payload.slice(2)
+    : await palavraDe(db, texto, e.mediaId, e.tipo === "comentario" ? "comentario" : c.passo ? "resposta" : "direct");
   const agora = Date.now();
 
   if (fluxoPalavra === "sair") {

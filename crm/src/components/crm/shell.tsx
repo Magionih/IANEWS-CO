@@ -21,6 +21,7 @@ import {
   Clapperboard,
   Gauge,
   ListOrdered,
+  MessageCircle,
 } from "lucide-react";
 
 import logo from "@/assets/ianews-logo-white.png";
@@ -48,6 +49,7 @@ const MENU: Item[] = [
   { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
   { to: "/fila", rotulo: "Fila do dia", icone: Send },
   { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
+  { to: "/direct", rotulo: "Direct", icone: MessageCircle },
   { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
   { to: "/empresas", rotulo: "Empresas", icone: Building2 },
   { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },

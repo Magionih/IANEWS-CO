@@ -142,3 +142,9 @@ language sql stable security definer set search_path = public as $$
   )
 $$;
 revoke all on function ig_em_conversa(text) from public, anon, authenticated;
+
+-- Acesso da equipe pelo CRM (página Direct)
+create policy ig_conversas_equipe on ig_conversas for all using (crm_tem_acesso()) with check (crm_tem_acesso());
+create policy ig_eventos_equipe on ig_eventos for select using (crm_tem_acesso());
+create policy ig_palavras_ler on ig_palavras for select using (crm_tem_acesso());
+create policy ig_palavras_admin on ig_palavras for all using (crm_e_admin()) with check (crm_e_admin());

@@ -1,3 +1,4 @@
+import { comChamada } from "./chamadas";
 // Somente servidor. Chamadas de IA da máquina comercial, no mesmo provedor da automação de
 // notícias (AI_BASE_URL / AI_API_KEY / AI_FAST_MODEL). Sem chave, as funções devolvem null.
 
@@ -385,7 +386,7 @@ export async function redigirDestaque(input: {
       .slice(0, 7),
     seo_title: limpa(r.seo_title, 70),
     seo_description: limpa(r.seo_description, 160),
-    legenda: limpa(r.legenda, 2200),
+    legenda: comChamada(limpa(r.legenda, 2160), "destaque", JSON.stringify(input.dados ?? {})),
     capa: {
       titulo: limpa(r.capa?.titulo, 90),
       destaque: limpa(r.capa?.destaque, 40),
@@ -581,6 +582,6 @@ export async function redigirCarrosselNoticia(artigo: {
           }
         : null,
     final: { titulo: limpa(r.final?.titulo, 90), texto: limpa(r.final?.texto, 170) },
-    legenda: limpa(r.legenda, 2200),
+    legenda: comChamada(limpa(r.legenda, 2160), "noticia", `${artigo.title} ${artigo.dek ?? ""} ${(artigo.tags ?? []).join(" ")}`),
   };
 }
