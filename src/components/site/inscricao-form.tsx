@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { maskPhone } from "@/lib/pauta-validate";
+import { pixel } from "@/lib/pixel";
 import { CANAL_URL, CONTATO, MAX_INDICADOS, VAZIA, validar, type Erros, type Inscricao, type Tipo } from "@/lib/inscricao";
 
 /* Peças comuns dos formulários de /lista100, /aula, /conselho e /projetos, no visual do /palco (pc2).
@@ -76,6 +77,9 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
         refresh?: boolean;
       };
       if (res.ok && json.ok) {
+        // Pixel da Meta: Conselho e Balcão contam como Lead; Aula e Lista 100 como cadastro.
+        if (tipo === "conselho" || tipo === "projeto") pixel("Lead", { content_name: tipo === "conselho" ? "Conselho IA News" : "Balcão de Projetos", content_category: tipo });
+        else pixel("CompleteRegistration", { content_name: tipo, content_category: tipo });
         setFeito({ nome: form.nome.trim().split(/\s+/)[0] ?? "", already: json.already === true, agendado_em: json.agendado_em ?? null });
         return;
       }

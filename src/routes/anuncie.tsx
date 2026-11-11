@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { submitContactMessage } from "@/lib/contact.functions";
 import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
+import { pixel } from "@/lib/pixel";
 
 export const Route = createFileRoute("/anuncie")({
   head: () => ({
@@ -14,13 +15,13 @@ export const Route = createFileRoute("/anuncie")({
       {
         name: "description",
         content:
-          "Formatos de mídia do IA News: newsletter diária, display no site, conteúdo patrocinado e ações sob medida para alcançar decisores de tecnologia.",
+          "Planos de publicidade da IA News: destaque, Presença, Autoridade e Patrocínio, com conteúdo editorial em collab nos 7 canais.",
       },
       { property: "og:title", content: "Anuncie no IA News" },
       {
         property: "og:description",
         content:
-          "Newsletter diária, display e conteúdo patrocinado para decisores de IA no Brasil.",
+          "Conteúdo editorial em collab para marcas que querem estar na conversa sobre IA nos negócios.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -33,53 +34,53 @@ export const Route = createFileRoute("/anuncie")({
 
 const FORMATS = [
   {
-    title: "Newsletter diária",
-    text: "Patrocínio da edição das 8h com bloco de marca, texto editorial e link rastreável.",
+    title: "Destaque · R$ 350",
+    text: "Matéria exclusiva de destaque no portal, capa em collab no Instagram e link nos stories. Bom para começar.",
   },
   {
-    title: "Display no site",
-    text: "Posições premium na home, nas matérias e no Ranking IA, em desktop e mobile.",
+    title: "Presença · R$ 1.050 por 1 mês",
+    text: "Matéria de destaque com carrossel em collab, 1 Reels e 1 sequência de stories com link.",
   },
   {
-    title: "Conteúdo patrocinado",
-    text: "Matéria produzida com o padrão editorial do IA News, sinalizada como conteúdo de marca.",
+    title: "Autoridade · R$ 2.490 por mês",
+    text: "Matéria com carrossel em collab, 3 Reels, 2 posts no feed e 4 sequências de stories, nos 7 canais, nos horários de maior audiência.",
   },
   {
-    title: "Ações sob medida",
-    text: "Pesquisas, relatórios setoriais e cobertura de eventos com a audiência do IA News.",
+    title: "Patrocínio · R$ 5.900 por mês",
+    text: "Série \u201capresentada por\u201d a sua marca, exclusividade de categoria e edição dedicada da newsletter.",
   },
 ];
 
 const AUDIENCE = [
-  { value: "Diária", label: "Frequência editorial" },
-  { value: "C-level", label: "Perfil predominante" },
-  { value: "Brasil", label: "Cobertura principal" },
+  { value: "1 mi+", label: "Visualizações em 30 dias" },
+  { value: "340 mil", label: "Contas alcançadas em 30 dias" },
+  { value: "108,8 mil", label: "Seguidores no Instagram" },
 ];
 
 const REASONS = [
   {
-    title: "Audiência qualificada.",
-    text: "Decisores que acompanham IA por obrigação profissional, não por curiosidade.",
+    title: "Conteúdo, não banner.",
+    text: "Sua marca entra numa matéria da redação, que o público lê como notícia.",
   },
   {
-    title: "Contexto editorial.",
-    text: "Sua marca aparece ao lado de análise própria, não de conteúdo genérico.",
+    title: "Gente nova a cada post.",
+    text: "55% das visualizações da IA News vêm de quem ainda não segue o perfil.",
   },
   {
-    title: "Transparência.",
-    text: "Relatórios de entrega, cliques e leitura ao final de cada campanha.",
+    title: "Você aprova antes.",
+    text: "Nada vai ao ar sem a sua aprovação, sempre sinalizado como parceria paga.",
   },
   {
-    title: "Formatos flexíveis.",
-    text: "Do patrocínio pontual da newsletter a programas anuais.",
+    title: "Sete canais.",
+    text: "Instagram, Facebook, LinkedIn, Threads, portal, newsletter e canal no WhatsApp.",
   },
 ];
 
 const BUDGETS = [
-  "Até R$ 5 mil",
-  "R$ 5 mil a R$ 15 mil",
-  "R$ 15 mil a R$ 50 mil",
-  "Acima de R$ 50 mil",
+  "Até R$ 1 mil",
+  "R$ 1 mil a R$ 3 mil",
+  "R$ 3 mil a R$ 6 mil",
+  "Acima de R$ 6 mil",
   "Ainda definindo",
 ];
 
@@ -116,6 +117,7 @@ function AnunciePage() {
           message: form.message,
         },
       });
+      pixel("Lead", { content_name: "Publicidade IA News", content_category: "publicidade" });
       toast.success("Recebemos seu contato! Enviaremos o mídia kit em breve.");
       setForm({ name: "", email: "", phone: "", company: "", budget: "", message: "" });
     } catch (err) {
@@ -135,9 +137,8 @@ function AnunciePage() {
               <p className="kick">Mídia IA News</p>
               <h1>Anuncie para quem decide a agenda de IA das empresas</h1>
               <p className="sub">
-                O IA News é lido por executivos, fundadores e times de tecnologia que precisam
-                entender o impacto da inteligência artificial no negócio — todos os dias, antes das
-                8h.
+                A IA News conta quem está fazendo IA de verdade nos negócios brasileiros. Sua marca entra
+                nessa conversa com conteúdo editorial em collab, aprovado por você antes de ir ao ar.
               </p>
             </div>
 
@@ -146,8 +147,8 @@ function AnunciePage() {
                 <div>
                   <h2 className="h-big">Solicite o mídia kit</h2>
                   <p className="fine" style={{ marginTop: 8, fontSize: 15 }}>
-                    Preencha os dados e nosso time comercial retorna com formatos, disponibilidade e
-                    valores.
+                    Preencha os dados e o Henrique Magioni, da IA News, retorna com as vagas do mês e o
+                    plano que faz sentido para a sua marca.
                   </p>
                 </div>
 
