@@ -19,6 +19,7 @@ import { PwaManager } from "@/components/site/pwa";
 import { ConsentBanner } from "@/components/site/consent-banner";
 import { ScrollToTop } from "@/components/site/scroll-to-top";
 import { supabase } from "@/integrations/supabase/client";
+import { pixel } from "@/lib/pixel";
 
 function NotFoundComponent() {
   return (
@@ -203,7 +204,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ...(import.meta.env.VITE_META_PIXEL_ID
         ? [
             {
-              children: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${String(import.meta.env.VITE_META_PIXEL_ID).replace(/[^0-9]/g, "")}');fbq('track','PageView');`,
+              children: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');try{if(localStorage.getItem('ianews-consent-v1')!=='all')fbq('consent','revoke')}catch(e){fbq('consent','revoke')}fbq('init','${String(import.meta.env.VITE_META_PIXEL_ID).replace(/[^0-9]/g, "")}');fbq('track','PageView');`,
             },
           ]
         : []),
@@ -242,6 +243,15 @@ function RootComponent() {
     });
     return () => subscription.unsubscribe();
   }, [router, queryClient]);
+
+  // Pixel da Meta: o script conta a 1ª página; aqui contam as trocas de página dentro do site.
+  useEffect(
+    () =>
+      router.subscribe("onResolved", (e) => {
+        if (e.pathChanged && e.fromLocation) pixel("PageView");
+      }),
+    [router],
+  );
 
   return (
     <QueryClientProvider client={queryClient}>

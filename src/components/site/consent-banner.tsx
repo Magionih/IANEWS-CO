@@ -16,6 +16,9 @@ export function readConsent(): ConsentValue | null {
 
 function writeConsent(v: ConsentValue) {
   window.localStorage.setItem(KEY, v);
+  // Pixel da Meta só envia dados depois do "aceitar todos" (até lá os eventos ficam retidos).
+  const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;
+  if (typeof fbq === "function") fbq("consent", v === "all" ? "grant" : "revoke");
   listeners.forEach((fn) => fn(v));
 }
 

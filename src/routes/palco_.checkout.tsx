@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { PALCO_PIXEL, pixel, pixelOnce } from "@/lib/pixel";
 
 import logoWhite from "@/assets/ianews-logo-white.png";
 import { CONTACT_EMAIL } from "@/lib/pauta-validate";
@@ -98,9 +99,15 @@ function CheckoutPage() {
         if (!p) return;
         setPedido(p);
         if (p.metodo) setMetodo(p.metodo);
+        if (!p.pago) pixel("InitiateCheckout", { ...PALCO_PIXEL, num_items: 1 }, `checkout-${i}`);
       })
       .catch(() => setErroCarga(true));
   }, [i, t, consultar]);
+
+  // Compra confirmada: um Purchase por pedido (eventID = inscrição, para deduplicar com a API de Conversões).
+  useEffect(() => {
+    if (pedido?.pago && i) pixelOnce(`purchase-${i}`, "Purchase", { ...PALCO_PIXEL, num_items: 1 }, `purchase-${i}`);
+  }, [pedido?.pago, i]);
 
   // Com o Pix na tela, confere o pagamento a cada 5 segundos.
   useEffect(() => {
@@ -129,6 +136,7 @@ function CheckoutPage() {
       }
     }
     setEnviando(true);
+    pixel("AddPaymentInfo", { ...PALCO_PIXEL, payment_type: metodo }, `payinfo-${i}-${metodo}`);
     try {
       const res = await fetch("/api/public/palco-checkout", {
         method: "POST",

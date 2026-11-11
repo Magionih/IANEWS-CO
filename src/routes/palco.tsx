@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { PALCO_PIXEL, pixel } from "@/lib/pixel";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -216,6 +217,10 @@ function PalcoPage() {
   }, [done]);
 
   useEffect(() => {
+    pixel("ViewContent", PALCO_PIXEL);
+  }, []);
+
+  useEffect(() => {
     // Página de origem: de onde a pessoa veio (outra página do site ou site externo).
     try {
       if (document.referrer) {
@@ -271,6 +276,7 @@ function PalcoPage() {
         token?: string;
       };
       if (res.ok && json.ok && json.id && json.token) {
+        pixel("Lead", PALCO_PIXEL, `lead-${json.id}`);
         // Vai direto para o checkout da IA News, com o pedido desta inscrição.
         navigate({ to: "/palco/checkout", search: { i: json.id, t: json.token } });
         return;
