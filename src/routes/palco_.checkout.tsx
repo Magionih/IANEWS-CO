@@ -389,6 +389,7 @@ function CheckoutPage() {
               </div>
             </div>
             <p className="ck-bonus">Os {PRECO} viram desconto no Palco presencial, em Belo Horizonte, em fevereiro de 2027.</p>
+            <p className="ck-bonus">Garantia de 7 dias: desistiu depois da compra, devolvemos 100% do valor.</p>
             <p className="ck-org">
               Realização IA News e FGIA Educação. Dúvidas: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             </p>

@@ -121,6 +121,7 @@ const INCLUI = [
   { t: "Slides do Raio-X IA News 2026", d: "Os dados apresentados, para usar no seu planejamento" },
   { t: "Playbook IA 2027", d: "Roteiro para quem compra e para quem vende IA" },
   { t: "R$ 97 de crédito no presencial", d: "Vira desconto no Palco IA News em Belo Horizonte, em fevereiro" },
+  { t: "Garantia de 7 dias", d: "Desistiu em até 7 dias depois da compra? Devolvemos 100%" },
 ];
 
 const FAQ = [
@@ -130,6 +131,10 @@ const FAQ = [
   },
   { q: "Como eu assisto?", a: "É online e ao vivo. O link de acesso chega por WhatsApp e e-mail, na véspera e 2 horas antes do início." },
   { q: "E se eu não puder ver ao vivo?", a: "A gravação fica disponível por 30 dias para quem se inscreveu." },
+  {
+    q: "E se eu desistir?",
+    a: `Você tem 7 dias depois da compra para desistir. É só escrever para ${CONTACT_EMAIL} e devolvemos 100% do valor, pelo mesmo meio de pagamento.`,
+  },
   {
     q: "E o evento presencial?",
     a: "O Palco IA News presencial acontece em Belo Horizonte, em fevereiro de 2027. Quem participar do online tem prioridade e usa os R$ 97 como desconto no ingresso.",
@@ -356,7 +361,10 @@ function PalcoPage() {
                   Ver a programação
                 </a>
               </div>
-              <p className="plv-fine">Gravação por 30 dias. Os {PRECO} viram desconto no presencial de fevereiro.</p>
+              <p className="plv-fine">
+                Gravação por 30 dias. Os {PRECO} viram desconto no presencial de fevereiro. Garantia de 7 dias: desistiu,
+                devolvemos 100%.
+              </p>
             </div>
 
             <aside className="plv-ticket" aria-label="Resumo do ingresso">
