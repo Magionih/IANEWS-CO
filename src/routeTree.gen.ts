@@ -59,6 +59,7 @@ import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/un
 import { Route as ApiPublicHooksAsaasRouteImport } from './routes/api/public/hooks/asaas'
 import { Route as ApiPublicHooksAsaasSetupRouteImport } from './routes/api/public/hooks/asaas-setup'
 import { Route as ApiPublicHooksAutoLeadsRouteImport } from './routes/api/public/hooks/auto-leads'
+import { Route as ApiPublicHooksCapiCheckRouteImport } from './routes/api/public/hooks/capi-check'
 import { Route as ApiPublicHooksCarrosselNoticiasRouteImport } from './routes/api/public/hooks/carrossel-noticias'
 import { Route as ApiPublicHooksCobrancasRouteImport } from './routes/api/public/hooks/cobrancas'
 import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hooks/cover'
@@ -331,6 +332,11 @@ const ApiPublicHooksAutoLeadsRoute = ApiPublicHooksAutoLeadsRouteImport.update({
   path: '/api/public/hooks/auto-leads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksCapiCheckRoute = ApiPublicHooksCapiCheckRouteImport.update({
+  id: '/api/public/hooks/capi-check',
+  path: '/api/public/hooks/capi-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksCarrosselNoticiasRoute =
   ApiPublicHooksCarrosselNoticiasRouteImport.update({
     id: '/api/public/hooks/carrossel-noticias',
@@ -493,6 +499,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/asaas': typeof ApiPublicHooksAsaasRoute
   '/api/public/hooks/asaas-setup': typeof ApiPublicHooksAsaasSetupRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/capi-check': typeof ApiPublicHooksCapiCheckRoute
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
@@ -564,6 +571,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/asaas': typeof ApiPublicHooksAsaasRoute
   '/api/public/hooks/asaas-setup': typeof ApiPublicHooksAsaasSetupRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/capi-check': typeof ApiPublicHooksCapiCheckRoute
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
@@ -637,6 +645,7 @@ export interface FileRoutesById {
   '/api/public/hooks/asaas': typeof ApiPublicHooksAsaasRoute
   '/api/public/hooks/asaas-setup': typeof ApiPublicHooksAsaasSetupRoute
   '/api/public/hooks/auto-leads': typeof ApiPublicHooksAutoLeadsRoute
+  '/api/public/hooks/capi-check': typeof ApiPublicHooksCapiCheckRoute
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
@@ -710,6 +719,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/asaas'
     | '/api/public/hooks/asaas-setup'
     | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/capi-check'
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
@@ -781,6 +791,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/asaas'
     | '/api/public/hooks/asaas-setup'
     | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/capi-check'
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
@@ -853,6 +864,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/asaas'
     | '/api/public/hooks/asaas-setup'
     | '/api/public/hooks/auto-leads'
+    | '/api/public/hooks/capi-check'
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
@@ -924,6 +936,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAsaasRoute: typeof ApiPublicHooksAsaasRoute
   ApiPublicHooksAsaasSetupRoute: typeof ApiPublicHooksAsaasSetupRoute
   ApiPublicHooksAutoLeadsRoute: typeof ApiPublicHooksAutoLeadsRoute
+  ApiPublicHooksCapiCheckRoute: typeof ApiPublicHooksCapiCheckRoute
   ApiPublicHooksCarrosselNoticiasRoute: typeof ApiPublicHooksCarrosselNoticiasRoute
   ApiPublicHooksCobrancasRoute: typeof ApiPublicHooksCobrancasRoute
   ApiPublicHooksCoverRoute: typeof ApiPublicHooksCoverRoute
@@ -1298,6 +1311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoLeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/capi-check': {
+      id: '/api/public/hooks/capi-check'
+      path: '/api/public/hooks/capi-check'
+      fullPath: '/api/public/hooks/capi-check'
+      preLoaderRoute: typeof ApiPublicHooksCapiCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/carrossel-noticias': {
       id: '/api/public/hooks/carrossel-noticias'
       path: '/api/public/hooks/carrossel-noticias'
@@ -1504,6 +1524,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAsaasRoute: ApiPublicHooksAsaasRoute,
   ApiPublicHooksAsaasSetupRoute: ApiPublicHooksAsaasSetupRoute,
   ApiPublicHooksAutoLeadsRoute: ApiPublicHooksAutoLeadsRoute,
+  ApiPublicHooksCapiCheckRoute: ApiPublicHooksCapiCheckRoute,
   ApiPublicHooksCarrosselNoticiasRoute: ApiPublicHooksCarrosselNoticiasRoute,
   ApiPublicHooksCobrancasRoute: ApiPublicHooksCobrancasRoute,
   ApiPublicHooksCoverRoute: ApiPublicHooksCoverRoute,
