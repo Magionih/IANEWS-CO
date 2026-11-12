@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { PALCO_DESCRICAO, PALCO_PAGAMENTO_URL, PALCO_VALOR } from "@/lib/palco-validate";
 import { PAGO, asaas, asaasKey, cnpjValido, cpfValido, soDigitos } from "@/lib/asaas.server";
+import { PALCO_CAPI, capiAtiva, capiCompraPalco, enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
 
 /* Checkout do Palco IA News Online (/palco/checkout).
    GET  ?i=<inscrição>&t=<token>            → dados do pedido e status (consulta o Asaas se ainda estiver pendente)
@@ -27,7 +28,7 @@ async function carregar(i: string | null, t: string | null) {
   const db = supabaseAdmin as any;
   const { data } = await db
     .from("palco_inscricoes")
-    .select("id, nome, email, whatsapp, empresa, status, checkout_token, asaas_customer_id, asaas_payment_id, pagamento_metodo")
+    .select("id, nome, email, whatsapp, empresa, status, checkout_token, asaas_customer_id, asaas_payment_id, pagamento_metodo, meta_ctx, capi_checkout_em")
     .eq("id", i)
     .eq("checkout_token", t)
     .maybeSingle();
@@ -45,6 +46,7 @@ async function marcarPago(db: any, id: string, metodo?: string | null) {
     .update({ status: "pago", pago_em: new Date().toISOString(), pagamento_atualizado_em: new Date().toISOString(), ...(metodo ? { pagamento_metodo: metodo } : {}) })
     .eq("id", id)
     .neq("status", "pago");
+  await capiCompraPalco(db, id);
 }
 
 export const Route = createFileRoute("/api/public/palco-checkout")({
@@ -91,6 +93,28 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
         if (row.status === "pago" || row.status === "cortesia") return Response.json({ ok: true, pago: true });
 
         const metodo = (["pix", "cartao", "boleto"].includes(String(body["metodo"])) ? body["metodo"] : "pix") as Metodo;
+
+        // API de Conversões: guarda o contexto mais recente (quem aceitou os cookies depois da inscrição também entra)
+        // e manda o InitiateCheckout uma vez, com o mesmo event_id do Pixel (checkout-<id>).
+        const ctx = lerMetaCtx(body["meta"], request) ?? (row.meta_ctx as ReturnType<typeof lerMetaCtx>);
+        if (ctx && capiAtiva()) {
+          const primeiro = !row.capi_checkout_em;
+          await db
+            .from("palco_inscricoes")
+            .update({ meta_ctx: ctx, ...(primeiro ? { capi_checkout_em: new Date().toISOString() } : {}) })
+            .eq("id", row.id);
+          if (primeiro) {
+            await enviarCapi(
+              "InitiateCheckout",
+              `checkout-${row.id}`,
+              { email: row.email, phone: row.whatsapp, nome: row.nome, externalId: row.id },
+              ctx,
+              { ...PALCO_CAPI, num_items: 1 },
+            );
+          }
+        } else if (ctx) {
+          await db.from("palco_inscricoes").update({ meta_ctx: ctx }).eq("id", row.id);
+        }
         if (!asaasKey()) return Response.json({ ok: true, modo: "link", url: PALCO_PAGAMENTO_URL });
 
         const doc = soDigitos(String(body["documento"] ?? ""));

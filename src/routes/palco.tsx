@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { PALCO_PIXEL, pixel } from "@/lib/pixel";
+import { PALCO_PIXEL, metaCtx, pixel } from "@/lib/pixel";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -265,6 +265,7 @@ function PalcoPage() {
           utm_source: search.utm_source ?? null,
           utm_medium: search.utm_medium ?? null,
           utm_campaign: search.utm_campaign ?? null,
+          meta: metaCtx(),
         }),
       });
       const json = (await res.json().catch(() => ({}))) as {

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
 import { AULA, PERFIL_DA_CATEGORIA, validar, VAZIA, type Inscricao, type Tipo } from "@/lib/inscricao";
+import { enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
 
 /* Recebe as inscrições de /lista100, /aula, /conselho e /projetos. Revalida tudo, descarta robôs (campo isca),
    limita 5 envios por hora por IP ou e-mail e grava em site_inscricoes. Um gatilho no banco leva a pessoa (e os
@@ -147,6 +148,19 @@ export const Route = createFileRoute("/api/public/inscricao")({
           }
           console.error("[inscricao] insert", error.message);
           return Response.json({ ok: false, error: FALHA }, { status: 500 });
+        }
+
+        // API de Conversões: mesmo event_id gerado no navegador (campo meta.event_id). Só com consentimento e fora de teste.
+        const ctx = lerMetaCtx(body["meta"], request);
+        if (ctx?.event_id && row.status === "recebido") {
+          const lead = tipo === "conselho" || tipo === "projeto";
+          await enviarCapi(
+            lead ? "Lead" : "CompleteRegistration",
+            ctx.event_id,
+            { email: row.email, phone: row.whatsapp, nome: row.nome },
+            ctx,
+            { content_name: tipo === "conselho" ? "Conselho IA News" : tipo === "projeto" ? "Balcão de Projetos" : tipo, content_category: tipo },
+          );
         }
 
         try {

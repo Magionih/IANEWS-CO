@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { timingSafeEqual } from "crypto";
 
 import { asaasWebhookToken } from "@/lib/asaas.server";
+import { capiCompraPalco } from "@/lib/meta-capi.server";
 
 /* Webhook do Asaas: quando a cobrança do Palco é paga, marca a inscrição como paga.
    O gatilho palco_inscricao_status leva o negócio do CRM para Confirmado. Confere o cabeçalho asaas-access-token. */
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas")({
             .update({ status: "pago", pago_em: agora, pagamento_atualizado_em: agora, asaas_payment_id: p.id ?? null })
             .eq("id", ref)
             .neq("status", "pago");
+          await capiCompraPalco(db, ref);
         } else if (body.event === "PAYMENT_REFUNDED") {
           await db.from("palco_inscricoes").update({ status: "cancelado", pagamento_atualizado_em: agora }).eq("id", ref);
         } else {

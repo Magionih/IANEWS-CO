@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { PALCO_PIXEL, pixel, pixelOnce } from "@/lib/pixel";
+import { PALCO_PIXEL, metaCtx, pixel, pixelOnce } from "@/lib/pixel";
 
 import logoWhite from "@/assets/ianews-logo-white.png";
 import { CONTACT_EMAIL } from "@/lib/pauta-validate";
@@ -141,7 +141,7 @@ function CheckoutPage() {
       const res = await fetch("/api/public/palco-checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ i, t, documento: doc, metodo }),
+        body: JSON.stringify({ i, t, documento: doc, metodo, meta: metaCtx() }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

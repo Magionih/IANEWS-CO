@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { submitContactMessage } from "@/lib/contact.functions";
 import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
-import { pixel } from "@/lib/pixel";
+import { metaCtx, novoEventId, pixel } from "@/lib/pixel";
 
 export const Route = createFileRoute("/anuncie")({
   head: () => ({
@@ -104,8 +104,10 @@ function AnunciePage() {
     const newsletter = wantsNewsletter(e);
     setLoading(true);
     try {
+      const eventId = novoEventId("anuncie");
       await submitContactMessage({
         data: {
+          meta: metaCtx(eventId),
           newsletter,
           kind: "anuncie",
           full_name: form.name,
@@ -117,7 +119,7 @@ function AnunciePage() {
           message: form.message,
         },
       });
-      pixel("Lead", { content_name: "Publicidade IA News", content_category: "publicidade" });
+      pixel("Lead", { content_name: "Publicidade IA News", content_category: "publicidade" }, eventId);
       toast.success("Recebemos seu contato! Enviaremos o mídia kit em breve.");
       setForm({ name: "", email: "", phone: "", company: "", budget: "", message: "" });
     } catch (err) {

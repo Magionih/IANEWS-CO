@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
 import { validatePalco, type PalcoInput } from "@/lib/palco-validate";
+import { PALCO_CAPI, enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
 
 /* Recebe a inscrição da página /palco. Revalida tudo, descarta robôs (campo isca), limita 3 envios por hora
    por IP ou e-mail, não duplica quem já está na lista e grava em palco_inscricoes. Um gatilho no banco leva a
@@ -100,6 +101,7 @@ export const Route = createFileRoute("/api/public/palco")({
           utm_campaign: optional(body["utm_campaign"], 120),
           device: /mobi|android|iphone|ipad/i.test(ua) ? "celular" : "computador",
           ip_hash: ipHash,
+          meta_ctx: lerMetaCtx(body["meta"], request),
         };
 
         const { data: criado, error } = await db.from("palco_inscricoes").insert(row).select("id, checkout_token").single();
@@ -107,6 +109,9 @@ export const Route = createFileRoute("/api/public/palco")({
           console.error("[palco] insert error", error?.message);
           return Response.json({ ok: false, error: FAIL }, { status: 500 });
         }
+
+        // API de Conversões: mesmo event_id do Pixel (lead-<id>), a Meta deduplica. Só com consentimento.
+        await enviarCapi("Lead", `lead-${criado.id}`, { email: row.email, phone: row.whatsapp, nome: row.nome, externalId: criado.id }, row.meta_ctx, PALCO_CAPI);
 
         // Avisos por e-mail: não bloqueiam a resposta se o envio falhar.
         try {

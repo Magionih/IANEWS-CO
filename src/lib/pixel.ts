@@ -27,4 +27,29 @@ export function pixelOnce(key: string, event: string, params?: Record<string, un
   pixel(event, params, eventID);
 }
 
+/* Contexto para a API de Conversões (vai no corpo dos formulários, campo "meta"). Só leva os cookies da Meta
+   de quem aceitou a medição; sem consentimento, o servidor não envia nada à Meta. */
+export function metaCtx(eventId?: string) {
+  if (typeof window === "undefined") return { consent: false };
+  let consent = false;
+  try {
+    consent = window.localStorage.getItem("ianews-consent-v1") === "all";
+  } catch {
+    consent = false;
+  }
+  if (!consent) return { consent: false };
+  const cookie = (n: string) => document.cookie.match(new RegExp(`(?:^|; )${n}=([^;]*)`))?.[1] ?? null;
+  let fbc = cookie("_fbc");
+  if (!fbc) {
+    const clid = new URLSearchParams(window.location.search).get("fbclid");
+    if (clid) fbc = `fb.1.${Date.now()}.${clid}`;
+  }
+  return { consent: true, fbp: cookie("_fbp"), fbc, url: window.location.href.split("#")[0], event_id: eventId ?? null };
+}
+
+export function novoEventId(prefixo: string) {
+  const r = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}${Math.random().toString(16).slice(2)}`;
+  return `${prefixo}-${r}`;
+}
+
 export const PALCO_PIXEL = { content_name: "Palco IA News Online 16/12", content_category: "evento", currency: "BRL", value: 97 };

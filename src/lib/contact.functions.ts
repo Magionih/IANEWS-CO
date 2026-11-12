@@ -35,6 +35,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
       message: string;
       newsletter?: boolean;
       website?: string;
+      meta?: Record<string, unknown>;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -78,6 +79,23 @@ export const submitContactMessage = createServerFn({ method: "POST" })
         cta_placement: `form-${kind}`,
         is_active: data.newsletter === true,
       } as never);
+    }
+
+    // API de Conversões (só /anuncie, só com consentimento): mesmo event_id do Pixel do navegador.
+    if (kind === "anuncie") {
+      try {
+        const { getRequest } = await import("@tanstack/react-start/server");
+        const { enviarCapi, lerMetaCtx } = await import("@/lib/meta-capi.server");
+        const ctx = lerMetaCtx(data.meta, getRequest());
+        if (ctx?.event_id) {
+          await enviarCapi("Lead", ctx.event_id, { email, phone: row.phone, nome: full_name }, ctx, {
+            content_name: "Publicidade IA News",
+            content_category: "publicidade",
+          });
+        }
+      } catch (err) {
+        console.error("[contact] capi", err instanceof Error ? err.message : err);
+      }
     }
 
     // Aviso para o administrador (não bloqueia o envio do formulário).
