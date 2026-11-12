@@ -574,13 +574,14 @@ export async function processar(db: any, canal: Canal, e: Entrada): Promise<{ fl
         r = { saidas: [{ texto: `${oi(c)} Obrigada por marcar a IA News! Se quiser, posso te ajudar com alguma destas:`, botoes: MENU }], passo: "menu" };
         fluxo = "menu";
       } else {
+        // Sem mensagem automática: a conversa vai em silêncio para a Renata (pedido do Joaquim em 12/11)
         fluxo = "humano";
-        r = abertura("humano", c);
-        if (r.lead) r.lead.nota = `Mensagem: ${texto.slice(0, 400)}`;
+        r = { saidas: [], passo: null, lead: { fluxo: "humano", nota: `Mensagem: ${texto.slice(0, 400)}` } };
       }
     } else {
-      fluxo = "menu";
-      r = abertura("menu", c);
+      // Mensagem solta sem palavra-chave também não recebe resposta automática (12/11)
+      fluxo = "humano";
+      r = { saidas: [], passo: null, lead: { fluxo: "humano", nota: `Mensagem: ${texto.slice(0, 400)}` } };
     }
   }
   if (!r) return { fluxo: null, saidas: [], nota: "sem ação" };
