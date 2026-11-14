@@ -141,7 +141,7 @@ const FAQ = [
   },
   {
     q: "Quero patrocinar.",
-    a: "Escolha \"Empresa ou marca\" no formulário. A equipe da IA News te procura com as cotas de apoio e de apresentação.",
+    a: `Escreva para ${CONTACT_EMAIL}. A equipe da IA News te procura com as cotas de apoio e de apresentação.`,
   },
   { q: "Quem organiza?", a: "A IA News, com a FGIA Educação, a vertical de eventos e aulas da IA News." },
 ];
