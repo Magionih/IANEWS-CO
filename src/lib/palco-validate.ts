@@ -9,7 +9,7 @@ export const PALCO_PAGAMENTO_URL = "https://www.asaas.com/000/c/lpcqp7cryd6i4zzg
 export const PALCO_VALOR = 97;
 export const PALCO_DESCRICAO = "Palco IA News Online · 16/12/2026, 19h às 20h30";
 
-export type PalcoPapel = "empresario" | "fornecedor" | "criador" | "marca";
+export type PalcoPapel = "empresario" | "fornecedor" | "criador" | "marca" | "outro";
 
 export type PalcoInput = {
   nome: string;
@@ -62,7 +62,8 @@ export function validatePalco(p: PalcoInput): { errors: PalcoErrors; clean: Palc
     cargo: p.cargo.trim().slice(0, 120),
     whatsapp: p.whatsapp.trim(),
     email: p.email.trim().toLowerCase().slice(0, 254),
-    papel: PAPEL_VALUES.includes(p.papel) ? p.papel : "",
+    // Formulário curto (nome, WhatsApp e e-mail): papel, empresa e consentimento deixaram de ser obrigatórios.
+    papel: PAPEL_VALUES.includes(p.papel) ? p.papel : "outro",
     setor: SETORES.includes(p.setor) ? p.setor : "",
     funcionarios: PORTES.includes(p.funcionarios) ? p.funcionarios : "",
     desafio: p.desafio.trim().slice(0, DESAFIO_MAX),
@@ -72,8 +73,6 @@ export function validatePalco(p: PalcoInput): { errors: PalcoErrors; clean: Palc
   if (!clean.nome) errors.nome = empty;
   else if (clean.nome.length < 3) errors.nome = "Informe o nome completo.";
 
-  if (!clean.empresa) errors.empresa = empty;
-
   const digits = phoneDigits(clean.whatsapp);
   if (!clean.whatsapp) errors.whatsapp = empty;
   else if (digits.length < 10 || digits.length > 11) errors.whatsapp = "Confira o número com DDD.";
@@ -82,9 +81,8 @@ export function validatePalco(p: PalcoInput): { errors: PalcoErrors; clean: Palc
   if (!clean.email) errors.email = empty;
   else if (!EMAIL_RE.test(clean.email)) errors.email = "Confira o e-mail.";
 
-  if (!clean.papel) errors.papel = "Escolha a opção que mais combina com você.";
-
-  if (!clean.consentimento) errors.consentimento = "Marque para podermos guardar o seu lugar na lista.";
+  // Consentimento: o aviso fica junto do botão; enviar o formulário é o aceite.
+  clean.consentimento = true;
 
   return { errors, clean };
 }

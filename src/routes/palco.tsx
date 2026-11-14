@@ -565,7 +565,7 @@ function PalcoPage() {
                   <form className="biz-form" onSubmit={onSubmit} noValidate>
                     <div className="plv-form-head">
                       <h3>Garanta sua vaga</h3>
-                      <p>Preencha em 30 segundos e siga para o pagamento.</p>
+                      <p>Só 3 campos. Depois, o pagamento.</p>
                     </div>
                     <input
                       ref={hp}
@@ -580,7 +580,6 @@ function PalcoPage() {
                       <legend className="pc2-sr">Seus dados</legend>
                       <div className="biz-fields">
                         {field("nome", "Nome completo", { autoComplete: "name", maxLength: 160, placeholder: "Seu nome", full: true })}
-                        {field("empresa", "Empresa", { autoComplete: "organization", maxLength: 160, placeholder: "Nome da empresa", full: true })}
                         {field("whatsapp", "WhatsApp", {
                           type: "tel",
                           inputMode: "tel",
@@ -598,35 +597,17 @@ function PalcoPage() {
                       </div>
                     </fieldset>
 
-                    <fieldset aria-describedby={errors.papel ? "pc-papel-err" : undefined}>
-                      <legend className="pc2-legend">Você vem como</legend>
-                      <div className="pc2-pills">
-                        {PAPEIS.map((p, i) => (
-                          <label className="pc2-pill" key={p.value} title={p.hint}>
-                            <input
-                              type="radio"
-                              name="papel"
-                              id={`pc-papel-${i + 1}`}
-                              value={p.value}
-                              checked={form.papel === p.value}
-                              onChange={() => set("papel", p.value)}
-                            />
-                            <span>{p.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                      {errors.papel ? (
-                        <span className="pt-err" id="pc-papel-err">
-                          {errors.papel}
-                        </span>
-                      ) : null}
-                    </fieldset>
-
                     <details className="pc2-more">
                       <summary>
                         Quer levar uma pergunta para a Mesa IA News? <small>opcional</small>
                       </summary>
                       <div className="biz-fields">
+                        {field("empresa", "Empresa", {
+                          autoComplete: "organization",
+                          maxLength: 160,
+                          placeholder: "Nome da empresa",
+                          optional: true,
+                        })}
                         {field("cargo", "Cargo", {
                           autoComplete: "organization-title",
                           maxLength: 120,
@@ -675,26 +656,14 @@ function PalcoPage() {
                       </div>
                     </details>
 
-                    <label className="pt-consent" htmlFor="pc-consentimento">
-                      <input
-                        id="pc-consentimento"
-                        type="checkbox"
-                        checked={form.consentimento}
-                        onChange={(e) => set("consentimento", e.target.checked)}
-                        aria-invalid={errors.consentimento ? true : undefined}
-                      />
-                      <span>
-                        Aceito receber as informações do Palco IA News por WhatsApp e e-mail. Nada é compartilhado com
-                        terceiros. <Link to="/termos">Política de privacidade</Link>.
-                        {errors.consentimento ? <span className="pt-err">{errors.consentimento}</span> : null}
-                      </span>
-                    </label>
-
                     <div className="biz-submit">
                       <button className="btn blue pc2-submit" type="submit" disabled={sending}>
                         {sending ? "Enviando…" : `Garantir minha vaga por ${PRECO}`}
                       </button>
-                      <span className="fine">Em seguida, você paga por Pix, cartão ou boleto.</span>
+                      <span className="fine">
+                        Em seguida, você paga por Pix, cartão ou boleto. Ao continuar, você aceita receber as informações do
+                        Palco por WhatsApp e e-mail. <Link to="/termos">Privacidade</Link>.
+                      </span>
                       <p className="msg err" role="status" aria-live="polite">
                         {failMsg ?? ""}
                       </p>
