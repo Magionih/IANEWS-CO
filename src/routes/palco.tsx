@@ -146,6 +146,107 @@ const FAQ = [
   { q: "Quem organiza?", a: "A IA News, com a FGIA Educação, a vertical de eventos e aulas da IA News." },
 ];
 
+/* Cases e falas reais, de empresários que a IA News entrevistou. Não são os palestrantes do Palco:
+   os três cases do workshop são anunciados em 30/11. Números e frases saem das matérias publicadas. */
+const COVER = (slug: string, file: string) =>
+  `https://hgydwvuowxxkdgtlqrdy.supabase.co/storage/v1/object/public/covers/${slug}/${file}`;
+
+const CASES = [
+  {
+    slug: "thiago-cardoso-ifood-27-mil-agentes-de-ia-30-por-cento-ebitda",
+    img: "366049ec1c18.webp",
+    n: "27 mil",
+    t: "agentes de IA no iFood",
+    who: "Thiago Cardoso",
+    org: "iFood",
+  },
+  {
+    slug: "amanda-diniz-divos-da-ia-empresa-agentica",
+    img: "2ab712919abf.jpg",
+    n: "R$ 500 mil",
+    t: "em 6 meses, com agentes feitos por ela",
+    who: "Amanda Diniz",
+    org: "Divos da IA",
+  },
+  {
+    slug: "christian-hart-orbit-ia-gestao-agentica-1230-empresas",
+    img: "07fb181ebf82.png",
+    n: "R$ 6 mi",
+    t: "de receita recorrente, com 40 agentes",
+    who: "Christian Hart",
+    org: "Orbit",
+  },
+  {
+    slug: "rodrigo-lins-nevoa-ai-controlador-ia-advocacia",
+    img: "1e25c3320e33.webp",
+    n: "2,4 mi",
+    t: "de tarefas por ano automatizadas",
+    who: "Rodrigo Lins",
+    org: "Nevoa AI",
+  },
+  {
+    slug: "bruno-richards-da-not-journal-com-tres-pessoas-e-ia-83-milhoes-de-visualizacoes-em-um-mes",
+    img: "365a7b8882ff.jpg",
+    n: "83 mi",
+    t: "de visualizações em um mês, com 3 pessoas",
+    who: "Bruno Richards",
+    org: "Not Journal",
+  },
+  {
+    slug: "matheus-caiaffa-ia-ecommerce-5-milhoes",
+    img: "badd567496f7.jpg",
+    n: "R$ 5 mi",
+    t: "faturados sozinho, com IA, em 2 anos",
+    who: "Matheus Caiaffa",
+    org: "E-commerce",
+  },
+];
+
+const FALAS = [
+  {
+    q: "A IA acelera quem sabe o que está fazendo. Para quem não sabe, ela acelera o erro.",
+    who: "Amanda Diniz",
+    org: "Divos da IA",
+    slug: "amanda-diniz-divos-da-ia-empresa-agentica",
+    img: "2ab712919abf.jpg",
+  },
+  {
+    q: "Comece pela dor. Olhe para onde a sua empresa perde mais tempo e dinheiro e comece por ali.",
+    who: "Christian Hart",
+    org: "Orbit",
+    slug: "christian-hart-orbit-ia-gestao-agentica-1230-empresas",
+    img: "07fb181ebf82.png",
+  },
+  {
+    q: "Minha organização começa a ser composta por pessoas e agentes.",
+    who: "Thiago Cardoso",
+    org: "iFood",
+    slug: "thiago-cardoso-ifood-27-mil-agentes-de-ia-30-por-cento-ebitda",
+    img: "366049ec1c18.webp",
+  },
+  {
+    q: "A maioria usa IA pra escrever email. Eu uso pra rodar negócio.",
+    who: "Matheus Caiaffa",
+    org: "E-commerce",
+    slug: "matheus-caiaffa-ia-ecommerce-5-milhoes",
+    img: "badd567496f7.jpg",
+  },
+  {
+    q: "Nossa visão é que o advogado não vai morrer, vamos fazer ele ficar superpoderoso.",
+    who: "Rafael Bagolin",
+    org: "Jusfy",
+    slug: "rafael-bagolin-jusfy-jusgpt-advogados-r-50-milhoes",
+    img: "9c79113e9af2.jpg",
+  },
+  {
+    q: "A IA não vem para substituir ninguém. […] Ela vem para aprimorar a forma como as pessoas atuam dentro da empresa.",
+    who: "Erick Castilio",
+    org: "Astrevo",
+    slug: "erick-castilio-astrevo-ia-so-onde-ha-retorno",
+    img: "29f70dbf299d.png",
+  },
+];
+
 const EMPTY: PalcoInput = {
   nome: "",
   empresa: "",
@@ -336,194 +437,228 @@ function PalcoPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="plv">
-        {/* 1. Topo: o evento e o ingresso */}
-        <section className="plv-hero" ref={heroRef}>
-          <img className="plv-hero-img" src={IMG(20733081, 1920)} alt="" fetchPriority="high" />
-          <div className="plv-hero-shade" aria-hidden="true" />
-          <div className="wrap plv-hero-grid">
-            <div className="plv-hero-copy">
-              <p className="plv-live">
-                <span className="plv-live-dot" aria-hidden="true" />
-                Online e ao vivo · 16 de dezembro, 19h
-              </p>
-              <p className="plv-brand">Palco IA News</p>
-              <h1>O que deu certo com IA nas empresas brasileiras em 2026</h1>
-              <p className="plv-sub">
-                Em 1h30, o Raio-X da IA News, três empresas mostrando resultado com números e um plano prático para
-                2027.
-              </p>
-              <div className="plv-cta">
-                <button className="btn blue plv-btn" type="button" onClick={scrollToForm}>
-                  Garantir minha vaga por {PRECO}
-                </button>
-                <a className="plv-ghost" href="#programacao">
-                  Ver a programação
-                </a>
-              </div>
-              <p className="plv-fine">
-                Gravação por 30 dias. Os {PRECO} viram desconto no presencial de fevereiro. Garantia de 7 dias: desistiu,
-                devolvemos 100%.
-              </p>
-            </div>
-
-            <aside className="plv-ticket" aria-label="Resumo do ingresso">
-              <div className="plv-ticket-top">
-                <span>Ingresso único</span>
-                <b>{PRECO}</b>
-              </div>
-              <dl className="plv-ticket-facts">
-                <div>
-                  <dt>Data</dt>
-                  <dd>Quarta, 16/12</dd>
-                </div>
-                <div>
-                  <dt>Horário</dt>
-                  <dd>19h às 20h30</dd>
-                </div>
-                <div>
-                  <dt>Formato</dt>
-                  <dd>Online, ao vivo</dd>
-                </div>
-              </dl>
-              {left ? (
-                <div className="plv-count" aria-label="Contagem regressiva para o evento">
-                  <span>
-                    <b>{left.d}</b>dias
-                  </span>
-                  <span>
-                    <b>{String(left.h).padStart(2, "0")}</b>horas
-                  </span>
-                  <span>
-                    <b>{String(left.m).padStart(2, "0")}</b>min
-                  </span>
-                </div>
-              ) : null}
-              <button className="btn blue plv-btn plv-btn-full" type="button" onClick={scrollToForm}>
-                Quero meu ingresso
+      <main id="main" className="pd">
+        {/* 1. Topo: foto do auditório, data, promessa e contagem */}
+        <section className="pd-hero" ref={heroRef}>
+          <img className="pd-hero-img" src={IMG(20733081, 1920)} alt="" fetchPriority="high" />
+          <div className="pd-hero-shade" aria-hidden="true" />
+          <div className="wrap pd-hero-in">
+            <p className="pd-pill">
+              <span className="pd-dot" aria-hidden="true" />
+              Ao vivo · 16 de dezembro · 19h
+            </p>
+            <h1>Raio-X 2026 da IA nas empresas brasileiras</h1>
+            <p className="pd-sub">
+              Três cases com números, o Playbook IA 2027 e a revelação da Lista IA News 100. Online, em 1h30, de onde você
+              estiver.
+            </p>
+            <div className="pd-cta">
+              <button className="pd-btn" type="button" onClick={scrollToForm}>
+                Quero participar · {PRECO}
               </button>
-            </aside>
+              <a className="pd-ghost" href="#cases">
+                Ver os cases
+              </a>
+            </div>
+            <div className="pd-count" aria-label="Contagem regressiva para o evento">
+              <span>
+                <b>{left ? left.d : "–"}</b>dias
+              </span>
+              <span>
+                <b>{left ? String(left.h).padStart(2, "0") : "–"}</b>horas
+              </span>
+              <span>
+                <b>{left ? String(left.m).padStart(2, "0") : "–"}</b>min
+              </span>
+            </div>
+            <p className="pd-fine">Gravação por 30 dias · Garantia de 7 dias · Pix, cartão ou boleto</p>
           </div>
         </section>
 
         {/* 2. Prova */}
-        <section className="plv-proof" aria-label="A IA News em números">
-          <div className="wrap plv-proof-row">
-            <p className="plv-proof-lead">Quem apresenta acompanha o mercado de IA todos os dias.</p>
+        <section className="pd-proof" aria-label="A IA News em números">
+          <div className="wrap pd-proof-row">
             {PROVAS.map((p) => (
               <div key={p.t}>
                 <b>{p.n}</b>
                 <span>{p.t}</span>
               </div>
             ))}
+            <div>
+              <b className="hot">1h30</b>
+              <span>ao vivo, com perguntas no chat</span>
+            </div>
           </div>
         </section>
 
-        <div className="wrap">
-          {/* 3. O problema */}
-          <section className="plv-sec plv-why" aria-labelledby="plv-why">
-            <h2 id="plv-why" className="plv-h2">
+        {/* 3. O que você leva */}
+        <section className="pd-sec" aria-labelledby="pd-leva">
+          <div className="wrap">
+            <p className="pd-kick">O problema</p>
+            <h2 id="pd-leva" className="pd-h2">
               Em 2026 todo mundo falou de IA. Pouca gente mostrou resultado.
             </h2>
-            <div className="plv-why-txt">
-              <p>
-                A IA News publicou mais de 320 matérias sobre IA nas empresas desde outubro e mapeou 523 empresas do setor.
-                Neste workshop, a redação abre o que viu: onde a IA virou receita, onde virou custo e o que muda em 2027.
-              </p>
-              <p>Sem palestra motivacional. Só dado, caso real e um plano que você aplica na segunda-feira.</p>
-            </div>
-          </section>
-
-          {/* 4. Para quem é */}
-          <section className="plv-sec" aria-labelledby="plv-quem">
-            <h2 id="plv-quem" className="plv-h2">
-              Para quem é
-            </h2>
-            <div className="plv-who">
-              {PUBLICO.map((p) => (
-                <article key={p.t} className="plv-who-card">
-                  <h3>{p.t}</h3>
-                  <p>{p.d}</p>
-                  <p className="plv-who-sai">{p.sai}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          {/* 5. O que você leva */}
-          <section className="plv-sec" aria-labelledby="plv-leva">
-            <h2 id="plv-leva" className="plv-h2">
-              O que você leva
-            </h2>
-            <div className="pc2-cards">
-              {LEVA.map((c) => (
-                <article className="pc2-card" key={c.t}>
+            <p className="pd-lead">
+              A IA News publicou mais de 320 matérias sobre IA nas empresas e mapeou 523 empresas do setor. Neste workshop,
+              a redação abre o que viu. Você sai da noite com três coisas na mão:
+            </p>
+            <div className="pd-cards">
+              {LEVA.map((c, i) => (
+                <article className="pd-card" key={c.t}>
                   <img src={IMG(c.img, 800)} alt="" loading="lazy" width={800} height={533} />
                   <div>
+                    <span className="pd-num">0{i + 1}</span>
                     <h3>{c.t}</h3>
                     <p>{c.d}</p>
                   </div>
                 </article>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* 6. Programação: a faixa mostra o peso de cada bloco nos 90 minutos */}
-          <section className="plv-sec" id="programacao" aria-labelledby="plv-prog">
-            <h2 id="plv-prog" className="plv-h2">
-              Programação de 16/12
+        {/* 4. Cases que a IA News já contou */}
+        <section className="pd-sec pd-cases" id="cases" aria-labelledby="pd-cases">
+          <div className="wrap">
+            <p className="pd-kick">Cases reais</p>
+            <h2 id="pd-cases" className="pd-h2">
+              A redação que apresenta o Palco é a mesma que contou estas histórias.
             </h2>
-            <p className="plv-lead">90 minutos, das 19h às 20h30. Cada bloco tem hora para começar e para acabar.</p>
-            <div className="plv-strip" aria-hidden="true">
-              {AGENDA.map((a) => (
-                <span key={a.time} className={a.hi ? "hi" : undefined} style={{ flexGrow: a.min, flexBasis: 0 }}>
-                  <i>{a.min}′</i>
-                </span>
+            <p className="pd-lead">
+              Empresários brasileiros que colocaram IA para trabalhar e mostraram os números para a IA News. Os três cases
+              do Palco são anunciados em 30/11, primeiro para quem está inscrito.
+            </p>
+          </div>
+          <div className="pd-rail" role="list">
+            {CASES.map((c) => (
+              <Link
+                key={c.slug}
+                role="listitem"
+                className="pd-case"
+                to="/materia/$slug"
+                params={{ slug: c.slug }}
+              >
+                <img src={COVER(c.slug, c.img)} alt={c.who} loading="lazy" width={600} height={750} />
+                <div className="pd-case-txt">
+                  <b>{c.n}</b>
+                  <span className="pd-case-t">{c.t}</span>
+                  <span className="pd-case-who">
+                    {c.who} · {c.org}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* 5. Depoimentos: falas dos entrevistados */}
+        <section className="pd-sec pd-falas" aria-labelledby="pd-falas">
+          <div className="wrap">
+            <p className="pd-kick">O que dizem os empresários</p>
+            <h2 id="pd-falas" className="pd-h2">
+              Quem faz IA dar resultado fala assim.
+            </h2>
+          </div>
+          <div className="pd-rail" role="list">
+            {FALAS.map((f) => (
+              <figure key={f.who} role="listitem" className="pd-fala">
+                <svg className="pd-quote" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M10 7H6a3 3 0 0 0-3 3v4h4v4l3-4v-7zm11 0h-4a3 3 0 0 0-3 3v4h4v4l3-4v-7z"
+                  />
+                </svg>
+                <blockquote>{f.q}</blockquote>
+                <figcaption>
+                  <img src={COVER(f.slug, f.img)} alt="" loading="lazy" width={48} height={48} />
+                  <span>
+                    <b>{f.who}</b>
+                    <small>
+                      {f.org} ·{" "}
+                      <Link to="/materia/$slug" params={{ slug: f.slug }}>
+                        ler a matéria
+                      </Link>
+                    </small>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="wrap pd-note">Falas publicadas nas entrevistas da IA News.</p>
+        </section>
+
+        {/* 6. Para quem é */}
+        <section className="pd-sec" aria-labelledby="pd-quem">
+          <div className="wrap">
+            <p className="pd-kick">Para quem é</p>
+            <h2 id="pd-quem" className="pd-h2">
+              Três perfis, uma decisão: o que fazer com IA em 2027.
+            </h2>
+            <div className="pd-who">
+              {PUBLICO.map((p) => (
+                <article key={p.t}>
+                  <h3>{p.t}</h3>
+                  <p>{p.d}</p>
+                  <p className="pd-who-sai">{p.sai}</p>
+                </article>
               ))}
             </div>
-            <ol className="plv-agenda">
+          </div>
+        </section>
+
+        {/* 7. Programação: a faixa mostra o peso de cada bloco */}
+        <section className="pd-sec" id="programacao" aria-labelledby="pd-prog">
+          <div className="wrap">
+            <p className="pd-kick">Programação</p>
+            <h2 id="pd-prog" className="pd-h2">
+              16 de dezembro, das 19h às 20h30
+            </h2>
+            <div className="pd-strip" aria-hidden="true">
+              {AGENDA.map((a) => (
+                <span key={a.time} className={a.hi ? "hi" : undefined} style={{ flexGrow: a.min, flexBasis: 0 }} />
+              ))}
+            </div>
+            <ol className="pd-agenda">
               {AGENDA.map((a) => (
                 <li key={a.time} className={a.hi ? "hi" : undefined}>
-                  <time>{a.time}</time>
-                  <div>
-                    <h3>
-                      {a.title} <small>{a.min} min</small>
-                    </h3>
-                    <p>{a.d}</p>
-                  </div>
+                  <time>
+                    {a.time} <small>· {a.min} min</small>
+                  </time>
+                  <h3>{a.title}</h3>
+                  <p>{a.d}</p>
                 </li>
               ))}
             </ol>
-            <p className="plv-note">
-              Total de {total} minutos. Os convidados dos cases são anunciados em 30/11, primeiro para quem está inscrito.
-            </p>
-          </section>
-        </div>
+            <p className="pd-note">Total de {total} minutos.</p>
+          </div>
+        </section>
 
-        {/* 7. Lista 100: o momento que só acontece ao vivo */}
-        <section className="plv-band">
-          <div className="wrap plv-band-in">
+        {/* 8. Lista 100 */}
+        <section className="pd-band">
+          <div className="wrap pd-band-in">
             <div>
               <h2>A Lista IA News 100 é revelada ao vivo, às 20h05.</h2>
               <p>
-                Os 100 nomes que estão fazendo IA de verdade nos negócios no Brasil. Ninguém paga para entrar, e o anúncio
-                acontece primeiro para quem está no Palco.
+                Os 100 nomes que fazem IA de verdade nos negócios no Brasil. Ninguém paga para entrar, e o anúncio acontece
+                primeiro para quem está no Palco.
               </p>
             </div>
-            <Link className="btn line plv-band-btn" to="/lista100">
+            <Link className="pd-ghost" to="/lista100">
               Conhecer a Lista 100
             </Link>
           </div>
         </section>
 
-        {/* 8. Oferta e inscrição */}
-        <section className="plv-offer" id="inscricao" aria-labelledby="plv-ofe">
-          <div className="wrap plv-offer-grid">
-            <div className="plv-offer-copy">
-              <h2 id="plv-ofe" className="plv-h2">
-                Seu ingresso para o Palco IA News Online
-              </h2>
-              <ul className="plv-inclui">
+        {/* 9. Oferta e inscrição */}
+        <section className="pd-offer" id="inscricao" aria-labelledby="pd-ofe">
+          <div className="wrap pd-offer-grid">
+            <div className="pd-offer-copy">
+              <h2 id="pd-ofe">Um ingresso. Dois eventos.</h2>
+              <p className="pd-offer-lead">
+                Os {PRECO} do online voltam como crédito no Palco IA News presencial, em Belo Horizonte, em fevereiro de
+                2027. E quem vai ao online tem prioridade na compra.
+              </p>
+              <ul className="pd-inclui">
                 {INCLUI.map((i) => (
                   <li key={i.t}>
                     <Check />
@@ -534,15 +669,10 @@ function PalcoPage() {
                   </li>
                 ))}
               </ul>
-              <div className="plv-price">
-                <span>Tudo isso por</span>
-                <b>{PRECO}</b>
-                <small>pagamento único, por Pix, cartão ou boleto</small>
-              </div>
             </div>
 
-            <div className="plv-form" id="lista" ref={formRef}>
-              <div className="biz-card pt-card-form">
+            <div className="pd-form" id="lista" ref={formRef}>
+              <div className="biz-card pt-card-form pd-ticket">
                 {done ? (
                   <div className="biz-done" ref={doneRef} role="status">
                     <span className="ok-mark" aria-hidden="true">
@@ -555,7 +685,7 @@ function PalcoPage() {
                         : `Pronto${done.name ? `, ${done.name}` : ""}. Falta só o pagamento para confirmar sua vaga. Estamos te levando para a página de pagamento, com Pix, cartão ou boleto.`}
                     </p>
                     <div className="actions">
-                      <a className="btn blue plv-btn plv-btn-full" href={PALCO_PAGAMENTO_URL}>
+                      <a className="pd-btn pd-btn-full" href={PALCO_PAGAMENTO_URL}>
                         Pagar {PRECO} e confirmar a vaga
                       </a>
                     </div>
@@ -563,10 +693,11 @@ function PalcoPage() {
                   </div>
                 ) : (
                   <form className="biz-form" onSubmit={onSubmit} noValidate>
-                    <div className="plv-form-head">
-                      <h3>Garanta sua vaga</h3>
-                      <p>Só 3 campos. Depois, o pagamento.</p>
+                    <div className="pd-ticket-top">
+                      <span>Palco IA News Online</span>
+                      <b>{PRECO}</b>
                     </div>
+                    <p className="pd-ticket-sub">Só 3 campos. Depois, o pagamento.</p>
                     <input
                       ref={hp}
                       className="hp"
@@ -657,7 +788,7 @@ function PalcoPage() {
                     </details>
 
                     <div className="biz-submit">
-                      <button className="btn blue pc2-submit" type="submit" disabled={sending}>
+                      <button className="pd-btn pd-btn-full" type="submit" disabled={sending}>
                         {sending ? "Enviando…" : `Garantir minha vaga por ${PRECO}`}
                       </button>
                       <span className="fine">
@@ -671,34 +802,41 @@ function PalcoPage() {
                   </form>
                 )}
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 9. Presencial de fevereiro */}
-        <section className="wrap plv-sec">
-          <div className="plv-next">
-            <img src={IMG(3143850, 1200)} alt="Palco iluminado diante de uma plateia" loading="lazy" width={1200} height={800} />
-            <div>
-              <h2>Em fevereiro, o Palco sobe em Belo Horizonte.</h2>
-              <p>
-                O primeiro Palco IA News presencial acontece em fevereiro de 2027, com cases, expositores e networking. Quem
-                participar do online tem prioridade na compra e usa os {PRECO} como desconto.
+              <p className="pd-guarantee">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                  <path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>
+                  <b>Garantia de 7 dias.</b> Desistiu? Devolvemos 100%, pelo mesmo meio de pagamento.
+                </span>
               </p>
             </div>
           </div>
         </section>
 
-        <div className="wrap">
-          {/* 10. Quem organiza */}
-          <section className="plv-sec plv-org" aria-labelledby="plv-org">
-            <h2 id="plv-org" className="plv-h2">
-              Quem organiza
-            </h2>
-            <div className="plv-org-grid">
+        {/* 10. Presencial de fevereiro */}
+        <section className="pd-sec">
+          <div className="wrap pd-next">
+            <img src={IMG(3143850, 1200)} alt="Palco iluminado diante de uma plateia" loading="lazy" width={1200} height={800} />
+            <div>
+              <p className="pd-kick">Fevereiro de 2027</p>
+              <h2 className="pd-h2">Depois do online, o Palco sobe em Belo Horizonte.</h2>
+              <p className="pd-lead">
+                O primeiro Palco IA News presencial acontece em fevereiro, com cases, expositores e networking. Quem
+                participar do online tem prioridade e usa os {PRECO} como desconto.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 11. Quem organiza e dúvidas */}
+        <section className="pd-sec pd-light">
+          <div className="wrap">
+            <div className="pd-org">
               <div>
                 <h3>IA News</h3>
-                <p>Portal, newsletter e Instagram sobre IA para quem decide. A corrida da IA, explicada para quem decide.</p>
+                <p>Portal, newsletter e Instagram sobre IA para quem decide.</p>
               </div>
               <div>
                 <h3>FGIA Educação</h3>
@@ -709,11 +847,7 @@ function PalcoPage() {
                 <p>Fundador da IA News e anfitrião do Palco. Conduz o Raio-X e a Mesa IA News.</p>
               </div>
             </div>
-          </section>
-
-          {/* 11. Dúvidas */}
-          <section className="plv-sec" aria-labelledby="pc-faq">
-            <h2 id="pc-faq" className="plv-h2">
+            <h2 id="pc-faq" className="pd-h2 pd-faq-h">
               Dúvidas frequentes
             </h2>
             <div className="faq">
@@ -730,18 +864,19 @@ function PalcoPage() {
                 </p>
               </details>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
         {/* 12. Chamada final */}
-        <section className="pc2-final" style={{ backgroundImage: `url(${IMG(2833037, 1600)})` }}>
-          <div className="pc2-shade" aria-hidden="true" />
-          <div className="wrap pc2-final-in">
+        <section className="pd-final">
+          <img src={IMG(9275222, 1600)} alt="" loading="lazy" />
+          <div className="pd-final-shade" aria-hidden="true" />
+          <div className="wrap pd-final-in">
             <h2>16 de dezembro, 19h. Ao vivo, de onde você estiver.</h2>
-            <p>1h30 de dados, cases e plano para 2027 por {PRECO}, com gravação por 30 dias.</p>
-            <button className="btn blue plv-btn" type="button" onClick={scrollToForm}>
-              Garantir minha vaga
+            <button className="pd-btn pd-btn-hot" type="button" onClick={scrollToForm}>
+              Garantir vaga por {PRECO}
             </button>
+            <p>Uma realização IA News com a FGIA Educação</p>
           </div>
         </section>
 
@@ -752,7 +887,7 @@ function PalcoPage() {
               <b>Palco IA News Online</b>
               <small>16/12, 19h · {PRECO}</small>
             </span>
-            <button className="btn blue" type="button" onClick={scrollToForm} tabIndex={showBar ? 0 : -1}>
+            <button className="pd-btn" type="button" onClick={scrollToForm} tabIndex={showBar ? 0 : -1}>
               Garantir vaga
             </button>
           </div>
