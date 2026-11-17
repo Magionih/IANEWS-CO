@@ -466,3 +466,55 @@ export function HomeBizBand() {
     </section>
   );
 }
+
+/* Faixa de participação: leva o leitor (e o Google) às páginas de conversão. */
+const PARTICIPE = [
+  {
+    to: "/eventos" as const,
+    kick: "Eventos",
+    t: "Palco IA News Online · 16/12",
+    d: "Workshop ao vivo: o que deu certo com IA nas empresas brasileiras em 2026.",
+  },
+  {
+    to: "/pauta" as const,
+    kick: "Sua empresa na IA News",
+    t: "Envie sua pauta",
+    d: "Sua empresa usa IA? Conte a história para a redação. Respondemos em até 2 dias úteis.",
+  },
+  {
+    to: "/lista100" as const,
+    kick: "Lista IA News 100",
+    t: "Quem faz IA no Brasil",
+    d: "Os 100 nomes que fazem IA de verdade nos negócios. Candidatura gratuita.",
+  },
+  {
+    to: "/gente" as const,
+    kick: "Líderes de IA",
+    t: "Gente que cresce com IA",
+    d: "Entrevistas com fundadores e executivos brasileiros, com números.",
+  },
+];
+
+export function HomeParticipe() {
+  return (
+    <section className="hp-part" aria-labelledby="hp-part-h">
+      <div className="wrap">
+        <h2 id="hp-part-h" className="hp-part-h">
+          Participe da IA News
+        </h2>
+        <div className="hp-part-grid">
+          {PARTICIPE.map((p) => (
+            <Link key={p.to} to={p.to} className="hp-part-card">
+              <span className="hp-part-k">{p.kick}</span>
+              <b>{p.t}</b>
+              <span className="hp-part-d">{p.d}</span>
+              <span className="hp-part-go" aria-hidden="true">
+                →
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

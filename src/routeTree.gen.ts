@@ -22,6 +22,7 @@ import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as EdicaoRouteImport } from './routes/edicao'
 import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
 import { Route as GenteRouteImport } from './routes/gente'
 import { Route as LinksRouteImport } from './routes/links'
@@ -33,6 +34,7 @@ import { Route as PalcoRouteImport } from './routes/palco'
 import { Route as PautaRouteImport } from './routes/pauta'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as SeloRouteImport } from './routes/selo'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as TermosRouteImport } from './routes/termos'
@@ -69,6 +71,7 @@ import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksEmailFrioRouteImport } from './routes/api/public/hooks/email-frio'
 import { Route as ApiPublicHooksEnriquecerRouteImport } from './routes/api/public/hooks/enriquecer'
+import { Route as ApiPublicHooksIndexnowRouteImport } from './routes/api/public/hooks/indexnow'
 import { Route as ApiPublicHooksIngestNewsRouteImport } from './routes/api/public/hooks/ingest-news'
 import { Route as ApiPublicHooksInstagramRouteImport } from './routes/api/public/hooks/instagram'
 import { Route as ApiPublicHooksInstagramPublicarRouteImport } from './routes/api/public/hooks/instagram-publicar'
@@ -147,6 +150,11 @@ const EmpresasRoute = EmpresasRouteImport.update({
   path: '/empresas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeedDotxmlRoute = FeedDotxmlRouteImport.update({
   id: '/feed.xml',
   path: '/feed.xml',
@@ -200,6 +208,11 @@ const ProjetosRoute = ProjetosRouteImport.update({
 const RankingRoute = RankingRouteImport.update({
   id: '/ranking',
   path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeloRoute = SeloRouteImport.update({
+  id: '/selo',
+  path: '/selo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -387,6 +400,11 @@ const ApiPublicHooksEnriquecerRoute =
     path: '/api/public/hooks/enriquecer',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksIndexnowRoute = ApiPublicHooksIndexnowRouteImport.update({
+  id: '/api/public/hooks/indexnow',
+  path: '/api/public/hooks/indexnow',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksIngestNewsRoute =
   ApiPublicHooksIngestNewsRouteImport.update({
     id: '/api/public/hooks/ingest-news',
@@ -474,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/eventos': typeof EventosRoute
   '/feed.xml': typeof FeedDotxmlRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
@@ -485,6 +504,7 @@ export interface FileRoutesByFullPath {
   '/pauta': typeof PautaRoute
   '/projetos': typeof ProjetosRoute
   '/ranking': typeof RankingRoute
+  '/selo': typeof SeloRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -521,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
+  '/api/public/hooks/indexnow': typeof ApiPublicHooksIndexnowRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
@@ -548,6 +569,7 @@ export interface FileRoutesByTo {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/eventos': typeof EventosRoute
   '/feed.xml': typeof FeedDotxmlRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
@@ -559,6 +581,7 @@ export interface FileRoutesByTo {
   '/pauta': typeof PautaRoute
   '/projetos': typeof ProjetosRoute
   '/ranking': typeof RankingRoute
+  '/selo': typeof SeloRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -595,6 +618,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
+  '/api/public/hooks/indexnow': typeof ApiPublicHooksIndexnowRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
@@ -624,6 +648,7 @@ export interface FileRoutesById {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/eventos': typeof EventosRoute
   '/feed.xml': typeof FeedDotxmlRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
@@ -635,6 +660,7 @@ export interface FileRoutesById {
   '/pauta': typeof PautaRoute
   '/projetos': typeof ProjetosRoute
   '/ranking': typeof RankingRoute
+  '/selo': typeof SeloRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -671,6 +697,7 @@ export interface FileRoutesById {
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
   '/api/public/hooks/enriquecer': typeof ApiPublicHooksEnriquecerRoute
+  '/api/public/hooks/indexnow': typeof ApiPublicHooksIndexnowRoute
   '/api/public/hooks/ingest-news': typeof ApiPublicHooksIngestNewsRoute
   '/api/public/hooks/instagram': typeof ApiPublicHooksInstagramRoute
   '/api/public/hooks/instagram-publicar': typeof ApiPublicHooksInstagramPublicarRoute
@@ -700,6 +727,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/eventos'
     | '/feed.xml'
     | '/gente'
     | '/links'
@@ -711,6 +739,7 @@ export interface FileRouteTypes {
     | '/pauta'
     | '/projetos'
     | '/ranking'
+    | '/selo'
     | '/sitemap.xml'
     | '/sobre'
     | '/termos'
@@ -747,6 +776,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
     | '/api/public/hooks/enriquecer'
+    | '/api/public/hooks/indexnow'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
     | '/api/public/hooks/instagram-publicar'
@@ -774,6 +804,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/eventos'
     | '/feed.xml'
     | '/gente'
     | '/links'
@@ -785,6 +816,7 @@ export interface FileRouteTypes {
     | '/pauta'
     | '/projetos'
     | '/ranking'
+    | '/selo'
     | '/sitemap.xml'
     | '/sobre'
     | '/termos'
@@ -821,6 +853,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
     | '/api/public/hooks/enriquecer'
+    | '/api/public/hooks/indexnow'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
     | '/api/public/hooks/instagram-publicar'
@@ -849,6 +882,7 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/eventos'
     | '/feed.xml'
     | '/gente'
     | '/links'
@@ -860,6 +894,7 @@ export interface FileRouteTypes {
     | '/pauta'
     | '/projetos'
     | '/ranking'
+    | '/selo'
     | '/sitemap.xml'
     | '/sobre'
     | '/termos'
@@ -896,6 +931,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
     | '/api/public/hooks/enriquecer'
+    | '/api/public/hooks/indexnow'
     | '/api/public/hooks/ingest-news'
     | '/api/public/hooks/instagram'
     | '/api/public/hooks/instagram-publicar'
@@ -925,6 +961,7 @@ export interface RootRouteChildren {
   DescadastrarRoute: typeof DescadastrarRoute
   EdicaoRoute: typeof EdicaoRoute
   EmpresasRoute: typeof EmpresasRoute
+  EventosRoute: typeof EventosRoute
   FeedDotxmlRoute: typeof FeedDotxmlRoute
   GenteRoute: typeof GenteRoute
   LinksRoute: typeof LinksRoute
@@ -936,6 +973,7 @@ export interface RootRouteChildren {
   PautaRoute: typeof PautaRoute
   ProjetosRoute: typeof ProjetosRoute
   RankingRoute: typeof RankingRoute
+  SeloRoute: typeof SeloRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -970,6 +1008,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksEmailFrioRoute: typeof ApiPublicHooksEmailFrioRoute
   ApiPublicHooksEnriquecerRoute: typeof ApiPublicHooksEnriquecerRoute
+  ApiPublicHooksIndexnowRoute: typeof ApiPublicHooksIndexnowRoute
   ApiPublicHooksIngestNewsRoute: typeof ApiPublicHooksIngestNewsRoute
   ApiPublicHooksInstagramRoute: typeof ApiPublicHooksInstagramRoute
   ApiPublicHooksInstagramPublicarRoute: typeof ApiPublicHooksInstagramPublicarRoute
@@ -1078,6 +1117,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmpresasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/feed.xml': {
       id: '/feed.xml'
       path: '/feed.xml'
@@ -1153,6 +1199,13 @@ declare module '@tanstack/react-router' {
       path: '/ranking'
       fullPath: '/ranking'
       preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/selo': {
+      id: '/selo'
+      path: '/selo'
+      fullPath: '/selo'
+      preLoaderRoute: typeof SeloRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1407,6 +1460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksEnriquecerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/indexnow': {
+      id: '/api/public/hooks/indexnow'
+      path: '/api/public/hooks/indexnow'
+      fullPath: '/api/public/hooks/indexnow'
+      preLoaderRoute: typeof ApiPublicHooksIndexnowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/ingest-news': {
       id: '/api/public/hooks/ingest-news'
       path: '/api/public/hooks/ingest-news'
@@ -1528,6 +1588,7 @@ const rootRouteChildren: RootRouteChildren = {
   DescadastrarRoute: DescadastrarRoute,
   EdicaoRoute: EdicaoRoute,
   EmpresasRoute: EmpresasRoute,
+  EventosRoute: EventosRoute,
   FeedDotxmlRoute: FeedDotxmlRoute,
   GenteRoute: GenteRoute,
   LinksRoute: LinksRoute,
@@ -1539,6 +1600,7 @@ const rootRouteChildren: RootRouteChildren = {
   PautaRoute: PautaRoute,
   ProjetosRoute: ProjetosRoute,
   RankingRoute: RankingRoute,
+  SeloRoute: SeloRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
@@ -1574,6 +1636,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksEmailFrioRoute: ApiPublicHooksEmailFrioRoute,
   ApiPublicHooksEnriquecerRoute: ApiPublicHooksEnriquecerRoute,
+  ApiPublicHooksIndexnowRoute: ApiPublicHooksIndexnowRoute,
   ApiPublicHooksIngestNewsRoute: ApiPublicHooksIngestNewsRoute,
   ApiPublicHooksInstagramRoute: ApiPublicHooksInstagramRoute,
   ApiPublicHooksInstagramPublicarRoute: ApiPublicHooksInstagramPublicarRoute,

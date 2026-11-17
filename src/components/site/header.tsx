@@ -171,12 +171,15 @@ export function SiteHeader() {
             <Link to="/gente" aria-current={cur("/gente")}>
               Gente
             </Link>
+            <Link to="/eventos" aria-current={cur("/eventos")}>
+              Eventos
+            </Link>
             <Link to="/empresas" aria-current={cur("/empresas")}>
               Para empresas
             </Link>
             <Link
               to="/pauta"
-              search={{ utm_source: "site", utm_medium: "menu", utm_campaign: "pauta" }}
+              search={{}}
               aria-current={cur("/pauta")}
             >
               Envie sua pauta
@@ -229,13 +232,16 @@ export function SiteHeader() {
               <Link className="m" to="/gente" aria-current={cur("/gente")}>
                 Gente
               </Link>
+              <Link className="m" to="/eventos" aria-current={cur("/eventos")}>
+                Eventos
+              </Link>
               <Link className="m" to="/empresas" aria-current={cur("/empresas")}>
                 Para empresas
               </Link>
               <Link
                 className="m"
                 to="/pauta"
-                search={{ utm_source: "site", utm_medium: "menu", utm_campaign: "pauta" }}
+                search={{}}
                 aria-current={cur("/pauta")}
               >
                 Envie sua pauta

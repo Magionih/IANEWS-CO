@@ -10,6 +10,7 @@ import {
   HomeMostRead,
   HomeNews,
   HomeNewsletter,
+  HomeParticipe,
   HomeRanking,
   HomeSlimBand,
 } from "@/components/portal/home-sections";
@@ -41,9 +42,9 @@ export const Route = createFileRoute("/")({
   },
   head: ({ loaderData }) => {
     const items = (loaderData?.articles ?? []).slice(0, 10);
-    const title = "IA News — notícias de inteligência artificial e Ranking IA";
+    const title = "IA News: notícias de inteligência artificial, IA para empresas e Ranking IA";
     const description =
-      "Notícias diárias de inteligência artificial no Brasil e no mundo, com análise para quem decide, e o Ranking IA das melhores ferramentas — atualizado todos os dias.";
+      "Notícias diárias de inteligência artificial no Brasil e no mundo, histórias de empresários que crescem com IA, guias de agentes de IA e o Ranking IA das melhores ferramentas. Newsletter grátis às 7h.";
     const cover = items[0]?.cover_image_url ?? FALLBACK_COVERS[0];
     return {
       meta: [
@@ -139,6 +140,7 @@ function HomePage() {
           <HomeRanking tools={tools} />
           <HomeMostRead items={most} />
           <HomeBrasil items={brItems} isBrasil={isBrasil} />
+          <HomeParticipe />
           <HomeNewsletter week={week} />
           <HomeBizBand />
         </div>

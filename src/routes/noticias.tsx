@@ -32,13 +32,13 @@ export const Route = createFileRoute("/noticias")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: "Notícias de IA — busca e filtros por editoria | IA News" },
+      { title: "Notícias de inteligência artificial hoje: IA no Brasil e no mundo | IA News" },
       {
         name: "description",
         content:
-          "Todas as notícias de inteligência artificial do IA News, com busca por palavra-chave e filtro por editoria. Atualizado a cada 8 horas.",
+          "Últimas notícias de inteligência artificial: lançamentos de ChatGPT, Gemini e Claude, agentes de IA, startups e empresas brasileiras. Busca por palavra-chave e filtro por editoria, atualizado todos os dias.",
       },
-      { property: "og:title", content: "Notícias de IA — busca e filtros por editoria" },
+      { property: "og:title", content: "Notícias de inteligência artificial hoje | IA News" },
       {
         property: "og:description",
         content:

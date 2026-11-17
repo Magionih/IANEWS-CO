@@ -23,6 +23,27 @@ export const Route = createFileRoute("/sobre")({
       { property: "og:url", content: "https://ianewsbr.com/sobre" },
     ],
     links: [{ rel: "canonical", href: "https://ianewsbr.com/sobre" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          url: "https://ianewsbr.com/sobre",
+          name: "Sobre a IA News",
+          inLanguage: "pt-BR",
+          about: { "@id": "https://ianewsbr.com/#organization" },
+          mainEntity: {
+            "@type": "Person",
+            "@id": "https://ianewsbr.com/#henrique-magioni",
+            name: "Henrique Magioni",
+            jobTitle: "Fundador e CEO da IA News",
+            worksFor: { "@id": "https://ianewsbr.com/#organization" },
+            knowsAbout: ["Inteligência artificial", "IA para empresas", "Agentes de IA", "Startups de IA no Brasil"],
+          },
+        }),
+      },
+    ],
   }),
   component: SobrePage,
 });

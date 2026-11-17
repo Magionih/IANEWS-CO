@@ -10,7 +10,7 @@ import { submitContactMessage } from "@/lib/contact.functions";
 import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 const PAGE_URL = "https://ianewsbr.com/gente";
-const TITLE = "Gente — quem faz a IA no Brasil | IA News";
+const TITLE = "Líderes de IA no Brasil: fundadores e executivos que crescem com IA | IA News";
 const DESCRIPTION =
   "Perfis e bastidores dos brasileiros que estão construindo com inteligência artificial: fundadores, executivos e as rodadas das startups brasileiras de IA.";
 

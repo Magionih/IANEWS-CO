@@ -21,9 +21,9 @@ import {
    Sem preço: o valor aparece só na conversa comercial. */
 
 const PAGE_URL = "https://ianewsbr.com/pauta";
-const TITLE = "Envie sua pauta | IA News";
+const TITLE = "Envie sua pauta: divulgue sua empresa de IA na imprensa | IA News";
 const DESCRIPTION =
-  "Sua empresa usa IA? Conte sua história para a IA News. Envie sua pauta e nossa redação avalia e responde em até 2 dias úteis.";
+  "Sua empresa usa inteligência artificial? Envie sua pauta e conte sua história para a redação da IA News. O envio é gratuito e respondemos em até 2 dias úteis.";
 
 type PautaSearch = { utm_source?: string; utm_medium?: string; utm_campaign?: string; materia?: string };
 
@@ -54,6 +54,16 @@ export const Route = createFileRoute("/pauta")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: PAGE_URL }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+        }),
+      },
+    ],
   }),
   component: PautaPage,
 });

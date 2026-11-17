@@ -212,6 +212,21 @@ function shortDate(iso: string) {
   return `${get("day")} ${month} ${get("year")}`;
 }
 
+/** Guia mais próximo da matéria: conta os termos de cada guia no título, linha fina e tags. */
+function hubFor(a: { title: string; dek?: string | null; tags?: string[] | null }) {
+  const text = `${a.title} ${a.dek ?? ""} ${(a.tags ?? []).join(" ")}`.toLowerCase();
+  let best: (typeof HUB_LIST)[number] | null = null;
+  let bestScore = 1;
+  for (const h of HUB_LIST) {
+    const score = h.themes.flatMap((t) => t.terms).reduce((n, term) => (text.includes(term.toLowerCase()) ? n + 1 : n), 0);
+    if (score > bestScore) {
+      best = h;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 function catOf(value: string): CategoryKey {
   return (Object.keys(CATEGORY_MAP).includes(value) ? value : "generativa") as CategoryKey;
 }
@@ -404,6 +419,19 @@ function ArticlePage() {
                 </section>
               ) : null}
 
+              {(() => {
+                const hub = hubFor(article);
+                return hub ? (
+                  <aside className="art-guia" aria-label="Guia relacionado">
+                    <span className="art-guia-k">Guia IA News</span>
+                    <Link to="/guias/$hub" params={{ hub: hub.slug }} search={{}}>
+                      {hub.title}
+                    </Link>
+                    <small>{hub.description}</small>
+                  </aside>
+                ) : null;
+              })()}
+
               <aside className="art-pauta" aria-label="Envie sua pauta">
                 <p>
                   Sua empresa usa IA de um jeito que merece ser contado?
@@ -417,6 +445,14 @@ function ArticlePage() {
                   Envie sua pauta
                 </Link>
               </aside>
+
+              <p className="art-selo">
+                Esta matéria é sobre a sua empresa?{" "}
+                <Link to="/selo" search={{ materia: article.slug }}>
+                  Coloque o selo Destaque na IA News no seu site
+                </Link>
+                .
+              </p>
 
               <aside className="art-pauta art-projeto" aria-label="Balcão de Projetos IA News">
                 <p>

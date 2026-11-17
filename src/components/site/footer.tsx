@@ -31,7 +31,8 @@ export function SiteFooter() {
             </Link>
             <Link to="/ranking">Ranking IA</Link>
             <Link to="/gente">Gente</Link>
-            <Link to="/habitos">Meus hábitos</Link>
+            <Link to="/eventos">Eventos</Link>
+            <Link to="/lista100">Lista IA News 100</Link>
           </div>
           <div>
             <h4>Temas</h4>
@@ -47,7 +48,7 @@ export function SiteFooter() {
             <Link to="/newsletter">Newsletter</Link>
             <Link to="/empresas">Para empresas</Link>
             <Link to="/anuncie">Anuncie</Link>
-            <Link to="/pauta" search={{ utm_source: "site", utm_medium: "rodape", utm_campaign: "pauta" }}>
+            <Link to="/pauta" search={{}}>
               Envie sua pauta
             </Link>
             <Link to="/sobre">Como fazemos</Link>
