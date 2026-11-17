@@ -11,7 +11,7 @@ export const getCrmContexto = createServerFn({ method: "GET" })
     const { db } = context;
     const [equipe, funis, etapas, tags] = await Promise.all([
       db.rpc("crm_equipe"),
-      db.from("crm_funis").select("id, nome, ordem, ativo").order("ordem"),
+      db.from("crm_funis").select("id, nome, ordem, ativo, vertical, descricao").order("ordem"),
       db
         .from("crm_etapas")
         .select("id, funil_id, nome, ordem, prazo_dias, acao_padrao, criterio_entrada, tipo, ativo")

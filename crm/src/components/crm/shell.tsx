@@ -8,6 +8,7 @@ import {
   CalendarCheck,
   Home,
   KanbanSquare,
+  Layers,
   LogOut,
   Loader2,
   Megaphone,
@@ -46,6 +47,7 @@ type Item = {
 
 const MENU: Item[] = [
   { to: "/", rotulo: "Hoje", icone: Home, exato: true },
+  { to: "/verticais", rotulo: "Verticais", icone: Layers },
   { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
   { to: "/fila", rotulo: "Fila do dia", icone: Send },
   { to: "/producoes", rotulo: "Produções", icone: Clapperboard },

@@ -1,6 +1,7 @@
 /* Tipos do CRM interno (tabelas crm_* do Supabase). Compartilhados entre servidor e telas. */
 
-export type CrmFunilId = "materia" | "publicidade" | "parcerias";
+/** Id do funil (crm_funis.id): materia, publicidade, parcerias, ativacao, evento, presencial... */
+export type CrmFunilId = string;
 export type CrmEtapaTipo = "aberta" | "ganha" | "perdida";
 export type CrmGrupo = "A" | "B" | "C";
 export type CrmPorte = "startup" | "pme" | "grande" | "global";
@@ -26,7 +27,15 @@ export type CrmAtividadeTipo =
   | "pagamento"
   | "sistema";
 
-export type CrmFunil = { id: CrmFunilId; nome: string; ordem: number; ativo: boolean };
+export type CrmFunil = {
+  id: CrmFunilId;
+  nome: string;
+  ordem: number;
+  ativo: boolean;
+  /** Vertical da IA News a que o funil pertence (Ativação e base, Publicidade, Eventos, Conselho, Parcerias). */
+  vertical: string | null;
+  descricao: string | null;
+};
 
 export type CrmEtapa = {
   id: string;

@@ -24,6 +24,7 @@ import { Route as CrmProducoesRouteImport } from './routes/_crm.producoes'
 import { Route as CrmPublicidadeRouteImport } from './routes/_crm.publicidade'
 import { Route as CrmRelatoriosRouteImport } from './routes/_crm.relatorios'
 import { Route as CrmTarefasRouteImport } from './routes/_crm.tarefas'
+import { Route as CrmVerticaisRouteImport } from './routes/_crm.verticais'
 import { Route as CrmEmpresasIndexRouteImport } from './routes/_crm.empresas.index'
 import { Route as CrmEmpresasIdRouteImport } from './routes/_crm.empresas.$id'
 import { Route as CrmPessoasIndexRouteImport } from './routes/_crm.pessoas.index'
@@ -105,6 +106,11 @@ const CrmTarefasRoute = CrmTarefasRouteImport.update({
   path: '/tarefas',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmVerticaisRoute = CrmVerticaisRouteImport.update({
+  id: '/verticais',
+  path: '/verticais',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmEmpresasIndexRoute = CrmEmpresasIndexRouteImport.update({
   id: '/empresas/',
   path: '/empresas/',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/publicidade': typeof CrmPublicidadeRoute
   '/relatorios': typeof CrmRelatoriosRoute
   '/tarefas': typeof CrmTarefasRoute
+  '/verticais': typeof CrmVerticaisRoute
   '/empresas/$id': typeof CrmEmpresasIdRoute
   '/pessoas/$id': typeof CrmPessoasIdRoute
   '/api/hooks/crm-daily': typeof ApiHooksCrmDailyRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/publicidade': typeof CrmPublicidadeRoute
   '/relatorios': typeof CrmRelatoriosRoute
   '/tarefas': typeof CrmTarefasRoute
+  '/verticais': typeof CrmVerticaisRoute
   '/': typeof CrmIndexRoute
   '/empresas/$id': typeof CrmEmpresasIdRoute
   '/pessoas/$id': typeof CrmPessoasIdRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/_crm/publicidade': typeof CrmPublicidadeRoute
   '/_crm/relatorios': typeof CrmRelatoriosRoute
   '/_crm/tarefas': typeof CrmTarefasRoute
+  '/_crm/verticais': typeof CrmVerticaisRoute
   '/_crm/': typeof CrmIndexRoute
   '/_crm/empresas/$id': typeof CrmEmpresasIdRoute
   '/_crm/pessoas/$id': typeof CrmPessoasIdRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/publicidade'
     | '/relatorios'
     | '/tarefas'
+    | '/verticais'
     | '/empresas/$id'
     | '/pessoas/$id'
     | '/api/hooks/crm-daily'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/publicidade'
     | '/relatorios'
     | '/tarefas'
+    | '/verticais'
     | '/'
     | '/empresas/$id'
     | '/pessoas/$id'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/_crm/publicidade'
     | '/_crm/relatorios'
     | '/_crm/tarefas'
+    | '/_crm/verticais'
     | '/_crm/'
     | '/_crm/empresas/$id'
     | '/_crm/pessoas/$id'
@@ -388,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmTarefasRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/verticais': {
+      id: '/_crm/verticais'
+      path: '/verticais'
+      fullPath: '/verticais'
+      preLoaderRoute: typeof CrmVerticaisRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/empresas/': {
       id: '/_crm/empresas/'
       path: '/empresas'
@@ -446,6 +465,7 @@ interface CrmRouteChildren {
   CrmPublicidadeRoute: typeof CrmPublicidadeRoute
   CrmRelatoriosRoute: typeof CrmRelatoriosRoute
   CrmTarefasRoute: typeof CrmTarefasRoute
+  CrmVerticaisRoute: typeof CrmVerticaisRoute
   CrmIndexRoute: typeof CrmIndexRoute
   CrmEmpresasIdRoute: typeof CrmEmpresasIdRoute
   CrmPessoasIdRoute: typeof CrmPessoasIdRoute
@@ -466,6 +486,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmPublicidadeRoute: CrmPublicidadeRoute,
   CrmRelatoriosRoute: CrmRelatoriosRoute,
   CrmTarefasRoute: CrmTarefasRoute,
+  CrmVerticaisRoute: CrmVerticaisRoute,
   CrmIndexRoute: CrmIndexRoute,
   CrmEmpresasIdRoute: CrmEmpresasIdRoute,
   CrmPessoasIdRoute: CrmPessoasIdRoute,

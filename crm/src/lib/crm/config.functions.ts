@@ -4,6 +4,7 @@ import { CORES_TAG } from "./types";
 import {
   checar,
   exigirAdmin,
+  funilId,
   inteiro,
   obrigatorio,
   requireCrmAccess,
@@ -16,7 +17,6 @@ import {
 /* Configuração (só admin): funis, etapas, prazos, modelos de mensagem, usuários e papéis. */
 
 const TIPOS_ETAPA = ["aberta", "ganha", "perdida"] as const;
-const FUNIS = ["materia", "publicidade", "parcerias"] as const;
 export const PAPEIS_EQUIPE = ["admin", "comercial", "editorial", "reader"] as const;
 export type PapelEquipe = (typeof PAPEIS_EQUIPE)[number];
 
@@ -54,7 +54,7 @@ export const saveEtapa = createServerFn({ method: "POST" })
     const nova = checar(
       await context.db
         .from("crm_etapas")
-        .insert({ ...row, funil_id: umDe(data.funil_id, FUNIS, "Funil") ?? "materia" })
+        .insert({ ...row, funil_id: funilId(data.funil_id) ?? "materia" })
         .select("id")
         .single(),
     ) as { id: string };
@@ -66,7 +66,7 @@ export const saveFunil = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; nome: string; ativo?: boolean }) => input)
   .handler(async ({ data, context }) => {
     exigirAdmin(context.isAdmin);
-    const id = umDe(data.id, FUNIS, "Funil");
+    const id = funilId(data.id);
     checar(
       await context.db
         .from("crm_funis")

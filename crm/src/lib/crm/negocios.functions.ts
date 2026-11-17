@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   checar,
   dia,
+  funilId,
   dinheiro,
   listaIds,
   obrigatorio,
@@ -18,14 +19,12 @@ import type { CrmAtividade, CrmCampanha, CrmFunilId, CrmStatusPagamento, CrmTare
 /* Negócios: uma oportunidade num funil, ligada a empresa e pessoa, numa etapa.
    Mudar a etapa grava a linha do tempo e cria a tarefa da ação padrão (gatilhos no banco). */
 
-const FUNIS = ["materia", "publicidade", "parcerias"] as const;
 const PAGAMENTOS = ["pendente", "pago", "cortesia", "cancelado"] as const;
 
 export const listNegocios = createServerFn({ method: "GET" })
   .middleware([requireCrmAccess])
   .inputValidator((input: { funil_id?: CrmFunilId | "todos" }) => ({
-    funil_id:
-      input?.funil_id && input.funil_id !== "todos" ? umDe(input.funil_id, FUNIS, "Funil") : null,
+    funil_id: input?.funil_id && input.funil_id !== "todos" ? funilId(input.funil_id) : null,
   }))
   .handler(async ({ data, context }): Promise<NegocioCompleto[]> => {
     return carregarNegocios(context.db, (q) =>
@@ -108,8 +107,7 @@ export const saveNegocio = createServerFn({ method: "POST" })
     };
     if (!data.id || "titulo" in data)
       row.titulo = obrigatorio(data.titulo, "o título do negócio", 300);
-    if (!data.id || "funil_id" in data)
-      row.funil_id = umDe(data.funil_id, FUNIS, "Funil") ?? "materia";
+    if (!data.id || "funil_id" in data) row.funil_id = funilId(data.funil_id) ?? "materia";
     campo("etapa_id", () => uuid(data.etapa_id));
     campo("empresa_id", () => uuid(data.empresa_id));
     campo("pessoa_id", () => uuid(data.pessoa_id));

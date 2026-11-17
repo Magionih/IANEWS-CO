@@ -220,3 +220,11 @@ export const listaIds = (v: unknown, max = 20): string[] => {
 };
 
 export const bool = (v: unknown): boolean => v === true || v === "true";
+
+/** Id de funil (crm_funis.id): letras minúsculas, números e _; o banco confere se o funil existe. */
+export function funilId(v: unknown): string | null {
+  if (v == null || v === "") return null;
+  const s = String(v).trim();
+  if (!/^[a-z0-9_]{2,40}$/.test(s)) throw new Error("Funil inválido.");
+  return s;
+}

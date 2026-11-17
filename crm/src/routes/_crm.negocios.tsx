@@ -53,7 +53,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const busca = z.object({
-  funil: z.enum(["materia", "publicidade", "parcerias"]).optional(),
+  funil: z
+    .string()
+    .regex(/^[a-z0-9_]{2,40}$/)
+    .optional(),
   modalidade: z.enum(["paga", "cortesia"]).optional(),
   tags: z.array(z.string()).max(20).optional(),
   negocio: z.string().optional(),
@@ -65,6 +68,10 @@ export const Route = createFileRoute("/_crm/negocios")({
 });
 
 const PERDIDOS_VISIVEIS = 20;
+/** Cartões por coluna no quadro: funis grandes (como a Ativação) usam a lista ou os filtros para ver o resto. */
+const CARTOES_POR_COLUNA = 60;
+
+const ORDEM_VERTICAIS = ["Ativação e base", "Publicidade", "Eventos", "Conselho", "Parcerias"];
 
 function NegociosPage() {
   const { funis, etapasDo, membro, funilNome, tag } = useCrm();
@@ -93,6 +100,18 @@ function NegociosPage() {
   });
 
   const etapas = etapasDo(funil);
+  // Funis agrupados por vertical (Ativação e base, Publicidade, Eventos, Conselho, Parcerias).
+  const verticais = useMemo(() => {
+    const ativos = funis.filter((f) => f.ativo).sort((a, b) => a.ordem - b.ordem);
+    const nomes = [...new Set(ativos.map((f) => f.vertical ?? "Outros funis"))].sort(
+      (a, b) => (ORDEM_VERTICAIS.indexOf(a) + 1 || 99) - (ORDEM_VERTICAIS.indexOf(b) + 1 || 99),
+    );
+    return nomes.map((nome) => ({
+      nome,
+      funis: ativos.filter((f) => (f.vertical ?? "Outros funis") === nome),
+    }));
+  }, [funis]);
+  const verticalAtual = funis.find((f) => f.id === funil)?.vertical ?? "Outros funis";
   const filtrados = useMemo(
     () =>
       (data ?? []).filter(
@@ -204,6 +223,31 @@ function NegociosPage() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-wrap gap-1.5" aria-label="Verticais">
+          {verticais.map((v) => (
+            <button
+              key={v.nome}
+              type="button"
+              onClick={() =>
+                navigate({
+                  search: {
+                    funil: v.funis[0].id,
+                    modalidade: search.modalidade,
+                    tags: search.tags,
+                  },
+                })
+              }
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+                v.nome === verticalAtual
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {v.nome} <span className="opacity-70">· {v.funis.length}</span>
+            </button>
+          ))}
+        </div>
         <Tabs
           value={funil}
           onValueChange={(v) =>
@@ -213,13 +257,13 @@ function NegociosPage() {
           }
         >
           <TabsList className="h-10 w-full justify-start overflow-x-auto sm:w-auto">
-            {funis
-              .filter((f) => f.ativo)
-              .map((f) => (
-                <TabsTrigger key={f.id} value={f.id}>
-                  {f.nome}
-                </TabsTrigger>
-              ))}
+            {(
+              verticais.find((v) => v.nome === verticalAtual)?.funis ?? funis.filter((f) => f.ativo)
+            ).map((f) => (
+              <TabsTrigger key={f.id} value={f.id}>
+                {f.nome}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
         <Tabs
@@ -338,7 +382,10 @@ function NegociosPage() {
           <div className="flex min-w-max gap-3">
             {etapas.map((e) => {
               const todos = porEtapa.get(e.id) ?? [];
-              const lista = e.tipo === "perdida" ? todos.slice(0, PERDIDOS_VISIVEIS) : todos;
+              const lista = todos.slice(
+                0,
+                e.tipo === "perdida" ? PERDIDOS_VISIVEIS : CARTOES_POR_COLUNA,
+              );
               const total = todos.reduce((s, n) => s + (n.valor ?? 0), 0);
               return (
                 <div
@@ -388,7 +435,9 @@ function NegociosPage() {
                     )}
                     {todos.length > lista.length ? (
                       <p className="p-2 text-center text-[11px] text-muted-foreground">
-                        +{todos.length - lista.length} perdidos (veja na lista)
+                        +{fmtNum(todos.length - lista.length)}{" "}
+                        {e.tipo === "perdida" ? "perdidos" : "nesta etapa"} (use os filtros ou a
+                        lista)
                       </p>
                     ) : null}
                   </div>
