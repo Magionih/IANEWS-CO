@@ -41,6 +41,7 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
 import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './routes/artigos.inteligencia-artificial-nas-empresas'
+import { Route as AutorHenriqueMagioniRouteImport } from './routes/autor.henrique-magioni'
 import { Route as BriefingTokenRouteImport } from './routes/briefing.$token'
 import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
@@ -246,6 +247,11 @@ const ArtigosInteligenciaArtificialNasEmpresasRoute =
     path: '/artigos/inteligencia-artificial-nas-empresas',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AutorHenriqueMagioniRoute = AutorHenriqueMagioniRouteImport.update({
+  id: '/autor/henrique-magioni',
+  path: '/autor/henrique-magioni',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BriefingTokenRoute = BriefingTokenRouteImport.update({
   id: '/briefing/$token',
   path: '/briefing/$token',
@@ -511,6 +517,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  '/autor/henrique-magioni': typeof AutorHenriqueMagioniRoute
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
@@ -588,6 +595,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  '/autor/henrique-magioni': typeof AutorHenriqueMagioniRoute
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
@@ -667,6 +675,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/habitos': typeof AuthenticatedHabitosRoute
   '/artigos/inteligencia-artificial-nas-empresas': typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  '/autor/henrique-magioni': typeof AutorHenriqueMagioniRoute
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
   '/guias/$hub': typeof GuiasHubRoute
@@ -746,6 +755,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
+    | '/autor/henrique-magioni'
     | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
@@ -823,6 +833,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
+    | '/autor/henrique-magioni'
     | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
@@ -901,6 +912,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/habitos'
     | '/artigos/inteligencia-artificial-nas-empresas'
+    | '/autor/henrique-magioni'
     | '/briefing/$token'
     | '/categoria/$cat'
     | '/guias/$hub'
@@ -978,6 +990,7 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   ArtigosInteligenciaArtificialNasEmpresasRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRoute
+  AutorHenriqueMagioniRoute: typeof AutorHenriqueMagioniRoute
   BriefingTokenRoute: typeof BriefingTokenRoute
   CategoriaCatRoute: typeof CategoriaCatRoute
   GuiasHubRoute: typeof GuiasHubRoute
@@ -1248,6 +1261,13 @@ declare module '@tanstack/react-router' {
       path: '/artigos/inteligencia-artificial-nas-empresas'
       fullPath: '/artigos/inteligencia-artificial-nas-empresas'
       preLoaderRoute: typeof ArtigosInteligenciaArtificialNasEmpresasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/autor/henrique-magioni': {
+      id: '/autor/henrique-magioni'
+      path: '/autor/henrique-magioni'
+      fullPath: '/autor/henrique-magioni'
+      preLoaderRoute: typeof AutorHenriqueMagioniRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/briefing/$token': {
@@ -1606,6 +1626,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   ArtigosInteligenciaArtificialNasEmpresasRoute:
     ArtigosInteligenciaArtificialNasEmpresasRoute,
+  AutorHenriqueMagioniRoute: AutorHenriqueMagioniRoute,
   BriefingTokenRoute: BriefingTokenRoute,
   CategoriaCatRoute: CategoriaCatRoute,
   GuiasHubRoute: GuiasHubRoute,

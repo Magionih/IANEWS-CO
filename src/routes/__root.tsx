@@ -169,7 +169,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
                 "@id": "https://ianewsbr.com/#henrique-magioni",
                 name: "Henrique Magioni",
                 jobTitle: "Fundador e CEO da IA News",
-                url: "https://ianewsbr.com/sobre",
+                url: "https://ianewsbr.com/autor/henrique-magioni",
               },
               sameAs: ["https://www.instagram.com/ianews.co/"],
             },

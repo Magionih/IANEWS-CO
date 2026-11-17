@@ -37,6 +37,7 @@ export const Route = createFileRoute("/sobre")({
             "@type": "Person",
             "@id": "https://ianewsbr.com/#henrique-magioni",
             name: "Henrique Magioni",
+            url: "https://ianewsbr.com/autor/henrique-magioni",
             jobTitle: "Fundador e CEO da IA News",
             worksFor: { "@id": "https://ianewsbr.com/#organization" },
             knowsAbout: ["Inteligência artificial", "IA para empresas", "Agentes de IA", "Startups de IA no Brasil"],

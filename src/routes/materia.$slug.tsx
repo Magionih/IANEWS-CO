@@ -17,6 +17,7 @@ import {
   ArticleSideSubscribe,
 } from "@/components/portal/article-cta";
 import { ArticleShare } from "@/components/portal/article-share";
+import { EDITOR, isIndexable } from "@/lib/seo-quality";
 import { HUB_LIST } from "@/lib/hubs";
 import { CATEGORY_SEO } from "@/lib/categories";
 import { type CategoryKey, CATEGORY_MAP } from "@/components/site/category-chip";
@@ -107,9 +108,11 @@ export const Route = createFileRoute("/materia/$slug")({
         ? a.updated_at
         : a.published_at;
     const section = CATEGORY_MAP[catOf(a.category)].label;
+    const isNewsroom = !a.author || /reda[cç][aã]o/i.test(a.author);
     return {
       meta: [
         { title: `${seoTitle} — IA News` },
+        ...(isIndexable(a.body_markdown) ? [] : [{ name: "robots", content: "noindex, follow" }]),
         { name: "description", content: desc.slice(0, 155) },
         { property: "og:title", content: seoTitle },
         { property: "og:description", content: desc.slice(0, 155) },
@@ -141,9 +144,10 @@ export const Route = createFileRoute("/materia/$slug")({
             dateModified: modified,
             articleSection: CATEGORY_MAP[catOf(a.category)].label,
             isAccessibleForFree: true,
-            author: a.author
-              ? { "@type": "Person", name: a.author }
-              : { "@type": "Organization", name: "Redação IA News", url: "https://ianewsbr.com/sobre" },
+            author: isNewsroom
+              ? { "@type": "Organization", name: "Redação IA News", url: "https://ianewsbr.com/sobre" }
+              : { "@type": "Person", name: a.author },
+            editor: { "@type": "Person", "@id": EDITOR.id, name: EDITOR.name, url: EDITOR.url },
             publisher: {
               "@type": "NewsMediaOrganization",
               "@id": "https://ianewsbr.com/#organization",
@@ -348,7 +352,8 @@ function ArticlePage() {
 
               <div className="byline">
                 <span>
-                  Por <b>{article.author ?? "Redação IA News"}</b>
+                  Por <b>{article.author ?? "Redação IA News"}</b> · Edição{" "}
+                  <Link to="/autor/henrique-magioni">{EDITOR.name}</Link>
                 </span>
                 <time dateTime={article.published_at}>{shortDate(article.published_at)}</time>
                 <span>{minutes} min de leitura</span>

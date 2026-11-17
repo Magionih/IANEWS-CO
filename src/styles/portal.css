@@ -1784,3 +1784,16 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 .selo-how ul{margin:0;padding-left:20px;line-height:1.8;color:#3B4350}
 @media (max-width:760px){.selo-grid{grid-template-columns:1fr}.selo-form .btn{justify-self:stretch}}
 .art-selo{margin:14px 0 0;font-size:14px;color:#687180}.art-selo a{color:var(--p-blue-ink);font-weight:500}
+
+/* ===== /autor/henrique-magioni ===== */
+.autor-head{display:flex;gap:20px;align-items:center;padding-top:48px}
+.autor-mono{display:grid;place-items:center;flex:0 0 88px;width:88px;height:88px;border-radius:50%;background:#0B0E13;color:#fff;font-weight:900;font-size:28px;letter-spacing:-.02em}
+.autor-kick{margin:0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--p-blue-ink)}
+.autor-head h1{margin:4px 0 0;font-size:clamp(30px,4vw,42px);font-weight:900;letter-spacing:-.02em}
+.autor-role{margin:4px 0 0;color:#3B4350}
+.autor-bio{max-width:760px;padding-top:24px}
+.autor-bio p{font-family:var(--p-serif);font-size:18.5px;line-height:1.6;color:#22272F;margin:0 0 16px}
+.autor-social a{font-family:var(--p-sans);font-size:15px;font-weight:500}
+.autor-list{padding:24px 0 72px}
+.autor-list h2{margin:0 0 18px;font-size:24px;font-weight:900}
+@media (max-width:560px){.autor-head{gap:14px}.autor-mono{flex-basis:64px;width:64px;height:64px;font-size:21px}}

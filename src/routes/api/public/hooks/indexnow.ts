@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { cronUnauthorized, readJson } from "@/lib/cron-auth.server";
+import { isIndexable } from "@/lib/seo-quality";
 
 /* IndexNow: avisa Bing (que alimenta a busca do ChatGPT e o Copilot), Yandex e outros buscadores
    sempre que matérias são publicadas ou atualizadas. O pg_cron chama de hora em hora.
@@ -21,6 +22,7 @@ const PAGES = [
   "/pauta",
   "/lista100",
   "/newsletter",
+  "/autor/henrique-magioni",
   "/guias/agentes-de-ia",
   "/guias/ferramentas-de-ia",
   "/guias/lideres-de-ia-no-brasil",
@@ -47,13 +49,15 @@ async function handle(request: Request) {
   const since = new Date(now.getTime() - hours * 3600 * 1000).toISOString();
   const { data, error } = await (supabaseAdmin as any)
     .from("articles")
-    .select("slug")
+    .select("slug, body_markdown")
     .eq("status", "published")
     .lte("published_at", now.toISOString())
     .or(`published_at.gte.${since},updated_at.gte.${since}`)
     .limit(5000);
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
-  for (const r of (data ?? []) as { slug: string }[]) urls.add(`${BASE}/materia/${encodeURIComponent(r.slug)}`);
+  for (const r of (data ?? []) as { slug: string; body_markdown: string | null }[]) {
+    if (isIndexable(r.body_markdown)) urls.add(`${BASE}/materia/${encodeURIComponent(r.slug)}`);
+  }
 
   // Matéria nova muda a home e as listas: avisa junto.
   if ((data ?? []).length > 0) for (const p of ["/", "/noticias"]) urls.add(BASE + p);

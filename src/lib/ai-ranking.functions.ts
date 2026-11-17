@@ -123,3 +123,28 @@ export const rateAiTool = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+export type BenchLeader = { name: string; maker: string; asOf: string; source: string } | null;
+
+/** Líder de inteligência do ranking mais recente da newsletter (benchmarks públicos, com data e fonte). */
+export const getLatestBenchLeader = createServerFn({ method: "GET" }).handler(async (): Promise<BenchLeader> => {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await (supabaseAdmin as any)
+      .from("newsletter_editions")
+      .select("ranking, edition_date")
+      .not("ranking", "is", null)
+      .order("edition_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const r = data?.ranking as
+      | { as_of?: string; source_name?: string; items?: { name: string; maker: string; position: number }[] }
+      | undefined;
+    const first = r?.items?.find((i) => i.position === 1) ?? r?.items?.[0];
+    if (!first) return null;
+    return { name: first.name, maker: first.maker, asOf: r?.as_of ?? data.edition_date, source: r?.source_name ?? "" };
+  } catch (err) {
+    console.error("[ai-ranking] bench leader error", err);
+    return null;
+  }
+});

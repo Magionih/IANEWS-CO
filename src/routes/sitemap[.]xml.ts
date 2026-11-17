@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type {} from "@tanstack/react-start";
 import { CATEGORY_SEO_LIST } from "@/lib/categories";
 import { HUB_LIST } from "@/lib/hubs";
+import { isIndexable } from "@/lib/seo-quality";
 
 const BASE_URL = "https://ianewsbr.com";
 
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/palco", changefreq: "weekly", priority: "0.8" },
           { path: "/eventos", changefreq: "weekly", priority: "0.8" },
           { path: "/selo", changefreq: "yearly", priority: "0.4" },
+          { path: "/autor/henrique-magioni", changefreq: "weekly", priority: "0.6" },
           { path: "/pauta", changefreq: "monthly", priority: "0.7" },
           { path: "/gente", changefreq: "daily", priority: "0.8" },
           { path: "/empresas", changefreq: "monthly", priority: "0.6" },
@@ -64,7 +66,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           for (let offset = 0; ; offset += 1000) {
             const { data, error } = await supabase
               .from("articles")
-              .select("slug, published_at, updated_at, cover_image_url")
+              .select("slug, published_at, updated_at, cover_image_url, body_markdown")
               .eq("status", "published")
               .lte("published_at", new Date().toISOString())
               .order("published_at", { ascending: false })
@@ -76,8 +78,10 @@ export const Route = createFileRoute("/sitemap.xml")({
               published_at: string;
               updated_at: string | null;
               cover_image_url: string | null;
+              body_markdown: string | null;
             }[];
             for (const row of rows) {
+              if (!isIndexable(row.body_markdown)) continue;
               const pub = new Date(row.published_at).getTime();
               const upd = row.updated_at ? new Date(row.updated_at).getTime() : pub;
               entries.push({

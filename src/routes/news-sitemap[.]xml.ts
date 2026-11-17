@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type {} from "@tanstack/react-start";
+import { isIndexable } from "@/lib/seo-quality";
 
 /* Sitemap de notícias (Google News): só matérias publicadas nas últimas 48 horas, como pede o Google. */
 
@@ -15,21 +16,21 @@ export const Route = createFileRoute("/news-sitemap.xml")({
       GET: async () => {
         const now = new Date();
         const since = new Date(now.getTime() - 48 * 60 * 60 * 1000);
-        let rows: { slug: string; title: string; published_at: string; tags: string[] | null }[] = [];
+        let rows: { slug: string; title: string; published_at: string; tags: string[] | null; body_markdown: string | null }[] = [];
         try {
           const supabase = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, {
             auth: { persistSession: false, autoRefreshToken: false },
           });
           const { data, error } = await supabase
             .from("articles")
-            .select("slug, title, published_at, tags")
+            .select("slug, title, published_at, tags, body_markdown")
             .eq("status", "published")
             .gte("published_at", since.toISOString())
             .lte("published_at", now.toISOString())
             .order("published_at", { ascending: false })
             .limit(1000);
           if (error) throw error;
-          rows = (data ?? []) as typeof rows;
+          rows = ((data ?? []) as typeof rows).filter((r) => isIndexable(r.body_markdown));
         } catch (error) {
           console.error("[news-sitemap] failed", error);
           return new Response("Sitemap temporariamente indisponível", { status: 503 });

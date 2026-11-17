@@ -9,7 +9,9 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-subscribe";
 import { useAuth } from "@/hooks/use-auth";
-import { listAiTools, getMyToolRatings, type AiTool } from "@/lib/ai-ranking.functions";
+import { listAiTools,
+  getLatestBenchLeader,
+  type BenchLeader, getMyToolRatings, type AiTool } from "@/lib/ai-ranking.functions";
 import {
   AREAS,
   CATEGORIES,
@@ -41,19 +43,21 @@ export const Route = createFileRoute("/ranking")({
   }),
   loader: async () => {
     try {
-      const tools = await listAiTools();
-      return { tools };
+      const [tools, bench] = await Promise.all([listAiTools(), getLatestBenchLeader().catch(() => null)]);
+      return { tools, bench };
     } catch (err) {
       console.error("[ranking] loader failed", err);
-      return { tools: [] as AiTool[] };
+      return { tools: [] as AiTool[], bench: null as BenchLeader };
     }
   },
   head: ({ loaderData }) => {
     const tools = (loaderData?.tools ?? []).slice(0, 20);
     const top = tools.slice(0, 3).map((t) => t.name);
     const title = "Ranking IA 2026: as melhores ferramentas de inteligência artificial";
+    const bench = loaderData?.bench;
+    const benchTxt = bench ? ` Em inteligência, lidera o ${bench.name}, da ${bench.maker} (${bench.asOf}).` : "";
     const description = top.length
-      ? `Ranking atualizado das melhores IAs: ${top.join(", ")} lideram hoje. Compare 50 ferramentas de inteligência artificial por categoria, fabricante e nota dos leitores brasileiros.`
+      ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram entre as ferramentas.${benchTxt} Compare 50 ferramentas por categoria e fabricante.`
       : "Ranking atualizado das 50 melhores ferramentas de inteligência artificial, por categoria, fabricante e nota dos leitores brasileiros.";
     return {
       meta: [
