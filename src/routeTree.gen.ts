@@ -22,9 +22,11 @@ import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as EdicaoRouteImport } from './routes/edicao'
 import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
 import { Route as GenteRouteImport } from './routes/gente'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as Lista100RouteImport } from './routes/lista100'
+import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
 import { Route as NewsletterRouteImport } from './routes/newsletter'
 import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as PalcoRouteImport } from './routes/palco'
@@ -145,6 +147,11 @@ const EmpresasRoute = EmpresasRouteImport.update({
   path: '/empresas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeedDotxmlRoute = FeedDotxmlRouteImport.update({
+  id: '/feed.xml',
+  path: '/feed.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenteRoute = GenteRouteImport.update({
   id: '/gente',
   path: '/gente',
@@ -158,6 +165,11 @@ const LinksRoute = LinksRouteImport.update({
 const Lista100Route = Lista100RouteImport.update({
   id: '/lista100',
   path: '/lista100',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsSitemapDotxmlRoute = NewsSitemapDotxmlRouteImport.update({
+  id: '/news-sitemap.xml',
+  path: '/news-sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsletterRoute = NewsletterRouteImport.update({
@@ -462,9 +474,11 @@ export interface FileRoutesByFullPath {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/feed.xml': typeof FeedDotxmlRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/palco': typeof PalcoRoute
@@ -534,9 +548,11 @@ export interface FileRoutesByTo {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/feed.xml': typeof FeedDotxmlRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/palco': typeof PalcoRoute
@@ -608,9 +624,11 @@ export interface FileRoutesById {
   '/descadastrar': typeof DescadastrarRoute
   '/edicao': typeof EdicaoRoute
   '/empresas': typeof EmpresasRoute
+  '/feed.xml': typeof FeedDotxmlRoute
   '/gente': typeof GenteRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/newsletter': typeof NewsletterRoute
   '/noticias': typeof NoticiasRoute
   '/palco': typeof PalcoRoute
@@ -682,9 +700,11 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/feed.xml'
     | '/gente'
     | '/links'
     | '/lista100'
+    | '/news-sitemap.xml'
     | '/newsletter'
     | '/noticias'
     | '/palco'
@@ -754,9 +774,11 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/feed.xml'
     | '/gente'
     | '/links'
     | '/lista100'
+    | '/news-sitemap.xml'
     | '/newsletter'
     | '/noticias'
     | '/palco'
@@ -827,9 +849,11 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/edicao'
     | '/empresas'
+    | '/feed.xml'
     | '/gente'
     | '/links'
     | '/lista100'
+    | '/news-sitemap.xml'
     | '/newsletter'
     | '/noticias'
     | '/palco'
@@ -901,9 +925,11 @@ export interface RootRouteChildren {
   DescadastrarRoute: typeof DescadastrarRoute
   EdicaoRoute: typeof EdicaoRoute
   EmpresasRoute: typeof EmpresasRoute
+  FeedDotxmlRoute: typeof FeedDotxmlRoute
   GenteRoute: typeof GenteRoute
   LinksRoute: typeof LinksRoute
   Lista100Route: typeof Lista100Route
+  NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
   NewsletterRoute: typeof NewsletterRoute
   NoticiasRoute: typeof NoticiasRoute
   PalcoRoute: typeof PalcoRoute
@@ -1052,6 +1078,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmpresasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feed.xml': {
+      id: '/feed.xml'
+      path: '/feed.xml'
+      fullPath: '/feed.xml'
+      preLoaderRoute: typeof FeedDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gente': {
       id: '/gente'
       path: '/gente'
@@ -1071,6 +1104,13 @@ declare module '@tanstack/react-router' {
       path: '/lista100'
       fullPath: '/lista100'
       preLoaderRoute: typeof Lista100RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news-sitemap.xml': {
+      id: '/news-sitemap.xml'
+      path: '/news-sitemap.xml'
+      fullPath: '/news-sitemap.xml'
+      preLoaderRoute: typeof NewsSitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newsletter': {
@@ -1488,9 +1528,11 @@ const rootRouteChildren: RootRouteChildren = {
   DescadastrarRoute: DescadastrarRoute,
   EdicaoRoute: EdicaoRoute,
   EmpresasRoute: EmpresasRoute,
+  FeedDotxmlRoute: FeedDotxmlRoute,
   GenteRoute: GenteRoute,
   LinksRoute: LinksRoute,
   Lista100Route: Lista100Route,
+  NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
   NewsletterRoute: NewsletterRoute,
   NoticiasRoute: NoticiasRoute,
   PalcoRoute: PalcoRoute,

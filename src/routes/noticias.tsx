@@ -8,14 +8,17 @@ import { CATEGORY_MAP, type CategoryKey } from "@/components/site/category-chip"
 import { NewsListing, SearchIcon } from "@/components/portal/news-card";
 import { listArticlesFiltered, type ArticleRow } from "@/lib/articles.functions";
 
-type Search = { q: string; cat: string };
+type Search = { q?: string; cat?: string };
+
+/** Só guarda o que difere do padrão: assim /noticias não redireciona para /noticias?q=&cat=all. */
+const str = (v: unknown, def: string) => (typeof v === "string" && v !== "" && v !== def ? v : undefined);
 
 export const Route = createFileRoute("/noticias")({
   validateSearch: (search: Partial<Record<keyof Search, unknown>>): Search => ({
-    q: typeof search.q === "string" ? search.q : "",
-    cat: typeof search.cat === "string" ? search.cat : "all",
+    q: str(search.q, ""),
+    cat: str(search.cat, "all"),
   }),
-  loaderDeps: ({ search }: { search: Search }) => ({ q: search.q, cat: search.cat }),
+  loaderDeps: ({ search }: { search: Search }) => ({ q: search.q ?? "", cat: search.cat ?? "all" }),
   loader: async ({ deps }) => {
     try {
       const articles = await listArticlesFiltered({
@@ -106,7 +109,7 @@ const NEWS_SUB =
 
 function NoticiasPage() {
   const { articles } = Route.useLoaderData();
-  const { q, cat } = Route.useSearch();
+  const { q = "", cat = "all" } = Route.useSearch();
   const navigate = useNavigate({ from: "/noticias" });
   const cats = Object.entries(CATEGORY_MAP) as Array<[CategoryKey, { label: string }]>;
   const current = cat !== "all" ? CATEGORY_MAP[cat as CategoryKey] : undefined;
@@ -165,7 +168,7 @@ function NoticiasPage() {
                       navigate({
                         to: "/guias/$hub",
                         params: { hub: value.slice(5) },
-                        search: { q: "", tema: "all" },
+                        search: {},
                       });
                       return;
                     }
@@ -199,7 +202,7 @@ function NoticiasPage() {
                 <button
                   className="more"
                   type="button"
-                  onClick={() => navigate({ search: () => ({ q: "", cat: "all" }) })}
+                  onClick={() => navigate({ search: () => ({}) })}
                 >
                   Limpar
                 </button>
@@ -229,7 +232,7 @@ function NoticiasPage() {
                   className="chip"
                   to="/guias/$hub"
                   params={{ hub: h.slug }}
-                  search={{ q: "", tema: "all" }}
+                  search={{}}
                 >
                   {h.h1}
                 </Link>

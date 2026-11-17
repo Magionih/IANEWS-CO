@@ -43,7 +43,7 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
     e?.preventDefault();
     const term = q.trim().slice(0, 80);
     onClose();
-    navigate({ to: "/noticias", search: { q: term, cat: "all" } });
+    navigate({ to: "/noticias", search: { q: term || undefined } });
   }
   return (
     <div
@@ -133,7 +133,7 @@ export function SiteHeader() {
           </Link>
           <nav className="nav" aria-label="Seções">
             <div className={"nav-dd" + (ddOff ? " off" : "")}>
-              <Link to="/noticias" search={{ q: "", cat: "all" }} aria-haspopup="true" aria-current={cur("/noticias")}>
+              <Link to="/noticias" search={{}} aria-haspopup="true" aria-current={cur("/noticias")}>
                 Notícias
               </Link>
               <div className="dd">
@@ -151,7 +151,7 @@ export function SiteHeader() {
                   <h5>Temas</h5>
                   <div>
                     {HUB_LIST.map((h) => (
-                      <Link key={h.slug} to="/guias/$hub" params={{ hub: h.slug }} search={{ q: "", tema: "all" }}>
+                      <Link key={h.slug} to="/guias/$hub" params={{ hub: h.slug }} search={{}}>
                         {h.eyebrow || h.title}
                       </Link>
                     ))}
@@ -159,7 +159,7 @@ export function SiteHeader() {
                   </div>
                 </div>
                 <div className="dd-all">
-                  <Link to="/noticias" search={{ q: "", cat: "all" }}>
+                  <Link to="/noticias" search={{}}>
                     Todas as notícias →
                   </Link>
                 </div>
@@ -220,7 +220,7 @@ export function SiteHeader() {
         {menu && (
           <div className="menu" id="menu">
             <div className="wrap">
-              <Link className="m" to="/noticias" search={{ q: "", cat: "all" }} aria-current={cur("/noticias")}>
+              <Link className="m" to="/noticias" search={{}} aria-current={cur("/noticias")}>
                 Notícias
               </Link>
               <Link className="m" to="/ranking" aria-current={cur("/ranking")}>

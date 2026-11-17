@@ -195,7 +195,7 @@ function AssinarPage() {
                   <p className="msg ok" role="status">
                     {done}
                   </p>
-                  <Link className="btn blue wide" to="/noticias" search={{ q: "", cat: "all" }}>
+                  <Link className="btn blue wide" to="/noticias" search={{}}>
                     Ler as notícias de hoje
                   </Link>
                 </div>

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type {} from "@tanstack/react-start";
 import { CATEGORY_SEO_LIST } from "@/lib/categories";
+import { HUB_LIST } from "@/lib/hubs";
 
 const BASE_URL = "https://ianewsbr.com";
 
@@ -10,7 +11,11 @@ interface SitemapEntry {
   lastmod?: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
   priority?: string;
+  image?: string;
 }
+
+const xmlEscape = (v: string) =>
+  v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
@@ -25,13 +30,7 @@ export const Route = createFileRoute("/sitemap.xml")({
             changefreq: "monthly",
             priority: "0.8",
           },
-          {
-            path: "/guias/regulamentacao-da-ia-no-brasil",
-            changefreq: "daily",
-            priority: "0.8",
-          },
-          { path: "/guias/ia-para-pequenas-empresas", changefreq: "daily", priority: "0.8" },
-          { path: "/guias/ia-no-atendimento-ao-cliente", changefreq: "daily", priority: "0.8" },
+          ...HUB_LIST.map((h) => ({ path: `/guias/${h.slug}`, changefreq: "daily" as const, priority: "0.8" })),
           { path: "/assinar", changefreq: "monthly", priority: "0.7" },
           { path: "/newsletter", changefreq: "daily", priority: "0.9" },
           ...CATEGORY_SEO_LIST.map((c) => ({
@@ -41,7 +40,10 @@ export const Route = createFileRoute("/sitemap.xml")({
           })),
           { path: "/sobre", changefreq: "monthly", priority: "0.6" },
           { path: "/anuncie", changefreq: "monthly", priority: "0.5" },
-          { path: "/palco", changefreq: "weekly", priority: "0.7" },
+          { path: "/palco", changefreq: "weekly", priority: "0.8" },
+          { path: "/pauta", changefreq: "monthly", priority: "0.6" },
+          { path: "/gente", changefreq: "daily", priority: "0.8" },
+          { path: "/empresas", changefreq: "monthly", priority: "0.6" },
           { path: "/lista100", changefreq: "weekly", priority: "0.7" },
           { path: "/lista100/criterios", changefreq: "monthly", priority: "0.5" },
           { path: "/aula", changefreq: "weekly", priority: "0.6" },
@@ -60,16 +62,26 @@ export const Route = createFileRoute("/sitemap.xml")({
           for (let offset = 0; ; offset += 1000) {
             const { data, error } = await supabase
               .from("articles")
-              .select("slug, published_at")
+              .select("slug, published_at, updated_at, cover_image_url")
+              .eq("status", "published")
+              .lte("published_at", new Date().toISOString())
               .order("published_at", { ascending: false })
               .order("slug", { ascending: true })
               .range(offset, offset + 999);
             if (error) throw error;
-            const rows = (data ?? []) as { slug: string; published_at: string }[];
+            const rows = (data ?? []) as {
+              slug: string;
+              published_at: string;
+              updated_at: string | null;
+              cover_image_url: string | null;
+            }[];
             for (const row of rows) {
+              const pub = new Date(row.published_at).getTime();
+              const upd = row.updated_at ? new Date(row.updated_at).getTime() : pub;
               entries.push({
                 path: `/materia/${encodeURIComponent(row.slug)}`,
-                lastmod: new Date(row.published_at).toISOString(),
+                lastmod: new Date(Math.max(pub, Math.min(upd, Date.now()))).toISOString(),
+                image: row.cover_image_url ?? undefined,
                 changefreq: "weekly",
                 priority: "0.7",
               });
@@ -88,6 +100,7 @@ export const Route = createFileRoute("/sitemap.xml")({
             e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
+            e.image ? `    <image:image><image:loc>${xmlEscape(e.image)}</image:loc></image:image>` : null,
             `  </url>`,
           ]
             .filter(Boolean)
@@ -96,7 +109,7 @@ export const Route = createFileRoute("/sitemap.xml")({
 
         const xml = [
           `<?xml version="1.0" encoding="UTF-8"?>`,
-          `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+          `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`,
           ...urls,
           `</urlset>`,
         ].join("\n");

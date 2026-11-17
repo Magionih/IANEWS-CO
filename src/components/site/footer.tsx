@@ -26,7 +26,7 @@ export function SiteFooter() {
           </div>
           <div>
             <h4>Portal</h4>
-            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+            <Link to="/noticias" search={{}}>
               Notícias
             </Link>
             <Link to="/ranking">Ranking IA</Link>
@@ -36,8 +36,8 @@ export function SiteFooter() {
           <div>
             <h4>Temas</h4>
             {HUB_LIST.map((h) => (
-              <Link key={h.slug} to="/guias/$hub" params={{ hub: h.slug }} search={{ q: "", tema: "all" }}>
-                {h.eyebrow || h.title}
+              <Link key={h.slug} to="/guias/$hub" params={{ hub: h.slug }} search={{}}>
+                {h.h1}
               </Link>
             ))}
             <Link to="/artigos/inteligencia-artificial-nas-empresas">IA nas empresas</Link>

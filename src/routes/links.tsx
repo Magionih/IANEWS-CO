@@ -95,7 +95,7 @@ function LinksPage() {
                 </Link>
               ))}
             </div>
-            <Link to="/noticias" search={{ q: "", cat: "all" }} className="lk-more" onClick={click("noticias")}>
+            <Link to="/noticias" search={{}} className="lk-more" onClick={click("noticias")}>
               Todas as notícias <Arrow />
             </Link>
           </section>

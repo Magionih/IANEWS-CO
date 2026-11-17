@@ -236,7 +236,7 @@ export function SinceLastVisit({ dates }: { dates: string[] }) {
     <div className="rd-since">
       <span className="rd-dot" aria-hidden="true" />
       {n === 1 ? "1 matéria nova" : `${n} matérias novas`} desde a sua última visita.{" "}
-      <Link to="/noticias" search={{ q: "", cat: "all" }} onClick={() => trackCta({ event: "click", placement: "desde-ultima-visita", variant: String(n) })}>
+      <Link to="/noticias" search={{}} onClick={() => trackCta({ event: "click", placement: "desde-ultima-visita", variant: String(n) })}>
         Ver todas →
       </Link>
     </div>

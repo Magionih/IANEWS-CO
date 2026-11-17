@@ -102,6 +102,11 @@ export const Route = createFileRoute("/materia/$slug")({
     const desc = a.seo_description ?? a.dek ?? "Análise do IA News sobre inteligência artificial.";
     const seoTitle = a.seo_title ?? a.title;
     const img = a.cover_image_url ?? FALLBACK_COVER;
+    const modified =
+      a.updated_at && new Date(a.updated_at).getTime() > new Date(a.published_at).getTime()
+        ? a.updated_at
+        : a.published_at;
+    const section = CATEGORY_MAP[catOf(a.category)].label;
     return {
       meta: [
         { title: `${seoTitle} — IA News` },
@@ -109,6 +114,9 @@ export const Route = createFileRoute("/materia/$slug")({
         { property: "og:title", content: seoTitle },
         { property: "og:description", content: desc.slice(0, 155) },
         { property: "og:type", content: "article" },
+        { property: "article:published_time", content: a.published_at },
+        { property: "article:modified_time", content: modified },
+        { property: "article:section", content: section },
         { name: "twitter:card", content: "summary_large_image" },
         ...(a.tags && a.tags.length ? [{ name: "keywords", content: a.tags.join(", ") }] : []),
         ...(img.startsWith("https://")
@@ -126,28 +134,36 @@ export const Route = createFileRoute("/materia/$slug")({
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "NewsArticle",
-            headline: a.title,
+            headline: a.title.slice(0, 110),
             description: desc.slice(0, 300),
             image: [img],
             datePublished: a.published_at,
-            dateModified: a.published_at,
-            author: {
-              "@type": a.author ? "Person" : "Organization",
-              name: a.author ?? "Redação IA News",
-            },
+            dateModified: modified,
+            articleSection: CATEGORY_MAP[catOf(a.category)].label,
+            isAccessibleForFree: true,
+            author: a.author
+              ? { "@type": "Person", name: a.author }
+              : { "@type": "Organization", name: "Redação IA News", url: "https://ianewsbr.com/sobre" },
             publisher: {
-              "@type": "Organization",
+              "@type": "NewsMediaOrganization",
+              "@id": "https://ianewsbr.com/#organization",
               name: "IA News",
+              url: "https://ianewsbr.com",
               logo: {
                 "@type": "ImageObject",
-                url: "https://ianewsbr.com/og-brand.png",
+                url: "https://ianewsbr.com/icon-512.png",
+                width: 512,
+                height: 512,
               },
             },
             mainEntityOfPage: {
               "@type": "WebPage",
               "@id": `https://ianewsbr.com/materia/${a.slug}`,
             },
-            ...(a.tags && a.tags.length ? { keywords: a.tags.join(", ") } : {}),
+            ...(a.tags && a.tags.length
+              ? { keywords: a.tags.join(", "), about: a.tags.slice(0, 6).map((t) => ({ "@type": "Thing", name: t })) }
+              : {}),
+            ...(a.source_url ? { citation: a.source_url } : {}),
             inLanguage: "pt-BR",
           }),
         },
@@ -161,8 +177,8 @@ export const Route = createFileRoute("/materia/$slug")({
               {
                 "@type": "ListItem",
                 position: 2,
-                name: "Notícias",
-                item: "https://ianewsbr.com/noticias",
+                name: section,
+                item: `https://ianewsbr.com/categoria/${catOf(a.category)}`,
               },
               {
                 "@type": "ListItem",
@@ -217,7 +233,7 @@ function ArticleFallback({ title }: { title: string }) {
             <Link to="/" className="btn blue">
               Voltar para o início
             </Link>
-            <Link to="/noticias" search={{ q: "", cat: "all" }} className="btn line">
+            <Link to="/noticias" search={{}} className="btn line">
               Ver todas as notícias
             </Link>
           </div>
@@ -294,7 +310,7 @@ function ArticlePage() {
           <nav className="crumbs" aria-label="Você está em">
             <Link to="/">Início</Link>
             <span>/</span>
-            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+            <Link to="/noticias" search={{}}>
               Notícias
             </Link>
             <span>/</span>
@@ -581,7 +597,7 @@ function ArticlePage() {
                       <Link
                         to="/guias/$hub"
                         params={{ hub: h.slug }}
-                        search={{ q: "", tema: "all" }}
+                        search={{}}
                       >
                         {h.h1}
                       </Link>

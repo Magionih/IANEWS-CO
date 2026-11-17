@@ -23,6 +23,9 @@ import { CompareDialog, RatingPrompt, ToolDialog } from "@/components/portal/ran
 
 type Search = { area?: string; cat?: string; q?: string; all?: boolean; maker?: string };
 
+/** Só guarda o que difere do padrão: assim /ranking não redireciona para uma URL cheia de parâmetros. */
+const str = (v: unknown, def: string) => (typeof v === "string" && v !== "" && v !== def ? v : undefined);
+
 /** Quantas plataformas aparecem antes do botão "Ver todas". */
 const FIRST_ROWS = 20;
 /** Teto da lista completa (mantido do comportamento anterior). */
@@ -30,11 +33,11 @@ const MAX_ROWS = 50;
 
 export const Route = createFileRoute("/ranking")({
   validateSearch: (search: Record<string, unknown>): Search => ({
-    area: typeof search.area === "string" ? search.area : "semanal",
-    cat: typeof search.cat === "string" ? search.cat : "todas",
-    q: typeof search.q === "string" ? search.q : "",
-    all: search.all === true || search.all === "true",
-    maker: typeof search.maker === "string" ? search.maker : "todos",
+    area: str(search.area, "semanal"),
+    cat: str(search.cat, "todas"),
+    q: str(search.q, ""),
+    all: search.all === true || search.all === "true" ? true : undefined,
+    maker: str(search.maker, "todos"),
   }),
   loader: async () => {
     try {

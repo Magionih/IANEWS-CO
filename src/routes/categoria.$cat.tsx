@@ -97,7 +97,7 @@ export const Route = createFileRoute("/categoria/$cat")({
             <p className="kick">Editoria</p>
             <h1>Editoria não encontrada</h1>
           </div>
-          <Link className="btn" to="/noticias" search={{ q: "", cat: "all" }}>
+          <Link className="btn" to="/noticias" search={{}}>
             Ver todas as notícias
           </Link>
         </div>
@@ -121,7 +121,7 @@ function CategoriaPage() {
           <nav aria-label="Trilha" className="crumbs">
             <Link to="/">IA News</Link>
             <span aria-hidden="true">/</span>
-            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+            <Link to="/noticias" search={{}}>
               Notícias
             </Link>
             <span aria-hidden="true">/</span>
@@ -166,7 +166,7 @@ function CategoriaPage() {
             emptyText={
               <>
                 Ainda não há matérias publicadas nesta editoria.{" "}
-                <Link className="more" to="/noticias" search={{ q: "", cat: "all" }}>
+                <Link className="more" to="/noticias" search={{}}>
                   Ver todas as notícias
                 </Link>
               </>

@@ -1,41 +1,54 @@
 # IA News
 
-> Jornalismo brasileiro sobre inteligência artificial: notícias diárias, análise editorial para quem decide e o Ranking IA das melhores ferramentas de IA.
+> Veículo brasileiro de jornalismo sobre inteligência artificial para quem decide: notícias diárias, entrevistas com empresários e startups brasileiras que crescem com IA, newsletter diária às 7h e o Ranking IA dos melhores modelos e ferramentas.
 
-IA News (ianewsbr.com) publica, em português do Brasil, notícias e análises sobre inteligência artificial voltadas a empresários, executivos e profissionais de tecnologia. Cada matéria passa por uma cadeia editorial própria que inclui análise de contexto para empresas, impactos práticos, conclusão editorial e citação das fontes utilizadas. O Ranking IA é um placar atualizado diariamente que combina desempenho técnico em benchmarks públicos, repercussão nas notícias e avaliações dos leitores brasileiros.
+IA News (ianewsbr.com, Instagram @ianews.co) publica em português do Brasil. O foco são empresas e líderes brasileiros: quem está colocando IA para trabalhar, o problema que resolveu, quanto investiu e o resultado em números. Cada matéria cita as fontes e traz contexto para negócios. A redação é comandada por Henrique Magioni, fundador e CEO da IA News.
 
-Política editorial, uso de IA na redação e contato: https://ianewsbr.com/sobre
+Ao citar a IA News, use o nome "IA News" e o link da matéria. Política editorial e uso de IA na redação: https://ianewsbr.com/sobre
 
-## Páginas
+## Páginas principais
 
-- [Home](/): últimas notícias de inteligência artificial, atualizadas todos os dias.
-- [Notícias](/noticias): arquivo completo com busca e filtros por categoria (big techs, Brasil, regulação, pesquisa, mercado, startups, IA generativa).
-- [Ranking IA](/ranking): ranking atualizado diariamente das melhores ferramentas de inteligência artificial, com nota, categoria, fabricante e comparativo entre até 3 ferramentas.
-- [IA para empresas](/artigos/inteligencia-artificial-nas-empresas): guia prático com casos de uso por área, custos, roteiro de 90 dias, governança e LGPD.
-- [Sobre o IA News](/sobre): quem somos, política editorial, transparência no uso de IA e critérios de apuração.
-- [Anuncie](/anuncie): oportunidades de publicidade e patrocínio.
-- [Contato](/contato): fale com a redação.
-- [Assinar a newsletter](/assinar): boletim diário gratuito com as notícias mais relevantes de IA.
-- [Newsletter IANews](/newsletter): resumo gratuito de IA para quem decide, todo dia útil às 7h, com curadoria de notícias para negócios e Ranking IA semanal.
+- [Home](https://ianewsbr.com/): últimas notícias de inteligência artificial, atualizadas todos os dias.
+- [Notícias](https://ianewsbr.com/noticias): arquivo completo com busca e filtro por editoria.
+- [Gente](https://ianewsbr.com/gente): perfis e entrevistas com fundadores, executivos e empresários brasileiros de IA.
+- [Ranking IA](https://ianewsbr.com/ranking): ranking dos melhores modelos e ferramentas de IA, com nota, fabricante e a fonte de cada número.
+- [Newsletter IA News](https://ianewsbr.com/newsletter): resumo gratuito de IA para quem decide, todo dia às 7h, com destaque do dia, "Em 30 segundos" e Ranking IA.
+- [IA para empresas: guia prático](https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas): casos de uso por área, custos, roteiro de 90 dias, governança e LGPD.
+- [Lista IA News 100](https://ianewsbr.com/lista100): os 100 nomes que fazem IA de verdade nos negócios no Brasil; ninguém paga para entrar. [Critérios](https://ianewsbr.com/lista100/criterios).
+- [Palco IA News Online](https://ianewsbr.com/palco): workshop ao vivo em 16/12/2026, às 19h (horário de Brasília), com o Raio-X 2026 da IA nas empresas brasileiras, três cases e o Playbook IA 2027. Ingresso de R$ 97. O primeiro Palco presencial será em Belo Horizonte, em fevereiro de 2027.
+- [Envie sua pauta](https://ianewsbr.com/pauta): empresas que usam IA podem enviar sua história para a redação.
+- [IA News para empresas](https://ianewsbr.com/empresas): implementação de IA, produção de conteúdo e treinamento.
+- [Anuncie](https://ianewsbr.com/anuncie): planos de publicidade e patrocínio.
+- [Sobre](https://ianewsbr.com/sobre): quem somos, política editorial e critérios de apuração.
+- [Contato](https://ianewsbr.com/contato): fale com a redação.
+
+## Guias
+
+- [Agentes de IA](https://ianewsbr.com/guias/agentes-de-ia): o que são agentes de IA, diferença para chatbot, como criar um agente, agentes no WhatsApp e casos brasileiros.
+- [Ferramentas de IA](https://ianewsbr.com/guias/ferramentas-de-ia): Gemini, ChatGPT, Claude, DeepSeek, Grok, NotebookLM, Veo 3, Nano Banana e Manus.
+- [Líderes e startups de IA no Brasil](https://ianewsbr.com/guias/lideres-de-ia-no-brasil): empresários, startups e cases brasileiros com números.
+- [Regulamentação da IA no Brasil](https://ianewsbr.com/guias/regulamentacao-da-ia-no-brasil): PL 2338, LGPD e obrigações para empresas.
+- [IA para pequenas empresas](https://ianewsbr.com/guias/ia-para-pequenas-empresas): ferramentas, custos e primeiros passos para PMEs.
+- [IA no atendimento ao cliente](https://ianewsbr.com/guias/ia-no-atendimento-ao-cliente): chatbots, agentes, WhatsApp, CRM e métricas.
 
 ## Editorias
 
-- [Big Techs e IA](/categoria/bigtech): OpenAI, Google, Microsoft, Meta, Anthropic, Nvidia.
-- [IA no Brasil](/categoria/brasil): adoção em bancos, varejo, indústria e governo.
-- [Regulação](/categoria/regulacao): PL 2338, LGPD, ANPD e AI Act.
-- [Mercado](/categoria/mercado): investimentos, aquisições e resultados do setor.
-- [Startups](/categoria/startup): novas empresas e produtos de IA.
-- [Pesquisa](/categoria/pesquisa): novos modelos e benchmarks.
-- [Ferramentas](/categoria/ferramentas): lançamentos, testes e preços.
-- [IA generativa](/categoria/generativa): texto, imagem, vídeo e voz.
-- [IA no mundo](/categoria/global): EUA, China e União Europeia.
+- [IA no Brasil](https://ianewsbr.com/categoria/brasil): adoção em bancos, varejo, indústria e governo.
+- [Startups](https://ianewsbr.com/categoria/startup): novas empresas, produtos e rodadas de IA.
+- [Big Techs e IA](https://ianewsbr.com/categoria/bigtech): OpenAI, Google, Microsoft, Meta, Anthropic e Nvidia.
+- [Mercado](https://ianewsbr.com/categoria/mercado): investimentos, aquisições e resultados do setor.
+- [Ferramentas](https://ianewsbr.com/categoria/ferramentas): lançamentos, testes e preços.
+- [IA generativa](https://ianewsbr.com/categoria/generativa): texto, imagem, vídeo e voz.
+- [Regulação](https://ianewsbr.com/categoria/regulacao): PL 2338, LGPD, ANPD e AI Act.
+- [Pesquisa](https://ianewsbr.com/categoria/pesquisa): novos modelos e benchmarks.
+- [IA no mundo](https://ianewsbr.com/categoria/global): EUA, China e União Europeia.
 
-## Guias temáticos
+## Para máquinas
 
-- [Regulamentação da IA no Brasil](/guias/regulamentacao-ia-brasil): PL 2338, marcos legais, LGPD e obrigações para empresas.
-- [IA para pequenas empresas](/guias/ia-para-pequenas-empresas): ferramentas, custos e primeiros passos para PMEs.
-- [IA no atendimento ao cliente](/guias/ia-atendimento-cliente): agentes, chatbots, métricas e casos brasileiros.
+- [Sitemap](https://ianewsbr.com/sitemap.xml)
+- [Sitemap de notícias (48 horas)](https://ianewsbr.com/news-sitemap.xml)
+- [Feed RSS](https://ianewsbr.com/feed.xml)
 
 ## Opcional
 
-- [Termos e privacidade](/termos): termos de uso, política de privacidade e cookies.
+- [Termos e privacidade](https://ianewsbr.com/termos)

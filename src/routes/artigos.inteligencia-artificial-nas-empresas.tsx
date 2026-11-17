@@ -153,7 +153,7 @@ function GuiaIaEmpresas() {
           <nav aria-label="Trilha" className="crumbs">
             <Link to="/">IA News</Link>
             <span aria-hidden="true">/</span>
-            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+            <Link to="/noticias" search={{}}>
               Notícias
             </Link>
             <span aria-hidden="true">/</span>
@@ -196,7 +196,7 @@ function GuiaIaEmpresas() {
                 <h2 className="h-sm">Continue pelo IA News</h2>
                 <ul className="plain links-list">
                   <li>
-                    <Link to="/noticias" search={{ q: "", cat: "all" }}>
+                    <Link to="/noticias" search={{}}>
                       Últimas notícias de IA aplicadas a negócios
                     </Link>
                   </li>

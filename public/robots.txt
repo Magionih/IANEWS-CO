@@ -1,11 +1,49 @@
+# IA News · ianewsbr.com
+# Conteúdo público liberado para buscadores e assistentes de IA (com citação da fonte).
+
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /habitos
 Disallow: /auth
 Disallow: /cadastro
+Disallow: /confirmar
+Disallow: /descadastrar
+Disallow: /briefing/
+Disallow: /previa/
+Disallow: /palco/checkout
 Disallow: /s/
 Disallow: /lovable/
 Disallow: /api/
 
+# Buscadores e assistentes de IA: leitura liberada das páginas públicas
+User-agent: Googlebot
+User-agent: Googlebot-News
+User-agent: Google-Extended
+User-agent: Bingbot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: DuckAssistBot
+User-agent: meta-externalagent
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /cadastro
+Disallow: /confirmar
+Disallow: /descadastrar
+Disallow: /briefing/
+Disallow: /previa/
+Disallow: /palco/checkout
+Disallow: /s/
+Disallow: /api/
+
 Sitemap: https://ianewsbr.com/sitemap.xml
+Sitemap: https://ianewsbr.com/news-sitemap.xml

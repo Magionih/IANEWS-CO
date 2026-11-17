@@ -51,6 +51,46 @@ export const Route = createFileRoute("/palco")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: PAGE_URL }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Event",
+          name: "Palco IA News Online: Raio-X 2026 da IA nas empresas brasileiras",
+          description: DESCRIPTION,
+          startDate: "2026-12-16T19:00:00-03:00",
+          endDate: "2026-12-16T20:30:00-03:00",
+          eventStatus: "https://schema.org/EventScheduled",
+          eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+          inLanguage: "pt-BR",
+          location: { "@type": "VirtualLocation", url: PAGE_URL },
+          image: [IMG(20733081, 1200)],
+          organizer: { "@type": "Organization", name: "IA News", url: "https://ianewsbr.com" },
+          performer: { "@type": "Person", name: "Henrique Magioni" },
+          offers: {
+            "@type": "Offer",
+            url: PAGE_URL,
+            price: "97",
+            priceCurrency: "BRL",
+            availability: "https://schema.org/InStock",
+            validFrom: "2026-11-10T00:00:00-03:00",
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+    ],
   }),
   component: PalcoPage,
 });

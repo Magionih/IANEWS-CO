@@ -136,7 +136,7 @@ export const HUBS: Record<string, HubConfig> = {
     ctaTitle: "Quer discutir IA na sua operação?",
     ctaDescription:
       "Fale com a redação do IA News sobre pauta, parceria ou divulgação para o público empresarial brasileiro.",
-    ctaAction: "Falar com a redação",
+    ctaAction: "Envie sua pauta",
     faq: [
       {
         q: "Por onde uma pequena empresa deve começar com IA?",
@@ -197,7 +197,7 @@ export const HUBS: Record<string, HubConfig> = {
     ctaTitle: "Sua empresa atende com IA? Conte para a redação",
     ctaDescription:
       "Buscamos casos reais de atendimento com inteligência artificial no Brasil para nossas reportagens — e temos espaços de mídia para quem quer falar com esse público.",
-    ctaAction: "Falar com a redação",
+    ctaAction: "Envie sua pauta",
     faq: [
       {
         q: "IA substitui a equipe de atendimento?",
@@ -210,6 +210,189 @@ export const HUBS: Record<string, HubConfig> = {
       {
         q: "É obrigatório avisar que o cliente fala com uma IA?",
         a: "A transparência é a prática recomendada e tende a virar exigência formal nas propostas de marco legal em discussão. O Código de Defesa do Consumidor já veda informação enganosa sobre o serviço prestado.",
+      },
+    ],
+  },
+  "agentes-de-ia": {
+    slug: "agentes-de-ia",
+    eyebrow: "Guia",
+    h1: "Agentes de IA",
+    title: "Agentes de IA: o que são, como criar e casos reais no Brasil",
+    description:
+      "O que são agentes de IA, a diferença para um chatbot, como criar um agente, agentes de IA para WhatsApp, vendas e atendimento, e empresas brasileiras que já operam com agentes.",
+    intro: [
+      "Agente de IA é um sistema que recebe um objetivo, decide os passos e usa ferramentas (sistemas, planilhas, CRM, WhatsApp) para cumprir a tarefa, com supervisão humana nas decisões sensíveis. É o assunto de IA que mais cresce nas buscas de empresas brasileiras.",
+      "Esta página reúne a cobertura da IA News sobre agentes, com casos de empresas brasileiras que mostraram números. Ela é atualizada automaticamente conforme novas matérias entram no site.",
+    ],
+    themes: [
+      {
+        id: "o-que-sao",
+        title: "O que são agentes de IA",
+        description:
+          "Como um agente planeja, usa ferramentas e executa tarefas, e o que o separa de um chatbot de perguntas e respostas.",
+        terms: ["agente", "agentes", "agêntic", "agentic", "autônom", "orquestra"],
+      },
+      {
+        id: "whatsapp-vendas",
+        title: "Agentes no WhatsApp, vendas e atendimento",
+        description:
+          "Agentes que atendem, qualificam e vendem pelo WhatsApp e por outros canais, com integração ao CRM.",
+        terms: ["whatsapp", "vendas", "atendimento", "sdr", "comercial", "crm", "cliente"],
+      },
+      {
+        id: "como-criar",
+        title: "Como criar um agente de IA",
+        description:
+          "Ferramentas sem código, automação e desenvolvimento com IA: o caminho de quem já construiu agentes dentro da própria empresa.",
+        terms: ["criar", "construir", "n8n", "no-code", "automação", "claude code", "codex", "make"],
+      },
+      {
+        id: "casos-brasil",
+        title: "Casos no Brasil",
+        description:
+          "Empresas brasileiras que colocaram agentes para trabalhar, com o problema, o investimento e o resultado.",
+        terms: ["brasil", "brasileir", "empresa", "startup", "fundador", "milhões"],
+      },
+    ],
+    cta: "newsletter",
+    ctaTitle: "Os melhores casos de agentes de IA, toda manhã",
+    ctaDescription:
+      "A newsletter diária da IA News traz o que empresas brasileiras estão fazendo com agentes, com números. Grátis, às 7h.",
+    ctaAction: "Assinar a newsletter diária",
+    faq: [
+      {
+        q: "O que é um agente de IA?",
+        a: "É um sistema baseado em um modelo de linguagem que recebe um objetivo, decide os passos e usa ferramentas, como sistemas internos, planilhas, e-mail ou WhatsApp, para executar a tarefa. Diferente de um assistente que só responde, o agente age dentro de limites definidos pela empresa.",
+      },
+      {
+        q: "Qual a diferença entre chatbot e agente de IA?",
+        a: "O chatbot tradicional segue um roteiro de perguntas e respostas. O agente entende o pedido em linguagem natural, consulta informações, toma decisões dentro de regras e executa ações, como agendar, registrar um pedido ou atualizar o CRM.",
+      },
+      {
+        q: "Como criar um agente de IA?",
+        a: "Comece por um processo repetitivo e bem documentado, defina o que o agente pode e não pode fazer, conecte as ferramentas necessárias (plataformas sem código ou desenvolvimento próprio), teste com casos reais e mantenha revisão humana nas decisões sensíveis.",
+      },
+      {
+        q: "Agente de IA para WhatsApp funciona para pequenas empresas?",
+        a: "Funciona quando a empresa tem perguntas e etapas que se repetem, como orçamento, agendamento e qualificação de clientes. O cuidado está em deixar claro que é uma IA, passar para um humano nos casos fora do roteiro e proteger os dados pessoais conforme a LGPD.",
+      },
+    ],
+  },
+  "ferramentas-de-ia": {
+    slug: "ferramentas-de-ia",
+    eyebrow: "Guia",
+    h1: "Ferramentas de IA",
+    title: "Melhores ferramentas de IA em 2026: Gemini, ChatGPT, Claude, DeepSeek e mais",
+    description:
+      "As ferramentas de inteligência artificial mais buscadas no Brasil: Gemini, ChatGPT, Claude, DeepSeek, Grok, NotebookLM, Veo 3, Nano Banana e Manus. Notícias, comparativos e o Ranking IA.",
+    intro: [
+      "Gemini, DeepSeek, Veo 3, NotebookLM, Grok e Nano Banana estiveram entre os assuntos de IA mais buscados no Google pelos brasileiros em 2025. Esta página reúne a cobertura da IA News sobre as principais ferramentas, organizada por uso.",
+      "Para saber qual ferramenta lidera hoje, consulte o Ranking IA, atualizado com dados públicos de benchmarks e a fonte de cada número.",
+    ],
+    themes: [
+      {
+        id: "assistentes",
+        title: "Assistentes: Gemini, ChatGPT, Claude, Grok e DeepSeek",
+        description: "Lançamentos, preços, comparativos e o que cada assistente faz melhor no trabalho.",
+        terms: ["gemini", "chatgpt", "openai", "claude", "anthropic", "grok", "deepseek", "copilot", "llama", "mistral"],
+      },
+      {
+        id: "imagem-video",
+        title: "Imagem e vídeo: Veo 3, Nano Banana, Flow e Sora",
+        description: "Geradores de imagem e vídeo, o que mudou em qualidade e como empresas usam em marketing.",
+        terms: ["veo", "nano banana", "flow", "sora", "imagem", "vídeo", "midjourney", "pixverse", "kling"],
+      },
+      {
+        id: "pesquisa-produtividade",
+        title: "Pesquisa e produtividade: NotebookLM, Perplexity e Manus",
+        description: "Ferramentas para pesquisar, resumir documentos e executar tarefas de ponta a ponta.",
+        terms: ["notebooklm", "perplexity", "manus", "pesquisa", "produtividade", "resumo", "busca"],
+      },
+      {
+        id: "modelos",
+        title: "Novos modelos e benchmarks",
+        description: "Os modelos que chegam ao mercado e como eles se saem nos testes públicos.",
+        terms: ["modelo", "benchmark", "lança", "versão", "ranking", "llm"],
+      },
+    ],
+    cta: "newsletter",
+    ctaTitle: "Qual IA lidera esta semana? Receba o Ranking IA",
+    ctaDescription:
+      "A newsletter diária da IA News traz os lançamentos que importam e o Ranking IA semanal, com a fonte de cada número. Grátis, às 7h.",
+    ctaAction: "Assinar a newsletter diária",
+    faq: [
+      {
+        q: "Qual é a melhor inteligência artificial hoje?",
+        a: "Depende do uso: texto, programação, imagem ou vídeo. O Ranking IA da IA News mostra quais modelos lideram nos benchmarks públicos, com a data e a fonte de cada número, e é atualizado com frequência.",
+      },
+      {
+        q: "Quais IAs têm versão gratuita?",
+        a: "Os principais assistentes, como Gemini, ChatGPT, Claude, Grok e DeepSeek, oferecem uso gratuito com limites. Os planos pagos liberam modelos mais fortes, mais uso e recursos como agentes e geração de vídeo.",
+      },
+      {
+        q: "O que é o NotebookLM?",
+        a: "É uma ferramenta do Google que responde com base nos documentos que você envia, como PDFs, planilhas e links, e cria resumos, perguntas e até áudios explicativos a partir desse material.",
+      },
+      {
+        q: "O que é o Veo 3?",
+        a: "É o modelo de geração de vídeo do Google, que cria cenas a partir de texto, com áudio. Ele é usado em ferramentas como o Flow e foi um dos assuntos de IA mais buscados no Brasil em 2025.",
+      },
+    ],
+  },
+  "lideres-de-ia-no-brasil": {
+    slug: "lideres-de-ia-no-brasil",
+    eyebrow: "Guia",
+    h1: "Líderes e startups de IA no Brasil",
+    title: "Líderes de IA no Brasil: empresários, startups e cases com números",
+    description:
+      "Empresários, fundadores e startups brasileiras que estão crescendo com inteligência artificial: entrevistas, cases com números, rodadas de investimento e a Lista IA News 100.",
+    intro: [
+      "A IA News conta as histórias de quem está fazendo IA de verdade nos negócios no Brasil: o problema que resolveram, quanto investiram e o resultado. Esta página reúne essas entrevistas e a cobertura de startups brasileiras de IA.",
+      "Os nomes mais relevantes entram na Lista IA News 100, revelada ao vivo no Palco IA News. Ninguém paga para entrar.",
+    ],
+    themes: [
+      {
+        id: "lideres",
+        title: "Empresários e líderes",
+        description: "Entrevistas com fundadores, CEOs e executivos que colocaram IA no centro da operação.",
+        terms: ["fundador", "fundadora", "ceo", "empresári", "executiv", "diretor", "presidente", "cofundador"],
+      },
+      {
+        id: "startups",
+        title: "Startups brasileiras de IA",
+        description: "Novas empresas, produtos e rodadas de investimento do ecossistema brasileiro de IA.",
+        terms: ["startup", "rodada", "investimento", "aporte", "captação", "unicórnio", "venture"],
+      },
+      {
+        id: "cases",
+        title: "Cases com números",
+        description: "Faturamento, economia de tempo e crescimento que empresas brasileiras atribuem à IA.",
+        terms: ["faturamento", "receita", "milhões", "milhão", "cresceu", "resultado", "economia", "mil "],
+      },
+      {
+        id: "brasil",
+        title: "IA nas empresas brasileiras",
+        description: "Bancos, varejo, indústria, agro, saúde e serviços: como os setores estão adotando IA.",
+        terms: ["brasil", "brasileir", "banco", "varejo", "indústria", "agro", "saúde"],
+      },
+    ],
+    cta: "contato",
+    ctaTitle: "Sua empresa usa IA? Ela pode ser a próxima história",
+    ctaDescription:
+      "A redação da IA News procura empresários brasileiros com resultados reais de IA. Envie sua pauta: respondemos em até 2 dias úteis.",
+    ctaAction: "Envie sua pauta",
+    faq: [
+      {
+        q: "Quem são os líderes de IA no Brasil?",
+        a: "São fundadores, executivos e empresários que colocaram inteligência artificial para gerar resultado nos negócios. A IA News publica entrevistas com essas pessoas e reúne os 100 nomes mais relevantes na Lista IA News 100.",
+      },
+      {
+        q: "Como minha empresa pode aparecer na IA News?",
+        a: "Envie sua pauta pela página Envie sua pauta, contando como a empresa usa IA e quais resultados teve. A redação avalia e responde em até 2 dias úteis.",
+      },
+      {
+        q: "O que é a Lista IA News 100?",
+        a: "É a seleção dos 100 nomes que fazem IA de verdade nos negócios no Brasil, escolhidos por critérios públicos. As candidaturas e indicações são gratuitas e ninguém paga para entrar.",
       },
     ],
   },

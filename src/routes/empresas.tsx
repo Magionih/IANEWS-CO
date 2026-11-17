@@ -199,7 +199,7 @@ function EmpresasPage() {
                         Receber também a newsletter diária
                       </button>
                     ) : null}
-                    <Link className="btn line" to="/noticias" search={{ q: "", cat: "all" }}>
+                    <Link className="btn line" to="/noticias" search={{}}>
                       Ler as notícias
                     </Link>
                   </div>

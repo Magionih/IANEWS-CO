@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "viewport",
         content:
-          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+          "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       { name: "author", content: "IA News" },
       { name: "publisher", content: "IA News" },
@@ -104,8 +104,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "IA News" },
       { property: "og:locale", content: "pt_BR" },
+      { property: "og:image", content: "https://ianewsbr.com/og-ianews.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "IA News: inteligência artificial para quem decide" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@ianews" },
+      { name: "twitter:image", content: "https://ianewsbr.com/og-ianews.png" },
+      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
     ],
 
     links: [
@@ -122,6 +128,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "alternate", type: "application/rss+xml", title: "IA News", href: "https://ianewsbr.com/feed.xml" },
     ],
     scripts: [
       {
@@ -152,9 +159,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
                 "Regulamentação da IA no Brasil",
                 "IA para empresas",
                 "Ferramentas de IA",
+                "Agentes de IA",
+                "Startups de IA no Brasil",
+                "Líderes de IA no Brasil",
               ],
               publishingPrinciples: "https://ianewsbr.com/sobre",
-              sameAs: ["https://ianewsbr.com"],
+              founder: {
+                "@type": "Person",
+                "@id": "https://ianewsbr.com/#henrique-magioni",
+                name: "Henrique Magioni",
+                jobTitle: "Fundador e CEO da IA News",
+                url: "https://ianewsbr.com/sobre",
+              },
+              sameAs: ["https://www.instagram.com/ianews.co/"],
             },
             {
               "@type": "WebSite",

@@ -23,6 +23,26 @@ export const Route = createFileRoute("/aula")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: PAGE_URL }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Event",
+          name: `Aula ao vivo IA News: ${AULA.titulo}`,
+          description: DESCRIPTION,
+          startDate: AULA.inicio,
+          eventStatus: "https://schema.org/EventScheduled",
+          eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+          inLanguage: "pt-BR",
+          isAccessibleForFree: true,
+          location: { "@type": "VirtualLocation", url: PAGE_URL },
+          image: ["https://ianewsbr.com/og-ianews.png"],
+          organizer: { "@type": "Organization", name: "IA News", url: "https://ianewsbr.com" },
+          offers: { "@type": "Offer", url: PAGE_URL, price: "0", priceCurrency: "BRL", availability: "https://schema.org/InStock" },
+        }),
+      },
+    ],
   }),
   component: AulaPage,
 });

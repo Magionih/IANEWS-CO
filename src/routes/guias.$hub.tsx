@@ -6,12 +6,15 @@ import { NewsListing, SearchIcon } from "@/components/portal/news-card";
 import { HUBS, SITE_URL, type HubConfig, type HubTheme } from "@/lib/hubs";
 import { listArticlesForHub, type ArticleRow } from "@/lib/articles.functions";
 
-type HubSearch = { q: string; tema: string };
+type HubSearch = { q?: string; tema?: string };
+
+/** Só guarda o que difere do padrão: assim o guia não redireciona para ?q=&tema=all. */
+const str = (v: unknown, def: string) => (typeof v === "string" && v !== "" && v !== def ? v : undefined);
 
 export const Route = createFileRoute("/guias/$hub")({
   validateSearch: (search: Partial<Record<keyof HubSearch, unknown>>): HubSearch => ({
-    q: typeof search.q === "string" ? search.q : "",
-    tema: typeof search.tema === "string" ? search.tema : "all",
+    q: str(search.q, ""),
+    tema: str(search.tema, "all"),
   }),
   loader: async ({ params }) => {
     const hub = HUBS[params.hub];
@@ -129,7 +132,7 @@ function HubNotFound() {
             <h1>Guia não encontrado</h1>
             <p className="sub">Este hub não existe ou foi movido. Veja todas as nossas matérias.</p>
           </div>
-          <Link className="btn" to="/noticias" search={{ q: "", cat: "all" }}>
+          <Link className="btn" to="/noticias" search={{}}>
             Ir para Notícias
           </Link>
         </div>
@@ -147,7 +150,7 @@ function matchesTheme(article: ArticleRow, theme: HubTheme): boolean {
 
 function HubPage() {
   const { hub, articles } = Route.useLoaderData() as { hub: HubConfig; articles: ArticleRow[] };
-  const { q, tema } = Route.useSearch();
+  const { q = "", tema = "all" } = Route.useSearch();
   const navigate = useNavigate({ from: "/guias/$hub" });
 
   const term = q.trim().toLowerCase();
@@ -168,7 +171,7 @@ function HubPage() {
           <nav aria-label="Trilha" className="crumbs">
             <Link to="/">Início</Link>
             <span aria-hidden="true">/</span>
-            <Link to="/noticias" search={{ q: "", cat: "all" }}>
+            <Link to="/noticias" search={{}}>
               Notícias
             </Link>
             <span aria-hidden="true">/</span>
@@ -251,7 +254,7 @@ function HubPage() {
                 <button
                   className="more"
                   type="button"
-                  onClick={() => navigate({ search: () => ({ q: "", tema: "all" }) })}
+                  onClick={() => navigate({ search: () => ({}) })}
                 >
                   Limpar
                 </button>
@@ -277,7 +280,7 @@ function HubPage() {
                 <b style={{ color: "var(--p-ink)" }}>Ainda não temos matérias nesta seleção.</b>{" "}
                 Publicamos novas matérias todos os dias às 7h. Assine a newsletter para receber
                 assim que sair.{" "}
-                <Link className="more" to="/noticias" search={{ q: "", cat: "all" }}>
+                <Link className="more" to="/noticias" search={{}}>
                   Ver todas as notícias
                 </Link>
               </>
@@ -297,7 +300,7 @@ function HubPage() {
                 </p>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                <Link className="btn blue" to="/contato">
+                <Link className="btn blue" to="/pauta">
                   {hub.ctaAction} →
                 </Link>
                 <Link className="btn line" to="/anuncie">
@@ -339,7 +342,7 @@ function HubPage() {
                 .filter((h) => h.slug !== hub.slug)
                 .map((h) => (
                   <li key={h.slug}>
-                    <Link to="/guias/$hub" params={{ hub: h.slug }} search={{ q: "", tema: "all" }}>
+                    <Link to="/guias/$hub" params={{ hub: h.slug }} search={{}}>
                       Hub: {h.h1}
                     </Link>
                   </li>
@@ -348,7 +351,7 @@ function HubPage() {
                 <Link to="/ranking">Ranking IA — comparação das principais ferramentas</Link>
               </li>
               <li>
-                <Link to="/noticias" search={{ q: "", cat: "all" }}>
+                <Link to="/noticias" search={{}}>
                   Todas as notícias de inteligência artificial
                 </Link>
               </li>

@@ -289,7 +289,7 @@ function PautaPage() {
             <section className="pt-sec" aria-labelledby="pt-ex">
               <div className="sec-head">
                 <h2 id="pt-ex">Histórias que publicamos</h2>
-                <Link to="/noticias" search={{ q: "", cat: "all" }} className="more">
+                <Link to="/noticias" search={{}} className="more">
                   Ver todas →
                 </Link>
               </div>
@@ -341,7 +341,7 @@ function PautaPage() {
                     pelo WhatsApp ou e-mail. Enquanto isso, veja as últimas matérias da IA News.
                   </p>
                   <div className="actions">
-                    <Link className="btn blue" to="/noticias" search={{ q: "", cat: "all" }}>
+                    <Link className="btn blue" to="/noticias" search={{}}>
                       Ver matérias
                     </Link>
                     <a className="btn line" href="https://www.instagram.com/ianews.co/" target="_blank" rel="noopener noreferrer">

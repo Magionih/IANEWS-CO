@@ -26,6 +26,7 @@ export type ArticleRow = {
 };
 
 export type ArticleFull = ArticleRow & {
+  updated_at?: string | null;
   body_markdown: string;
   views_count: number;
   seo_title: string | null;
@@ -63,7 +64,7 @@ export const getArticleBySlug = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("articles")
       .select(
-        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at, body_markdown, views_count, seo_title, seo_description, tags, analysis_markdown, business_context, editorial_conclusion, business_impacts, sources",
+        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at, updated_at, body_markdown, views_count, seo_title, seo_description, tags, analysis_markdown, business_context, editorial_conclusion, business_impacts, sources",
       )
       .eq("slug", data.slug)
       .maybeSingle();

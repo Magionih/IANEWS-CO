@@ -267,7 +267,7 @@ function HabitosPage() {
                       Você ainda não leu nenhuma matéria por aqui.{" "}
                       <Link
                         to="/noticias"
-                        search={{ q: "", cat: "all" }}
+                        search={{}}
                         className="font-semibold text-primary hover:underline"
                       >
                         Comece agora

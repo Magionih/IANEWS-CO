@@ -137,7 +137,7 @@ export function HomeHero({ lead, latest }: { lead: ArticleRow | null; latest: Ar
               <HomeCard key={a.id} a={a} kind="row" />
             ))}
           </div>
-          <Link className="more" to="/noticias" search={{ q: "", cat: "all" }}>
+          <Link className="more" to="/noticias" search={{}}>
             Todas as notícias →
           </Link>
         </aside>
@@ -184,7 +184,7 @@ export function HomeNews({ items }: { items: ArticleRow[] }) {
     <section className="sec">
       <div className="sec-head">
         <h2>Notícias</h2>
-        <Link className="more" to="/noticias" search={{ q: "", cat: "all" }}>
+        <Link className="more" to="/noticias" search={{}}>
           Ver todas →
         </Link>
       </div>
@@ -364,7 +364,7 @@ export function HomeBrasil({ items, isBrasil }: { items: ArticleRow[]; isBrasil:
               Mais de Brasil →
             </Link>
           ) : (
-            <Link className="more" to="/noticias" search={{ q: "", cat: "all" }}>
+            <Link className="more" to="/noticias" search={{}}>
               Mais notícias →
             </Link>
           )}
