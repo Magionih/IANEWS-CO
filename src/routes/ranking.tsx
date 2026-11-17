@@ -53,12 +53,13 @@ export const Route = createFileRoute("/ranking")({
   head: ({ loaderData }) => {
     const tools = (loaderData?.tools ?? []).slice(0, 20);
     const top = tools.slice(0, 3).map((t) => t.name);
+    const total = loaderData?.tools?.length || 50;
     const title = "Ranking IA 2026: as melhores ferramentas de inteligência artificial";
     const bench = loaderData?.bench;
     const benchTxt = bench ? ` Em inteligência, lidera o ${bench.name}, da ${bench.maker} (${bench.asOf}).` : "";
     const description = top.length
-      ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram entre as ferramentas.${benchTxt} Compare 50 ferramentas por categoria e fabricante.`
-      : "Ranking atualizado das 50 melhores ferramentas de inteligência artificial, por categoria, fabricante e nota dos leitores brasileiros.";
+      ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram entre as ferramentas.${benchTxt} Compare ${total} ferramentas por categoria e fabricante.`
+      : "Ranking atualizado das melhores ferramentas de inteligência artificial, por categoria, fabricante e nota dos leitores brasileiros.";
     return {
       meta: [
         { title },

@@ -238,7 +238,7 @@ export function HomeRanking({ tools }: { tools: AiTool[] }) {
       <div className="sec-head">
         <h2>Ranking IA</h2>
         <Link className="more" to="/ranking">
-          Ver as 50 plataformas →
+          Ver o ranking completo →
         </Link>
       </div>
       <div className="rk-home">
