@@ -16,7 +16,7 @@ export const AULA = {
   hora: "19h",
   duracao: "60 minutos",
   titulo: "Como empresas brasileiras estão colocando IA para vender",
-  onde: "Online e gratuita, ao vivo no YouTube",
+  onde: "Online e gratuita, ao vivo no YouTube da IA News",
 };
 
 export const LISTA = {

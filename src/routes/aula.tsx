@@ -100,7 +100,7 @@ function AulaPage() {
                 <span>Quem faz, ensina.</span>
               </h1>
               <p className="pc2-sub">
-                {AULA.duracao} ao vivo com empresários que já colocaram IA para vender. Gratuita, online e sem enrolação.
+                {AULA.duracao} ao vivo com Henrique Magioni, CEO da IA News, e casos de empresas que já colocaram IA para vender. Gratuita, online e sem enrolação.
               </p>
               <ul className="pc2-facts">
                 {FACTS.map((x) => (
@@ -179,7 +179,7 @@ function AulaPage() {
                 </article>
               ))}
             </div>
-            <p className="pc2-note">Os nomes de quem dá a aula saem nesta página e no canal da IA News antes do dia.</p>
+            <p className="pc2-note">Quem apresenta é Henrique Magioni, fundador e CEO da IA News, ao vivo no YouTube da IA News.</p>
           </section>
 
           <section className="pc2-sec pc2-who" aria-labelledby="a-quem">
