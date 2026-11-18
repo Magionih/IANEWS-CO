@@ -24,7 +24,9 @@ import { Route as EdicaoRouteImport } from './routes/edicao'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
+import { Route as FgiaRouteImport } from './routes/fgia'
 import { Route as GenteRouteImport } from './routes/gente'
+import { Route as IngressoRouteImport } from './routes/ingresso'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as Lista100RouteImport } from './routes/lista100'
 import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
@@ -54,6 +56,7 @@ import { Route as ApiPublicAdMetricsRouteImport } from './routes/api/public/ad-m
 import { Route as ApiPublicBriefingRouteImport } from './routes/api/public/briefing'
 import { Route as ApiPublicCtaRouteImport } from './routes/api/public/cta'
 import { Route as ApiPublicEngagementRouteImport } from './routes/api/public/engagement'
+import { Route as ApiPublicFgiaRouteImport } from './routes/api/public/fgia'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicInscricaoRouteImport } from './routes/api/public/inscricao'
 import { Route as ApiPublicPalcoRouteImport } from './routes/api/public/palco'
@@ -161,9 +164,19 @@ const FeedDotxmlRoute = FeedDotxmlRouteImport.update({
   path: '/feed.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FgiaRoute = FgiaRouteImport.update({
+  id: '/fgia',
+  path: '/fgia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenteRoute = GenteRouteImport.update({
   id: '/gente',
   path: '/gente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IngressoRoute = IngressoRouteImport.update({
+  id: '/ingresso',
+  path: '/ingresso',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinksRoute = LinksRouteImport.update({
@@ -310,6 +323,11 @@ const ApiPublicCtaRoute = ApiPublicCtaRouteImport.update({
 const ApiPublicEngagementRoute = ApiPublicEngagementRouteImport.update({
   id: '/api/public/engagement',
   path: '/api/public/engagement',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicFgiaRoute = ApiPublicFgiaRouteImport.update({
+  id: '/api/public/fgia',
+  path: '/api/public/fgia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
@@ -500,7 +518,9 @@ export interface FileRoutesByFullPath {
   '/empresas': typeof EmpresasRoute
   '/eventos': typeof EventosRoute
   '/feed.xml': typeof FeedDotxmlRoute
+  '/fgia': typeof FgiaRoute
   '/gente': typeof GenteRoute
+  '/ingresso': typeof IngressoRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
@@ -530,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
+  '/api/public/fgia': typeof ApiPublicFgiaRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
@@ -578,7 +599,9 @@ export interface FileRoutesByTo {
   '/empresas': typeof EmpresasRoute
   '/eventos': typeof EventosRoute
   '/feed.xml': typeof FeedDotxmlRoute
+  '/fgia': typeof FgiaRoute
   '/gente': typeof GenteRoute
+  '/ingresso': typeof IngressoRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
@@ -608,6 +631,7 @@ export interface FileRoutesByTo {
   '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
+  '/api/public/fgia': typeof ApiPublicFgiaRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
@@ -658,7 +682,9 @@ export interface FileRoutesById {
   '/empresas': typeof EmpresasRoute
   '/eventos': typeof EventosRoute
   '/feed.xml': typeof FeedDotxmlRoute
+  '/fgia': typeof FgiaRoute
   '/gente': typeof GenteRoute
+  '/ingresso': typeof IngressoRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
@@ -688,6 +714,7 @@ export interface FileRoutesById {
   '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
   '/api/public/engagement': typeof ApiPublicEngagementRoute
+  '/api/public/fgia': typeof ApiPublicFgiaRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/inscricao': typeof ApiPublicInscricaoRoute
   '/api/public/palco': typeof ApiPublicPalcoRoute
@@ -738,7 +765,9 @@ export interface FileRouteTypes {
     | '/empresas'
     | '/eventos'
     | '/feed.xml'
+    | '/fgia'
     | '/gente'
+    | '/ingresso'
     | '/links'
     | '/lista100'
     | '/news-sitemap.xml'
@@ -768,6 +797,7 @@ export interface FileRouteTypes {
     | '/api/public/briefing'
     | '/api/public/cta'
     | '/api/public/engagement'
+    | '/api/public/fgia'
     | '/api/public/health'
     | '/api/public/inscricao'
     | '/api/public/palco'
@@ -816,7 +846,9 @@ export interface FileRouteTypes {
     | '/empresas'
     | '/eventos'
     | '/feed.xml'
+    | '/fgia'
     | '/gente'
+    | '/ingresso'
     | '/links'
     | '/lista100'
     | '/news-sitemap.xml'
@@ -846,6 +878,7 @@ export interface FileRouteTypes {
     | '/api/public/briefing'
     | '/api/public/cta'
     | '/api/public/engagement'
+    | '/api/public/fgia'
     | '/api/public/health'
     | '/api/public/inscricao'
     | '/api/public/palco'
@@ -895,7 +928,9 @@ export interface FileRouteTypes {
     | '/empresas'
     | '/eventos'
     | '/feed.xml'
+    | '/fgia'
     | '/gente'
+    | '/ingresso'
     | '/links'
     | '/lista100'
     | '/news-sitemap.xml'
@@ -925,6 +960,7 @@ export interface FileRouteTypes {
     | '/api/public/briefing'
     | '/api/public/cta'
     | '/api/public/engagement'
+    | '/api/public/fgia'
     | '/api/public/health'
     | '/api/public/inscricao'
     | '/api/public/palco'
@@ -975,7 +1011,9 @@ export interface RootRouteChildren {
   EmpresasRoute: typeof EmpresasRoute
   EventosRoute: typeof EventosRoute
   FeedDotxmlRoute: typeof FeedDotxmlRoute
+  FgiaRoute: typeof FgiaRoute
   GenteRoute: typeof GenteRoute
+  IngressoRoute: typeof IngressoRoute
   LinksRoute: typeof LinksRoute
   Lista100Route: typeof Lista100Route
   NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
@@ -1003,6 +1041,7 @@ export interface RootRouteChildren {
   ApiPublicBriefingRoute: typeof ApiPublicBriefingRoute
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
   ApiPublicEngagementRoute: typeof ApiPublicEngagementRoute
+  ApiPublicFgiaRoute: typeof ApiPublicFgiaRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicInscricaoRoute: typeof ApiPublicInscricaoRoute
   ApiPublicPalcoRoute: typeof ApiPublicPalcoRoute
@@ -1144,11 +1183,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fgia': {
+      id: '/fgia'
+      path: '/fgia'
+      fullPath: '/fgia'
+      preLoaderRoute: typeof FgiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gente': {
       id: '/gente'
       path: '/gente'
       fullPath: '/gente'
       preLoaderRoute: typeof GenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ingresso': {
+      id: '/ingresso'
+      path: '/ingresso'
+      fullPath: '/ingresso'
+      preLoaderRoute: typeof IngressoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/links': {
@@ -1352,6 +1405,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/engagement'
       fullPath: '/api/public/engagement'
       preLoaderRoute: typeof ApiPublicEngagementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/fgia': {
+      id: '/api/public/fgia'
+      path: '/api/public/fgia'
+      fullPath: '/api/public/fgia'
+      preLoaderRoute: typeof ApiPublicFgiaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/health': {
@@ -1610,7 +1670,9 @@ const rootRouteChildren: RootRouteChildren = {
   EmpresasRoute: EmpresasRoute,
   EventosRoute: EventosRoute,
   FeedDotxmlRoute: FeedDotxmlRoute,
+  FgiaRoute: FgiaRoute,
   GenteRoute: GenteRoute,
+  IngressoRoute: IngressoRoute,
   LinksRoute: LinksRoute,
   Lista100Route: Lista100Route,
   NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
@@ -1639,6 +1701,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBriefingRoute: ApiPublicBriefingRoute,
   ApiPublicCtaRoute: ApiPublicCtaRoute,
   ApiPublicEngagementRoute: ApiPublicEngagementRoute,
+  ApiPublicFgiaRoute: ApiPublicFgiaRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicInscricaoRoute: ApiPublicInscricaoRoute,
   ApiPublicPalcoRoute: ApiPublicPalcoRoute,

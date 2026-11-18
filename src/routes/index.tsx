@@ -21,6 +21,9 @@ import {
   type ArticleRow,
 } from "@/lib/articles.functions";
 import { listAiTools, type AiTool } from "@/lib/ai-ranking.functions";
+import { FgiaPage, fgiaHead } from "@/components/fgia/fgia-page";
+import { isFgiaHost } from "@/lib/fgia";
+import { getRequestHostname } from "@/lib/fgia-host";
 
 /* Imagem de compartilhamento usada só quando nenhuma matéria tem capa. */
 const FALLBACK_COVERS = [
@@ -29,6 +32,11 @@ const FALLBACK_COVERS = [
 
 export const Route = createFileRoute("/")({
   loader: async () => {
+    // O domínio fgiaeducacao.com.br abre a landing da FGIA Educação na raiz.
+    const host = await getRequestHostname().catch(() => "");
+    if (isFgiaHost(host)) {
+      return { fgia: true, articles: [] as ArticleRow[], mostRead: [] as ArticleRow[], tools: [] as AiTool[], brasil: [] as ArticleRow[] };
+    }
     const [articles, mostRead, tools, brasil] = await Promise.all([
       listRecentArticles().catch((err) => {
         console.error("[home] loader failed", err);
@@ -38,9 +46,10 @@ export const Route = createFileRoute("/")({
       listAiTools().catch(() => [] as AiTool[]),
       listArticlesFiltered({ data: { category: "brasil" } }).catch(() => [] as ArticleRow[]),
     ]);
-    return { articles, mostRead, tools, brasil };
+    return { fgia: false, articles, mostRead, tools, brasil };
   },
   head: ({ loaderData }) => {
+    if (loaderData?.fgia) return fgiaHead("https://fgiaeducacao.com.br/");
     const items = (loaderData?.articles ?? []).slice(0, 10);
     const title = "IA News: notícias de inteligência artificial, IA para empresas e Ranking IA";
     const description =
@@ -95,6 +104,11 @@ export const Route = createFileRoute("/")({
 const WEEK_MS = 7 * 24 * 3_600_000;
 
 function HomePage() {
+  const { fgia } = Route.useLoaderData();
+  return fgia ? <FgiaPage /> : <PortalHome />;
+}
+
+function PortalHome() {
   const { articles, mostRead, tools, brasil } = Route.useLoaderData();
   const used = new Set<string>();
   const take = (list: ArticleRow[], n: number, filter?: (a: ArticleRow) => boolean) => {
