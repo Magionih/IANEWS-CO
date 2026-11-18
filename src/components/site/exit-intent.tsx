@@ -5,7 +5,7 @@ import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
 import { trackCta } from "@/lib/cta-tracking";
 
 const KEY = "ianews_exit_shown";
-const HIDDEN_PREFIXES = ["/admin", "/auth", "/cadastro", "/habitos", "/pauta"];
+const HIDDEN_PREFIXES = ["/admin", "/auth", "/cadastro", "/habitos", "/pauta", "/fgia"];
 
 /** Abre o pop-up de assinatura na intenção de saída (desktop) ou após 60s de leitura. */
 export function ExitIntent() {
@@ -14,6 +14,7 @@ export function ExitIntent() {
 
   useEffect(() => {
     if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return;
+    if (window.location.hostname.includes("fgiaeducacao")) return;
     try {
       if (sessionStorage.getItem(KEY)) return;
     } catch {
