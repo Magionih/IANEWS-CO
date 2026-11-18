@@ -17,6 +17,7 @@
 }
 .fg *, .fg *::before, .fg *::after { box-sizing: border-box; }
 .fg a { color: inherit; }
+.fg :is(h1, h2, h3, h4) { color: inherit; }
 .fg-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 .fg-serif { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; }
 .fg-serif i, .fg-gold { color: var(--fg-gold); }
