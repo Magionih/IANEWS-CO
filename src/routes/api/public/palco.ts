@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
-import { validatePalco, type PalcoInput } from "@/lib/palco-validate";
+import { validatePalco, validateQualificacao, type PalcoInput, type Qualificacao } from "@/lib/palco-validate";
 import { PALCO_CAPI, enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
 
 /* Recebe a inscrição da página /palco. Revalida tudo, descarta robôs (campo isca), limita 3 envios por hora
@@ -49,6 +49,26 @@ export const Route = createFileRoute("/api/public/palco")({
           return Response.json({ ok: false, errors }, { status: 422 });
         }
 
+        // Checkout da FGIA: qualificação obrigatória antes do pagamento (empresa, cargo, perfil, segmento, tamanho, faturamento).
+        const fgia = body["qualificacao"] === "fgia";
+        const qualif: Qualificacao | null = fgia
+          ? {
+              empresa: clean.empresa,
+              cargo: clean.cargo,
+              papel: str(body["papel"], 20),
+              setor: clean.setor,
+              funcionarios: clean.funcionarios,
+              faturamento: str(body["faturamento"], 60),
+              desafio: clean.desafio,
+            }
+          : null;
+        if (qualif) {
+          const qErr = validateQualificacao(qualif);
+          if (Object.keys(qErr).length) return Response.json({ ok: false, errors: qErr }, { status: 422 });
+        }
+        const checkoutUrl = (id: string, token: string) =>
+          fgia ? `https://fgiaeducacao.com.br/ingresso?i=${id}&t=${token}` : `https://ianewsbr.com/palco/checkout?i=${id}&t=${token}`;
+
         const ua = request.headers.get("user-agent") ?? "";
         const ip =
           request.headers.get("x-real-ip") ??
@@ -70,6 +90,21 @@ export const Route = createFileRoute("/api/public/palco")({
           .maybeSingle();
         if (already.data) {
           const a = already.data as { id: string; checkout_token: string; status: string };
+          if (qualif) {
+            // Quem volta pelo checkout da FGIA atualiza os dados da empresa e a qualificação vai para o CRM.
+            await db
+              .from("palco_inscricoes")
+              .update({
+                empresa: clean.empresa,
+                cargo: clean.cargo || null,
+                papel: clean.papel,
+                setor: clean.setor || null,
+                funcionarios: clean.funcionarios || null,
+                desafio: clean.desafio || null,
+              })
+              .eq("id", a.id);
+            await registrarQualificacao(db, a.id, clean, qualif, body);
+          }
           return Response.json({ ok: true, already: true, id: a.id, token: a.checkout_token, pago: a.status === "pago" || a.status === "cortesia" });
         }
 
@@ -110,6 +145,8 @@ export const Route = createFileRoute("/api/public/palco")({
           return Response.json({ ok: false, error: FAIL }, { status: 500 });
         }
 
+        if (qualif) await registrarQualificacao(db, criado.id, clean, qualif, body);
+
         // API de Conversões: mesmo event_id do Pixel (lead-<id>), a Meta deduplica. Só com consentimento.
         await enviarCapi("Lead", `lead-${criado.id}`, { email: row.email, phone: row.whatsapp, nome: row.nome, externalId: criado.id }, row.meta_ctx, PALCO_CAPI);
 
@@ -117,9 +154,9 @@ export const Route = createFileRoute("/api/public/palco")({
         try {
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           await Promise.allSettled([
-            ...NOTIFY_TO.map((to) => sendTemplateEmail("palco-notification", to, { templateData: row, replyTo: row.email })),
+            ...NOTIFY_TO.map((to) => sendTemplateEmail("palco-notification", to, { templateData: qualif ? { ...row, faturamento: qualif.faturamento } : row, replyTo: row.email })),
             sendTemplateEmail("palco-confirmation", row.email, {
-              templateData: { nome: row.nome, checkout: `https://ianewsbr.com/palco/checkout?i=${criado.id}&t=${criado.checkout_token}` },
+              templateData: { nome: row.nome, checkout: checkoutUrl(criado.id, criado.checkout_token) },
               replyTo: "ianewscomercial@gmail.com",
             }),
           ]);
@@ -132,3 +169,64 @@ export const Route = createFileRoute("/api/public/palco")({
     },
   },
 });
+
+const PERFIL: Record<string, string> = {
+  empresario: "Empresário",
+  fornecedor: "Fornecedor de IA",
+  criador: "Criador ou educador",
+  marca: "Empresa ou marca",
+};
+
+/* Grava a qualificação do checkout da FGIA no CRM: uma nota completa no negócio do Palco, e o faturamento e o
+   segmento na empresa (só quando ainda estão vazios). Uma falha aqui não impede o pagamento. */
+async function registrarQualificacao(db: any, inscricaoId: string, clean: PalcoInput, q: Qualificacao, body: Record<string, unknown>) {
+  try {
+    const { data: insc } = await db.from("palco_inscricoes").select("pessoa_id, negocio_id").eq("id", inscricaoId).maybeSingle();
+    if (!insc?.pessoa_id) return;
+    const { data: neg } = insc.negocio_id
+      ? await db.from("crm_negocios").select("empresa_id").eq("id", insc.negocio_id).maybeSingle()
+      : { data: null };
+    let empresaId: string | null = neg?.empresa_id ?? null;
+    if (!empresaId) {
+      const { data: emp } = await db.from("crm_empresas").select("id").ilike("nome", q.empresa.trim()).limit(1).maybeSingle();
+      empresaId = emp?.id ?? null;
+      if (empresaId && insc.negocio_id) {
+        await db.from("crm_negocios").update({ empresa_id: empresaId }).eq("id", insc.negocio_id).is("empresa_id", null);
+      }
+    }
+    if (empresaId) {
+      await db.from("crm_empresas").update({ porte: `${q.faturamento} · ${q.funcionarios} funcionários` }).eq("id", empresaId).is("porte", null);
+      await db.from("crm_empresas").update({ setor: q.setor }).eq("id", empresaId).is("setor", null);
+    }
+    const origem = ["utm_source", "utm_medium", "utm_campaign"]
+      .map((k) => (typeof body[k] === "string" && body[k] ? `${k.replace("utm_", "")}=${String(body[k]).slice(0, 80)}` : ""))
+      .filter(Boolean)
+      .join(" · ");
+    const texto = [
+      "Qualificação no checkout da FGIA (fgiaeducacao.com.br/ingresso), antes do pagamento",
+      `Nome: ${clean.nome}`,
+      `WhatsApp: ${clean.whatsapp}`,
+      `E-mail: ${clean.email}`,
+      `Empresa: ${q.empresa}`,
+      `Cargo: ${q.cargo}`,
+      `Perfil: ${PERFIL[q.papel] ?? q.papel}`,
+      `Segmento: ${q.setor}`,
+      `Funcionários: ${q.funcionarios}`,
+      `Faturamento: ${q.faturamento}`,
+      q.desafio ? `Quer resolver com IA: ${q.desafio}` : "",
+      origem ? `Origem: ${origem}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    await db.from("crm_atividades").insert({
+      tipo: "nota",
+      canal: "site",
+      texto,
+      pessoa_id: insc.pessoa_id,
+      empresa_id: empresaId,
+      negocio_id: insc.negocio_id ?? null,
+    });
+  } catch (err) {
+    console.error("[palco] qualificação no CRM falhou", err instanceof Error ? err.message : err);
+  }
+}

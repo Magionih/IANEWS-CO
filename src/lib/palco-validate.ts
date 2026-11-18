@@ -48,6 +48,43 @@ export const SETORES = [
 
 export const PORTES = ["Só eu", "2 a 10", "11 a 50", "51 a 200", "Mais de 200"];
 
+/* Faturamento mensal da empresa, perguntado na qualificação do checkout da FGIA (fgiaeducacao.com.br/ingresso). */
+export const FATURAMENTOS = [
+  "Ainda não fatura",
+  "Até R$ 50 mil por mês",
+  "R$ 50 mil a R$ 100 mil por mês",
+  "R$ 100 mil a R$ 500 mil por mês",
+  "R$ 500 mil a R$ 1 milhão por mês",
+  "R$ 1 milhão a R$ 5 milhões por mês",
+  "Acima de R$ 5 milhões por mês",
+];
+
+export type Qualificacao = {
+  empresa: string;
+  cargo: string;
+  papel: string;
+  setor: string;
+  funcionarios: string;
+  faturamento: string;
+  desafio: string;
+};
+
+export type QualificacaoErrors = Partial<Record<keyof Qualificacao, string>>;
+
+/* Qualificação antes do pagamento (checkout da FGIA): empresa, cargo, perfil, segmento, tamanho e faturamento são obrigatórios. */
+export function validateQualificacao(q: Qualificacao): QualificacaoErrors {
+  const e: QualificacaoErrors = {};
+  const empty = "Preencha este campo.";
+  const pick = "Escolha uma opção.";
+  if (q.empresa.trim().length < 2) e.empresa = empty;
+  if (q.cargo.trim().length < 2) e.cargo = empty;
+  if (!PAPEIS.some((p) => p.value === q.papel)) e.papel = pick;
+  if (!SETORES.includes(q.setor)) e.setor = pick;
+  if (!PORTES.includes(q.funcionarios)) e.funcionarios = pick;
+  if (!FATURAMENTOS.includes(q.faturamento)) e.faturamento = pick;
+  return e;
+}
+
 export const DESAFIO_MAX = 500;
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;

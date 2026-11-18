@@ -44,6 +44,24 @@
 .fgc-field input.bad { border-color: #b3261e; }
 .fgc-field small { font-size: 13px; line-height: 1.45; color: #5b6272; }
 .fgc-field small.err, .fgc-fail { color: #b3261e; }
+.fgc-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fgc-field.full { grid-column: 1 / -1; }
+.fgc-field select, .fgc-field textarea {
+  width: 100%; min-height: 52px; padding: 14px 16px; font: inherit; font-size: 16px; color: var(--fg-ink);
+  background: #fff; border: 1px solid rgba(11, 18, 32, 0.22); border-radius: 0; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.fgc-field select {
+  appearance: none; -webkit-appearance: none; padding-right: 42px; cursor: pointer; text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238F6B2C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center;
+}
+.fgc-field select.vazio { color: #9aa0ae; }
+.fgc-field select option { color: var(--fg-ink); }
+.fgc-field textarea { resize: vertical; min-height: 92px; line-height: 1.5; }
+.fgc-field textarea::placeholder { color: #9aa0ae; }
+.fgc-field select:focus, .fgc-field textarea:focus { border-color: var(--fg-gold-ink); box-shadow: 0 0 0 3px rgba(201, 165, 92, 0.28); }
+.fgc-field select.bad { border-color: #b3261e; }
+.fgc-field .opt { font-size: 12px; font-weight: 500; color: #8a90a0; margin-left: 4px; }
 .fgc-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
 .fgc-btn { width: 100%; min-height: 56px; font-size: 17px; gap: 10px; }
@@ -127,6 +145,7 @@
   .fgc-lines { padding-top: 14px; }
   .fgc-lines .fgc-total { padding-top: 0; }
   .fgc-card { padding: 28px 20px; }
+  .fgc-two { grid-template-columns: 1fr; }
   .fgc-wrap { padding: 0 16px; }
   .fgc-steps { gap: 8px 16px; font-size: 13px; margin: 16px 0 20px; }
   .fgc-top-in { padding-top: 14px; padding-bottom: 14px; }
