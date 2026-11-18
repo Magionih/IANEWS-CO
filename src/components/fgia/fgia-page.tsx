@@ -199,10 +199,12 @@ export function FgiaPage() {
   const [open, setOpen] = useState(0);
   const [aba, setAba] = useState<"palestrar" | "patrocinio">("palestrar");
   const ingresso = useMemo(() => {
-    const src = utm.utm_source;
-    return src && src !== "fgiaeducacao.com.br"
-      ? FGIA_INGRESSO_URL.replace("utm_medium=site", `utm_medium=site-${encodeURIComponent(src)}`)
-      : FGIA_INGRESSO_URL;
+    // Leva a origem da visita (bio, WhatsApp, anúncio) até o checkout, para o CRM saber de onde veio a venda.
+    const q = new URLSearchParams();
+    q.set("utm_source", utm.utm_source || "fgiaeducacao.com.br");
+    q.set("utm_medium", utm.utm_medium || "site");
+    q.set("utm_campaign", utm.utm_campaign || "palco-online");
+    return `${FGIA_INGRESSO_URL}?${q.toString()}`;
   }, [utm]);
 
   return (
@@ -526,7 +528,7 @@ export function fgiaHead(url: string) {
       eventStatus: "https://schema.org/EventScheduled",
       location: { "@type": "VirtualLocation", url: "https://ianewsbr.com/palco" },
       organizer: { "@type": "Organization", name: "FGIA Educação · IA News", url: "https://fgiaeducacao.com.br" },
-      offers: { "@type": "Offer", price: "97", priceCurrency: "BRL", url: "https://ianewsbr.com/palco", availability: "https://schema.org/InStock" },
+      offers: { "@type": "Offer", price: "97", priceCurrency: "BRL", url: "https://fgiaeducacao.com.br/ingresso", availability: "https://schema.org/InStock" },
       image,
     },
     {

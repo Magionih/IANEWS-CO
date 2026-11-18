@@ -4,7 +4,10 @@
 import { maskPhone, phoneDigits } from "@/lib/pauta-validate";
 
 export const FGIA_SITE = "https://fgiaeducacao.com.br";
-export const FGIA_INGRESSO_URL = "https://ianewsbr.com/palco?utm_source=fgiaeducacao&utm_medium=site&utm_campaign=palco-online";
+/* Checkout próprio da FGIA (src/routes/ingresso.tsx): cobra pelo Asaas e grava a inscrição no CRM. */
+export const FGIA_INGRESSO_URL = "/ingresso";
+/* Link de pagamento da FGIA no Asaas ("FGIA Educação · Palco 16/12"). Só aparece se a cobrança pela API falhar. */
+export const FGIA_PAGAMENTO_URL = "https://www.asaas.com/000/c/lpcqp7cryd6i4zzg";
 export const FGIA_DIRECT_URL = "https://ig.me/m/fgiaeducacao";
 export const FGIA_INSTAGRAM = "https://www.instagram.com/fgiaeducacao/";
 export const FGIA_ONLINE_INICIO = "2026-12-16T19:00:00-03:00";

@@ -26,6 +26,7 @@ import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
 import { Route as FgiaRouteImport } from './routes/fgia'
 import { Route as GenteRouteImport } from './routes/gente'
+import { Route as IngressoRouteImport } from './routes/ingresso'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as Lista100RouteImport } from './routes/lista100'
 import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
@@ -171,6 +172,11 @@ const FgiaRoute = FgiaRouteImport.update({
 const GenteRoute = GenteRouteImport.update({
   id: '/gente',
   path: '/gente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IngressoRoute = IngressoRouteImport.update({
+  id: '/ingresso',
+  path: '/ingresso',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinksRoute = LinksRouteImport.update({
@@ -514,6 +520,7 @@ export interface FileRoutesByFullPath {
   '/feed.xml': typeof FeedDotxmlRoute
   '/fgia': typeof FgiaRoute
   '/gente': typeof GenteRoute
+  '/ingresso': typeof IngressoRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
@@ -594,6 +601,7 @@ export interface FileRoutesByTo {
   '/feed.xml': typeof FeedDotxmlRoute
   '/fgia': typeof FgiaRoute
   '/gente': typeof GenteRoute
+  '/ingresso': typeof IngressoRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
@@ -676,6 +684,7 @@ export interface FileRoutesById {
   '/feed.xml': typeof FeedDotxmlRoute
   '/fgia': typeof FgiaRoute
   '/gente': typeof GenteRoute
+  '/ingresso': typeof IngressoRoute
   '/links': typeof LinksRoute
   '/lista100': typeof Lista100Route
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
@@ -758,6 +767,7 @@ export interface FileRouteTypes {
     | '/feed.xml'
     | '/fgia'
     | '/gente'
+    | '/ingresso'
     | '/links'
     | '/lista100'
     | '/news-sitemap.xml'
@@ -838,6 +848,7 @@ export interface FileRouteTypes {
     | '/feed.xml'
     | '/fgia'
     | '/gente'
+    | '/ingresso'
     | '/links'
     | '/lista100'
     | '/news-sitemap.xml'
@@ -919,6 +930,7 @@ export interface FileRouteTypes {
     | '/feed.xml'
     | '/fgia'
     | '/gente'
+    | '/ingresso'
     | '/links'
     | '/lista100'
     | '/news-sitemap.xml'
@@ -1001,6 +1013,7 @@ export interface RootRouteChildren {
   FeedDotxmlRoute: typeof FeedDotxmlRoute
   FgiaRoute: typeof FgiaRoute
   GenteRoute: typeof GenteRoute
+  IngressoRoute: typeof IngressoRoute
   LinksRoute: typeof LinksRoute
   Lista100Route: typeof Lista100Route
   NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
@@ -1182,6 +1195,13 @@ declare module '@tanstack/react-router' {
       path: '/gente'
       fullPath: '/gente'
       preLoaderRoute: typeof GenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ingresso': {
+      id: '/ingresso'
+      path: '/ingresso'
+      fullPath: '/ingresso'
+      preLoaderRoute: typeof IngressoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/links': {
@@ -1652,6 +1672,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedDotxmlRoute: FeedDotxmlRoute,
   FgiaRoute: FgiaRoute,
   GenteRoute: GenteRoute,
+  IngressoRoute: IngressoRoute,
   LinksRoute: LinksRoute,
   Lista100Route: Lista100Route,
   NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,

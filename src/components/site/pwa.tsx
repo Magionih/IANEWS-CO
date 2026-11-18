@@ -39,7 +39,7 @@ export function PwaManager() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
     // O site da FGIA Educação (domínio próprio e /fgia) não pede notificações da IA News.
-    if (window.location.hostname.includes("fgiaeducacao") || window.location.pathname.startsWith("/fgia")) return;
+    if (window.location.hostname.includes("fgiaeducacao") || window.location.pathname.startsWith("/fgia") || window.location.pathname.startsWith("/ingresso")) return;
     const register = async () => {
       try {
         const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
