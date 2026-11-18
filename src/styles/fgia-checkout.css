@@ -123,7 +123,9 @@
 @media (max-width: 900px) {
   .fgc-grid { grid-template-columns: 1fr; }
   .fgc-summary { position: static; order: -1; padding: 22px; gap: 18px; }
-  .fgc-summary .fgc-items, .fgc-summary .fgc-org { display: none; }
+  .fgc-summary .fgc-items, .fgc-summary .fgc-org, .fgc-summary .fgc-perks, .fgc-lines div:first-child { display: none; }
+  .fgc-lines { padding-top: 14px; }
+  .fgc-lines .fgc-total { padding-top: 0; }
   .fgc-card { padding: 28px 20px; }
   .fgc-wrap { padding: 0 16px; }
   .fgc-steps { gap: 8px 16px; font-size: 13px; margin: 16px 0 20px; }
@@ -142,3 +144,4 @@
   .fgc-copy { flex-direction: column; }
   .fgc-actions .fg-btn { width: 100%; }
 }
+.fgc-card { scroll-margin-top: 90px; }

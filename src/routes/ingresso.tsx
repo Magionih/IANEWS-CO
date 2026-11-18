@@ -295,6 +295,13 @@ function FgiaCheckout() {
     navigate({ to: "/ingresso", search: (prev: Search) => ({ ...prev, i: undefined, t: undefined }), replace: true });
   }
 
+  // Pix gerado, ida para o Asaas ou compra confirmada: leva o topo do cartão para a tela.
+  const cartao = useRef<HTMLElement>(null);
+  const fase = pedido?.pago ? "pago" : indo ? "indo" : pix ? "pix" : "";
+  useEffect(() => {
+    if (fase) cartao.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [fase]);
+
   const etapa = pedido?.pago ? 3 : temPedido ? 2 : 1;
   const primeiro = pedido?.nome?.trim().split(/\s+/)[0] ?? "";
 
@@ -349,7 +356,7 @@ function FgiaCheckout() {
         </ol>
 
         <div className="fgc-grid">
-          <section className="fgc-card" aria-live="polite">
+          <section className="fgc-card" aria-live="polite" ref={cartao}>
             {!temPedido ? (
               <form onSubmit={salvarDados} noValidate>
                 <p className="fgc-kick">Etapa 1 de 2</p>
