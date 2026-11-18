@@ -195,7 +195,9 @@ async function registrarQualificacao(db: any, inscricaoId: string, clean: PalcoI
       }
     }
     if (empresaId) {
-      await db.from("crm_empresas").update({ porte: `${q.faturamento} · ${q.funcionarios} funcionários` }).eq("id", empresaId).is("porte", null);
+      // porte aceita só startup, pme, grande ou global; a faixa exata de faturamento fica na nota abaixo.
+      const porte = q.faturamento === "Ainda não fatura" ? "startup" : q.faturamento === "Acima de R$ 5 milhões por mês" ? "grande" : "pme";
+      await db.from("crm_empresas").update({ porte }).eq("id", empresaId).is("porte", null);
       await db.from("crm_empresas").update({ setor: q.setor }).eq("id", empresaId).is("setor", null);
     }
     const origem = ["utm_source", "utm_medium", "utm_campaign"]
