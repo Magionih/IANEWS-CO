@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2, Lock } from "lucide-react";
 import { z } from "zod";
 
-import logo from "@/assets/ianews-logo.png";
+import logo from "@/assets/ianews-logo-white.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,15 +117,23 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0D1117] px-4 py-10">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-7 shadow-xl">
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="IANews" className="h-6 w-auto" />
-          <span className="rounded bg-primary px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-primary-foreground">
-            CRM
-          </span>
+    <div className="safe-top relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-nav px-4 py-10">
+      {/* Grade discreta de fundo, só decorativa. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:linear-gradient(rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.04)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]"
+      />
+      <div className="relative mb-6 flex items-center gap-3">
+        <img src="/icon-192.png" alt="" className="h-10 w-10 rounded-xl" />
+        <div>
+          <img src={logo} alt="IA News" className="h-[18px] w-auto" />
+          <p className="mt-1 text-xs font-medium text-white/55">
+            CRM · operação comercial e editorial
+          </p>
         </div>
-        <h1 className="mt-5 text-xl font-extrabold">
+      </div>
+      <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-card p-6 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.6)] sm:p-7">
+        <h1 className="text-xl font-semibold tracking-[-0.02em]">
           {modo === "entrar"
             ? "Entrar no CRM"
             : modo === "criar"
@@ -135,7 +143,7 @@ function LoginPage() {
                 : "Recuperar senha"}
         </h1>
         <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="h-3.5 w-3.5" /> Acesso restrito à equipe da IANews.
+          <Lock className="h-3.5 w-3.5" /> Acesso restrito à equipe da IA News.
         </p>
 
         <form onSubmit={enviar} className="mt-5 space-y-3">
@@ -177,7 +185,7 @@ function LoginPage() {
           ) : null}
           {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
           {aviso ? <p className="text-sm text-primary">{aviso}</p> : null}
-          <Button type="submit" className="h-11 w-full font-bold" disabled={ocupado}>
+          <Button type="submit" className="h-11 w-full font-semibold" disabled={ocupado}>
             {ocupado ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {modo === "entrar"
               ? "Entrar"
@@ -218,6 +226,9 @@ function LoginPage() {
           )}
         </div>
       </div>
+      <p className="relative mt-6 text-[11px] text-white/40">
+        No iPhone: Compartilhar → Adicionar à Tela de Início
+      </p>
     </div>
   );
 }

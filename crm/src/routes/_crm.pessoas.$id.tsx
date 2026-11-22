@@ -90,7 +90,9 @@ function FichaPessoaPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{p.nome}</h1>
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] sm:text-[26px]">
+              {p.nome}
+            </h1>
             {p.consentimento ? (
               <Etiqueta tom="ok">
                 consentiu {p.consentimento_em ? `em ${fmtDia(p.consentimento_em)}` : ""}

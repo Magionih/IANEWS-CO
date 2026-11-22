@@ -378,7 +378,7 @@ function NegociosPage() {
       ) : error ? (
         <Erro erro={error} />
       ) : modo === "kanban" ? (
-        <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
+        <div className="-mx-4 snap-x snap-mandatory overflow-x-auto scroll-px-4 px-4 pb-4 sm:mx-0 sm:snap-none sm:px-0">
           <div className="flex min-w-max gap-3">
             {etapas.map((e) => {
               const todos = porEtapa.get(e.id) ?? [];
@@ -397,7 +397,7 @@ function NegociosPage() {
                   onDragLeave={() => setSobre((s) => (s === e.id ? null : s))}
                   onDrop={(ev) => soltar(e.id, ev)}
                   className={cn(
-                    "flex w-[272px] shrink-0 flex-col rounded-[var(--radius)] border bg-muted/40",
+                    "flex w-[84vw] max-w-[300px] shrink-0 snap-start flex-col rounded-xl border bg-[#eef1f5]/70 sm:w-[280px]",
                     sobre === e.id && "border-primary bg-primary/5",
                     e.tipo === "ganha" && "bg-emerald-50/60 dark:bg-emerald-950/20",
                     e.tipo === "perdida" && "opacity-80",
@@ -405,7 +405,7 @@ function NegociosPage() {
                 >
                   <div className="border-b px-3 py-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold">
+                      <p className="text-[13px] font-semibold">
                         {e.ordem < 90 ? `${e.ordem}. ` : ""}
                         {e.nome}
                       </p>
@@ -447,7 +447,7 @@ function NegociosPage() {
           </div>
         </div>
       ) : filtrados.length ? (
-        <div className="overflow-x-auto rounded-[var(--radius)] border bg-card">
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
               <tr>
@@ -633,7 +633,7 @@ function IndicadoresFunil({
       </div>
       {total ? (
         <figure
-          className="rounded-[var(--radius)] border bg-card p-3"
+          className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-3"
           onMouseLeave={() => setFoco(null)}
         >
           <figcaption className="mb-2 flex justify-between text-xs text-muted-foreground">
@@ -674,7 +674,7 @@ function IndicadoresFunil({
         </figure>
       ) : null}
       {tagsAtivas.length ? (
-        <div className="flex flex-wrap items-center gap-1.5 rounded-[var(--radius)] border bg-card p-3">
+        <div className="flex flex-wrap items-center gap-1.5 rounded-xl border bg-card shadow-[var(--shadow-card)] p-3">
           <span className="mr-1 text-xs text-muted-foreground">Tags neste recorte:</span>
           {tagsAtivas.map((t) => (
             <TagChip

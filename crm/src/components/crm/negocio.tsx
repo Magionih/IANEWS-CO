@@ -494,7 +494,7 @@ export function NegocioCartao({
       }}
       onClick={onAbrir}
       className={cn(
-        "w-full rounded-lg border bg-card p-3 text-left shadow-sm transition hover:border-primary/60 hover:shadow",
+        "w-full rounded-lg border bg-card p-3 text-left shadow-[var(--shadow-card)] transition hover:border-primary/50 hover:shadow-md",
         vermelho && "border-destructive/60 bg-destructive/5",
         arrastavel && "cursor-grab active:cursor-grabbing",
       )}

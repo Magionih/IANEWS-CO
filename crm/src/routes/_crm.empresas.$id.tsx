@@ -132,7 +132,9 @@ function FichaEmpresaPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{e.nome}</h1>
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] sm:text-[26px]">
+              {e.nome}
+            </h1>
             <GrupoBadge grupo={e.grupo} manual={e.grupo_manual} pontuacao={e.pontuacao} />
             {e.e_cliente ? <Etiqueta tom="ok">cliente</Etiqueta> : null}
             {e.e_anunciante ? <Etiqueta tom="azul">anunciante</Etiqueta> : null}

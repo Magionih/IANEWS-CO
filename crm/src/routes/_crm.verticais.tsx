@@ -147,10 +147,10 @@ function VerticaisPage() {
             <a
               key={g.nome}
               href={`#v-${slug(g.nome)}`}
-              className="rounded-[var(--radius)] border bg-card p-4 transition hover:border-primary"
+              className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-4 transition hover:border-primary"
             >
               <p className="font-mono-eyebrow text-primary">{g.nome}</p>
-              <p className="mt-1 text-2xl font-extrabold tracking-tight">{fmtNum(t.abertos)}</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.02em]">{fmtNum(t.abertos)}</p>
               <p className="text-xs text-muted-foreground">em andamento</p>
               <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 <dt className="text-muted-foreground">Ganhos</dt>
@@ -180,7 +180,7 @@ function VerticaisPage() {
           {grupos.map((g) => (
             <section key={g.nome} id={`v-${slug(g.nome)}`} className="scroll-mt-24 space-y-3">
               <div>
-                <h2 className="text-lg font-extrabold tracking-tight">{g.nome}</h2>
+                <h2 className="text-lg font-semibold tracking-[-0.02em]">{g.nome}</h2>
                 <p className="text-sm text-muted-foreground">{g.papel}</p>
               </div>
               {g.funis.map((f) => (
@@ -215,7 +215,7 @@ function FunilCartao({
   const t = somar(etapas, resumo);
   const max = Math.max(1, ...etapas.map((e) => resumo.get(e.id)?.qtd ?? 0));
   return (
-    <div className="rounded-[var(--radius)] border bg-card">
+    <div className="rounded-xl border bg-card shadow-[var(--shadow-card)]">
       <header className="flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0">
           <h3 className="font-bold">{funil.nome}</h3>
@@ -275,7 +275,7 @@ function FunilCartao({
                     <span className="line-clamp-2 min-h-[2rem] text-[11px] font-semibold leading-tight">
                       {e.nome}
                     </span>
-                    <span className="mt-1 text-xl font-extrabold tracking-tight">
+                    <span className="mt-1 text-xl font-semibold tracking-[-0.02em]">
                       {fmtNum(qtd)}
                     </span>
                     <span className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
