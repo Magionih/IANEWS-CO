@@ -161,7 +161,7 @@ function FichaEmpresaPage() {
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <Button size="sm" className="h-9" onClick={() => setNovoNegocio(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Criar negócio
+            <Plus className="h-4 w-4" /> Criar negócio
           </Button>
           <Button
             size="sm"
@@ -181,13 +181,13 @@ function FichaEmpresaPage() {
               })
             }
           >
-            <MessageCircle className="mr-1.5 h-4 w-4" /> Mensagem
+            <MessageCircle className="h-4 w-4" /> Mensagem
           </Button>
           <Button size="sm" variant="outline" className="h-9" onClick={() => setAtividade(true)}>
-            <NotebookPen className="mr-1.5 h-4 w-4" /> Registrar conversa
+            <NotebookPen className="h-4 w-4" /> Registrar conversa
           </Button>
           <Button size="sm" variant="outline" className="h-9" onClick={() => setTarefa(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Tarefa
+            <Plus className="h-4 w-4" /> Tarefa
           </Button>
           <Button
             size="sm"
@@ -200,11 +200,10 @@ function FichaEmpresaPage() {
               )
             }
           >
-            <CheckCircle2 className="mr-1.5 h-4 w-4" />{" "}
-            {e.e_cliente ? "É cliente" : "Marcar como cliente"}
+            <CheckCircle2 className="h-4 w-4" /> {e.e_cliente ? "É cliente" : "Marcar como cliente"}
           </Button>
           <Button size="sm" variant="outline" className="h-9" onClick={() => setEditar(true)}>
-            <Pencil className="mr-1.5 h-4 w-4" /> Editar
+            <Pencil className="h-4 w-4" /> Editar
           </Button>
         </div>
       </div>

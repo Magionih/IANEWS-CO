@@ -2,20 +2,22 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Flame, MessageCircle, Plus, RefreshCw } from "lucide-react";
+import { CalendarPlus, ChevronDown, Flame, MessageCircle, Plus, RefreshCw } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { BarrasHorizontais, BarrasPorDia } from "@/components/crm/grafico";
 import { MensagemDialog, TarefaDialog, type DadosMensagem } from "@/components/crm/dialogs";
 import { NegocioDialog, NegocioPainel } from "@/components/crm/negocio";
 import { useAcao } from "@/components/crm/queries";
+import { TarefaLinha } from "@/components/crm/tarefa";
 import {
+  Avatar,
   CabecalhoPagina,
   Carregando,
   Erro,
   Etiqueta,
+  FaixaNumeros,
   GrupoBadge,
-  Numero,
   Secao,
   Vazio,
 } from "@/components/crm/ui";
@@ -42,48 +44,147 @@ export const Route = createFileRoute("/_crm/")({
 
 /** Painel visual da tela Hoje: funil aberto, entrada de leads e origem (30 dias). */
 function VisaoGeral({ visao }: { visao: PainelHoje["visao"] }) {
-  const { funilNome } = useCrm();
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
-      <Secao
-        titulo="Funil aberto"
-        contagem={visao.funis.reduce((s, f) => s + f.qtd, 0)}
-        className="xl:col-span-1"
-      >
-        <p className="mb-3 text-xs text-muted-foreground">
-          Negócios abertos por etapa · {fmtMoeda(visao.pipeline)} em negociação.
-        </p>
-        {visao.funis.length ? (
-          <div className="space-y-5">
-            {visao.funis.map((f) => (
-              <div key={f.funil_id}>
-                <p className="mb-2 flex justify-between text-xs font-semibold">
-                  <span>{funilNome(f.funil_id)}</span>
-                  <span className="text-muted-foreground">
-                    {fmtNum(f.qtd)} · {fmtMoeda(f.valor)}
-                  </span>
-                </p>
-                <BarrasHorizontais
-                  itens={f.etapas.map((e) => ({
-                    rotulo: e.nome,
-                    valor: e.qtd,
-                    detalhe: e.valor ? fmtMoeda(e.valor) : undefined,
-                  }))}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Vazio>Nenhum negócio aberto.</Vazio>
-        )}
-      </Secao>
-      <Secao titulo="Entrada de leads (30 dias)" contagem={visao.leads30}>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <FunilAberto visao={visao} />
+      <Secao titulo="Entrada de leads · 30 dias" contagem={visao.leads30}>
         <BarrasPorDia dados={visao.leadsPorDia} rotulo="Leads por dia" />
       </Secao>
-      <Secao titulo="De onde vêm os leads (30 dias)">
+      <Secao titulo="De onde vêm os leads · 30 dias">
         <BarrasHorizontais itens={visao.origens} />
       </Secao>
     </div>
+  );
+}
+
+const TONS_ETAPA = [
+  "bg-primary/25",
+  "bg-primary/40",
+  "bg-primary/55",
+  "bg-primary/70",
+  "bg-primary/85",
+  "bg-primary",
+  "bg-[#1640b8]",
+  "bg-[#0f2f8a]",
+  "bg-[#0b2266]",
+];
+
+/** Funil aberto: uma linha por funil com o total, o valor e a barra das etapas; toque para abrir as etapas. */
+function FunilAberto({ visao }: { visao: PainelHoje["visao"] }) {
+  const { funilNome } = useCrm();
+  const [aberto, setAberto] = useState<string | null>(null);
+  const [todos, setTodos] = useState(false);
+  const ordenados = [...visao.funis].sort((a, b) => b.qtd - a.qtd);
+  const funis = todos ? ordenados : ordenados.slice(0, 5);
+  const total = ordenados.reduce((s, f) => s + f.qtd, 0);
+  return (
+    <Secao
+      titulo="Funil aberto"
+      contagem={total}
+      className="lg:col-span-2"
+      colado
+      acoes={
+        <span className="text-xs text-muted-foreground">
+          {fmtMoeda(visao.pipeline)} em negociação
+        </span>
+      }
+    >
+      {funis.length ? (
+        <ul className="divide-y">
+          {funis.map((f) => {
+            const etapas = f.etapas.filter((e) => e.qtd > 0).sort((a, b) => a.ordem - b.ordem);
+            const maior = [...etapas].sort((a, b) => b.qtd - a.qtd)[0];
+            const exp = aberto === f.funil_id;
+            return (
+              <li key={f.funil_id}>
+                <button
+                  type="button"
+                  onClick={() => setAberto(exp ? null : f.funil_id)}
+                  aria-expanded={exp}
+                  className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition hover:bg-[#f8faff] sm:grid-cols-[minmax(180px,260px)_1fr_auto] sm:px-5"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13.5px] font-semibold">
+                      {funilNome(f.funil_id)}
+                    </span>
+                    <span className="block truncate text-[11.5px] text-muted-foreground">
+                      {maior ? `mais em ${maior.nome} (${fmtNum(maior.qtd)})` : "sem negócios"}
+                    </span>
+                  </span>
+                  <span className="order-3 col-span-2 flex h-2 w-full gap-[2px] overflow-hidden rounded-full bg-muted sm:order-none sm:col-span-1">
+                    {etapas.map((e, i) => (
+                      <span
+                        key={e.nome}
+                        title={`${e.nome}: ${fmtNum(e.qtd)}`}
+                        className={cn("h-full", TONS_ETAPA[Math.min(i, TONS_ETAPA.length - 1)])}
+                        style={{ width: `${(e.qtd / Math.max(1, f.qtd)) * 100}%` }}
+                      />
+                    ))}
+                  </span>
+                  <span className="flex items-center gap-2 text-right">
+                    <span>
+                      <span className="tabular block text-[15px] font-semibold">
+                        {fmtNum(f.qtd)}
+                      </span>
+                      <span className="tabular block text-[11px] text-muted-foreground">
+                        {f.valor ? fmtMoeda(f.valor) : "—"}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 text-muted-foreground transition-transform",
+                        exp && "rotate-180",
+                      )}
+                    />
+                  </span>
+                </button>
+                {exp ? (
+                  <div className="bg-[#f8f9fb] px-4 pb-3 pt-1 sm:px-5">
+                    <ul className="grid gap-x-6 gap-y-1.5 py-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {etapas.map((e, i) => (
+                        <li key={e.nome} className="flex items-center gap-2 text-[12.5px]">
+                          <span
+                            className={cn(
+                              "h-2 w-2 shrink-0 rounded-full",
+                              TONS_ETAPA[Math.min(i, TONS_ETAPA.length - 1)],
+                            )}
+                          />
+                          <span className="min-w-0 flex-1 truncate">{e.nome}</span>
+                          <span className="tabular font-semibold">{fmtNum(e.qtd)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      to="/negocios"
+                      search={{ funil: f.funil_id }}
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      Abrir o funil
+                    </Link>
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+          {ordenados.length > 5 ? (
+            <li>
+              <button
+                type="button"
+                onClick={() => setTodos((v) => !v)}
+                className="flex w-full items-center justify-center gap-1 px-4 py-2.5 text-xs font-semibold text-primary hover:bg-[#f8faff]"
+              >
+                {todos ? "Mostrar só os 5 maiores" : `Ver todos os funis (${ordenados.length})`}
+                <ChevronDown className={cn("h-3.5 w-3.5", todos && "rotate-180")} />
+              </button>
+            </li>
+          ) : null}
+        </ul>
+      ) : (
+        <div className="p-4">
+          <Vazio>Nenhum negócio aberto.</Vazio>
+        </div>
+      )}
+    </Secao>
   );
 }
 
@@ -135,43 +236,47 @@ function HojePage() {
               onClick={() => refetch()}
               disabled={isFetching}
             >
-              <RefreshCw className={cn("mr-1.5 h-4 w-4", isFetching && "animate-spin")} /> Atualizar
+              <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+              <span className="hidden sm:inline">Atualizar</span>
             </Button>
             <Button variant="outline" size="sm" className="h-9" onClick={() => setNovaTarefa(true)}>
-              <Plus className="mr-1.5 h-4 w-4" /> Tarefa
+              <CalendarPlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Tarefa</span>
             </Button>
             <Button size="sm" className="h-9" onClick={() => setNovoNegocio(true)}>
-              <Plus className="mr-1.5 h-4 w-4" /> Novo lead
+              <Plus className="h-4 w-4" /> Novo lead
             </Button>
           </>
         }
       />
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Numero
-          rotulo="Tarefas hoje"
-          valor={fmtNum(tarefas.length)}
-          detalhe={`${atrasadas.length} atrasadas`}
-          destaque={atrasadas.length ? "alerta" : undefined}
-        />
-        <Numero
-          rotulo="Novos leads 24h"
-          valor={fmtNum(data.novos.length)}
-          destaque={data.novos.length ? "azul" : undefined}
-        />
-        <Numero
-          rotulo="Negócios atrasados"
-          valor={fmtNum(data.atrasados.length)}
-          destaque={data.atrasados.length ? "alerta" : undefined}
-        />
-        <Numero rotulo="Leads novos (7 dias)" valor={fmtNum(data.semana.novosLeads)} />
-        <Numero rotulo="Mensagens (7 dias)" valor={fmtNum(data.semana.mensagensEnviadas)} />
-        <Numero
-          rotulo="Fechados (7 dias)"
-          valor={fmtNum(data.semana.fechados)}
-          detalhe={`${fmtMoeda(data.semana.receita)} recebidos`}
-        />
-      </section>
+      <FaixaNumeros
+        itens={[
+          {
+            rotulo: "Tarefas hoje",
+            valor: fmtNum(tarefas.length),
+            detalhe: `${atrasadas.length} atrasadas`,
+            tom: atrasadas.length ? "alerta" : undefined,
+          },
+          {
+            rotulo: "Novos leads 24h",
+            valor: fmtNum(data.novos.length),
+            tom: data.novos.length ? "azul" : undefined,
+          },
+          {
+            rotulo: "Negócios atrasados",
+            valor: fmtNum(data.atrasados.length),
+            tom: data.atrasados.length ? "alerta" : undefined,
+          },
+          { rotulo: "Leads · 7 dias", valor: fmtNum(data.semana.novosLeads) },
+          { rotulo: "Mensagens · 7 dias", valor: fmtNum(data.semana.mensagensEnviadas) },
+          {
+            rotulo: "Fechados · 7 dias",
+            valor: fmtNum(data.semana.fechados),
+            detalhe: `${fmtMoeda(data.semana.receita)} recebidos`,
+          },
+        ]}
+      />
 
       <VisaoGeral visao={data.visao} />
 
@@ -179,6 +284,7 @@ function HojePage() {
         <Secao
           titulo="Tarefas de hoje e atrasadas"
           contagem={tarefas.length}
+          colado
           acoes={
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               <Switch checked={soMinhas} onCheckedChange={setSoMinhas} /> Só as minhas
@@ -188,50 +294,25 @@ function HojePage() {
           {tarefas.length ? (
             <ul className="divide-y">
               {tarefas.map((t) => (
-                <li key={t.id} className="flex items-start gap-3 py-2.5">
-                  <button
-                    type="button"
-                    aria-label="Concluir tarefa"
-                    className="mt-0.5 text-muted-foreground hover:text-primary"
-                    onClick={() =>
-                      executar(
-                        () => concluir({ data: { id: t.id, feita: true } }),
-                        "Tarefa concluída.",
-                      )
-                    }
-                  >
-                    <CheckCircle2 className="h-5 w-5" />
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <button
-                      type="button"
-                      className="text-left text-sm font-semibold hover:text-primary"
-                      onClick={() => t.negocio_id && setAberto(t.negocio_id)}
-                    >
-                      {t.titulo}
-                    </button>
-                    <p className="text-xs text-muted-foreground">
-                      <span
-                        className={cn(
-                          atrasado(t.vence_em, data.hoje) && "font-semibold text-destructive",
-                        )}
-                      >
-                        {prazoRelativo(t.vence_em, data.hoje)}
-                      </span>
-                      {" · "}
-                      {membro(t.responsavel_id)}
-                      {t.empresa_nome ? ` · ${t.empresa_nome}` : ""}
-                      {t.automatica ? " · automática" : ""}
-                    </p>
-                    {t.descricao ? (
-                      <p className="mt-0.5 text-xs text-muted-foreground">{t.descricao}</p>
-                    ) : null}
-                  </div>
-                </li>
+                <TarefaLinha
+                  key={t.id}
+                  t={t}
+                  hoje={data.hoje}
+                  onAbrir={t.negocio_id ? () => setAberto(t.negocio_id) : undefined}
+                  onNegocio={t.negocio_id ? () => setAberto(t.negocio_id) : undefined}
+                  onConcluir={() =>
+                    executar(
+                      () => concluir({ data: { id: t.id, feita: true } }),
+                      "Tarefa concluída.",
+                    )
+                  }
+                />
               ))}
             </ul>
           ) : (
-            <Vazio>Nada para hoje. Que tal puxar a fila “Viraram pauta”?</Vazio>
+            <div className="p-4">
+              <Vazio>Nada para hoje. Que tal puxar a fila “Viraram pauta”?</Vazio>
+            </div>
           )}
         </Secao>
 
@@ -396,42 +477,59 @@ function ListaNegocios({
   detalhe?: (n: NegocioCompleto) => string;
 }) {
   const { membro } = useCrm();
+  const [todos, setTodos] = useState(false);
+  const visiveis = todos ? lista.slice(0, 40) : lista.slice(0, 5);
   return (
-    <Secao titulo={titulo} contagem={lista.length}>
+    <Secao titulo={titulo} contagem={lista.length} colado>
       {lista.length ? (
-        <ul className="divide-y">
-          {lista.slice(0, 25).map((n) => (
-            <li key={n.id}>
-              <button
-                type="button"
-                onClick={() => onAbrir(n.id)}
-                className="flex w-full items-start justify-between gap-3 py-2 text-left hover:text-primary"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">
-                    {n.empresa_nome ?? n.titulo}
+        <>
+          <ul className="divide-y">
+            {visiveis.map((n) => (
+              <li key={n.id}>
+                <button
+                  type="button"
+                  onClick={() => onAbrir(n.id)}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-[#f8faff] sm:px-5"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate text-[13.5px] font-semibold">
+                        {n.empresa_nome ?? n.titulo}
+                      </span>
+                      <GrupoBadge grupo={n.empresa_grupo} />
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {n.etapa_nome}
+                      {detalhe
+                        ? ` · ${detalhe(n)}`
+                        : n.proxima_acao_em
+                          ? ` · ${prazoRelativo(n.proxima_acao_em)}`
+                          : ""}
+                    </span>
                   </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {n.etapa_nome} · {membro(n.dono_id)}
-                    {detalhe
-                      ? ` · ${detalhe(n)}`
-                      : n.proxima_acao_em
-                        ? ` · ${prazoRelativo(n.proxima_acao_em)}`
-                        : ""}
-                  </span>
-                </span>
-                <span className="flex shrink-0 items-center gap-1">
                   {alerta && atrasado(n.proxima_acao_em) ? (
                     <Etiqueta tom="alerta">atrasado</Etiqueta>
                   ) : null}
-                  <GrupoBadge grupo={n.empresa_grupo} />
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+                  <Avatar nome={membro(n.dono_id)} />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {lista.length > 5 ? (
+            <button
+              type="button"
+              onClick={() => setTodos((v) => !v)}
+              className="flex w-full items-center justify-center gap-1 border-t px-4 py-2.5 text-xs font-semibold text-primary hover:bg-[#f8faff]"
+            >
+              {todos ? "Mostrar menos" : `Ver todos (${fmtNum(lista.length)})`}
+              <ChevronDown className={cn("h-3.5 w-3.5", todos && "rotate-180")} />
+            </button>
+          ) : null}
+        </>
       ) : (
-        <Vazio>{vazio}</Vazio>
+        <div className="p-4">
+          <Vazio>{vazio}</Vazio>
+        </div>
       )}
     </Secao>
   );

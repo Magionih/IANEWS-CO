@@ -174,11 +174,13 @@ export function MembroSelect({
   onChange,
   incluirTodos,
   placeholder = "Responsável",
+  className,
 }: {
   valor: string | null;
   onChange: (id: string | null) => void;
   incluirTodos?: boolean;
   placeholder?: string;
+  className?: string;
 }) {
   const { equipe } = useCrm();
   return (
@@ -186,7 +188,7 @@ export function MembroSelect({
       value={valor ?? (incluirTodos ? "todos" : "ninguem")}
       onValueChange={(v) => onChange(v === "ninguem" || v === "todos" ? null : v)}
     >
-      <SelectTrigger className="h-10">
+      <SelectTrigger className={className ?? "h-10"}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

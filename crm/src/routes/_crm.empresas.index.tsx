@@ -97,7 +97,7 @@ function EmpresasPage() {
               ]}
             />
             <Button size="sm" className="h-9" onClick={() => setNova(true)}>
-              <Plus className="mr-1.5 h-4 w-4" /> Nova empresa
+              <Plus className="h-4 w-4" /> Nova empresa
             </Button>
           </>
         }
@@ -111,12 +111,12 @@ function EmpresasPage() {
         <Numero rotulo="Clientes" valor={fmtNum(ativas.filter((e) => e.e_cliente).length)} />
       </section>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+      <div className="grid grid-cols-3 gap-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Filtrar por nome, Instagram, site, setor ou cidade"
-          className="h-10"
+          placeholder="Buscar nome, Instagram, site, setor ou cidade"
+          className="col-span-3 h-10 lg:col-span-1"
         />
         <Select value={grupo} onValueChange={setGrupo}>
           <SelectTrigger className="h-10">

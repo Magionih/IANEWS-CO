@@ -67,7 +67,7 @@ import { EmpresaPicker, MembroSelect, PessoaPicker } from "./pickers";
 import { useAcao, useEmpresas } from "./queries";
 import { EditorTags, TagsDoNegocio } from "./tags";
 import { LinhaDoTempo } from "./timeline";
-import { Campo, Carregando, Erro, Etiqueta, GrupoBadge, Secao, Vazio } from "./ui";
+import { Avatar, Campo, Carregando, Erro, Etiqueta, GrupoBadge, Secao, Vazio } from "./ui";
 
 /* Negócio: formulário, painel de detalhe e mudança de etapa (com motivo quando é perda). */
 
@@ -494,41 +494,49 @@ export function NegocioCartao({
       }}
       onClick={onAbrir}
       className={cn(
-        "w-full rounded-lg border bg-card p-3 text-left shadow-[var(--shadow-card)] transition hover:border-primary/50 hover:shadow-md",
-        vermelho && "border-destructive/60 bg-destructive/5",
+        "relative w-full shrink-0 overflow-hidden rounded-lg border bg-card p-3 text-left shadow-[var(--shadow-card)] transition hover:border-primary/40 hover:shadow-md",
         arrastavel && "cursor-grab active:cursor-grabbing",
       )}
     >
+      {vermelho ? <span className="absolute inset-y-0 left-0 w-[3px] bg-destructive" /> : null}
       <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 text-sm font-semibold">{n.empresa_nome ?? n.titulo}</p>
+        <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug">
+          {n.empresa_nome ?? n.titulo}
+        </p>
         <GrupoBadge grupo={n.empresa_grupo} />
       </div>
-      {n.empresa_nome && n.titulo !== n.empresa_nome ? (
-        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{n.titulo}</p>
-      ) : null}
-      {n.pessoa_nome ? <p className="mt-1 text-xs">{n.pessoa_nome}</p> : null}
-      <div className="mt-2 flex flex-wrap items-center gap-1">
-        {n.valor ? <Etiqueta tom="azul">{fmtMoeda(n.valor)}</Etiqueta> : null}
-        {n.tipo ? <Etiqueta>{labelDe(TIPOS_NEGOCIO, n.tipo)}</Etiqueta> : null}
-        {n.status_pagamento !== "pendente" ? (
-          <Etiqueta tom={n.status_pagamento === "pago" ? "ok" : "neutro"}>
-            {PAGAMENTO_LABEL[n.status_pagamento]}
-          </Etiqueta>
-        ) : null}
-      </div>
-      <TagsDoNegocio ids={n.tags} />
-      <p
-        className={cn(
-          "mt-2 flex items-center gap-1 text-[11px]",
-          vermelho ? "font-semibold text-destructive" : "text-muted-foreground",
-        )}
-      >
-        <CalendarClock className="h-3 w-3" />
-        {n.proxima_acao
-          ? `${n.proxima_acao} · ${prazoRelativo(n.proxima_acao_em)}`
-          : "Sem próxima ação"}
+      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+        {[n.pessoa_nome, n.empresa_nome && n.titulo !== n.empresa_nome ? n.titulo : null]
+          .filter(Boolean)
+          .join(" · ") || "Sem contato"}
       </p>
-      <p className="mt-1 text-[11px] text-muted-foreground">{membro(n.dono_id)}</p>
+      {n.valor || n.status_pagamento !== "pendente" ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1">
+          {n.valor ? <Etiqueta tom="azul">{fmtMoeda(n.valor)}</Etiqueta> : null}
+          {n.status_pagamento !== "pendente" ? (
+            <Etiqueta tom={n.status_pagamento === "pago" ? "ok" : "neutro"}>
+              {PAGAMENTO_LABEL[n.status_pagamento]}
+            </Etiqueta>
+          ) : null}
+        </div>
+      ) : null}
+      <TagsDoNegocio ids={n.tags} />
+      <div className="mt-2.5 flex items-center gap-2 border-t pt-2">
+        <p
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-1 text-[11px]",
+            vermelho ? "font-medium text-destructive" : "text-muted-foreground",
+          )}
+          title={n.proxima_acao ?? undefined}
+        >
+          <CalendarClock className="h-3 w-3 shrink-0" />
+          <span className="truncate">
+            {n.proxima_acao_em ? prazoRelativo(n.proxima_acao_em) : "Sem data"}
+            {n.proxima_acao ? ` · ${n.proxima_acao}` : " · sem próxima ação"}
+          </span>
+        </p>
+        <Avatar nome={membro(n.dono_id)} />
+      </div>
     </button>
   );
 }
@@ -674,16 +682,16 @@ export function NegocioPainel({ id, onClose }: { id: string | null; onClose: () 
 
               <div className="grid grid-cols-2 gap-2">
                 <Button onClick={() => setMensagem(true)}>
-                  <MessageCircle className="mr-2 h-4 w-4" /> Mensagem
+                  <MessageCircle className="h-4 w-4" /> Mensagem
                 </Button>
                 <Button variant="outline" onClick={() => setAtividade(true)}>
-                  <NotebookPen className="mr-2 h-4 w-4" /> Registrar
+                  <NotebookPen className="h-4 w-4" /> Registrar
                 </Button>
                 <Button variant="outline" onClick={() => setTarefa(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Tarefa
+                  <Plus className="h-4 w-4" /> Tarefa
                 </Button>
                 <Button variant="outline" onClick={() => setEditar(true)}>
-                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                  <Pencil className="h-4 w-4" /> Editar
                 </Button>
               </div>
 

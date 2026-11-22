@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { AlertTriangle, Download, Flame, Loader2 } from "lucide-react";
+import { AlertTriangle, Download, Flame, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,19 +19,19 @@ export function CabecalhoPagina({
   acoes?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-6">
+    <div className="flex items-start justify-between gap-3 md:items-end md:gap-6">
       <div className="min-w-0 flex-1">
         <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] sm:text-[26px]">
           {titulo}
         </h1>
         {descricao ? (
-          <p className="mt-1 max-w-3xl text-[13.5px] leading-relaxed text-muted-foreground">
+          <p className="mt-1 hidden max-w-3xl text-[13.5px] leading-relaxed text-muted-foreground sm:block">
             {descricao}
           </p>
         ) : null}
       </div>
       {acoes ? (
-        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:px-0 md:max-w-[62%] md:flex-wrap md:justify-end md:overflow-visible [&>*]:shrink-0">
+        <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2 md:max-w-[62%] [&>*]:shrink-0">
           {acoes}
         </div>
       ) : null}
@@ -55,7 +55,7 @@ export function Numero({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4",
+        "relative overflow-hidden rounded-xl border bg-card p-3 shadow-[var(--shadow-card)] sm:p-4",
         destaque === "alerta" && "border-destructive/30",
         destaque === "azul" && "border-primary/30",
       )}
@@ -69,11 +69,13 @@ export function Numero({
         />
       ) : null}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[12.5px] font-medium leading-snug text-muted-foreground">{rotulo}</p>
+        <p className="text-[11.5px] font-medium leading-snug text-muted-foreground sm:text-[12.5px]">
+          {rotulo}
+        </p>
         {Icone ? (
           <span
             className={cn(
-              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8",
+              "hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:flex",
               destaque === "alerta"
                 ? "bg-destructive/10 text-destructive"
                 : "bg-primary/[0.08] text-primary",
@@ -85,13 +87,17 @@ export function Numero({
       </div>
       <p
         className={cn(
-          "tabular mt-1.5 text-[22px] font-semibold leading-none tracking-[-0.02em] sm:text-[26px]",
+          "tabular mt-1 text-[20px] font-semibold leading-none tracking-[-0.02em] sm:mt-1.5 sm:text-[26px]",
           destaque === "alerta" && "text-destructive",
         )}
       >
         {valor}
       </p>
-      {detalhe ? <p className="mt-1.5 text-xs text-muted-foreground">{detalhe}</p> : null}
+      {detalhe ? (
+        <p className="mt-1 text-[11px] leading-snug text-muted-foreground sm:mt-1.5 sm:text-xs">
+          {detalhe}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -102,12 +108,15 @@ export function Secao({
   acoes,
   children,
   className,
+  colado,
 }: {
   titulo: ReactNode;
   contagem?: number;
   acoes?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Sem margem interna (listas que vão de borda a borda). */
+  colado?: boolean;
 }) {
   return (
     <section
@@ -124,7 +133,7 @@ export function Secao({
         </h2>
         {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
       </header>
-      <div className="p-4 sm:p-5">{children}</div>
+      <div className={colado ? "" : "p-4 sm:p-5"}>{children}</div>
     </section>
   );
 }
@@ -250,7 +259,7 @@ export function BotaoCsv<T>({
       onClick={() => baixarCsv(nome, linhas, colunas)}
       disabled={!linhas.length}
     >
-      <Download className="mr-1.5 h-4 w-4" /> CSV
+      <Download className="h-4 w-4" /> <span className="hidden sm:inline">CSV</span>
     </Button>
   );
 }
@@ -287,5 +296,126 @@ export function LinkExterno({ href, children }: { href: string | null; children:
     >
       {children}
     </a>
+  );
+}
+
+/** Alternador compacto (lista/quadro, pagos/cortesia...). */
+export function Alternador<T extends string>({
+  valor,
+  onChange,
+  opcoes,
+  className,
+}: {
+  valor: T;
+  onChange: (v: T) => void;
+  opcoes: {
+    valor: T;
+    rotulo?: ReactNode;
+    icone?: ComponentType<{ className?: string }>;
+    titulo?: string;
+  }[];
+  className?: string;
+}) {
+  return (
+    <div
+      role="radiogroup"
+      className={cn("inline-flex h-10 shrink-0 items-center rounded-lg bg-muted p-1", className)}
+    >
+      {opcoes.map((o) => {
+        const on = o.valor === valor;
+        return (
+          <button
+            key={o.valor}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            aria-label={o.titulo}
+            title={o.titulo}
+            onClick={() => onChange(o.valor)}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition",
+              on && "bg-card text-foreground shadow-[0_1px_2px_rgb(16_24_40/0.08)]",
+            )}
+          >
+            {o.icone ? <o.icone className="h-4 w-4" /> : null}
+            {o.rotulo}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Iniciais do membro em círculo (responsável, dono). */
+export function Avatar({ nome, className }: { nome: string; className?: string }) {
+  const partes = nome.split(/\s+/).filter(Boolean);
+  const ini = ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "—";
+  return (
+    <span
+      title={nome}
+      className={cn(
+        "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary",
+        className,
+      )}
+    >
+      {ini}
+    </span>
+  );
+}
+
+/** Filtro aplicado, com botão para tirar. */
+export function ChipFiltro({ children, onTirar }: { children: ReactNode; onTirar: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border bg-card py-0.5 pl-2.5 pr-1 text-xs font-medium shadow-[var(--shadow-card)]">
+      {children}
+      <button
+        type="button"
+        onClick={onTirar}
+        aria-label="Tirar filtro"
+        className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
+/** Faixa de números num painel só (mais compacta que vários cartões, boa no celular). */
+export function FaixaNumeros({
+  itens,
+  children,
+}: {
+  itens: { rotulo: string; valor: ReactNode; detalhe?: ReactNode; tom?: "alerta" | "azul" }[];
+  children?: ReactNode;
+}) {
+  const cols =
+    itens.length >= 6 ? "lg:grid-cols-6" : itens.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
+  return (
+    <section className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
+      <dl className={cn("grid grid-cols-3 gap-px bg-border", cols)}>
+        {itens.map((x) => (
+          <div key={x.rotulo} className="min-w-0 bg-card px-3 py-3 sm:px-4">
+            <dt className="truncate text-[11.5px] font-medium text-muted-foreground">{x.rotulo}</dt>
+            <dd
+              className={cn(
+                "tabular mt-0.5 truncate text-[15px] font-semibold tracking-[-0.01em] sm:text-xl",
+                x.tom === "alerta" && "text-destructive",
+                x.tom === "azul" && "text-primary",
+              )}
+            >
+              {x.valor}
+            </dd>
+            {x.detalhe ? (
+              <dd className="truncate text-[11px] text-muted-foreground">{x.detalhe}</dd>
+            ) : null}
+          </div>
+        ))}
+        {/* Completa a última linha no celular para a grade não ficar com buraco. */}
+        {Array.from({ length: (3 - (itens.length % 3)) % 3 }, (_, i) => (
+          <div key={`v${i}`} className="bg-card lg:hidden" />
+        ))}
+      </dl>
+      {children}
+    </section>
   );
 }

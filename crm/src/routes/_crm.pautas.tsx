@@ -144,7 +144,7 @@ function PautasPage() {
               className="h-9"
               onClick={() => setConteudo({ canal: "instagram", formato: "carrossel" })}
             >
-              <Plus className="mr-1.5 h-4 w-4" /> Post nas redes
+              <Plus className="h-4 w-4" /> Post nas redes
             </Button>
           </>
         }
@@ -634,7 +634,7 @@ function MencoesDialog({
                   {sugerindo ? (
                     <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                   ) : (
-                    <Sparkles className="mr-1.5 h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                   )}{" "}
                   Sugerir pelo título, texto e tags
                 </Button>
