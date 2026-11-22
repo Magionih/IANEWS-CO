@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 /* Fontes servidas pelo próprio CRM (sem Google Fonts: mais rápido e sem terceiros). */
-@import "@fontsource-variable/roboto/wght.css";
+@import "@fontsource-variable/inter/wght.css";
 @import "@fontsource-variable/roboto-mono/wght.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -72,14 +72,20 @@
   --color-lime: var(--lime);
   --color-nav: var(--nav);
   --color-nav-foreground: var(--nav-foreground);
+  --color-nav-muted: var(--nav-muted);
+  --color-nav-hover: var(--nav-hover);
+  --color-nav-border: var(--nav-border);
+  --color-canvas: var(--canvas);
   --font-sans:
-    "Roboto Variable", "Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display:
-    "Roboto Variable", "Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-slab: "Roboto Slab", ui-serif, Georgia, serif;
   --font-serif: "Lora", ui-serif, Georgia, "Times New Roman", serif;
   --font-mono:
     "Roboto Mono Variable", "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.03);
+  --shadow-pop: 0 16px 40px -12px rgb(16 24 40 / 0.22), 0 4px 12px -4px rgb(16 24 40 / 0.08);
   --shadow-mui-sm: 0 4px 20px 0 rgb(0 0 0 / 0.06), 0 2px 6px 0 rgb(0 0 0 / 0.04);
   --shadow-mui-md: 0 12px 40px -12px rgb(23 45 92 / 0.18), 0 6px 20px -8px rgb(23 45 92 / 0.12);
   --shadow-mui-lg: 0 24px 60px -20px rgb(23 45 92 / 0.28), 0 10px 30px -12px rgb(23 45 92 / 0.18);
@@ -87,59 +93,64 @@
 }
 
 :root {
-  --radius: 0.85rem;
-  /* Acento azul claro IA News e barra de navegação escura */
-  --lime: oklch(0.63 0.21 264);
-  --nav: oklch(0.145 0.005 250);
-  --nav-foreground: oklch(0.985 0 0);
-  /* Base — fundo cru estilo TheNews / Morning Brew */
-  --background: oklch(0.985 0.003 250); /* #F8FAFC — MUI cru neutro */
-  --foreground: oklch(0.22 0.015 60); /* #26221C ink */
-  --ink: oklch(0.22 0.015 60);
-  --surface: oklch(1 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.015 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.015 60);
-  /* Primária azul IA News #1F5EFF */
-  --primary: oklch(0.585 0.235 265);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.955 0.01 80);
-  --secondary-foreground: oklch(0.22 0.015 60);
-  --muted: oklch(0.955 0.01 80);
-  --muted-foreground: oklch(0.5 0.012 70); /* #6c6a64 */
-  --accent: oklch(0.955 0.01 80);
-  --accent-foreground: oklch(0.22 0.015 60);
-  --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.9 0.012 80); /* #E6E0D6 */
-  --input: oklch(0.9 0.012 80);
-  --ring: oklch(0.585 0.235 265);
-  --gold: oklch(0.78 0.14 78); /* #E8A020 PRO */
-  --success: oklch(0.62 0.15 155); /* #1F965A */
+  --radius: 0.625rem;
+  /* Plataforma: navegação navy, área de trabalho neutra e fria, azul IA News nas ações. */
+  --lime: #1f5eff;
+  --nav: #0b1220;
+  --nav-foreground: #eef1f7;
+  --nav-muted: #8b95a8;
+  --nav-hover: rgb(255 255 255 / 0.06);
+  --nav-border: rgb(255 255 255 / 0.08);
+  --canvas: #f4f6f9;
+  --background: #f4f6f9;
+  --foreground: #0e1424;
+  --ink: #0e1424;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #0e1424;
+  --popover: #ffffff;
+  --popover-foreground: #0e1424;
+  --primary: #1f5eff;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f5;
+  --secondary-foreground: #0e1424;
+  --muted: #eef1f5;
+  --muted-foreground: #5b6476;
+  --accent: #eef1f5;
+  --accent-foreground: #0e1424;
+  --destructive: #d92d20;
+  --destructive-foreground: #ffffff;
+  --border: #e3e7ee;
+  --input: #d9dee7;
+  --ring: #1f5eff;
+  --gold: #c6a15b;
+  --success: #12875a;
   /* Chips de categoria */
-  --cat-bigtech: oklch(0.55 0.2 290); /* #6C4AE6 */
-  --cat-startup: oklch(0.7 0.17 55); /* #E97824 */
-  --cat-brasil: oklch(0.62 0.15 155); /* #1F965A */
-  --cat-global: oklch(0.585 0.235 265); /* #1F5EFF */
-  --cat-mercado: oklch(0.62 0.12 190); /* #0E9791 */
-  --cat-pesquisa: oklch(0.53 0.2 310); /* #9649CD */
-  --cat-regulacao: oklch(0.6 0.2 25); /* #D6404A */
-  --cat-ferramentas: oklch(0.65 0.14 230); /* #1496C8 */
-  --cat-generativa: oklch(0.65 0.19 350); /* #DB4A8C */
-  --chart-1: oklch(0.585 0.235 265);
-  --chart-2: oklch(0.62 0.15 155);
-  --chart-3: oklch(0.78 0.14 78);
-  --chart-4: oklch(0.55 0.2 290);
-  --chart-5: oklch(0.7 0.17 55);
-  --sidebar: oklch(0.99 0.004 80);
-  --sidebar-foreground: oklch(0.22 0.015 60);
-  --sidebar-primary: oklch(0.585 0.235 265);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.95 0.01 80);
-  --sidebar-accent-foreground: oklch(0.22 0.015 60);
-  --sidebar-border: oklch(0.9 0.012 80);
-  --sidebar-ring: oklch(0.585 0.235 265);
+  --cat-bigtech: #6c4ae6;
+  --cat-startup: #b7791f;
+  --cat-brasil: #12875a;
+  --cat-global: #1f5eff;
+  --cat-mercado: #0e9791;
+  --cat-pesquisa: #7c3aed;
+  --cat-regulacao: #d6404a;
+  --cat-ferramentas: #1496c8;
+  --cat-generativa: #4f46e5;
+  --chart-1: #1f5eff;
+  --chart-2: #12875a;
+  --chart-3: #c6a15b;
+  --chart-4: #6c4ae6;
+  --chart-5: #0e9791;
+  --sidebar: #0b1220;
+  --sidebar-foreground: #eef1f7;
+  --sidebar-primary: #1f5eff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(255 255 255 / 0.06);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #1f5eff;
+  /* Alturas fixas da moldura (topo e barra de abas no celular). */
+  --topbar-h: 3.5rem;
+  --tabbar-h: 4rem;
 }
 
 .dark {
@@ -187,14 +198,16 @@
   }
 
   html {
-    background-color: #000000;
+    background-color: var(--nav);
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01", "ss03";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -206,20 +219,37 @@
   h5,
   h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.03em;
-    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-weight: 650;
+  }
+
+  /* Números alinhados em tabelas e indicadores. */
+  td,
+  th,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* No iPhone, campo com fonte menor que 16px faz a tela dar zoom ao tocar. */
+  @media (max-width: 1023px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 
   .font-editorial {
     font-family: var(--font-serif);
   }
 
+  /* Rótulo pequeno de seção (mantido o nome antigo para não mexer em todas as telas). */
   .font-mono-eyebrow {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 0.72rem;
-    font-weight: 500;
+    letter-spacing: 0.06em;
+    font-size: 0.6875rem;
+    font-weight: 600;
   }
 }
 
@@ -385,14 +415,78 @@
   }
 }
 
-/* ===== PWA / mobile: a página inteira rola no documento =====
-   (Rolar dentro de um contêiner quebrava o `position: sticky` da navbar.) */
+/* ===== App: moldura de plataforma (menu lateral, topo e abas no celular) ===== */
 html,
 body {
   overscroll-behavior-y: none;
 }
 
 .app-shell {
-  min-height: 100%;
+  min-height: 100dvh;
+}
+
+/* Área de conteúdo: deixa espaço para a barra de abas e a área segura do iPhone. */
+.crm-main {
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 1.5rem);
+}
+@media (min-width: 1024px) {
+  .crm-main {
+    padding-bottom: 3rem;
+  }
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Barra de rolagem discreta no menu lateral. */
+.nav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.12) transparent;
+}
+
+/* Tabelas do CRM: cabeçalho discreto, linhas com respiro e destaque ao passar o mouse. */
+.crm-main table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.crm-main thead th {
+  background: #f8f9fb;
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.crm-main tbody tr {
+  transition: background-color 120ms ease;
+}
+.crm-main tbody tr:hover {
+  background: #f8faff;
+}
+.crm-main tbody td {
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 75%, transparent);
+}
+.crm-main tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Rolagem horizontal de tabelas e quadros no celular, com borda que indica "tem mais". */
+.crm-main .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

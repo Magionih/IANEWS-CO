@@ -250,7 +250,7 @@ function TarefasPage() {
                 <section
                   key={k}
                   className={cn(
-                    "rounded-[var(--radius)] border bg-card px-4",
+                    "rounded-xl border bg-card shadow-[var(--shadow-card)] px-4",
                     k === "atrasadas" && "border-destructive/40",
                   )}
                 >
@@ -271,7 +271,7 @@ function TarefasPage() {
           <Vazio>Nenhuma tarefa.</Vazio>
         )
       ) : (
-        <div className="rounded-[var(--radius)] border bg-card p-3">
+        <div className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-3">
           <div className="mb-3 flex items-center justify-between">
             <Button
               variant="ghost"

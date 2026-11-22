@@ -19,14 +19,22 @@ export function CabecalhoPagina({
   acoes?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{titulo}</h1>
+    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-6">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] sm:text-[26px]">
+          {titulo}
+        </h1>
         {descricao ? (
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{descricao}</p>
+          <p className="mt-1 max-w-3xl text-[13.5px] leading-relaxed text-muted-foreground">
+            {descricao}
+          </p>
         ) : null}
       </div>
-      {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
+      {acoes ? (
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:px-0 md:max-w-[62%] md:flex-wrap md:justify-end md:overflow-visible [&>*]:shrink-0">
+          {acoes}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -47,24 +55,43 @@ export function Numero({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border bg-card p-4",
-        destaque === "alerta" && "border-destructive/40 bg-destructive/5",
-        destaque === "azul" && "border-primary/40 bg-primary/5",
+        "relative overflow-hidden rounded-xl border bg-card p-3.5 shadow-[var(--shadow-card)] sm:p-4",
+        destaque === "alerta" && "border-destructive/30",
+        destaque === "azul" && "border-primary/30",
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <p className="font-mono-eyebrow text-muted-foreground">{rotulo}</p>
-        {Icone ? <Icone className="h-4 w-4 text-muted-foreground" /> : null}
+      {destaque ? (
+        <span
+          className={cn(
+            "absolute inset-x-0 top-0 h-[3px]",
+            destaque === "alerta" ? "bg-destructive" : "bg-primary",
+          )}
+        />
+      ) : null}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[12.5px] font-medium leading-snug text-muted-foreground">{rotulo}</p>
+        {Icone ? (
+          <span
+            className={cn(
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8",
+              destaque === "alerta"
+                ? "bg-destructive/10 text-destructive"
+                : "bg-primary/[0.08] text-primary",
+            )}
+          >
+            <Icone className="h-4 w-4" />
+          </span>
+        ) : null}
       </div>
       <p
         className={cn(
-          "mt-1 text-2xl font-extrabold tracking-tight",
+          "tabular mt-1.5 text-[22px] font-semibold leading-none tracking-[-0.02em] sm:text-[26px]",
           destaque === "alerta" && "text-destructive",
         )}
       >
         {valor}
       </p>
-      {detalhe ? <p className="mt-0.5 text-xs text-muted-foreground">{detalhe}</p> : null}
+      {detalhe ? <p className="mt-1.5 text-xs text-muted-foreground">{detalhe}</p> : null}
     </div>
   );
 }
@@ -83,15 +110,21 @@ export function Secao({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-[var(--radius)] border bg-card", className)}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-        <h2 className="text-sm font-bold">
+    <section
+      className={cn("min-w-0 rounded-xl border bg-card shadow-[var(--shadow-card)]", className)}
+    >
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-5">
+        <h2 className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.01em]">
           {titulo}
-          {contagem != null ? <span className="ml-1.5 text-primary">({contagem})</span> : null}
+          {contagem != null ? (
+            <span className="tabular rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              {contagem}
+            </span>
+          ) : null}
         </h2>
-        {acoes ? <div className="flex items-center gap-2">{acoes}</div> : null}
+        {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
       </header>
-      <div className="p-4">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -105,7 +138,7 @@ export function Carregando({ texto = "Carregando..." }: { texto?: string }) {
       </span>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-[var(--radius)] bg-muted" />
+          <div key={i} className="h-24 animate-pulse rounded-xl border bg-card" />
         ))}
       </div>
       <div className="space-y-2">
@@ -123,7 +156,7 @@ export function Carregando({ texto = "Carregando..." }: { texto?: string }) {
 
 export function Erro({ erro }: { erro: unknown }) {
   return (
-    <div className="flex items-start gap-2 rounded-[var(--radius)] border border-destructive/40 bg-destructive/5 p-4 text-sm">
+    <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
       <span>{erro instanceof Error ? erro.message : "Não foi possível carregar."}</span>
     </div>
@@ -131,13 +164,17 @@ export function Erro({ erro }: { erro: unknown }) {
 }
 
 export function Vazio({ children }: { children: ReactNode }) {
-  return <p className="py-6 text-center text-sm text-muted-foreground">{children}</p>;
+  return (
+    <p className="rounded-lg border border-dashed bg-muted/40 px-4 py-8 text-center text-sm text-muted-foreground">
+      {children}
+    </p>
+  );
 }
 
 const GRUPO_COR: Record<CrmGrupo, string> = {
   A: "bg-primary text-primary-foreground",
-  B: "bg-primary/15 text-primary",
-  C: "bg-muted text-muted-foreground",
+  B: "bg-primary/[0.1] text-primary ring-1 ring-inset ring-primary/20",
+  C: "bg-muted text-muted-foreground ring-1 ring-inset ring-border",
 };
 
 export function GrupoBadge({
@@ -175,12 +212,11 @@ export function Etiqueta({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold",
-        tom === "neutro" && "bg-muted text-muted-foreground",
-        tom === "azul" && "bg-primary/10 text-primary",
-        tom === "alerta" && "bg-destructive/10 text-destructive",
-        tom === "ok" &&
-          "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset",
+        tom === "neutro" && "bg-muted text-muted-foreground ring-border",
+        tom === "azul" && "bg-primary/[0.07] text-primary ring-primary/20",
+        tom === "alerta" && "bg-destructive/[0.07] text-destructive ring-destructive/20",
+        tom === "ok" && "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
       )}
     >
       {children}

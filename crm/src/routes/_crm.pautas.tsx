@@ -228,7 +228,7 @@ function PautasPage() {
 
         <TabsContent value="posts" className="mt-4">
           {data?.conteudos.length ? (
-            <div className="overflow-x-auto rounded-[var(--radius)] border bg-card">
+            <div className="overflow-x-auto rounded-xl border bg-card shadow-[var(--shadow-card)]">
               <table className="w-full min-w-[760px] text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
@@ -306,7 +306,7 @@ function PautasPage() {
           {fila.isLoading ? (
             <Carregando />
           ) : fila.data?.viraramPauta.length ? (
-            <ul className="divide-y rounded-[var(--radius)] border bg-card">
+            <ul className="divide-y rounded-xl border bg-card shadow-[var(--shadow-card)]">
               {fila.data.viraramPauta.map((f) => (
                 <li
                   key={f.empresa_id}
@@ -441,7 +441,7 @@ function LinhaArtigo({
       (m.pessoa_id && (aparicoes.pessoas[m.pessoa_id] ?? 0) > 1),
   );
   return (
-    <li className="rounded-[var(--radius)] border bg-card p-3">
+    <li className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <a

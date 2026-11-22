@@ -58,13 +58,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "CRM — IA News" },
       { name: "robots", content: "noindex, nofollow, noarchive" },
       { name: "referrer", content: "no-referrer" },
-      { name: "theme-color", content: "#0D1117" },
+      { name: "theme-color", content: "#0B1220" },
+      // App instalável: no iPhone, Safari → Compartilhar → Adicionar à Tela de Início.
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "IA News CRM" },
+      { name: "application-name", content: "IA News CRM" },
+      { name: "format-detection", content: "telephone=no" },
     ],
     links: [
       // O navegador já abre a conexão com o banco enquanto carrega o app.
       { rel: "preconnect", href: import.meta.env.VITE_SUPABASE_URL, crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: Documento,
@@ -92,7 +101,7 @@ function Raiz() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-center" offset="calc(env(safe-area-inset-top) + 12px)" />
     </QueryClientProvider>
   );
 }

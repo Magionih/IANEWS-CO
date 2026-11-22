@@ -151,7 +151,7 @@ function EmpresasPage() {
       ) : error ? (
         <Erro erro={error} />
       ) : lista.length ? (
-        <div className="overflow-x-auto rounded-[var(--radius)] border bg-card">
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[820px] text-sm">
             <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
               <tr>

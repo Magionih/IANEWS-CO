@@ -400,7 +400,7 @@ function Modelos() {
           {data.map((m) => {
             const e = etapa(m.etapa_id);
             return (
-              <li key={m.id} className="rounded-[var(--radius)] border bg-card p-3">
+              <li key={m.id} className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <button
                     type="button"
@@ -571,7 +571,7 @@ function Usuarios() {
         className="h-10 sm:max-w-sm"
       />
       {lista.length ? (
-        <ul className="divide-y rounded-[var(--radius)] border bg-card">
+        <ul className="divide-y rounded-xl border bg-card shadow-[var(--shadow-card)]">
           {lista.map((u) => {
             const papel = (u.papeis.find((p) => p !== "reader") ?? "reader") as string;
             return (

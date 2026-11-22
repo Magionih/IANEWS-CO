@@ -2,32 +2,39 @@ import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   BarChart3,
   Building2,
   CalendarCheck,
+  ChevronRight,
+  Clapperboard,
+  Gauge,
   Home,
   KanbanSquare,
   Layers,
-  LogOut,
+  ListOrdered,
   Loader2,
+  LogOut,
   Megaphone,
+  Menu,
+  MessageCircle,
   Newspaper,
   Search,
   Send,
   Settings,
+  Share,
   Shield,
+  SquarePlus,
   Users,
   UsersRound,
-  Clapperboard,
-  Gauge,
-  ListOrdered,
-  MessageCircle,
+  X,
 } from "lucide-react";
 
 import logo from "@/assets/ianews-logo-white.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { buscarCrm } from "@/lib/crm/core.functions";
 import { fmtDia } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
@@ -35,7 +42,9 @@ import { cn } from "@/lib/utils";
 import { useCrm } from "./context";
 import { AvisoRepeticao, GrupoBadge } from "./ui";
 
-/* Moldura das telas do CRM: menu lateral próprio, busca global no topo e área de conteúdo. */
+/* Moldura do CRM no formato de plataforma:
+   - computador: menu lateral fixo (navy) por grupos, topo com título da área, busca (⌘K) e conta;
+   - celular/app: topo compacto, barra de abas na base e "Menu" com todas as áreas. */
 
 type Item = {
   to: string;
@@ -45,107 +54,506 @@ type Item = {
   admin?: boolean;
 };
 
-const MENU: Item[] = [
-  { to: "/", rotulo: "Hoje", icone: Home, exato: true },
-  { to: "/verticais", rotulo: "Verticais", icone: Layers },
-  { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
-  { to: "/fila", rotulo: "Fila do dia", icone: Send },
-  { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
-  { to: "/direct", rotulo: "Direct", icone: MessageCircle },
-  { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
-  { to: "/empresas", rotulo: "Empresas", icone: Building2 },
-  { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
-  { to: "/pautas", rotulo: "Pautas e conteúdo", icone: Newspaper },
-  { to: "/publicidade", rotulo: "Publicidade", icone: Megaphone },
-  { to: "/audiencia", rotulo: "Audiência", icone: Users },
-  { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
-  { to: "/painel", rotulo: "Painel", icone: Gauge },
-  { to: "/relatorios", rotulo: "Relatórios", icone: BarChart3 },
-  { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
+type Grupo = { titulo: string; itens: Item[] };
+
+const GRUPOS: Grupo[] = [
+  {
+    titulo: "Operação",
+    itens: [
+      { to: "/", rotulo: "Hoje", icone: Home, exato: true },
+      { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
+      { to: "/fila", rotulo: "Fila do dia", icone: Send },
+      { to: "/direct", rotulo: "Direct", icone: MessageCircle },
+      { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
+    ],
+  },
+  {
+    titulo: "Comercial",
+    itens: [
+      { to: "/verticais", rotulo: "Verticais", icone: Layers },
+      { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
+      { to: "/empresas", rotulo: "Empresas", icone: Building2 },
+      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
+      { to: "/publicidade", rotulo: "Publicidade", icone: Megaphone },
+    ],
+  },
+  {
+    titulo: "Conteúdo",
+    itens: [
+      { to: "/pautas", rotulo: "Pautas e conteúdo", icone: Newspaper },
+      { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
+      { to: "/audiencia", rotulo: "Audiência", icone: Users },
+    ],
+  },
+  {
+    titulo: "Análise",
+    itens: [
+      { to: "/painel", rotulo: "Painel", icone: Gauge },
+      { to: "/relatorios", rotulo: "Relatórios", icone: BarChart3 },
+      { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
+    ],
+  },
 ];
 
-export function CrmShell({ children }: { children: ReactNode }) {
-  const { isAdmin, papeis } = useCrm();
+/** Abas fixas na base do celular (o resto fica em "Menu"). */
+const ABAS = ["/", "/lista", "/negocios", "/tarefas"];
+
+const PAPEL_NOME: Record<string, string> = {
+  admin: "Administrador",
+  comercial: "Comercial",
+  editorial: "Editorial",
+};
+
+function useAtivo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const itens = MENU.filter((i) => !i.admin || isAdmin);
-  const ativo = (i: Item) =>
-    i.exato ? path === i.to || path === `${i.to}/` : path.startsWith(i.to);
+  return (i: Item) =>
+    i.exato ? path === i.to || path === `${i.to}/` : path === i.to || path.startsWith(`${i.to}/`);
+}
+
+function useGrupos() {
+  const { isAdmin } = useCrm();
+  return GRUPOS.map((g) => ({ ...g, itens: g.itens.filter((i) => !i.admin || isAdmin) })).filter(
+    (g) => g.itens.length,
+  );
+}
+
+function useEmail() {
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
+  }, []);
+  return email;
+}
+
+function useSair() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  return async () => {
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/login", replace: true });
+  };
+}
+
+function iniciais(nome: string) {
+  const partes = nome
+    .replace(/@.*/, "")
+    .split(/[\s._-]+/)
+    .filter(Boolean);
+  return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "IA";
+}
+
+export function CrmShell({ children }: { children: ReactNode }) {
+  const [busca, setBusca] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const path = useRouterState({ select: (s) => s.location.pathname });
+
+  // ⌘K / Ctrl+K abre a busca em qualquer tela.
+  useEffect(() => {
+    const atalho = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setBusca((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", atalho);
+    return () => window.removeEventListener("keydown", atalho);
+  }, []);
+
+  // Fecha o menu do celular ao trocar de tela.
+  useEffect(() => setMenu(false), [path]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopoCrm />
-      <div className="mx-auto flex max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] w-56 shrink-0 flex-col lg:flex">
-          <p className="font-mono-eyebrow text-primary">CRM · IA News</p>
-          <nav className="mt-3 flex flex-col gap-0.5" aria-label="Menu do CRM">
-            {itens.map((i) => (
-              <Link
-                key={i.to}
-                to={i.to}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground",
-                  ativo(i) &&
-                    "bg-primary/10 font-semibold text-primary hover:bg-primary/10 hover:text-primary",
-                )}
-              >
-                <i.icone className="h-4 w-4" />
-                {i.rotulo}
-              </Link>
-            ))}
-          </nav>
-          <div className="mt-auto space-y-2 border-t pt-3 text-xs text-muted-foreground">
-            <p>Acesso: {papeis.filter((p) => p !== "reader").join(", ")}</p>
-          </div>
-        </aside>
+    <div className="app-shell bg-background lg:pl-64">
+      <MenuLateral onBuscar={() => setBusca(true)} />
+      <TopoCelular onBuscar={() => setBusca(true)} onMenu={() => setMenu(true)} />
+      <TopoComputador onBuscar={() => setBusca(true)} />
+      <main className="crm-main mx-auto w-full max-w-[1440px] px-4 pt-4 sm:px-6 lg:px-8 lg:pt-6">
+        {children}
+      </main>
+      <BarraAbas onMenu={() => setMenu(true)} />
+      <MenuCelular aberto={menu} onFechar={() => setMenu(false)} />
+      <BuscaGlobal aberto={busca} onFechar={() => setBusca(false)} />
+      <AvisoInstalar />
+    </div>
+  );
+}
 
+/* ---------- Computador ---------- */
+
+function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
+  const grupos = useGrupos();
+  const ativo = useAtivo();
+  return (
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-nav-border bg-nav text-nav-foreground lg:flex">
+      <div className="flex h-[var(--topbar-h)] items-center gap-2.5 px-5">
+        <Link to="/" className="flex items-center gap-2.5" aria-label="Início do CRM">
+          <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />
+          <img src={logo} alt="IA News" className="h-[15px] w-auto" />
+        </Link>
+        <span className="ml-auto rounded-md border border-nav-border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-nav-muted">
+          CRM
+        </span>
+      </div>
+
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={onBuscar}
+          className="flex w-full items-center gap-2 rounded-lg border border-nav-border bg-white/[0.03] px-3 py-2 text-left text-[13px] text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1">Buscar</span>
+          <kbd className="rounded border border-nav-border px-1.5 text-[10px] font-medium">⌘K</kbd>
+        </button>
+      </div>
+
+      <nav className="nav-scroll flex-1 overflow-y-auto px-3 pb-4" aria-label="Menu do CRM">
+        {grupos.map((g) => (
+          <div key={g.titulo} className="mt-4 first:mt-2">
+            <p className="px-3 pb-1.5 text-[11px] font-semibold text-nav-muted/80">{g.titulo}</p>
+            <ul className="space-y-0.5">
+              {g.itens.map((i) => {
+                const on = ativo(i);
+                return (
+                  <li key={i.to}>
+                    <Link
+                      to={i.to}
+                      aria-current={on ? "page" : undefined}
+                      className={cn(
+                        "group relative flex items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13.5px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
+                        on &&
+                          "bg-primary/[0.16] text-white hover:bg-primary/[0.2] hover:text-white",
+                      )}
+                    >
+                      {on ? (
+                        <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-primary" />
+                      ) : null}
+                      <i.icone
+                        className={cn("h-[17px] w-[17px] shrink-0", on ? "text-[#8db0ff]" : "")}
+                      />
+                      {i.rotulo}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      <ContaLateral />
+    </aside>
+  );
+}
+
+function ContaLateral() {
+  const { userId, membro, papeis } = useCrm();
+  const email = useEmail();
+  const sair = useSair();
+  const nome = membro(userId) !== "—" ? membro(userId) : (email ?? "Equipe");
+  const papel = papeis.filter((p) => p !== "reader").map((p) => PAPEL_NOME[p] ?? p)[0];
+  return (
+    <div className="border-t border-nav-border p-3">
+      <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+          {iniciais(nome)}
+        </span>
         <div className="min-w-0 flex-1">
-          <BuscaGlobal />
-          <nav
-            className="-mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1 lg:hidden"
-            aria-label="Menu do CRM"
-          >
-            {itens.map((i) => (
+          <p className="truncate text-[13px] font-semibold text-nav-foreground">{nome}</p>
+          <p className="truncate text-[11px] text-nav-muted">{papel ?? email}</p>
+        </div>
+        <button
+          type="button"
+          onClick={sair}
+          title="Sair"
+          aria-label="Sair"
+          className="rounded-md p-1.5 text-nav-muted transition hover:bg-nav-hover hover:text-white"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function useTituloAtual() {
+  const grupos = useGrupos();
+  const ativo = useAtivo();
+  for (const g of grupos) {
+    const i = g.itens.find(ativo);
+    if (i) return { grupo: g.titulo, item: i };
+  }
+  return null;
+}
+
+function TopoComputador({ onBuscar }: { onBuscar: () => void }) {
+  const atual = useTituloAtual();
+  const data = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const hoje = data.charAt(0).toUpperCase() + data.slice(1);
+  return (
+    <header className="sticky top-0 z-20 hidden h-[var(--topbar-h)] items-center gap-4 border-b bg-card/85 px-8 backdrop-blur-md lg:flex">
+      <nav aria-label="Onde você está" className="flex min-w-0 items-center gap-1.5 text-sm">
+        <span className="text-muted-foreground">{atual?.grupo ?? "CRM"}</span>
+        {atual ? (
+          <>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+            <span className="truncate font-semibold">{atual.item.rotulo}</span>
+          </>
+        ) : null}
+      </nav>
+      <div className="ml-auto flex items-center gap-3">
+        <span className="hidden text-xs text-muted-foreground xl:inline">{hoje}</span>
+        <button
+          type="button"
+          onClick={onBuscar}
+          className="flex w-72 items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-left text-[13px] text-muted-foreground transition hover:border-primary/40"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1 truncate">Buscar empresa, pessoa, e-mail…</span>
+          <kbd className="rounded border bg-card px-1.5 text-[10px] font-medium">⌘K</kbd>
+        </button>
+      </div>
+    </header>
+  );
+}
+
+/* ---------- Celular / app ---------- */
+
+function TopoCelular({ onBuscar, onMenu }: { onBuscar: () => void; onMenu: () => void }) {
+  const atual = useTituloAtual();
+  return (
+    <header className="safe-top sticky top-0 z-30 bg-nav text-nav-foreground lg:hidden">
+      <div className="flex h-[var(--topbar-h)] items-center gap-2 px-3">
+        <Link to="/" className="flex items-center gap-2 pl-1" aria-label="Início do CRM">
+          <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />
+        </Link>
+        <div className="min-w-0 flex-1 pl-1">
+          <p className="truncate text-[15px] font-semibold leading-tight">
+            {atual?.item.rotulo ?? "CRM"}
+          </p>
+          <p className="truncate text-[11px] leading-tight text-nav-muted">
+            {atual ? `${atual.grupo} · IA News CRM` : "IA News CRM"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onBuscar}
+          aria-label="Buscar"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-nav-foreground transition active:bg-nav-hover"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={onMenu}
+          aria-label="Abrir menu"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-nav-foreground transition active:bg-nav-hover"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function BarraAbas({ onMenu }: { onMenu: () => void }) {
+  const grupos = useGrupos();
+  const ativo = useAtivo();
+  const todos = grupos.flatMap((g) => g.itens);
+  const abas = ABAS.map((to) => todos.find((i) => i.to === to)).filter(Boolean) as Item[];
+  const algumaAtiva = abas.some(ativo);
+  return (
+    <nav
+      aria-label="Navegação principal"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur-md lg:hidden"
+    >
+      <ul className="mx-auto grid h-[var(--tabbar-h)] max-w-lg grid-cols-5">
+        {abas.map((i) => {
+          const on = ativo(i);
+          return (
+            <li key={i.to}>
               <Link
-                key={i.to}
                 to={i.to}
+                aria-current={on ? "page" : undefined}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold",
-                  ativo(i)
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground",
+                  "flex h-full flex-col items-center justify-center gap-1 text-[10.5px] font-medium text-muted-foreground",
+                  on && "text-primary",
                 )}
               >
-                <i.icone className="h-3.5 w-3.5" />
-                {i.rotulo}
+                <span
+                  className={cn(
+                    "flex h-7 w-12 items-center justify-center rounded-full transition",
+                    on && "bg-primary/10",
+                  )}
+                >
+                  <i.icone className="h-[19px] w-[19px]" />
+                </span>
+                {i.rotulo === "Lista do dia" ? "Lista" : i.rotulo}
               </Link>
-            ))}
-          </nav>
-          <main className="mt-5">{children}</main>
+            </li>
+          );
+        })}
+        <li>
+          <button
+            type="button"
+            onClick={onMenu}
+            className={cn(
+              "flex h-full w-full flex-col items-center justify-center gap-1 text-[10.5px] font-medium text-muted-foreground",
+              !algumaAtiva && "text-primary",
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-7 w-12 items-center justify-center rounded-full",
+                !algumaAtiva && "bg-primary/10",
+              )}
+            >
+              <Menu className="h-[19px] w-[19px]" />
+            </span>
+            Menu
+          </button>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+
+function MenuCelular({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
+  const grupos = useGrupos();
+  const ativo = useAtivo();
+  const { userId, membro, papeis } = useCrm();
+  const email = useEmail();
+  const sair = useSair();
+  const nome = membro(userId) !== "—" ? membro(userId) : (email ?? "Equipe");
+  return (
+    <Sheet open={aberto} onOpenChange={(v) => !v && onFechar()}>
+      <SheetContent
+        side="bottom"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="max-h-[88dvh] overflow-y-auto bg-background px-4 pt-3 lg:hidden"
+      >
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+        <SheetTitle className="sr-only">Menu do CRM</SheetTitle>
+        <div className="mb-4 flex items-center gap-3 rounded-xl border bg-card p-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+            {iniciais(nome)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{nome}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {papeis
+                .filter((p) => p !== "reader")
+                .map((p) => PAPEL_NOME[p] ?? p)
+                .join(" · ") || email}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={sair}>
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
+        </div>
+        <div className="space-y-4">
+          {grupos.map((g) => (
+            <div key={g.titulo}>
+              <p className="px-1 pb-2 text-xs font-semibold text-muted-foreground">{g.titulo}</p>
+              <div className="grid grid-cols-3 gap-2">
+                {g.itens.map((i) => {
+                  const on = ativo(i);
+                  return (
+                    <Link
+                      key={i.to}
+                      to={i.to}
+                      onClick={onFechar}
+                      className={cn(
+                        "flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-3 text-center text-[12px] font-medium leading-tight transition active:scale-[0.98]",
+                        on && "border-primary/40 bg-primary/[0.06] text-primary",
+                      )}
+                    >
+                      <i.icone
+                        className={cn("h-5 w-5", on ? "text-primary" : "text-foreground/70")}
+                      />
+                      {i.rotulo}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** No iPhone (Safari, fora do app), explica como instalar o CRM na Tela de Início. */
+function AvisoInstalar() {
+  const [mostrar, setMostrar] = useState(false);
+  useEffect(() => {
+    try {
+      const ua = window.navigator.userAgent;
+      const ios = /iPhone|iPad|iPod/.test(ua) || (ua.includes("Mac") && "ontouchend" in document);
+      const safari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|Instagram|FBAN|FBAV/.test(ua);
+      const instalado =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+      const dispensado = window.localStorage.getItem("crm-aviso-instalar") === "1";
+      if (ios && safari && !instalado && !dispensado) setMostrar(true);
+    } catch {
+      /* sem armazenamento: não mostra o aviso */
+    }
+  }, []);
+  if (!mostrar) return null;
+  const fechar = () => {
+    setMostrar(false);
+    try {
+      window.localStorage.setItem("crm-aviso-instalar", "1");
+    } catch {
+      /* ignora */
+    }
+  };
+  return (
+    <div className="fixed inset-x-3 bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+0.75rem)] z-40 rounded-2xl border bg-card p-4 shadow-[var(--shadow-pop)] lg:hidden">
+      <button
+        type="button"
+        onClick={fechar}
+        aria-label="Fechar aviso"
+        className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground"
+      >
+        <X className="h-4 w-4" />
+      </button>
+      <div className="flex gap-3 pr-6">
+        <img src="/icon-192.png" alt="" className="h-11 w-11 shrink-0 rounded-xl" />
+        <div className="text-sm">
+          <p className="font-semibold">Instale o CRM no iPhone</p>
+          <p className="mt-0.5 text-muted-foreground">
+            Toque em <Share className="inline h-4 w-4 -translate-y-0.5 text-primary" /> Compartilhar
+            e depois em{" "}
+            <span className="whitespace-nowrap font-medium text-foreground">
+              <SquarePlus className="inline h-4 w-4 -translate-y-0.5" /> Adicionar à Tela de Início
+            </span>
+            . Ele abre em tela cheia, como um app.
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-/** Barra superior do CRM: marca, quem está logado e sair. */
+/** Topo simples (usado na tela de acesso restrito, fora da moldura completa). */
 export function TopoCrm() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [email, setEmail] = useState<string | null>(null);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
-  }, []);
-  async function sair() {
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/login", replace: true });
-  }
+  const email = useEmail();
+  const sair = useSair();
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0D1117] text-white">
-      <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+    <header className="safe-top sticky top-0 z-30 bg-nav text-white">
+      <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src={logo} alt="IANews" className="h-5 w-auto" />
-          <span className="rounded bg-primary px-1.5 py-0.5 text-[11px] font-bold tracking-wide">
+          <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />
+          <img src={logo} alt="IA News" className="h-[15px] w-auto" />
+          <span className="rounded-md border border-white/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/70">
             CRM
           </span>
         </Link>
@@ -175,7 +583,7 @@ export function SemAcesso({ mensagem }: { mensagem?: string }) {
   return (
     <div className="min-h-screen bg-background">
       <TopoCrm />
-      <div className="mx-auto mt-16 max-w-md rounded-2xl border bg-card p-10 text-center">
+      <div className="mx-4 mt-16 max-w-md rounded-2xl border bg-card p-10 text-center shadow-[var(--shadow-card)] sm:mx-auto">
         <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
         <h1 className="mt-4 text-xl font-bold">Acesso restrito</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -190,13 +598,15 @@ export function SemAcesso({ mensagem }: { mensagem?: string }) {
   );
 }
 
-function BuscaGlobal() {
+/* ---------- Busca global (⌘K) ---------- */
+
+function BuscaGlobal({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
   const navigate = useNavigate();
   const buscar = useServerFn(buscarCrm);
+  const grupos = useGrupos();
   const [q, setQ] = useState("");
   const [termo, setTermo] = useState("");
-  const [aberto, setAberto] = useState(false);
-  const caixa = useRef<HTMLDivElement>(null);
+  const campo = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setTermo(q.trim()), 250);
@@ -204,105 +614,160 @@ function BuscaGlobal() {
   }, [q]);
 
   useEffect(() => {
-    const fora = (e: MouseEvent) => {
-      if (caixa.current && !caixa.current.contains(e.target as Node)) setAberto(false);
-    };
-    document.addEventListener("mousedown", fora);
-    return () => document.removeEventListener("mousedown", fora);
-  }, []);
+    if (!aberto) setQ("");
+  }, [aberto]);
 
   const { data, isFetching } = useQuery({
     queryKey: ["crm", "busca", termo],
     queryFn: () => buscar({ data: { q: termo } }),
-    enabled: termo.length >= 2,
+    enabled: aberto && termo.length >= 2,
     staleTime: 15_000,
   });
 
   const ir = (to: string, id: string) => {
-    setAberto(false);
-    setQ("");
+    onFechar();
     navigate({ to, params: { id } });
   };
 
   const vazio = data && !data.empresas.length && !data.pessoas.length;
+  const atalhos = grupos
+    .flatMap((g) => g.itens)
+    .filter((i) => !q || i.rotulo.toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
-    <div ref={caixa} className="relative">
-      <div className="flex items-center gap-2 rounded-lg border bg-card px-3.5 py-2.5 focus-within:border-primary">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setAberto(true);
+    <DialogPrimitive.Root open={aberto} onOpenChange={(v) => !v && onFechar()}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[#0b1220]/55 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Content
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            campo.current?.focus();
           }}
-          onFocus={() => setAberto(true)}
-          onKeyDown={(e) => e.key === "Escape" && setAberto(false)}
-          placeholder="Buscar empresa, pessoa, e-mail, Instagram ou WhatsApp (antes de criar pauta)"
-          aria-label="Busca global do CRM"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        />
-        {isFetching ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
-      </div>
-      {aberto && termo.length >= 2 && data ? (
-        <div className="absolute z-40 mt-1 max-h-[70vh] w-full overflow-y-auto rounded-lg border bg-popover p-2 shadow-lg">
-          {vazio ? (
-            <p className="p-3 text-sm text-muted-foreground">
-              Nada encontrado. Pessoa e empresa ainda não apareceram no conteúdo.
-            </p>
-          ) : null}
-          {data.empresas.length ? (
-            <p className="px-2 pb-1 pt-1 font-mono-eyebrow text-muted-foreground">Empresas</p>
-          ) : null}
-          {data.empresas.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              onClick={() => ir("/empresas/$id", e.id)}
-              className="flex w-full flex-wrap items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
-            >
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">{e.nome}</span>
-              <GrupoBadge grupo={e.grupo as never} pontuacao={e.pontuacao} />
-              {e.e_cliente ? <span className="text-xs text-primary">cliente</span> : null}
-              <AvisoRepeticao
-                vezes={e.mencoes}
-                ultima={
-                  e.ultima_mencao
-                    ? `${e.ultima_mencao.titulo ?? ""} (${fmtDia(e.ultima_mencao.em)})`
-                    : null
-                }
-              />
-            </button>
-          ))}
-          {data.pessoas.length ? (
-            <p className="px-2 pb-1 pt-2 font-mono-eyebrow text-muted-foreground">Pessoas</p>
-          ) : null}
-          {data.pessoas.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => ir("/pessoas/$id", p.id)}
-              className="flex w-full flex-wrap items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
-            >
-              <UsersRound className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">{p.nome}</span>
-              {p.empresas.length ? (
-                <span className="text-xs text-muted-foreground">{p.empresas.join(", ")}</span>
-              ) : null}
-              {p.email ? <span className="text-xs text-muted-foreground">{p.email}</span> : null}
-              <AvisoRepeticao
-                vezes={p.mencoes}
-                ultima={
-                  p.ultima_mencao
-                    ? `${p.ultima_mencao.titulo ?? ""} (${fmtDia(p.ultima_mencao.em)})`
-                    : null
-                }
-              />
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
+          className="safe-top fixed inset-0 z-50 flex flex-col bg-card data-[state=open]:animate-in data-[state=open]:fade-in-0 sm:inset-auto sm:left-1/2 sm:top-[12vh] sm:max-h-[70vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:rounded-xl sm:border sm:shadow-[var(--shadow-pop)]"
+        >
+          <DialogPrimitive.Title className="sr-only">Buscar no CRM</DialogPrimitive.Title>
+          <div className="flex items-center gap-2 border-b px-4">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              ref={campo}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar empresa, pessoa, e-mail…"
+              aria-label="Busca global do CRM"
+              className="h-14 w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+            />
+            {isFetching ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+            <DialogPrimitive.Close className="rounded-md px-2 py-1 text-sm font-medium text-primary sm:hidden">
+              Cancelar
+            </DialogPrimitive.Close>
+            <kbd className="hidden rounded border px-1.5 text-[10px] text-muted-foreground sm:inline">
+              Esc
+            </kbd>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-2">
+            {termo.length >= 2 && data ? (
+              <>
+                {vazio ? (
+                  <p className="p-4 text-sm text-muted-foreground">
+                    Nada encontrado. Pessoa e empresa ainda não apareceram no conteúdo.
+                  </p>
+                ) : null}
+                {data.empresas.length ? <Rotulo>Empresas</Rotulo> : null}
+                {data.empresas.map((e) => (
+                  <ItemBusca key={e.id} onClick={() => ir("/empresas/$id", e.id)}>
+                    <Icone>
+                      <Building2 className="h-4 w-4" />
+                    </Icone>
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-2 font-semibold">
+                        {e.nome}
+                        <GrupoBadge grupo={e.grupo as never} pontuacao={e.pontuacao} />
+                        {e.e_cliente ? <span className="text-xs text-primary">cliente</span> : null}
+                      </p>
+                      <AvisoRepeticao
+                        vezes={e.mencoes}
+                        ultima={
+                          e.ultima_mencao
+                            ? `${e.ultima_mencao.titulo ?? ""} (${fmtDia(e.ultima_mencao.em)})`
+                            : null
+                        }
+                      />
+                    </div>
+                  </ItemBusca>
+                ))}
+                {data.pessoas.length ? <Rotulo>Pessoas</Rotulo> : null}
+                {data.pessoas.map((p) => (
+                  <ItemBusca key={p.id} onClick={() => ir("/pessoas/$id", p.id)}>
+                    <Icone>
+                      <UsersRound className="h-4 w-4" />
+                    </Icone>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">{p.nome}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {[p.empresas.join(", "), p.email].filter(Boolean).join(" · ")}
+                      </p>
+                      <AvisoRepeticao
+                        vezes={p.mencoes}
+                        ultima={
+                          p.ultima_mencao
+                            ? `${p.ultima_mencao.titulo ?? ""} (${fmtDia(p.ultima_mencao.em)})`
+                            : null
+                        }
+                      />
+                    </div>
+                  </ItemBusca>
+                ))}
+              </>
+            ) : null}
+
+            {atalhos.length && !(termo.length >= 2 && data && !vazio) ? (
+              <>
+                <Rotulo>Ir para</Rotulo>
+                {atalhos.map((i) => (
+                  <ItemBusca
+                    key={i.to}
+                    onClick={() => {
+                      onFechar();
+                      navigate({ to: i.to });
+                    }}
+                  >
+                    <Icone>
+                      <i.icone className="h-4 w-4" />
+                    </Icone>
+                    <span className="flex-1 font-medium">{i.rotulo}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </ItemBusca>
+                ))}
+              </>
+            ) : null}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
+function Rotulo({ children }: { children: ReactNode }) {
+  return <p className="px-3 pb-1 pt-3 text-xs font-semibold text-muted-foreground">{children}</p>;
+}
+
+function Icone({ children }: { children: ReactNode }) {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
+function ItemBusca({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+    >
+      {children}
+    </button>
   );
 }
