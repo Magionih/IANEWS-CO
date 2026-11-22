@@ -819,17 +819,17 @@ export function MensagemDialog({ aberto, onClose, dados }: Aberto & { dados: Dad
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={copiar} disabled={!texto}>
-            <Copy className="mr-2 h-4 w-4" /> Copiar
+            <Copy className="h-4 w-4" /> Copiar
           </Button>
           {wa ? (
             <Button variant="outline" asChild>
               <a href={wa} target="_blank" rel="noreferrer noopener">
-                <ExternalLink className="mr-2 h-4 w-4" /> Abrir no WhatsApp
+                <ExternalLink className="h-4 w-4" /> Abrir no WhatsApp
               </a>
             </Button>
           ) : (
             <Button variant="outline" disabled title="A pessoa não tem WhatsApp cadastrado">
-              <ExternalLink className="mr-2 h-4 w-4" /> Sem WhatsApp
+              <ExternalLink className="h-4 w-4" /> Sem WhatsApp
             </Button>
           )}
           <Button
@@ -843,7 +843,7 @@ export function MensagemDialog({ aberto, onClose, dados }: Aberto & { dados: Dad
             {ocupado ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Send className="mr-2 h-4 w-4" />
+              <Send className="h-4 w-4" />
             )}{" "}
             Registrar envio
           </Button>

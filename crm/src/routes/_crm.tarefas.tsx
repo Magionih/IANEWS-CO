@@ -2,29 +2,27 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  CalendarDays,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Circle,
-  List,
-  Plus,
-  XCircle,
-} from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, List, Plus, Search } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { TarefaDialog } from "@/components/crm/dialogs";
 import { NegocioPainel } from "@/components/crm/negocio";
 import { MembroSelect } from "@/components/crm/pickers";
 import { useAcao } from "@/components/crm/queries";
-import { BotaoCsv, CabecalhoPagina, Carregando, Erro, Etiqueta, Vazio } from "@/components/crm/ui";
+import { TarefaLinha } from "@/components/crm/tarefa";
+import {
+  Alternador,
+  BotaoCsv,
+  CabecalhoPagina,
+  Carregando,
+  Erro,
+  Vazio,
+} from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cancelarTarefa, concluirTarefa, listTarefas } from "@/lib/crm/tarefas.functions";
 import type { CrmTarefaItem } from "@/lib/crm/types";
-import { atrasado, contem, fmtDia, hojeBR, prazoRelativo, somarDias } from "@/lib/crm/utils";
+import { atrasado, contem, hojeBR, somarDias } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_crm/tarefas")({
@@ -83,73 +81,20 @@ function TarefasPage() {
   }, [lista, hoje]);
 
   const item = (t: CrmTarefaItem) => (
-    <li key={t.id} className="flex items-start gap-3 py-2.5">
-      <button
-        type="button"
-        aria-label={t.feita ? "Reabrir" : "Concluir"}
-        className="mt-0.5 text-muted-foreground hover:text-primary"
-        onClick={() =>
-          executar(
-            () => concluir({ data: { id: t.id, feita: !t.feita } }),
-            t.feita ? "Tarefa reaberta." : "Tarefa concluída.",
-          )
-        }
-      >
-        {t.feita ? (
-          <CheckCircle2 className="h-5 w-5 text-primary" />
-        ) : (
-          <Circle className="h-5 w-5" />
-        )}
-      </button>
-      <div className="min-w-0 flex-1">
-        <button
-          type="button"
-          className={cn(
-            "text-left text-sm font-semibold hover:text-primary",
-            t.feita && "text-muted-foreground line-through",
-          )}
-          onClick={() => setEditar(t)}
-        >
-          {t.titulo}
-        </button>
-        <p className="text-xs text-muted-foreground">
-          <span
-            className={cn(
-              !t.feita && atrasado(t.vence_em, hoje) && "font-semibold text-destructive",
-            )}
-          >
-            {t.vence_em ? `${fmtDia(t.vence_em)} (${prazoRelativo(t.vence_em, hoje)})` : "sem data"}
-          </span>
-          {" · "}
-          {membro(t.responsavel_id)}
-          {t.empresa_nome ? ` · ${t.empresa_nome}` : ""}
-          {t.pessoa_nome ? ` · ${t.pessoa_nome}` : ""}
-        </p>
-        {t.negocio_titulo ? (
-          <button
-            type="button"
-            className="text-xs text-primary hover:underline"
-            onClick={() => setNegocio(t.negocio_id)}
-          >
-            {t.negocio_titulo}
-          </button>
-        ) : null}
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        {t.automatica ? <Etiqueta>automática</Etiqueta> : null}
-        {!t.feita ? (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-            title="Descartar tarefa (não apaga, só tira da lista)"
-            onClick={() => executar(() => cancelar({ data: { id: t.id } }), "Tarefa descartada.")}
-          >
-            <XCircle className="h-4 w-4" />
-          </Button>
-        ) : null}
-      </div>
-    </li>
+    <TarefaLinha
+      key={t.id}
+      t={t}
+      hoje={hoje}
+      onAbrir={() => setEditar(t)}
+      onNegocio={t.negocio_id ? () => setNegocio(t.negocio_id) : undefined}
+      onConcluir={() =>
+        executar(
+          () => concluir({ data: { id: t.id, feita: !t.feita } }),
+          t.feita ? "Tarefa reaberta." : "Tarefa concluída.",
+        )
+      }
+      onDescartar={() => executar(() => cancelar({ data: { id: t.id } }), "Tarefa descartada.")}
+    />
   );
 
   // Calendário do mês (segunda a domingo).
@@ -174,7 +119,7 @@ function TarefasPage() {
     <div className="space-y-4">
       <CabecalhoPagina
         titulo="Tarefas"
-        descricao="Lista e calendário por responsável. As automáticas nascem das cadências (mudança de etapa, pós-venda, renovação, lead aquecido)."
+        descricao="Por responsável, em lista ou calendário. As automáticas (ícone de robô) nascem das cadências de cada etapa."
         acoes={
           <>
             <BotaoCsv
@@ -193,42 +138,72 @@ function TarefasPage() {
               ]}
             />
             <Button size="sm" className="h-9" onClick={() => setNova(hoje)}>
-              <Plus className="mr-1.5 h-4 w-4" /> Nova tarefa
+              <Plus className="h-4 w-4" /> Nova tarefa
             </Button>
           </>
         }
       />
 
-      <div className="grid gap-2 sm:grid-cols-[2fr_1fr_auto_auto]">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Filtrar tarefas"
-          className="h-10"
-        />
-        <MembroSelect valor={responsavel} onChange={setResponsavel} incluirTodos />
-        <label className="flex items-center gap-2 text-sm">
-          <Switch checked={incluirFeitas} onCheckedChange={setIncluirFeitas} /> Mostrar feitas
-        </label>
-        <div className="flex rounded-md border">
-          <Button
-            variant={modo === "lista" ? "secondary" : "ghost"}
-            className="h-10 rounded-r-none"
-            onClick={() => setModo("lista")}
-            aria-label="Lista"
+      {/* Filtros numa linha só: busca, responsável, feitas e modo. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex h-10 min-w-0 flex-[1_1_220px] items-center gap-2 rounded-lg border bg-card px-3 shadow-[0_1px_2px_rgb(16_24_40/0.04)] focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar tarefa, empresa ou pessoa"
+            aria-label="Buscar tarefas"
+            className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+        <div className="flex flex-[1_1_auto] items-center gap-2 sm:flex-none">
+          <MembroSelect
+            valor={responsavel}
+            onChange={setResponsavel}
+            incluirTodos
+            className="h-10 min-w-0 flex-1 sm:w-48 sm:flex-none"
+          />
+          <label
+            className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 text-[13px] font-medium shadow-[0_1px_2px_rgb(16_24_40/0.04)]"
+            title="Mostrar tarefas feitas"
           >
-            <List className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={modo === "calendario" ? "secondary" : "ghost"}
-            className="h-10 rounded-l-none"
-            onClick={() => setModo("calendario")}
-            aria-label="Calendário"
-          >
-            <CalendarDays className="h-4 w-4" />
-          </Button>
+            <Switch checked={incluirFeitas} onCheckedChange={setIncluirFeitas} />
+            Feitas
+          </label>
+          <Alternador
+            valor={modo}
+            onChange={setModo}
+            opcoes={[
+              { valor: "lista", icone: List, titulo: "Lista" },
+              { valor: "calendario", icone: CalendarDays, titulo: "Calendário" },
+            ]}
+          />
         </div>
       </div>
+
+      {modo === "lista" && !isLoading && !error ? (
+        <div className="grid grid-cols-4 gap-2">
+          {(
+            [
+              ["atrasadas", "Atrasadas", "text-destructive"],
+              ["hoje", "Hoje", "text-primary"],
+              ["semana", "7 dias", ""],
+              ["depois", "Depois", ""],
+            ] as const
+          ).map(([k, r, cor]) => (
+            <a
+              key={k}
+              href={`#tarefas-${k}`}
+              className="rounded-xl border bg-card px-3 py-2.5 shadow-[var(--shadow-card)] transition hover:border-primary/40"
+            >
+              <span className="block text-[11.5px] font-medium text-muted-foreground">{r}</span>
+              <span className={cn("tabular text-xl font-semibold", grupos[k].length && cor)}>
+                {grupos[k].length}
+              </span>
+            </a>
+          ))}
+        </div>
+      ) : null}
 
       {isLoading ? (
         <Carregando />
@@ -249,18 +224,26 @@ function TarefasPage() {
               grupos[k].length ? (
                 <section
                   key={k}
-                  className={cn(
-                    "rounded-xl border bg-card shadow-[var(--shadow-card)] px-4",
-                    k === "atrasadas" && "border-destructive/40",
-                  )}
+                  id={`tarefas-${k}`}
+                  className="scroll-mt-20 overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]"
                 >
-                  <h2
-                    className={cn(
-                      "border-b py-2.5 text-sm font-bold",
-                      k === "atrasadas" && "text-destructive",
-                    )}
-                  >
-                    {titulo} <span className="text-primary">({grupos[k].length})</span>
+                  <h2 className="flex items-center gap-2 border-b bg-[#f8f9fb] px-4 py-2.5 text-[13px] font-semibold sm:px-5">
+                    <span
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        k === "atrasadas"
+                          ? "bg-destructive"
+                          : k === "hoje"
+                            ? "bg-primary"
+                            : k === "feitas"
+                              ? "bg-emerald-500"
+                              : "bg-slate-300",
+                      )}
+                    />
+                    {titulo}
+                    <span className="tabular rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground ring-1 ring-border">
+                      {grupos[k].length}
+                    </span>
                   </h2>
                   <ul className="divide-y">{grupos[k].map(item)}</ul>
                 </section>

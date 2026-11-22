@@ -34,7 +34,7 @@ import {
 import logo from "@/assets/ianews-logo-white.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { buscarCrm } from "@/lib/crm/core.functions";
 import { fmtDia } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
@@ -434,55 +434,65 @@ function MenuCelular({ aberto, onFechar }: { aberto: boolean; onFechar: () => vo
     <Sheet open={aberto} onOpenChange={(v) => !v && onFechar()}>
       <SheetContent
         side="bottom"
+        semFechar
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="max-h-[88dvh] overflow-y-auto bg-background px-4 pt-3 lg:hidden"
+        className="flex max-h-[88dvh] flex-col gap-0 bg-background p-0 lg:hidden"
       >
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
-        <SheetTitle className="sr-only">Menu do CRM</SheetTitle>
-        <div className="mb-4 flex items-center gap-3 rounded-xl border bg-card p-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-            {iniciais(nome)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{nome}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {papeis
-                .filter((p) => p !== "reader")
-                .map((p) => PAPEL_NOME[p] ?? p)
-                .join(" · ") || email}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={sair}>
-            <LogOut className="h-4 w-4" /> Sair
-          </Button>
+        <div className="flex items-center justify-between border-b bg-card px-4 py-3">
+          <SheetTitle className="text-base font-semibold">Menu</SheetTitle>
+          <SheetClose
+            aria-label="Fechar menu"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground transition active:scale-95"
+          >
+            <X className="h-4 w-4" />
+          </SheetClose>
         </div>
-        <div className="space-y-4">
-          {grupos.map((g) => (
-            <div key={g.titulo}>
-              <p className="px-1 pb-2 text-xs font-semibold text-muted-foreground">{g.titulo}</p>
-              <div className="grid grid-cols-3 gap-2">
-                {g.itens.map((i) => {
-                  const on = ativo(i);
-                  return (
-                    <Link
-                      key={i.to}
-                      to={i.to}
-                      onClick={onFechar}
-                      className={cn(
-                        "flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-3 text-center text-[12px] font-medium leading-tight transition active:scale-[0.98]",
-                        on && "border-primary/40 bg-primary/[0.06] text-primary",
-                      )}
-                    >
-                      <i.icone
-                        className={cn("h-5 w-5", on ? "text-primary" : "text-foreground/70")}
-                      />
-                      {i.rotulo}
-                    </Link>
-                  );
-                })}
-              </div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
+          <div className="mb-4 flex items-center gap-3 rounded-xl border bg-card p-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+              {iniciais(nome)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{nome}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {papeis
+                  .filter((p) => p !== "reader")
+                  .map((p) => PAPEL_NOME[p] ?? p)
+                  .join(" · ") || email}
+              </p>
             </div>
-          ))}
+            <Button variant="outline" size="sm" onClick={sair}>
+              <LogOut className="h-4 w-4" /> Sair
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {grupos.map((g) => (
+              <div key={g.titulo}>
+                <p className="px-1 pb-2 text-xs font-semibold text-muted-foreground">{g.titulo}</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {g.itens.map((i) => {
+                    const on = ativo(i);
+                    return (
+                      <Link
+                        key={i.to}
+                        to={i.to}
+                        onClick={onFechar}
+                        className={cn(
+                          "flex min-h-[68px] flex-col items-center justify-center gap-1.5 rounded-xl border bg-card px-1 py-2.5 text-center text-[11px] font-medium leading-tight transition active:scale-[0.98]",
+                          on && "border-primary/40 bg-primary/[0.06] text-primary",
+                        )}
+                      >
+                        <i.icone
+                          className={cn("h-5 w-5", on ? "text-primary" : "text-foreground/70")}
+                        />
+                        {i.rotulo}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

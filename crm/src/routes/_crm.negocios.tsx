@@ -2,7 +2,16 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LayoutGrid, List, Plus } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  KanbanSquare,
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { z } from "zod";
 
 import { useCrm } from "@/components/crm/context";
@@ -13,18 +22,21 @@ import {
   useMoverEtapa,
 } from "@/components/crm/negocio";
 import { MembroSelect } from "@/components/crm/pickers";
-import { FiltroTags, TagChip } from "@/components/crm/tags";
+import { ListaTags } from "@/components/crm/tags";
 import {
+  Alternador,
   BotaoCsv,
   CabecalhoPagina,
+  Campo,
   Carregando,
+  ChipFiltro,
   Erro,
+  FaixaNumeros,
   GrupoBadge,
-  Numero,
   Vazio,
 } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -32,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import type { NegocioCompleto } from "@/lib/crm/carregar";
 import { listNegocios } from "@/lib/crm/negocios.functions";
 import type { CrmFunilId } from "@/lib/crm/types";
@@ -136,15 +148,20 @@ function NegociosPage() {
     return c;
   }, [data]);
 
-  const filtrosAtivos =
-    !!modalidade ||
-    tagsFiltro.length > 0 ||
-    !!dono ||
-    grupo !== "todos" ||
-    origem !== "todas" ||
-    tipo !== "todos" ||
-    soAtrasados ||
-    !!q.trim();
+  const qtdFiltros =
+    (modalidade ? 1 : 0) +
+    tagsFiltro.length +
+    (dono ? 1 : 0) +
+    (grupo !== "todos" ? 1 : 0) +
+    (origem !== "todas" ? 1 : 0) +
+    (tipo !== "todos" ? 1 : 0) +
+    (soAtrasados ? 1 : 0);
+  const filtrosAtivos = qtdFiltros > 0;
+  const contagemTags = useMemo(() => {
+    const c = new Map<string, number>();
+    for (const n of data ?? []) for (const t of n.tags ?? []) c.set(t, (c.get(t) ?? 0) + 1);
+    return c;
+  }, [data]);
   const limparFiltros = () => {
     setQ("");
     setDono(null);
@@ -176,7 +193,7 @@ function NegociosPage() {
     <div className="space-y-4">
       <CabecalhoPagina
         titulo="Negócios"
-        descricao="Arraste o cartão para mudar a etapa: o CRM registra a mudança e cria a tarefa da etapa. Cartão vermelho = sem ação ou ação vencida."
+        descricao="Arraste o cartão para mudar de etapa. Borda vermelha: sem próxima ação ou ação vencida."
         acoes={
           <>
             <BotaoCsv
@@ -216,162 +233,204 @@ function NegociosPage() {
               ]}
             />
             <Button size="sm" className="h-9" onClick={() => setNovo(true)}>
-              <Plus className="mr-1.5 h-4 w-4" /> Novo negócio
+              <Plus className="h-4 w-4" /> Novo negócio
             </Button>
           </>
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex w-full flex-wrap gap-1.5" aria-label="Verticais">
-          {verticais.map((v) => (
-            <button
-              key={v.nome}
-              type="button"
-              onClick={() =>
-                navigate({
-                  search: {
-                    funil: v.funis[0].id,
-                    modalidade: search.modalidade,
-                    tags: search.tags,
-                  },
-                })
-              }
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                v.nome === verticalAtual
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground",
-              )}
+      {/* Barra única: funil, busca, filtros e modo de visualização. */}
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <SeletorFunil
+          verticais={verticais}
+          funil={funil}
+          onEscolher={(id) =>
+            navigate({ search: { funil: id, modalidade: search.modalidade, tags: search.tags } })
+          }
+        />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border bg-card px-3 shadow-[0_1px_2px_rgb(16_24_40/0.04)] focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar empresa, pessoa ou título"
+              aria-label="Buscar negócios"
+              className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 shrink-0 px-3">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Filtros</span>
+                {qtdFiltros ? (
+                  <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-white">
+                    {qtdFiltros}
+                  </span>
+                ) : null}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="max-h-[78vh] w-[min(94vw,380px)] overflow-y-auto p-4"
             >
-              {v.nome} <span className="opacity-70">· {v.funis.length}</span>
-            </button>
+              <div className="space-y-3">
+                <Campo rotulo="Modalidade">
+                  <Alternador
+                    className="w-full [&>button]:flex-1 [&>button]:justify-center"
+                    valor={modalidade ?? "todos"}
+                    onChange={(v) =>
+                      navigate({
+                        search: (s) => ({
+                          ...s,
+                          modalidade: v === "todos" ? undefined : (v as Modalidade),
+                        }),
+                        replace: true,
+                      })
+                    }
+                    opcoes={[
+                      { valor: "todos", rotulo: `Todos ${fmtNum((data ?? []).length)}` },
+                      { valor: "paga", rotulo: `Pagos ${fmtNum(porModalidade.paga)}` },
+                      { valor: "cortesia", rotulo: `Cortesia ${fmtNum(porModalidade.cortesia)}` },
+                    ]}
+                  />
+                </Campo>
+                <div className="grid grid-cols-2 gap-3">
+                  <Campo rotulo="Dono">
+                    <MembroSelect valor={dono} onChange={setDono} incluirTodos placeholder="Dono" />
+                  </Campo>
+                  <Campo rotulo="Grupo">
+                    <Select value={grupo} onValueChange={setGrupo}>
+                      <SelectTrigger className="h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos</SelectItem>
+                        <SelectItem value="A">Grupo A</SelectItem>
+                        <SelectItem value="B">Grupo B</SelectItem>
+                        <SelectItem value="C">Grupo C</SelectItem>
+                        <SelectItem value="sem">Sem empresa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Campo rotulo="Origem">
+                    <Select value={origem} onValueChange={setOrigem}>
+                      <SelectTrigger className="h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todas">Todas</SelectItem>
+                        {ORIGENS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Campo rotulo="Tipo">
+                    <Select value={tipo} onValueChange={setTipo}>
+                      <SelectTrigger className="h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos</SelectItem>
+                        {TIPOS_NEGOCIO.filter((t) => !t.funil || t.funil === funil).map((t) => (
+                          <SelectItem key={t.value} value={t.value}>
+                            {t.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                </div>
+                <label className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm">
+                  <span>
+                    <span className="font-medium">Só atrasados</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Sem próxima ação ou com a ação vencida
+                    </span>
+                  </span>
+                  <Switch checked={soAtrasados} onCheckedChange={setSoAtrasados} />
+                </label>
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold">Tags</p>
+                  <ListaTags
+                    selecionadas={tagsFiltro}
+                    contagem={contagemTags}
+                    onAlternar={(id) =>
+                      setTagsFiltro(
+                        tagsFiltro.includes(id)
+                          ? tagsFiltro.filter((x) => x !== id)
+                          : [...tagsFiltro, id],
+                      )
+                    }
+                  />
+                </div>
+                {filtrosAtivos ? (
+                  <Button variant="ghost" className="w-full text-primary" onClick={limparFiltros}>
+                    Limpar todos os filtros
+                  </Button>
+                ) : null}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Alternador
+            valor={modo}
+            onChange={setModo}
+            opcoes={[
+              { valor: "kanban", icone: LayoutGrid, titulo: "Quadro" },
+              { valor: "lista", icone: List, titulo: "Lista" },
+            ]}
+          />
+        </div>
+      </div>
+
+      {filtrosAtivos ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {modalidade ? (
+            <ChipFiltro
+              onTirar={() =>
+                navigate({ search: (s) => ({ ...s, modalidade: undefined }), replace: true })
+              }
+            >
+              {modalidade === "paga" ? "Pagos" : "Cortesia"}
+            </ChipFiltro>
+          ) : null}
+          {dono ? (
+            <ChipFiltro onTirar={() => setDono(null)}>Dono: {membro(dono)}</ChipFiltro>
+          ) : null}
+          {grupo !== "todos" ? (
+            <ChipFiltro onTirar={() => setGrupo("todos")}>
+              {grupo === "sem" ? "Sem empresa" : `Grupo ${grupo}`}
+            </ChipFiltro>
+          ) : null}
+          {origem !== "todas" ? (
+            <ChipFiltro onTirar={() => setOrigem("todas")}>{labelDe(ORIGENS, origem)}</ChipFiltro>
+          ) : null}
+          {tipo !== "todos" ? (
+            <ChipFiltro onTirar={() => setTipo("todos")}>{labelDe(TIPOS_NEGOCIO, tipo)}</ChipFiltro>
+          ) : null}
+          {soAtrasados ? (
+            <ChipFiltro onTirar={() => setSoAtrasados(false)}>Só atrasados</ChipFiltro>
+          ) : null}
+          {tagsFiltro.map((id) => (
+            <ChipFiltro key={id} onTirar={() => setTagsFiltro(tagsFiltro.filter((x) => x !== id))}>
+              {tag(id)?.nome ?? "Tag"}
+            </ChipFiltro>
           ))}
-        </div>
-        <Tabs
-          value={funil}
-          onValueChange={(v) =>
-            navigate({
-              search: { funil: v as CrmFunilId, modalidade: search.modalidade, tags: search.tags },
-            })
-          }
-        >
-          <TabsList className="h-10 w-full justify-start overflow-x-auto sm:w-auto">
-            {(
-              verticais.find((v) => v.nome === verticalAtual)?.funis ?? funis.filter((f) => f.ativo)
-            ).map((f) => (
-              <TabsTrigger key={f.id} value={f.id}>
-                {f.nome}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <Tabs
-          value={modalidade ?? "todos"}
-          onValueChange={(v) =>
-            navigate({
-              search: (s) => ({ ...s, modalidade: v === "todos" ? undefined : (v as Modalidade) }),
-              replace: true,
-            })
-          }
-        >
-          <TabsList className="h-10" aria-label="Pagos ou cortesia">
-            <TabsTrigger value="todos">Todos ({fmtNum((data ?? []).length)})</TabsTrigger>
-            <TabsTrigger value="paga">Pagos ({fmtNum(porModalidade.paga)})</TabsTrigger>
-            <TabsTrigger value="cortesia">Cortesia ({fmtNum(porModalidade.cortesia)})</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_0.7fr_1fr_1fr_auto_auto_auto]">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Filtrar por empresa, pessoa ou título"
-          className="h-10"
-        />
-        <MembroSelect valor={dono} onChange={setDono} incluirTodos placeholder="Dono" />
-        <Select value={grupo} onValueChange={setGrupo}>
-          <SelectTrigger className="h-10">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os grupos</SelectItem>
-            <SelectItem value="A">Grupo A</SelectItem>
-            <SelectItem value="B">Grupo B</SelectItem>
-            <SelectItem value="C">Grupo C</SelectItem>
-            <SelectItem value="sem">Sem empresa</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={origem} onValueChange={setOrigem}>
-          <SelectTrigger className="h-10">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as origens</SelectItem>
-            {ORIGENS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={tipo} onValueChange={setTipo}>
-          <SelectTrigger className="h-10">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os tipos</SelectItem>
-            {TIPOS_NEGOCIO.filter((t) => !t.funil || t.funil === funil).map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <FiltroTags selecionadas={tagsFiltro} onChange={setTagsFiltro} />
-        <Button
-          variant={soAtrasados ? "default" : "outline"}
-          className="h-10"
-          onClick={() => setSoAtrasados((v) => !v)}
-        >
-          Atrasados
-        </Button>
-        <div className="flex rounded-md border">
-          <Button
-            variant={modo === "kanban" ? "secondary" : "ghost"}
-            className="h-10 rounded-r-none"
-            onClick={() => setModo("kanban")}
-            aria-label="Kanban"
+          <button
+            type="button"
+            onClick={limparFiltros}
+            className="ml-1 text-xs font-semibold text-primary hover:underline"
           >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={modo === "lista" ? "secondary" : "ghost"}
-            className="h-10 rounded-l-none"
-            onClick={() => setModo("lista")}
-            aria-label="Lista"
-          >
-            <List className="h-4 w-4" />
-          </Button>
+            Limpar
+          </button>
         </div>
-      </div>
-
-      {data ? (
-        <IndicadoresFunil
-          lista={filtrados}
-          etapas={etapas}
-          modalidade={modalidade}
-          filtrosAtivos={filtrosAtivos}
-          onLimpar={limparFiltros}
-          tagsFiltro={tagsFiltro}
-          onTag={(id) =>
-            setTagsFiltro(
-              tagsFiltro.includes(id) ? tagsFiltro.filter((x) => x !== id) : [...tagsFiltro, id],
-            )
-          }
-        />
       ) : null}
+
+      {data ? <IndicadoresFunil lista={filtrados} etapas={etapas} modalidade={modalidade} /> : null}
 
       {isLoading ? (
         <Carregando />
@@ -512,31 +571,17 @@ function NegociosPage() {
   );
 }
 
-/** Indicadores do que está na tela: mudam junto com o funil, o seletor Pagos/Cortesia e os filtros. */
+/** Indicadores do que está na tela: um painel só, com os números e a distribuição por etapa. */
 function IndicadoresFunil({
   lista,
   etapas,
   modalidade,
-  filtrosAtivos,
-  onLimpar,
-  tagsFiltro,
-  onTag,
 }: {
-  tagsFiltro: string[];
-  onTag: (id: string) => void;
   lista: NegocioCompleto[];
   etapas: { id: string; nome: string; tipo: string }[];
   modalidade?: Modalidade;
-  filtrosAtivos: boolean;
-  onLimpar: () => void;
 }) {
   const [foco, setFoco] = useState<string | null>(null);
-  const { tagsAtivas } = useCrm();
-  const contagemTags = useMemo(() => {
-    const c = new Map<string, number>();
-    for (const n of lista) for (const t of n.tags ?? []) c.set(t, (c.get(t) ?? 0) + 1);
-    return c;
-  }, [lista]);
   const r = useMemo(() => {
     const abertos = lista.filter((n) => n.etapa_tipo === "aberta");
     const ganhos = lista.filter((n) => n.etapa_tipo === "ganha");
@@ -572,79 +617,60 @@ function IndicadoresFunil({
     // Etapas de recuperação ficam com cor própria para não se confundirem com o caminho principal.
     if (e.nome === "Remarketing") return "bg-violet-500";
     if (e.nome === "Sem resposta") return "bg-amber-400";
-    if (e.tipo === "perdida") return "bg-muted-foreground/40";
+    if (e.tipo === "perdida") return "bg-slate-300";
     const i = abertas.findIndex((x) => x.id === e.id);
     const opacidades = ["opacity-40", "opacity-55", "opacity-70", "opacity-85", "opacity-100"];
     return `bg-primary ${opacidades[Math.min(opacidades.length - 1, Math.max(0, i))]}`;
   };
   const destaque = segmentos.find((e) => e.id === foco);
 
+  const numeros: { rotulo: string; valor: string; detalhe?: string; alerta?: boolean }[] = [
+    {
+      rotulo: "Em aberto",
+      valor: fmtNum(r.abertos),
+      detalhe: cortesia ? "em andamento" : dinheiro(r.valorAberto),
+    },
+    {
+      rotulo: cortesia ? "Publicados" : "Ganhos",
+      valor: fmtNum(r.ganhos),
+      detalhe: cortesia ? undefined : dinheiro(r.valorGanho),
+    },
+    { rotulo: "Perdidos", valor: fmtNum(r.perdidos) },
+    {
+      rotulo: "Conversão",
+      valor: r.conversao == null ? "—" : `${r.conversao}%`,
+      detalhe: "ganhos ÷ fechados",
+    },
+    cortesia
+      ? { rotulo: "Empresas", valor: fmtNum(r.empresas), detalhe: "em cortesia" }
+      : {
+          rotulo: "Recebido",
+          valor: dinheiro(r.recebido),
+          detalhe: r.ticket ? `ticket ${fmtMoeda(r.ticket)}` : undefined,
+        },
+    {
+      rotulo: "Precisam de ação",
+      valor: fmtNum(r.atencao),
+      detalhe: "sem ação ou atrasados",
+      alerta: r.atencao > 0,
+    },
+  ];
+
   return (
-    <section className="space-y-3" aria-label="Indicadores do funil">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span>
-          {fmtNum(lista.length)} negócio(s){" "}
-          {modalidade ? (cortesia ? "de cortesia" : "pagos") : "pagos e cortesia"}
-          {filtrosAtivos ? " com os filtros aplicados" : ""}
-        </span>
-        {filtrosAtivos ? (
-          <button
-            type="button"
-            className="font-semibold text-primary hover:underline"
-            onClick={onLimpar}
-          >
-            Limpar filtros
-          </button>
-        ) : null}
-      </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Numero
-          rotulo="Em aberto"
-          valor={fmtNum(r.abertos)}
-          detalhe={cortesia ? "em andamento" : `${dinheiro(r.valorAberto)} em negociação`}
-          destaque="azul"
-        />
-        <Numero
-          rotulo={cortesia ? "Publicados / fechados" : "Ganhos"}
-          valor={fmtNum(r.ganhos)}
-          detalhe={cortesia ? undefined : dinheiro(r.valorGanho)}
-        />
-        <Numero rotulo="Perdidos" valor={fmtNum(r.perdidos)} />
-        <Numero
-          rotulo="Conversão"
-          valor={r.conversao == null ? "—" : `${r.conversao}%`}
-          detalhe="ganhos ÷ fechados"
-        />
-        {cortesia ? (
-          <Numero rotulo="Empresas" valor={fmtNum(r.empresas)} detalhe="atendidas em cortesia" />
-        ) : (
-          <Numero
-            rotulo="Recebido"
-            valor={dinheiro(r.recebido)}
-            detalhe={r.ticket ? `ticket médio ${fmtMoeda(r.ticket)}` : undefined}
-          />
-        )}
-        <Numero
-          rotulo="Precisam de ação"
-          valor={fmtNum(r.atencao)}
-          detalhe="sem próxima ação ou atrasados"
-          destaque={r.atencao ? "alerta" : undefined}
-        />
-      </div>
+    <FaixaNumeros
+      itens={numeros.map((x) => ({ ...x, tom: x.alerta ? ("alerta" as const) : undefined }))}
+    >
       {total ? (
-        <figure
-          className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-3"
-          onMouseLeave={() => setFoco(null)}
-        >
-          <figcaption className="mb-2 flex justify-between text-xs text-muted-foreground">
-            <span>Distribuição por etapa</span>
-            <span className="font-medium text-foreground">
+        <figure className="border-t px-3 py-3 sm:px-4" onMouseLeave={() => setFoco(null)}>
+          <figcaption className="mb-2 flex justify-between gap-2 text-[11.5px] text-muted-foreground">
+            <span>{fmtNum(lista.length)} negócios por etapa</span>
+            <span className="truncate font-medium text-foreground">
               {destaque
                 ? `${destaque.nome}: ${fmtNum(destaque.qtd)} (${Math.round((destaque.qtd / total) * 100)}%)`
-                : "passe o mouse para ver cada etapa"}
+                : null}
             </span>
           </figcaption>
-          <div className="flex h-3 w-full gap-[2px] overflow-hidden rounded-full">
+          <div className="flex h-2.5 w-full gap-[2px] overflow-hidden rounded-full">
             {segmentos.map((e) => (
               <div
                 key={e.id}
@@ -659,7 +685,7 @@ function IndicadoresFunil({
               />
             ))}
           </div>
-          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+          <ul className="mt-2.5 hidden flex-wrap gap-x-3.5 gap-y-1 text-[11px] text-muted-foreground sm:flex">
             {segmentos.map((e) => (
               <li
                 key={e.id}
@@ -667,27 +693,93 @@ function IndicadoresFunil({
                 onMouseEnter={() => setFoco(e.id)}
               >
                 <span className={cn("h-2 w-2 rounded-full", tom(e))} />
-                {e.nome} <span className="font-semibold text-foreground">{fmtNum(e.qtd)}</span>
+                {e.nome}{" "}
+                <span className="tabular font-semibold text-foreground">{fmtNum(e.qtd)}</span>
               </li>
             ))}
           </ul>
         </figure>
       ) : null}
-      {tagsAtivas.length ? (
-        <div className="flex flex-wrap items-center gap-1.5 rounded-xl border bg-card shadow-[var(--shadow-card)] p-3">
-          <span className="mr-1 text-xs text-muted-foreground">Tags neste recorte:</span>
-          {tagsAtivas.map((t) => (
-            <TagChip
-              key={t.id}
-              tag={t}
-              ativa={tagsFiltro.includes(t.id) || (contagemTags.get(t.id) ?? 0) > 0}
-              selecionada={tagsFiltro.includes(t.id)}
-              sufixo={` ${fmtNum(contagemTags.get(t.id) ?? 0)}`}
-              onClick={() => onTag(t.id)}
-            />
-          ))}
-        </div>
-      ) : null}
-    </section>
+    </FaixaNumeros>
+  );
+}
+
+/** Escolha do funil: um botão com o funil atual que abre a lista por vertical. */
+function SeletorFunil({
+  verticais,
+  funil,
+  onEscolher,
+}: {
+  verticais: {
+    nome: string;
+    funis: { id: CrmFunilId; nome: string; descricao: string | null }[];
+  }[];
+  funil: CrmFunilId;
+  onEscolher: (id: CrmFunilId) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const atual = verticais.flatMap((v) => v.funis.map((f) => ({ ...f, vertical: v.nome })));
+  const f = atual.find((x) => x.id === funil);
+  return (
+    <Popover open={aberto} onOpenChange={setAberto}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex h-10 min-w-0 items-center gap-2.5 rounded-lg border bg-card px-3 text-left shadow-[0_1px_2px_rgb(16_24_40/0.04)] transition hover:border-primary/40 lg:w-72"
+        >
+          <KanbanSquare className="h-4 w-4 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block truncate text-[11px] text-muted-foreground">
+              {f?.vertical ?? "Funil"}
+            </span>
+            <span className="block truncate text-[13px] font-semibold">{f?.nome ?? funil}</span>
+          </span>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="max-h-[70vh] w-[min(94vw,340px)] overflow-y-auto p-1.5"
+      >
+        {verticais.map((v) => (
+          <div key={v.nome} className="py-1">
+            <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-semibold text-muted-foreground">
+              {v.nome}
+            </p>
+            {v.funis.map((x) => (
+              <button
+                key={x.id}
+                type="button"
+                onClick={() => {
+                  setAberto(false);
+                  onEscolher(x.id);
+                }}
+                className={cn(
+                  "flex w-full items-start gap-2 rounded-md px-2.5 py-2 text-left hover:bg-muted",
+                  x.id === funil && "bg-primary/[0.07]",
+                )}
+              >
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={cn(
+                      "block text-[13px] font-medium",
+                      x.id === funil && "text-primary",
+                    )}
+                  >
+                    {x.nome}
+                  </span>
+                  {x.descricao ? (
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {x.descricao}
+                    </span>
+                  ) : null}
+                </span>
+                {x.id === funil ? <Check className="mt-0.5 h-4 w-4 text-primary" /> : null}
+              </button>
+            ))}
+          </div>
+        ))}
+      </PopoverContent>
+    </Popover>
   );
 }

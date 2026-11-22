@@ -99,7 +99,7 @@ function PessoasPage() {
               ]}
             />
             <Button size="sm" className="h-9" onClick={() => setNova(true)}>
-              <Plus className="mr-1.5 h-4 w-4" /> Nova pessoa
+              <Plus className="h-4 w-4" /> Nova pessoa
             </Button>
           </>
         }

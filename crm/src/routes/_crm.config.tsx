@@ -392,7 +392,7 @@ function Modelos() {
           3ª mensagem; reativação só pergunta se ainda há interesse.
         </p>
         <Button size="sm" onClick={() => setEditar({ ativo: true, ordem: 200, canal: "direct" })}>
-          <Plus className="mr-1.5 h-4 w-4" /> Modelo
+          <Plus className="h-4 w-4" /> Modelo
         </Button>
       </div>
       {data?.length ? (

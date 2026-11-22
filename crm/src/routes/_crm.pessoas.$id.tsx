@@ -145,26 +145,26 @@ function FichaPessoaPage() {
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <Button size="sm" className="h-9" onClick={() => setMensagem(true)}>
-            <MessageCircle className="mr-1.5 h-4 w-4" /> Copiar mensagem
+            <MessageCircle className="h-4 w-4" /> Copiar mensagem
           </Button>
           {wa ? (
             <Button size="sm" variant="outline" className="h-9" asChild>
               <a href={wa} target="_blank" rel="noreferrer noopener">
-                <ExternalLink className="mr-1.5 h-4 w-4" /> Abrir WhatsApp
+                <ExternalLink className="h-4 w-4" /> Abrir WhatsApp
               </a>
             </Button>
           ) : null}
           <Button size="sm" variant="outline" className="h-9" onClick={() => setAtividade(true)}>
-            <NotebookPen className="mr-1.5 h-4 w-4" /> Registrar conversa
+            <NotebookPen className="h-4 w-4" /> Registrar conversa
           </Button>
           <Button size="sm" variant="outline" className="h-9" onClick={() => setNovoNegocio(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Negócio
+            <Plus className="h-4 w-4" /> Negócio
           </Button>
           <Button size="sm" variant="outline" className="h-9" onClick={() => setTarefa(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Tarefa
+            <Plus className="h-4 w-4" /> Tarefa
           </Button>
           <Button size="sm" variant="outline" className="h-9" onClick={() => setEditar(true)}>
-            <Pencil className="mr-1.5 h-4 w-4" /> Editar
+            <Pencil className="h-4 w-4" /> Editar
           </Button>
         </div>
       </div>

@@ -131,10 +131,10 @@ function PublicidadePage() {
               className="h-9"
               onClick={() => setNovoNegocio(true)}
             >
-              <Plus className="mr-1.5 h-4 w-4" /> Anunciante / negócio
+              <Plus className="h-4 w-4" /> Anunciante / negócio
             </Button>
             <Button size="sm" className="h-9" onClick={() => setCampanha({ status: "planejada" })}>
-              <Plus className="mr-1.5 h-4 w-4" /> Campanha
+              <Plus className="h-4 w-4" /> Campanha
             </Button>
           </>
         }
