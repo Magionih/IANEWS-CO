@@ -19,10 +19,10 @@ import {
 import { FGIA_DIRECT_URL, FGIA_PAGAMENTO_URL, FGIA_SITE } from "@/lib/fgia";
 
 /* Checkout da FGIA Educação para o Palco IA News Online (fgiaeducacao.com.br/ingresso).
-   1. Seus dados: nome, WhatsApp e e-mail.
-   2. Sua empresa (qualificação antes do pagamento): empresa, cargo, perfil, segmento, funcionários, faturamento e o
-      que quer resolver com IA. Tudo vai para /api/public/palco (qualificacao "fgia"): a inscrição entra no CRM pelo
-      gatilho do banco e a qualificação vira uma nota no negócio, com o faturamento no porte da empresa.
+   1. Seus dados: nome, WhatsApp e e-mail. Já grava a inscrição em /api/public/palco (checkout "fgia"): o lead entra
+      no CRM e recebe o link do pedido mesmo se parar aqui.
+   2. Sua empresa (opcional, dá para pular): empresa, cargo, perfil, segmento, funcionários, faturamento e o que quer
+      resolver com IA. Vai de novo para /api/public/palco (qualificacao "fgia") e vira uma nota no negócio.
    3. Pagamento: /api/public/palco-checkout cria a cobrança no Asaas. Pix aparece aqui mesmo (QR e copia e cola) e a
       vaga é confirmada sozinha; cartão e boleto seguem para a fatura segura do Asaas.
    4. Ingresso confirmado.
@@ -135,6 +135,7 @@ function FgiaCheckout() {
   const [passo, setPasso] = useState<"dados" | "empresa">("dados");
   const [faturamento, setFaturamento] = useState("");
   const [qErrors, setQErrors] = useState<QualificacaoErrors>({});
+  const [salvo, setSalvo] = useState<{ id: string; token: string } | null>(null);
 
   // Etapa 2: pagamento
   const [pedido, setPedido] = useState<Pedido | null>(null);
@@ -206,9 +207,34 @@ function FgiaCheckout() {
     desafio: form.desafio,
   });
 
-  // Etapa 1 → 2: só confere nome, WhatsApp e e-mail; nada é gravado ainda.
-  function avancar(e: FormEvent) {
+  const enviarPalco = (extra: Record<string, unknown>) =>
+    fetch("/api/public/palco", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        ...form,
+        ...extra,
+        checkout: "fgia",
+        consentimento: true,
+        empresa_site: hp.current?.value ?? "",
+        origem_path: "fgiaeducacao.com.br/ingresso",
+        utm_source: search.utm_source ?? "fgiaeducacao",
+        utm_medium: search.utm_medium ?? "checkout",
+        utm_campaign: search.utm_campaign ?? "palco-online",
+        meta: metaCtx(),
+      }),
+    });
+
+  function irParaPagamento(id: string, token: string) {
+    navigate({ to: "/ingresso", search: (prev: Search) => ({ ...prev, i: id, t: token }), replace: true });
+    topo.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  // Etapa 1: grava a inscrição já com nome, WhatsApp e e-mail (o lead não se perde se a pessoa parar aqui).
+  async function avancar(e: FormEvent) {
     e.preventDefault();
+    if (salvando) return;
+    setFalhaDados(null);
     const { errors: found } = validatePalco(form);
     const first = (["nome", "whatsapp", "email"] as const).find((k) => found[k]);
     if (first) {
@@ -217,15 +243,42 @@ function FgiaCheckout() {
       return;
     }
     setErrors({});
-    setPasso("empresa");
-    pixel("ViewContent", { ...PALCO_PIXEL, content_type: "qualificacao" });
-    topo.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    setSalvando(true);
+    try {
+      const res = await enviarPalco({});
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        pago?: boolean;
+        error?: string;
+        errors?: PalcoErrors;
+        id?: string;
+        token?: string;
+      };
+      if (res.ok && json.ok && json.id && json.token) {
+        pixel("Lead", PALCO_PIXEL, `lead-${json.id}`);
+        if (json.pago) {
+          irParaPagamento(json.id, json.token);
+          return;
+        }
+        setSalvo({ id: json.id, token: json.token });
+        setPasso("empresa");
+        pixel("ViewContent", { ...PALCO_PIXEL, content_type: "qualificacao" });
+        topo.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        return;
+      }
+      if (json.errors) setErrors(json.errors);
+      setFalhaDados(json.error ?? (json.errors ? "Confira os campos destacados." : "Não conseguimos guardar seus dados agora. Tente de novo em instantes."));
+    } catch {
+      setFalhaDados("Sem conexão agora. Confira a internet e tente de novo.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
+  // Etapa 2 (opcional): a qualificação vira nota no CRM e segue para o pagamento, mesmo se a gravação falhar.
   async function salvarDados(e: FormEvent) {
     e.preventDefault();
-    if (salvando) return;
-    setFalhaDados(null);
+    if (salvando || !salvo) return;
     const found = validateQualificacao(qualificacao());
     if (Object.keys(found).length) {
       setQErrors(found);
@@ -235,46 +288,13 @@ function FgiaCheckout() {
     }
     setSalvando(true);
     try {
-      const res = await fetch("/api/public/palco", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          faturamento,
-          qualificacao: "fgia",
-          consentimento: true,
-          empresa_site: hp.current?.value ?? "",
-          origem_path: "fgiaeducacao.com.br/ingresso",
-          utm_source: search.utm_source ?? "fgiaeducacao",
-          utm_medium: search.utm_medium ?? "checkout",
-          utm_campaign: search.utm_campaign ?? "palco-online",
-          meta: metaCtx(),
-        }),
-      });
-      const json = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-        errors?: PalcoErrors & QualificacaoErrors;
-        id?: string;
-        token?: string;
-      };
-      if (res.ok && json.ok && json.id && json.token) {
-        pixel("Lead", PALCO_PIXEL, `lead-${json.id}`);
-        navigate({ to: "/ingresso", search: (prev: Search) => ({ ...prev, i: json.id, t: json.token }), replace: true });
-        topo.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-        return;
-      }
-      if (json.errors) {
-        setErrors(json.errors);
-        setQErrors(json.errors);
-        if (json.errors.nome || json.errors.whatsapp || json.errors.email) setPasso("dados");
-      }
-      setFalhaDados(json.error ?? (json.errors ? "Confira os campos destacados." : "Não conseguimos guardar seus dados agora. Tente de novo em instantes."));
+      await enviarPalco({ faturamento, qualificacao: "fgia" });
     } catch {
-      setFalhaDados("Sem conexão agora. Confira a internet e tente de novo.");
+      // Opcional: segue para o pagamento.
     } finally {
       setSalvando(false);
     }
+    irParaPagamento(salvo.id, salvo.token);
   }
 
   async function pagar(e: FormEvent) {
@@ -349,6 +369,7 @@ function FgiaCheckout() {
     setPedido(null);
     setPix(null);
     setErroCarga(false);
+    setSalvo(null);
     setPasso("dados");
     navigate({ to: "/ingresso", search: (prev: Search) => ({ ...prev, i: undefined, t: undefined }), replace: true });
   }
@@ -486,9 +507,15 @@ function FgiaCheckout() {
                   {campo("whatsapp", "WhatsApp com DDD", { autoComplete: "tel-national", inputMode: "tel", placeholder: "(31) 99999-9999", maxLength: 16 })}
                   {campo("email", "E-mail", { autoComplete: "email", inputMode: "email", type: "email", placeholder: "voce@empresa.com.br", maxLength: 254 })}
                 </div>
-                <button className="fg-btn fg-btn-gold fgc-btn" type="submit">
-                  Continuar
+                <input ref={hp} type="text" name="empresa_site" tabIndex={-1} autoComplete="off" className="fgc-hp" aria-hidden="true" />
+                <button className="fg-btn fg-btn-gold fgc-btn" type="submit" disabled={salvando}>
+                  {salvando ? "Salvando…" : `Continuar · ${PRECO}`}
                 </button>
+                {falhaDados ? (
+                  <p className="fgc-fail" role="alert">
+                    {falhaDados}
+                  </p>
+                ) : null}
                 <p className="fgc-fine">
                   Ao continuar, você aceita receber as informações do evento por WhatsApp e e-mail. Seus dados ficam só com a FGIA
                   Educação e a IA News.
@@ -496,11 +523,14 @@ function FgiaCheckout() {
               </form>
             ) : !temPedido ? (
               <form onSubmit={salvarDados} noValidate>
-                <p className="fgc-kick">Etapa 2 de 3</p>
+                <p className="fgc-kick">Etapa 2 de 3 · opcional</p>
                 <h1 className="fgc-h1">Conte sobre a sua empresa</h1>
                 <p className="fgc-muted">
-                  Com isso a curadoria prepara os cases e a Mesa IA News para o momento do seu negócio. Leva menos de um minuto.
+                  Ajuda a Mesa IA News a responder para o momento do seu negócio. Se preferir, pule e vá direto ao pagamento.
                 </p>
+                <button type="button" className="fgc-link fgc-skip" onClick={() => salvo && irParaPagamento(salvo.id, salvo.token)}>
+                  Pular e ir para o pagamento
+                </button>
                 <div className="fgc-fields fgc-two">
                   {texto("empresa", "Nome da empresa", { autoComplete: "organization", placeholder: "Ex.: Clínica Vida", maxLength: 160 })}
                   {texto("cargo", "Seu cargo", { autoComplete: "organization-title", placeholder: "Ex.: Sócio, CEO, Diretor", maxLength: 120 })}
@@ -525,17 +555,8 @@ function FgiaCheckout() {
                     />
                   </label>
                 </div>
-                <input ref={hp} type="text" name="empresa_site" tabIndex={-1} autoComplete="off" className="fgc-hp" aria-hidden="true" />
                 <button className="fg-btn fg-btn-gold fgc-btn" type="submit" disabled={salvando}>
-                  {salvando ? "Salvando…" : "Continuar para o pagamento"}
-                </button>
-                {falhaDados ? (
-                  <p className="fgc-fail" role="alert">
-                    {falhaDados}
-                  </p>
-                ) : null}
-                <button type="button" className="fgc-link" onClick={() => setPasso("dados")}>
-                  Voltar e corrigir meus dados
+                  {salvando ? "Salvando…" : "Salvar e ir para o pagamento"}
                 </button>
                 <p className="fgc-fine">
                   <Icone d={I_LOCK} size={13} /> Essas informações ficam só com a FGIA Educação e a IA News e não aparecem para outros
@@ -715,6 +736,9 @@ function FgiaCheckout() {
                 <b>{PRECO}</b>
               </div>
             </div>
+            <p className="fgc-mini">
+              <b>Garantia de 7 dias</b> · gravação por 30 dias · {PRECO} viram crédito no presencial em BH
+            </p>
             <div className="fgc-perks">
               <p>
                 <b>Crédito em BH.</b> Os {PRECO} viram desconto no Palco presencial, em Belo Horizonte, em 11.02.27.

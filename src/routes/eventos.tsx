@@ -53,7 +53,7 @@ const EVENTOS: Evento[] = [
     onde: "Online, ao vivo",
     preco: "R$ 97 (vira crédito no presencial)",
     resumo:
-      "Três cases com números, o Playbook IA 2027 e a revelação ao vivo da Lista IA News 100. Gravação por 30 dias e garantia de 7 dias.",
+      "O Raio-X 2026 da IA nas empresas, o Playbook IA 2027 e a revelação ao vivo da Lista IA News 100. Gravação por 30 dias e garantia de 7 dias.",
     to: "/palco",
     cta: "Garantir minha vaga",
     inicio: "2026-12-16T19:00:00-03:00",

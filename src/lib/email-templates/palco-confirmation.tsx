@@ -20,8 +20,8 @@ const Email = (p: Props) => (
     <Text style={s.p}>Olá, {first(p.nome)}.</Text>
     <Text style={s.p}>
       Obrigada por se inscrever no Palco IA News Online: um workshop ao vivo de 1h30, no dia 16 de dezembro, às 19h,
-      com o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, três cases com números e o Playbook IA
-      2027.
+      com o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, o Playbook IA 2027 e a revelação
+      da Lista IA News 100.
     </Text>
     <Text style={s.p}>
       O ingresso é R$ 97 e inclui a gravação por 30 dias. Sua vaga é confirmada com o pagamento, por Pix, cartão ou

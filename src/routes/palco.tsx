@@ -26,7 +26,7 @@ import {
 const PAGE_URL = "https://ianewsbr.com/palco";
 const TITLE = "Palco IA News Online · 16 de dezembro, ao vivo | IA News";
 const DESCRIPTION =
-  "Workshop online e ao vivo, em 16/12, às 19h: o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, três cases com números e o Playbook IA 2027. Ingresso de R$ 97.";
+  "Workshop online e ao vivo, em 16/12, às 19h (Brasília): o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, o Playbook IA 2027 e a revelação da Lista IA News 100. Ingresso de R$ 97, com gravação e garantia de 7 dias.";
 
 type PalcoSearch = { utm_source?: string; utm_medium?: string; utm_campaign?: string; papel?: PalcoPapel };
 
@@ -133,8 +133,8 @@ const LEVA = [
     img: 9275222,
   },
   {
-    t: "Três cases com números",
-    d: "Empresas que colocaram IA para trabalhar mostram o problema, o que fizeram, quanto investiram e o resultado.",
+    t: "Sua pergunta respondida ao vivo",
+    d: "Mande seu desafio na inscrição ou no chat. A Mesa IA News responde ao vivo, com base no que a redação apurou.",
     img: 29335353,
   },
   {
@@ -148,10 +148,10 @@ const LEVA = [
 const AGENDA = [
   { time: "19h00", min: 5, title: "Abertura", d: "Henrique Magioni, fundador da IA News, abre a noite e explica como as perguntas funcionam." },
   { time: "19h05", min: 20, title: "Raio-X IA News 2026", d: "Setores, usos e resultados: o que as empresas brasileiras fizeram com IA este ano." },
-  { time: "19h25", min: 25, title: "Três cases: quem faz, ensina", d: "Oito minutos por empresa: problema, solução, investimento, resultado e um erro que não repetiriam." },
+  { time: "19h25", min: 25, title: "O que deu certo, setor por setor", d: "Os casos que a IA News apurou em 2026: o problema, o que a empresa fez, o resultado publicado e o erro que não vale repetir." },
   { time: "19h50", min: 15, title: "Playbook IA 2027", d: "Como escolher, contratar e medir um projeto de IA. E como vender IA para empresas." },
   { time: "20h05", min: 10, title: "Anúncio da Lista IA News 100", d: "Os 100 nomes que fazem IA de verdade nos negócios no Brasil, revelados ao vivo.", hi: true },
-  { time: "20h15", min: 10, title: "Mesa IA News", d: "Os convidados respondem às perguntas do chat." },
+  { time: "20h15", min: 10, title: "Mesa IA News", d: "Henrique Magioni responde às perguntas enviadas na inscrição e no chat." },
   { time: "20h25", min: 5, title: "Encerramento", d: "Próximos passos, Conselho IA News e o presencial de fevereiro." },
 ];
 
@@ -177,7 +177,11 @@ const FAQ = [
   },
   {
     q: "E o evento presencial?",
-    a: "O Palco IA News presencial acontece em Belo Horizonte, em fevereiro de 2027. Quem participar do online tem prioridade e usa os R$ 97 como desconto no ingresso.",
+    a: "O Palco IA News presencial acontece em Belo Horizonte, em 11 de fevereiro de 2027. Quem participar do online tem prioridade e usa os R$ 97 como desconto no ingresso.",
+  },
+  {
+    q: "Preciso entender de tecnologia?",
+    a: "Não. O conteúdo é para dono, sócio e gestor que decide onde investir. Nada de código ou tutorial de ferramenta.",
   },
   {
     q: "Quero patrocinar.",
@@ -187,7 +191,7 @@ const FAQ = [
 ];
 
 /* Cases e falas reais, de empresários que a IA News entrevistou. Não são os palestrantes do Palco:
-   os três cases do workshop são anunciados em 30/11. Números e frases saem das matérias publicadas. */
+   nenhum deles está confirmado como convidado. Números e frases saem das matérias publicadas. */
 const COVER = (slug: string, file: string) =>
   `https://hgydwvuowxxkdgtlqrdy.supabase.co/storage/v1/object/public/covers/${slug}/${file}`;
 
@@ -485,19 +489,19 @@ function PalcoPage() {
           <div className="wrap pd-hero-in">
             <p className="pd-pill">
               <span className="pd-dot" aria-hidden="true" />
-              Ao vivo · 16 de dezembro · 19h
+              Ao vivo · 16 de dezembro · 19h (Brasília)
             </p>
             <h1>Raio-X 2026 da IA nas empresas brasileiras</h1>
             <p className="pd-sub">
-              Três cases com números, o Playbook IA 2027 e a revelação da Lista IA News 100. Online, em 1h30, de onde você
-              estiver.
+              O que deu certo com IA nas empresas brasileiras em 2026, o Playbook IA 2027 e a revelação da Lista IA News 100.
+              Online, em 1h30, para quem decide onde investir em 2027.
             </p>
             <div className="pd-cta">
               <button className="pd-btn" type="button" onClick={scrollToForm}>
                 Quero participar · {PRECO}
               </button>
-              <a className="pd-ghost" href="#cases">
-                Ver os cases
+              <a className="pd-ghost" href="#programacao">
+                Ver a programação
               </a>
             </div>
             <div className="pd-count" aria-label="Contagem regressiva para o evento">
@@ -565,8 +569,8 @@ function PalcoPage() {
               A redação que apresenta o Palco é a mesma que contou estas histórias.
             </h2>
             <p className="pd-lead">
-              Empresários brasileiros que colocaram IA para trabalhar e mostraram os números para a IA News. Os três cases
-              do Palco são anunciados em 30/11, primeiro para quem está inscrito.
+              Empresários brasileiros que colocaram IA para trabalhar e mostraram os números para a IA News. No Palco, a
+              redação junta o que aprendeu com essas histórias e com as outras 320 matérias do ano.
             </p>
           </div>
           <div className="pd-rail" role="list">
@@ -643,6 +647,10 @@ function PalcoPage() {
                 </article>
               ))}
             </div>
+            <p className="pd-note">
+              Não é um curso técnico: não tem código nem tutorial de ferramenta. É para quem decide onde a empresa coloca
+              tempo e dinheiro em IA.
+            </p>
           </div>
         </section>
 

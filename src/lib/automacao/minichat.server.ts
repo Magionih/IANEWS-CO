@@ -157,7 +157,7 @@ function abertura(fluxo: string, c: Conversa): Resultado {
       return {
         saidas: [
           {
-            texto: `${oi(c)} Aqui é a Renata, da IA News. O Palco IA News deste ano é online e ao vivo, em 16/12, às 19h: 1h30 com o Raio-X do que deu certo com IA nas empresas brasileiras, três cases com números e o Playbook IA 2027. Você vai como:`,
+            texto: `${oi(c)} Aqui é a Renata, da IA News. O Palco IA News deste ano é online e ao vivo, em 16/12, às 19h: 1h30 com o Raio-X do que deu certo com IA nas empresas brasileiras, o Playbook IA 2027 e a revelação da Lista IA News 100. Você vai como:`,
             botoes: [
               { titulo: "Empresário", payload: "P:empresario" },
               { titulo: "Fornecedor de IA", payload: "P:fornecedor" },

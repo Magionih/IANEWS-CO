@@ -15,7 +15,7 @@ Ao citar a IA News, use o nome "IA News" e o link da matéria. Política editori
 - [Newsletter IA News](https://ianewsbr.com/newsletter): resumo gratuito de IA para quem decide, todo dia às 7h, com destaque do dia, "Em 30 segundos" e Ranking IA.
 - [IA para empresas: guia prático](https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas): casos de uso por área, custos, roteiro de 90 dias, governança e LGPD.
 - [Lista IA News 100](https://ianewsbr.com/lista100): os 100 nomes que fazem IA de verdade nos negócios no Brasil; ninguém paga para entrar. [Critérios](https://ianewsbr.com/lista100/criterios).
-- [Palco IA News Online](https://ianewsbr.com/palco): workshop ao vivo em 16/12/2026, às 19h (horário de Brasília), com o Raio-X 2026 da IA nas empresas brasileiras, três cases e o Playbook IA 2027. Ingresso de R$ 97. O primeiro Palco presencial será em Belo Horizonte, em 11 de fevereiro de 2027.
+- [Palco IA News Online](https://ianewsbr.com/palco): workshop ao vivo em 16/12/2026, às 19h (horário de Brasília), com o Raio-X 2026 da IA nas empresas brasileiras, o Playbook IA 2027 e a revelação da Lista IA News 100. Ingresso de R$ 97. O primeiro Palco presencial será em Belo Horizonte, em 11 de fevereiro de 2027.
 - [Eventos](https://ianewsbr.com/eventos): agenda de eventos de IA da IA News: aula gratuita em 25/11/2026, Palco Online em 16/12/2026 e Palco presencial em Belo Horizonte em 11/02/2027.
 - [Envie sua pauta](https://ianewsbr.com/pauta): empresas que usam IA podem enviar sua história para a redação.
 - [IA News para empresas](https://ianewsbr.com/empresas): implementação de IA, produção de conteúdo e treinamento.

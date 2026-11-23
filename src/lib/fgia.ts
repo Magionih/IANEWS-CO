@@ -20,7 +20,7 @@ export function isFgiaHost(host: string | null | undefined): boolean {
 export const FGIA_PROGRAMA = [
   { t: "19h00", s: "Abertura com Henrique Magioni" },
   { t: "19h05", s: "Raio-X IA News 2026" },
-  { t: "19h25", s: "Três cases com números: quem faz, ensina" },
+  { t: "19h25", s: "O que deu certo, setor por setor" },
   { t: "19h50", s: "Playbook IA 2027" },
   { t: "20h05", s: "Anúncio da Lista IA News 100" },
   { t: "20h15", s: "Mesa IA News: perguntas ao vivo" },

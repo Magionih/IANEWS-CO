@@ -66,8 +66,10 @@ export const Route = createFileRoute("/api/public/palco")({
           const qErr = validateQualificacao(qualif);
           if (Object.keys(qErr).length) return Response.json({ ok: false, errors: qErr }, { status: 422 });
         }
+        // Inscrição feita no checkout da FGIA (com ou sem qualificação): o e-mail leva de volta para lá.
+        const viaFgia = fgia || body["checkout"] === "fgia";
         const checkoutUrl = (id: string, token: string) =>
-          fgia ? `https://fgiaeducacao.com.br/ingresso?i=${id}&t=${token}` : `https://ianewsbr.com/palco/checkout?i=${id}&t=${token}`;
+          viaFgia ? `https://fgiaeducacao.com.br/ingresso?i=${id}&t=${token}` : `https://ianewsbr.com/palco/checkout?i=${id}&t=${token}`;
 
         const ua = request.headers.get("user-agent") ?? "";
         const ip =
