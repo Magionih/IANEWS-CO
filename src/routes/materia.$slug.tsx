@@ -18,6 +18,7 @@ import {
 } from "@/components/portal/article-cta";
 import { ArticleShare } from "@/components/portal/article-share";
 import { EDITOR, isIndexable } from "@/lib/seo-quality";
+import { ParticipeCards } from "@/components/site/participe";
 import { HUB_LIST } from "@/lib/hubs";
 import { CATEGORY_SEO } from "@/lib/categories";
 import { type CategoryKey, CATEGORY_MAP } from "@/components/site/category-chip";
@@ -437,19 +438,10 @@ function ArticlePage() {
                 ) : null;
               })()}
 
-              <aside className="art-pauta" aria-label="Envie sua pauta">
-                <p>
-                  Sua empresa usa IA de um jeito que merece ser contado?
-                  <small>Envie sua pauta para a IA News. A redação avalia e responde em até 2 dias úteis.</small>
-                </p>
-                <Link
-                  className="btn blue"
-                  to="/pauta"
-                  search={{ utm_source: "site", utm_medium: "materia", utm_campaign: "pauta", materia: article.slug }}
-                >
-                  Envie sua pauta
-                </Link>
-              </aside>
+              <section className="art-part" aria-label="Participe da IA News">
+                <h2 className="art-part-h">Participe da IA News</h2>
+                <ParticipeCards placement="materia-participe" />
+              </section>
 
               <p className="art-selo">
                 Esta matéria é sobre a sua empresa?{" "}

@@ -150,11 +150,11 @@ function PortalHome() {
           <SinceLastVisit dates={articles.map((a) => a.published_at)} />
           <HomeHero lead={lead} latest={latest} />
           <HomeSlimBand />
+          <HomeParticipe />
           <HomeNews items={news} />
           <HomeRanking tools={tools} />
           <HomeMostRead items={most} />
           <HomeBrasil items={brItems} isBrasil={isBrasil} />
-          <HomeParticipe />
           <HomeNewsletter week={week} />
           <HomeBizBand />
         </div>

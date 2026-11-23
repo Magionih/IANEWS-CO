@@ -4,13 +4,14 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import logoWhite from "@/assets/ianews-logo-white.png";
 import { ArticleThumb } from "@/components/portal/article-thumb";
 import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-subscribe";
+import { ParticipeCards } from "@/components/site/participe";
 import { listRecentArticles } from "@/lib/articles.functions";
 import { CATEGORY_SEO } from "@/lib/categories";
 import { trackCta } from "@/lib/cta-tracking";
 
 /* Página do link da bio do Instagram (@ianews.co).
-   Ordem pensada para quem chega do Instagram: assinar, ler a matéria que viu no post,
-   participar, e só no fim o espaço comercial, separado do editorial. */
+   Ordem pensada para quem chega do Instagram: participar (pauta, Lista 100, Palco), assinar,
+   ler a matéria que viu no post, e só no fim o espaço comercial, separado do editorial. */
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL";
 
@@ -62,7 +63,15 @@ function LinksPage() {
       </header>
 
       <div className="lk-body">
-        {/* 1. Newsletter */}
+        {/* 1. Participe: pauta, Lista 100 e Palco no topo, com fotos. São as portas que viram relacionamento. */}
+        <section aria-labelledby="lk-part-t">
+          <h2 id="lk-part-t" className="lk-h lk-h-strong">
+            Participe da IANews
+          </h2>
+          <ParticipeCards placement="links-bio" utm />
+        </section>
+
+        {/* 2. Newsletter */}
         <section className="lk-card lk-news" aria-labelledby="lk-news-t">
           <p className="kick">Newsletter diária · grátis</p>
           <h1 id="lk-news-t">As notícias de IA de ontem, todo dia às 7h no seu e-mail.</h1>
@@ -111,48 +120,14 @@ function LinksPage() {
           <Arrow />
         </Link>
 
-        {/* 4. Participe: interação com quem acompanha, com curadoria da redação */}
-        <section aria-labelledby="lk-part-t">
-          <h2 id="lk-part-t" className="lk-h">Participe da IANews</h2>
-          <Link
-            to="/palco"
-            search={{ utm_source: "instagram", utm_medium: "bio", utm_campaign: "palco" }}
-            className="lk-card lk-row"
-            onClick={click("palco")}
-          >
-            <span>
-              <b>Palco IA News Online · 16/12, às 19h</b>
-              <small>Workshop ao vivo: o Raio-X da IA nas empresas brasileiras em 2026, três cases e o Playbook IA 2027. R$ 97.</small>
-            </span>
-            <Arrow />
-          </Link>
-          <Link to="/gente" hash="indicar" className="lk-card lk-row" onClick={click("indicar-gente")}>
-            <span>
-              <b>Indique quem faz a IA acontecer no Brasil</b>
-              <small>Conhece alguém que deveria ser a próxima capa? Pode ser do seu time, da sua cidade ou você.</small>
-            </span>
-            <Arrow />
-          </Link>
-          <Link
-            to="/pauta"
-            search={{ utm_source: "instagram", utm_medium: "bio", utm_campaign: "pauta" }}
-            className="lk-card lk-row"
-            onClick={click("pauta")}
-          >
-            <span>
-              <b>Sua empresa usa IA? Envie sua pauta</b>
-              <small>Conte o que sua empresa faz com IA. A redação avalia cada pauta e responde em até 2 dias úteis.</small>
-            </span>
-            <Arrow />
-          </Link>
-          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="lk-card lk-row" onClick={click("whatsapp")}>
-            <span>
-              <b>Comunidade IANews no WhatsApp</b>
-              <small>As notícias do dia direto no seu celular.</small>
-            </span>
-            <Arrow />
-          </a>
-        </section>
+        {/* Comunidade */}
+        <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="lk-card lk-row" onClick={click("whatsapp")}>
+          <span>
+            <b>Comunidade IANews no WhatsApp</b>
+            <small>As notícias do dia direto no seu celular.</small>
+          </span>
+          <Arrow />
+        </a>
 
         {/* 5. Espaço comercial, separado e discreto */}
         <section className="lk-biz" aria-labelledby="lk-biz-t">

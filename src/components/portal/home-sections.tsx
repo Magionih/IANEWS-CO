@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ParticipeCards } from "@/components/site/participe";
 import { Link } from "@tanstack/react-router";
 
 import { CATEGORY_MAP, type CategoryKey } from "@/components/site/category-chip";
@@ -467,53 +468,18 @@ export function HomeBizBand() {
   );
 }
 
-/* Faixa de participação: leva o leitor (e o Google) às páginas de conversão. */
-const PARTICIPE = [
-  {
-    to: "/eventos" as const,
-    kick: "Eventos",
-    t: "Palco IA News Online · 16/12",
-    d: "Workshop ao vivo: o que deu certo com IA nas empresas brasileiras em 2026.",
-  },
-  {
-    to: "/pauta" as const,
-    kick: "Sua empresa na IA News",
-    t: "Envie sua pauta",
-    d: "Sua empresa usa IA? Conte a história para a redação. Respondemos em até 2 dias úteis.",
-  },
-  {
-    to: "/lista100" as const,
-    kick: "Lista IA News 100",
-    t: "Quem faz IA no Brasil",
-    d: "Os 100 nomes que fazem IA de verdade nos negócios. Candidatura gratuita.",
-  },
-  {
-    to: "/gente" as const,
-    kick: "Líderes de IA",
-    t: "Gente que cresce com IA",
-    d: "Entrevistas com fundadores e executivos brasileiros, com números.",
-  },
-];
-
+/* Faixa de participação: pauta, Lista 100 e Palco, logo abaixo do destaque, com fotos. */
 export function HomeParticipe() {
   return (
     <section className="hp-part" aria-labelledby="hp-part-h">
       <div className="wrap">
-        <h2 id="hp-part-h" className="hp-part-h">
-          Participe da IA News
-        </h2>
-        <div className="hp-part-grid">
-          {PARTICIPE.map((p) => (
-            <Link key={p.to} to={p.to} className="hp-part-card">
-              <span className="hp-part-k">{p.kick}</span>
-              <b>{p.t}</b>
-              <span className="hp-part-d">{p.d}</span>
-              <span className="hp-part-go" aria-hidden="true">
-                →
-              </span>
-            </Link>
-          ))}
+        <div className="hp-part-head">
+          <h2 id="hp-part-h" className="hp-part-h">
+            Participe da IA News
+          </h2>
+          <p>Conte a história da sua empresa, indique quem faz a IA acontecer e venha para o Palco.</p>
         </div>
+        <ParticipeCards placement="home-participe" />
       </div>
     </section>
   );

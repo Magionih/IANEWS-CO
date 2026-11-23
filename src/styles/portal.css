@@ -1797,3 +1797,39 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
 .autor-list{padding:24px 0 72px}
 .autor-list h2{margin:0 0 18px;font-size:24px;font-weight:900}
 @media (max-width:560px){.autor-head{gap:14px}.autor-mono{flex-basis:64px;width:64px;height:64px;font-size:21px}}
+
+/* ===== Participe da IA News (home e /links): pauta, Lista 100, Palco ===== */
+.hp-part{padding:36px 0 8px}
+.hp-part-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 24px;margin-bottom:18px}
+.hp-part-head p{margin:0;color:#3B4350;font-size:15.5px}
+.pq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pq-grid.is-stack{grid-template-columns:1fr;gap:14px}
+.pq-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--p-rule,#E1E5EA);border-radius:16px;background:#fff;color:var(--p-ink,#0D1117) !important;text-decoration:none;box-shadow:0 1px 2px rgba(13,17,23,.04);transition:border-color .15s,transform .15s,box-shadow .15s}
+.pq-card:hover{border-color:var(--p-blue);transform:translateY(-2px);box-shadow:0 10px 28px rgba(13,17,23,.08)}
+.pq-media{position:relative;display:block;aspect-ratio:16/9;background:#0B0E13;overflow:hidden}
+.pq-media img{width:100%;height:100%;object-fit:cover;display:block}
+.pq-pauta .pq-media img{object-position:50% 25%}
+.pq-faces{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.pq-faces img{object-position:50% 20%}
+.pq-cap{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 8px;font-size:12px;font-weight:500;color:#fff;background:linear-gradient(180deg,rgba(11,14,19,0) 0%,rgba(11,14,19,.85) 100%)}
+.pq-live{position:absolute;left:12px;top:12px;padding:5px 10px;border-radius:999px;background:#FF6A2B;color:#0B0E13;font-size:12px;font-weight:700;letter-spacing:.04em}
+.pq-body{display:grid;gap:6px;padding:16px 18px 18px;flex:1;align-content:start}
+.pq-k{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--p-blue-ink)}
+.pq-body b{font-size:19px;line-height:1.25;letter-spacing:-.01em}
+.pq-d{font-size:14.5px;line-height:1.5;color:#3B4350}
+.pq-cta{margin-top:6px;font-weight:700;font-size:15px;color:var(--p-blue-ink)}
+.pq-pauta{border-color:var(--p-blue-rule,#CFE0FF)}
+.pq-pauta .pq-body{background:linear-gradient(180deg,#F5F9FF,#fff 80%)}
+.pq-palco .pq-k{color:#C2410C}
+.pq-palco .pq-cta{color:#C2410C}
+.lk-h-strong{font-size:18px;letter-spacing:-.01em;text-transform:none;color:var(--p-ink)}
+.pq-grid.is-stack .pq-body b{font-size:18px}
+@media (max-width:900px){.pq-grid{grid-template-columns:1fr}.pq-card{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr)}.pq-media{aspect-ratio:auto;min-height:170px}.pq-grid.is-stack .pq-card{display:flex}.pq-grid.is-stack .pq-media{aspect-ratio:16/9;min-height:0}}
+@media (max-width:560px){.pq-card{display:flex}.pq-media{aspect-ratio:16/9;min-height:0}.pq-body{padding:14px 16px 16px}}
+.art-part{margin:32px 0 0}
+.art-part-h{margin:0 0 14px;font-size:20px;font-weight:900;letter-spacing:-.01em}
+.art-part .pq-grid{grid-template-columns:1fr}
+.art-part .pq-card{display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr)}
+.art-part .pq-media{aspect-ratio:auto;min-height:150px}
+.art-part .pq-body b{font-size:17px}
+@media (max-width:560px){.art-part .pq-card{display:flex}.art-part .pq-media{aspect-ratio:16/9;min-height:0}}
