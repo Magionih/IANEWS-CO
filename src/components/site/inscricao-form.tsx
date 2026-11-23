@@ -49,6 +49,51 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
     if (erros[k]) setErros((e) => ({ ...e, [k]: undefined }));
   }
 
+  // Lista 100 em dois passos: 1) contato (já vira lead no CRM), 2) o caso.
+  const [etapa, setEtapa] = useState<"contato" | "caso">("contato");
+  const CONTATO_CAMPOS = ["nome", "empresa", "whatsapp", "email", "instagram", "consentimento"];
+
+  async function enviarContato(e: FormEvent) {
+    e.preventDefault();
+    if (enviando) return;
+    setFalha(null);
+    const todos = validar(form).erros;
+    const achados = Object.fromEntries(Object.entries(todos).filter(([k]) => CONTATO_CAMPOS.includes(k))) as Erros;
+    if (Object.keys(achados).length) {
+      setErros(achados);
+      const primeiro = ORDEM.find((k) => achados[k]);
+      document.getElementById(`in-${primeiro}`)?.focus();
+      return;
+    }
+    setErros({});
+    setEnviando(true);
+    try {
+      const eventId = novoEventId("lista100-contato");
+      const res = await fetch("/api/public/inscricao", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...form, etapa: "contato", empresa_site: hp.current?.value ?? "", origem_path: origem.current, ...utm.current, meta: metaCtx(eventId) }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; already?: boolean; parcial?: boolean; error?: string; errors?: Erros };
+      if (res.ok && json.ok && json.already) {
+        setFeito({ nome: form.nome.trim().split(/\s+/)[0] ?? "", already: true, agendado_em: null });
+        return;
+      }
+      if (res.ok && json.ok) {
+        if (json.parcial) pixel("Lead", { content_name: "lista100-contato", content_category: "lista100" }, eventId);
+        setEtapa("caso");
+        window.setTimeout(() => document.getElementById("in-categoria")?.focus(), 50);
+        return;
+      }
+      if (json.errors) setErros(json.errors);
+      setFalha(json.error ?? (json.errors ? "Confira os campos marcados." : FALHA));
+    } catch {
+      setFalha(FALHA);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
   async function enviar(e: FormEvent, aoDarConflito?: () => void) {
     e.preventDefault();
     if (enviando) return;
@@ -67,7 +112,14 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
       const res = await fetch("/api/public/inscricao", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, empresa_site: hp.current?.value ?? "", origem_path: origem.current, ...utm.current, meta: metaCtx(eventId) }),
+        body: JSON.stringify({
+          ...form,
+          ...(tipo === "lista100" && form.tipo === "lista100" ? { etapa: "caso" } : {}),
+          empresa_site: hp.current?.value ?? "",
+          origem_path: origem.current,
+          ...utm.current,
+          meta: metaCtx(eventId),
+        }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -94,7 +146,7 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
     }
   }
 
-  return { form, set, erros, falha, enviando, feito, enviar, hp };
+  return { form, set, erros, falha, enviando, feito, enviar, enviarContato, etapa, setEtapa, hp };
 }
 
 type CampoProps = React.InputHTMLAttributes<HTMLInputElement> & {

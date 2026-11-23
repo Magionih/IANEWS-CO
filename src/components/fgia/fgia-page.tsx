@@ -304,7 +304,7 @@ export function FgiaPage() {
               </h2>
               <p className="fg-p">
                 Em 1h30, o Henrique Magioni abre o que funcionou de verdade quando empresas brasileiras colocaram IA para
-                trabalhar, com três cases contados por quem fez, com números, e o que fazer em 2027.
+                trabalhar, a partir dos casos que a IA News apurou em 2026, e o que fazer em 2027.
               </p>
               <ol className="fg-prog">
                 {FGIA_PROGRAMA.map((it) => (

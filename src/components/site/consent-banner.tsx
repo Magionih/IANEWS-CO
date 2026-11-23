@@ -62,7 +62,8 @@ export function ConsentBanner() {
         color: "var(--p-ink)",
         borderTop: "1px solid var(--p-rule)",
         boxShadow: "0 -10px 30px rgba(11,14,19,.08)",
-        paddingBlock: "14px calc(14px + env(safe-area-inset-bottom, 0px))",
+        // Compacto: no celular ocupa duas linhas e não cobre o formulário nem o botão de compra.
+        paddingBlock: "10px calc(10px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       <div
@@ -72,32 +73,30 @@ export function ConsentBanner() {
           flexWrap: "wrap",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: "10px 24px",
+          gap: "8px 20px",
         }}
       >
         <p
           className="fine"
           style={{
-            flex: "1 1 420px",
-            maxWidth: "62em",
+            flex: "1 1 260px",
+            margin: 0,
             color: "var(--p-ink-2)",
-            fontSize: 14,
-            lineHeight: 1.5,
+            fontSize: 13,
+            lineHeight: 1.4,
           }}
         >
-          Usamos cookies essenciais para o funcionamento do site e, com o seu consentimento, cookies
-          de medição para entender o desempenho do conteúdo. Saiba mais na nossa{" "}
+          Usamos cookies essenciais e, se você aceitar, de medição.{" "}
           <Link to="/termos" hash="cookies">
-            Política de Privacidade
+            Saiba mais
           </Link>
-          .
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, flex: "0 0 auto" }}>
-          <button type="button" className="btn line s" onClick={() => writeConsent("essential")}>
+        <div style={{ display: "flex", gap: 8, flex: "1 0 auto", justifyContent: "flex-end", maxWidth: 320 }}>
+          <button type="button" className="btn line s" style={{ flex: 1 }} onClick={() => writeConsent("essential")}>
             Só essenciais
           </button>
-          <button type="button" className="btn blue s" onClick={() => writeConsent("all")}>
-            Aceitar tudo
+          <button type="button" className="btn blue s" style={{ flex: 1 }} onClick={() => writeConsent("all")}>
+            Aceitar
           </button>
         </div>
       </div>

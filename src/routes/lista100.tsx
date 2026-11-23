@@ -110,7 +110,7 @@ function Lista100Page() {
               <div className="pc2-form-head">
                 <span className="pc2-badge">Gratuita · até {LISTA.fecha}</span>
                 <h2>{candidato ? "Candidate-se" : "Indique quem merece"}</h2>
-                <p>{candidato ? "Conte o seu caso de IA. Leva 3 minutos." : "Indique até 5 pessoas. A gente convida e conta que foi você."}</p>
+                <p>{candidato ? "Dois passos rápidos: seus dados e o seu caso de IA." : "Indique até 5 pessoas. A gente convida e conta que foi você."}</p>
               </div>
               <div className="ins-modo" role="tablist" aria-label="O que você quer fazer">
                 <button
@@ -142,38 +142,50 @@ function Lista100Page() {
                     </p>
                   </Pronto>
                 ) : (
-                  <form className="biz-form" onSubmit={(e) => f.enviar(e)} noValidate>
+                  <form className="biz-form" onSubmit={(e) => (candidato && f.etapa === "contato" ? f.enviarContato(e) : f.enviar(e))} noValidate>
                     <Isca f={f} />
-                    <fieldset>
-                      <legend className="pc2-sr">Seus dados</legend>
-                      <div className="biz-fields">
-                        <Campo f={f} k="nome" rotulo="Nome completo" autoComplete="name" maxLength={160} placeholder="Seu nome" cheio />
-                        <Campo
-                          f={f}
-                          k="empresa"
-                          rotulo="Empresa"
-                          opcional={!candidato}
-                          autoComplete="organization"
-                          maxLength={160}
-                          placeholder="Nome da empresa"
-                        />
-                        {candidato ? (
-                          <Campo f={f} k="cargo" rotulo="Cargo" opcional autoComplete="organization-title" maxLength={120} placeholder="Fundador, CEO..." />
-                        ) : null}
-                        <Campo f={f} k="whatsapp" rotulo="WhatsApp" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16} placeholder="(00) 00000-0000" />
-                        <Campo f={f} k="email" rotulo="E-mail" type="email" inputMode="email" autoComplete="email" maxLength={254} placeholder="voce@empresa.com.br" />
-                        {candidato ? (
-                          <Campo f={f} k="instagram" rotulo="Instagram" opcional maxLength={120} placeholder="@perfil" />
-                        ) : null}
-                      </div>
-                    </fieldset>
-
                     {candidato ? (
+                      <p className="ins-passo">
+                        <b>Passo {f.etapa === "contato" ? "1" : "2"} de 2</b> · {f.etapa === "contato" ? "seus dados" : "o seu caso de IA"}
+                      </p>
+                    ) : null}
+
+                    {!candidato || f.etapa === "contato" ? (
+                      <fieldset>
+                        <legend className="pc2-sr">Seus dados</legend>
+                        <div className="biz-fields">
+                          <Campo f={f} k="nome" rotulo="Nome completo" autoComplete="name" maxLength={160} placeholder="Seu nome" cheio />
+                          <Campo
+                            f={f}
+                            k="empresa"
+                            rotulo="Empresa"
+                            opcional={!candidato}
+                            autoComplete="organization"
+                            maxLength={160}
+                            placeholder="Nome da empresa"
+                          />
+                          <Campo f={f} k="whatsapp" rotulo="WhatsApp" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16} placeholder="(00) 00000-0000" />
+                          <Campo f={f} k="email" rotulo="E-mail" type="email" inputMode="email" autoComplete="email" maxLength={254} placeholder="voce@empresa.com.br" cheio={candidato} />
+                        </div>
+                      </fieldset>
+                    ) : (
+                      <div className="ins-quem">
+                        <span>
+                          Candidatura de <b>{f.form.nome.trim().split(/\s+/)[0]}</b>
+                          {f.form.empresa ? ` · ${f.form.empresa}` : ""}
+                        </span>
+                        <button type="button" className="ins-mais" onClick={() => f.setEtapa("contato")}>
+                          Corrigir dados
+                        </button>
+                      </div>
+                    )}
+
+                    {candidato && f.etapa === "caso" ? (
                       <fieldset>
                         <legend className="pc2-legend">O seu caso de IA</legend>
                         <div className="biz-fields">
                           <Escolha f={f} k="categoria" rotulo="Categoria" opcoes={CATEGORIAS_LISTA} />
-                          <div className="f ins-vazio" aria-hidden="true" />
+                          <Campo f={f} k="cargo" rotulo="Cargo" opcional autoComplete="organization-title" maxLength={120} placeholder="Fundador, CEO..." />
                           <Texto
                             f={f}
                             k="caso"
@@ -191,23 +203,30 @@ function Lista100Page() {
                             linhas={2}
                             placeholder="Ex.: 38% mais consultas marcadas em 3 meses."
                           />
+                          <Campo f={f} k="instagram" rotulo="Instagram" opcional maxLength={120} placeholder="@perfil" />
                         </div>
                       </fieldset>
                     ) : null}
 
-                    {candidato ? (
+                    {candidato && f.etapa === "caso" ? (
                       <details className="pc2-more" open={f.form.indicados.some((i) => i.nome || i.contato)}>
                         <summary>
                           Conhece alguém que também deveria estar na lista? <small>opcional</small>
                         </summary>
                         <Indicados f={f} titulo={<span className="pc2-sr">Pessoas indicadas</span>} />
                       </details>
-                    ) : (
+                    ) : !candidato ? (
                       <Indicados f={f} titulo="Quem você indica" minimo={1} />
-                    )}
+                    ) : null}
 
-                    <Aceite f={f} texto="Aceito receber o resultado da Lista e as novidades da IA News por WhatsApp e e-mail." />
-                    <Enviar f={f} rotulo={candidato ? "Enviar candidatura" : "Enviar indicação"} fino="Gratuito. Não se paga nada para entrar na lista." />
+                    {!candidato || f.etapa === "contato" ? (
+                      <Aceite f={f} texto="Aceito receber o resultado da Lista e as novidades da IA News por WhatsApp e e-mail." />
+                    ) : null}
+                    <Enviar
+                      f={f}
+                      rotulo={!candidato ? "Enviar indicação" : f.etapa === "contato" ? "Continuar para o meu caso" : "Enviar candidatura"}
+                      fino={candidato && f.etapa === "contato" ? "Gratuito. No próximo passo, você conta o caso em 2 minutos." : "Gratuito. Não se paga nada para entrar na lista."}
+                    />
                   </form>
                 )}
               </div>

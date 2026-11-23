@@ -18,6 +18,13 @@ const UNICO: Tipo[] = ["lista100", "aula", "conselho"];
 const str = (v: unknown, max = 1000) => (typeof v === "string" ? v.slice(0, max) : "");
 const opt = (v: unknown, max = 300) => str(v, max).trim() || null;
 
+/** Passo 1 da Lista 100: só valem os erros dos campos de contato. */
+function soContato(erros: Record<string, string | undefined>) {
+  const out: Record<string, string> = {};
+  for (const k of ["nome", "empresa", "whatsapp", "email", "instagram", "consentimento"]) if (erros[k]) out[k] = erros[k] as string;
+  return out;
+}
+
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
@@ -67,19 +74,87 @@ export const Route = createFileRoute("/api/public/inscricao")({
           else (entrada as Record<string, unknown>)[k] = str(body[k], 1000);
         }
         entrada.tipo = tipo;
-        const { erros, limpa } = validar(entrada);
+        // Lista 100 em dois passos: "contato" grava só os dados de contato (o lead já entra no CRM);
+        // "caso" completa a mesma candidatura com a categoria, o caso e o resultado.
+        const etapa = tipo === "lista100" ? str(body["etapa"], 10) : "";
+        const validado = validar(entrada);
+        const erros = etapa === "contato" ? soContato(validado.erros) : validado.erros;
+        const limpa = validado.limpa;
         if (Object.keys(erros).length) return Response.json({ ok: false, errors: erros }, { status: 422 });
 
         const base = await db();
 
+        // Candidatura parcial (só o passo 1) desta pessoa, se houver.
+        type Linha = { id: string; pessoa_id: string | null; negocio_id: string | null; dados: Record<string, string> };
+        let parcial = null as Linha | null;
         if (UNICO.includes(tipo)) {
-          const ja = await base
+          const { data: anteriores } = await base
             .from("site_inscricoes")
-            .select("id", { count: "exact", head: true })
+            .select("id, pessoa_id, negocio_id, dados")
             .eq("tipo", tipo)
             .eq("status", "recebido")
-            .ilike("email", limpa.email);
-          if ((ja.count ?? 0) > 0 && limpa.indicados.length === 0) return Response.json({ ok: true, already: true });
+            .ilike("email", limpa.email)
+            .order("created_at", { ascending: false })
+            .limit(5);
+          const lista = (anteriores ?? []) as Linha[];
+          parcial = lista.find((r) => r.dados?.etapa === "contato") ?? null;
+          const completa = lista.some((r) => r.dados?.etapa !== "contato");
+          if (completa && limpa.indicados.length === 0) return Response.json({ ok: true, already: true });
+          if (etapa === "contato" && parcial) return Response.json({ ok: true, parcial: true });
+        }
+
+        const ctxMeta = lerMetaCtx(body["meta"], request);
+
+        // Passo 2 da Lista 100: completa a candidatura parcial (não cria outra pessoa nem outro negócio).
+        if (etapa !== "contato" && parcial) {
+          const dadosCaso: Record<string, string> = {};
+          for (const k of ["categoria", "caso", "resultado", "instagram"] as const) if (limpa[k]) dadosCaso[k] = limpa[k];
+          const { etapa: _e, ...resto } = parcial.dados ?? {};
+          const { error: errUp } = await base
+            .from("site_inscricoes")
+            .update({
+              dados: { ...resto, ...dadosCaso },
+              empresa: limpa.empresa || null,
+              cargo: limpa.cargo || null,
+              perfil: PERFIL_DA_CATEGORIA[limpa.categoria] ?? null,
+              indicados: limpa.indicados,
+            })
+            .eq("id", parcial.id);
+          if (errUp) {
+            console.error("[inscricao] completar", errUp.message);
+            return Response.json({ ok: false, error: FALHA }, { status: 500 });
+          }
+          await base.from("crm_atividades").insert({
+            tipo: "nota",
+            canal: "site",
+            texto: [
+              "Candidatura à Lista IA News 100 completa (passo 2)",
+              `Categoria: ${limpa.categoria}`,
+              `Caso: ${limpa.caso}`,
+              `Resultado: ${limpa.resultado}`,
+              limpa.indicados.length ? `Indicou ${limpa.indicados.length} nome(s) no formulário` : "",
+            ]
+              .filter(Boolean)
+              .join("\n"),
+            pessoa_id: parcial.pessoa_id,
+            negocio_id: parcial.negocio_id,
+          });
+          if (ctxMeta?.event_id) {
+            await enviarCapi("CompleteRegistration", ctxMeta.event_id, { email: limpa.email, phone: limpa.whatsapp, nome: limpa.nome }, ctxMeta, {
+              content_name: "lista100",
+              content_category: "lista100",
+            });
+          }
+          try {
+            const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+            await sendTemplateEmail("inscricao-confirmation", limpa.email, {
+              templateData: { tipo, nome: limpa.nome, agendado_em: null, indicados: limpa.indicados.length },
+              replyTo: "ianewscomercial@gmail.com",
+            });
+          } catch (err) {
+            console.error("[inscricao] e-mail", err instanceof Error ? err.message : err);
+          }
+          return Response.json({ ok: true, agendado_em: null });
         }
 
         const ua = request.headers.get("user-agent") ?? "";
@@ -113,8 +188,9 @@ export const Route = createFileRoute("/api/public/inscricao")({
         const perfil = tipo === "lista100" ? PERFIL_DA_CATEGORIA[limpa.categoria] ?? null : limpa.perfil || (tipo === "projeto" ? "empresario" : null);
         const dados: Record<string, string> = {};
         for (const k of ["categoria", "caso", "resultado", "setor", "porte", "problema", "prazo", "investimento", "materia", "instagram", "linkedin"] as const) {
-          if (limpa[k]) dados[k] = limpa[k];
+          if (limpa[k] && !(etapa === "contato" && (k === "caso" || k === "resultado" || k === "categoria"))) dados[k] = limpa[k];
         }
+        if (etapa === "contato") dados.etapa = "contato";
         if (tipo === "aula") dados.aula = AULA.inicio;
 
         const row = {
@@ -138,7 +214,25 @@ export const Route = createFileRoute("/api/public/inscricao")({
           ip_hash: ipHash,
         };
 
-        const { error } = await base.from("site_inscricoes").insert(row);
+        const { data: gravado, error } = await base.from("site_inscricoes").insert(row).select("pessoa_id, negocio_id").single();
+        if (!error && etapa === "contato") {
+          // Passo 1: o lead já está no CRM. A nota avisa que falta o caso; a Meta recebe um Lead (não o cadastro completo).
+          const g = (gravado ?? {}) as { pessoa_id?: string | null; negocio_id?: string | null };
+          await base.from("crm_atividades").insert({
+            tipo: "nota",
+            canal: "site",
+            texto: "Começou a candidatura à Lista 100 (passo 1, só contato). Falta contar o caso: se não terminar, ajudar pelo WhatsApp.",
+            pessoa_id: g.pessoa_id ?? null,
+            negocio_id: g.negocio_id ?? null,
+          });
+          if (ctxMeta?.event_id && row.status === "recebido") {
+            await enviarCapi("Lead", ctxMeta.event_id, { email: row.email, phone: row.whatsapp, nome: row.nome }, ctxMeta, {
+              content_name: "lista100-contato",
+              content_category: "lista100",
+            });
+          }
+          return Response.json({ ok: true, parcial: true });
+        }
         if (error) {
           if (error.code === "23505") {
             return Response.json(
@@ -151,7 +245,7 @@ export const Route = createFileRoute("/api/public/inscricao")({
         }
 
         // API de Conversões: mesmo event_id gerado no navegador (campo meta.event_id). Só com consentimento e fora de teste.
-        const ctx = lerMetaCtx(body["meta"], request);
+        const ctx = ctxMeta;
         if (ctx?.event_id && row.status === "recebido") {
           const lead = tipo === "conselho" || tipo === "projeto";
           await enviarCapi(

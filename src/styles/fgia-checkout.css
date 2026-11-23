@@ -136,6 +136,9 @@
 .fgc-org { margin: 0; font-size: 13px; line-height: 1.5; color: var(--fg-dim); }
 .fgc-org a { color: var(--fg-gold) !important; }
 
+.fgc-mini { display: none; }
+.fgc-skip { margin: -6px 0 18px; }
+
 .fgc-foot { border-top: 1px solid var(--fg-line); padding: 22px 0; font-size: 13px; color: var(--fg-dim); }
 
 @media (max-width: 900px) {
@@ -144,6 +147,8 @@
   .fgc-summary .fgc-items, .fgc-summary .fgc-org, .fgc-summary .fgc-perks, .fgc-lines div:first-child { display: none; }
   .fgc-lines { padding-top: 14px; }
   .fgc-lines .fgc-total { padding-top: 0; }
+  .fgc-mini { display: block; margin: -6px 0 0; font-size: 13px; line-height: 1.45; color: var(--fg-muted); }
+  .fgc-mini b { color: var(--fg-cream); }
   .fgc-card { padding: 28px 20px; }
   .fgc-two { grid-template-columns: 1fr; }
   .fgc-wrap { padding: 0 16px; }
