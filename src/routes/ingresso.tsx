@@ -490,7 +490,7 @@ function FgiaCheckout() {
           {["Seus dados", "Sua empresa", "Pagamento", "Confirmado"].map((n, k) => (
             <li key={n} className={k + 1 < etapa ? "ok" : k + 1 === etapa ? "on" : undefined} aria-current={k + 1 === etapa ? "step" : undefined}>
               <span>{k + 1 < etapa ? <Icone d={I_CHECK} size={13} /> : k + 1}</span>
-              {n}
+              <em>{n}</em>
             </li>
           ))}
         </ol>
@@ -709,7 +709,7 @@ function FgiaCheckout() {
 
           <aside className="fgc-summary" aria-label="Resumo do pedido">
             <div className="fgc-event">
-              <img src="/fgia/henrique-microfone.jpg" alt="Henrique Magioni, anfitrião do Palco IA News" width={1000} height={1333} />
+              <img src="/fgia/henrique.jpg" alt="Henrique Magioni, anfitrião do Palco IA News" width={724} height={905} />
               <div className="fgc-event-txt">
                 <span className="fgc-live">
                   <i aria-hidden="true" /> Online e ao vivo
