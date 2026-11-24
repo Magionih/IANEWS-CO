@@ -1,3 +1,4 @@
+import { coverObjectPosition } from "@/lib/cover-position";
 import { useEffect, useRef, useState } from "react";
 
 /* Foto no padrão do IANews Portal (.thumb). Sem endereço, ou se a imagem falhar,
@@ -11,12 +12,14 @@ export function ArticleThumb({
   label,
   className,
   eager = false,
+  position,
 }: {
   src: string | null | undefined;
   alt: string;
   label: string;
   className?: string;
   eager?: boolean;
+  position?: string | null;
 }) {
   const [failed, setFailed] = useState(false);
   const img = useRef<HTMLImageElement>(null);
@@ -43,6 +46,7 @@ export function ArticleThumb({
   return (
     <span className={cls}>
       <img
+          style={position ? { objectPosition: coverObjectPosition(position) } : undefined}
         ref={img}
         src={src!}
         alt={alt}

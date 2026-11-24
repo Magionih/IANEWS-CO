@@ -20,7 +20,13 @@ export type AdminArticle = {
   status: "draft" | "published";
   origin: string | null;
   social_url: string | null;
+  /** Enquadramento da capa: top, center, bottom ou nulo (padrão). */
+  cover_position: string | null;
+  /** Crédito da foto, lido da fonte do tipo "foto" (é o que vai na legenda da capa). */
+  cover_credit: string;
 };
+
+type PhotoSource = { name?: string; url?: string; kind?: string };
 
 export type AdminReader = {
   user_id: string;
@@ -77,7 +83,7 @@ export const getAdminData = createServerFn({ method: "GET" })
       supabase
         .from("articles")
         .select(
-          "id, slug, title, dek, category, author, cover_image_url, source_name, source_url, read_minutes, views_count, quality_score, published_at, status, origin, social_url",
+          "id, slug, title, dek, category, author, cover_image_url, cover_position, sources, source_name, source_url, read_minutes, views_count, quality_score, published_at, status, origin, social_url",
         )
         .order("published_at", { ascending: false })
         .limit(300),
@@ -102,7 +108,12 @@ export const getAdminData = createServerFn({ method: "GET" })
         .limit(20),
     ]);
 
-    const articles = (articlesRes.data ?? []) as AdminArticle[];
+    const articles = ((articlesRes.data ?? []) as (Omit<AdminArticle, "cover_credit"> & { sources: unknown })[]).map(
+      ({ sources, ...a }) => {
+        const foto = Array.isArray(sources) ? (sources as PhotoSource[]).find((s) => s?.kind === "foto") : undefined;
+        return { ...a, cover_credit: foto?.name ?? "" } as AdminArticle;
+      },
+    );
     const rolesByUser = new Map<string, AdminRole[]>();
     for (const r of (rolesRes.data ?? []) as { user_id: string; role: AdminRole }[]) {
       rolesByUser.set(r.user_id, [...(rolesByUser.get(r.user_id) ?? []), r.role]);
@@ -198,6 +209,10 @@ export const saveArticle = createServerFn({ method: "POST" })
       published_at?: string | null;
       origin?: string | null;
       social_url?: string | null;
+      /** Enquadramento da capa. undefined = não mexe; null = padrão. */
+      cover_position?: "top" | "center" | "bottom" | null;
+      /** Crédito da foto. undefined = não mexe; "" = remove o crédito. */
+      cover_credit?: string;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -223,6 +238,31 @@ export const saveArticle = createServerFn({ method: "POST" })
     }
     if (data.origin !== undefined) payload.origin = data.origin?.trim().slice(0, 40) || null;
     if (data.social_url !== undefined) payload.social_url = data.social_url?.trim().slice(0, 500) || null;
+    if (data.cover_position !== undefined) {
+      const pos = data.cover_position;
+      if (pos !== null && !["top", "center", "bottom"].includes(pos)) throw new Error("Enquadramento inválido.");
+      payload.cover_position = pos;
+    }
+
+    // Crédito da foto: grava na fonte do tipo "foto", o mesmo lugar que a legenda da capa já lê.
+    if (data.cover_credit !== undefined) {
+      let sources: PhotoSource[] = [];
+      if (data.id) {
+        const { data: cur, error: curErr } = await context.supabase
+          .from("articles")
+          .select("sources")
+          .eq("id", data.id)
+          .single();
+        if (curErr) throw new Error(curErr.message);
+        const raw = (cur as { sources: unknown } | null)?.sources;
+        sources = Array.isArray(raw) ? (raw as PhotoSource[]) : [];
+      }
+      const credit = data.cover_credit.trim().slice(0, 200);
+      const prev = sources.find((s) => s?.kind === "foto");
+      const others = sources.filter((s) => s?.kind !== "foto");
+      const url = prev?.url || (payload.cover_image_url as string | null) || undefined;
+      payload.sources = credit ? [...others, { name: credit, ...(url ? { url } : {}), kind: "foto" }] : others;
+    }
 
     if (data.id) {
       const { error } = await context.supabase

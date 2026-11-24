@@ -58,6 +58,8 @@ import { NewsletterPanel } from "@/components/admin/newsletter-panel";
 import { MessagesPanel } from "@/components/admin/messages-panel";
 import { PautasPanel } from "@/components/admin/pautas-panel";
 import { SharePanel } from "@/components/admin/share-panel";
+import { CoverUpload } from "@/components/admin/cover-upload";
+import type { CoverPosition } from "@/lib/cover-position";
 import { AnalyticsPanel } from "@/components/admin/analytics-panel";
 import { ConversionPanel } from "@/components/admin/conversion-panel";
 import { AdsPanel } from "@/components/admin/ads-panel";
@@ -130,6 +132,11 @@ const emptyForm = {
   publish_at: "",
   origin: "",
   social_url: "",
+  cover_position: "" as CoverPosition | "",
+  cover_credit: "",
+  // Valores carregados, para só enviar enquadramento e crédito quando mudarem.
+  orig_cover_position: "" as CoverPosition | "",
+  orig_cover_credit: "",
 };
 
 function AdminPage() {
@@ -210,6 +217,10 @@ function AdminPage() {
       publish_at: toLocalInput(a.published_at),
       origin: a.origin ?? "",
       social_url: a.social_url ?? "",
+      cover_position: (a.cover_position ?? "") as CoverPosition | "",
+      cover_credit: a.cover_credit ?? "",
+      orig_cover_position: (a.cover_position ?? "") as CoverPosition | "",
+      orig_cover_credit: a.cover_credit ?? "",
     });
     setDialogOpen(true);
   }
@@ -221,11 +232,13 @@ function AdminPage() {
       return toast.error("Slug inválido — use apenas letras minúsculas, números e hífens.");
     setSaving(true);
     try {
-      const { publish_at, ...rest } = form;
+      const { publish_at, cover_position, cover_credit, orig_cover_position, orig_cover_credit, ...rest } = form;
       const publishedAt = fromLocalInput(publish_at);
       await saveArticle({
         data: {
           ...rest,
+          cover_position: cover_position !== orig_cover_position ? cover_position || null : undefined,
+          cover_credit: cover_credit.trim() !== orig_cover_credit.trim() ? cover_credit : undefined,
           published_at: publishedAt,
           origin: form.origin || null,
           social_url: form.social_url || null,
@@ -943,6 +956,16 @@ function AdminPage() {
                 placeholder="https://..."
               />
             </Field>
+            <CoverUpload
+              slug={form.slug}
+              url={form.cover_image_url}
+              position={form.cover_position}
+              credit={form.cover_credit}
+              title={form.title}
+              onUrl={(url) => setForm((f) => ({ ...f, cover_image_url: url }))}
+              onPosition={(p) => setForm((f) => ({ ...f, cover_position: p }))}
+              onCredit={(c) => setForm((f) => ({ ...f, cover_credit: c }))}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Fonte" id="source_name">
                 <Input

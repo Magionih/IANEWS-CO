@@ -96,7 +96,7 @@ function LinksPage() {
                   className="lk-art"
                   onClick={click("materia", a.slug)}
                 >
-                  <ArticleThumb src={a.cover_image_url} alt="" label={CATEGORY_SEO[a.category]?.label ?? "IANews"} className="r43" />
+                  <ArticleThumb src={a.cover_image_url} alt="" label={CATEGORY_SEO[a.category]?.label ?? "IANews"} className="r43" position={a.cover_position} />
                   <span>
                     <small>{CATEGORY_SEO[a.category]?.label ?? a.category}</small>
                     <b>{a.title}</b>

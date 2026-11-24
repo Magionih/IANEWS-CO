@@ -1,3 +1,4 @@
+import { coverObjectPosition } from "@/lib/cover-position";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ParticipeCards } from "@/components/site/participe";
 import { Link } from "@tanstack/react-router";
@@ -42,11 +43,13 @@ function Thumb({
   label,
   ratio,
   eager = false,
+  position,
 }: {
   src: string | null | undefined;
   label: string;
   ratio?: "r43" | "r32";
   eager?: boolean;
+  position?: string | null;
 }) {
   const [failed, setFailed] = useState(false);
   const none = !src || failed;
@@ -56,6 +59,7 @@ function Thumb({
         <span>{label}</span>
       ) : (
         <img
+          style={position ? { objectPosition: coverObjectPosition(position) } : undefined}
           src={src}
           alt=""
           decoding="async"
@@ -94,7 +98,7 @@ export function HomeCard({ a, kind }: { a: ArticleRow; kind?: "row" | "full" | "
           <h3>{a.title}</h3>
           <span className="when">{homeDate(a.published_at)}</span>
         </span>
-        <Thumb src={a.cover_image_url} label={label} ratio="r43" />
+        <Thumb src={a.cover_image_url} label={label} ratio="r43" position={a.cover_position} />
       </Link>
     );
   }
@@ -104,7 +108,7 @@ export function HomeCard({ a, kind }: { a: ArticleRow; kind?: "row" | "full" | "
       to="/materia/$slug"
       params={{ slug: a.slug }}
     >
-      <Thumb src={a.cover_image_url} label={label} />
+      <Thumb src={a.cover_image_url} label={label} position={a.cover_position} />
       <Kick a={a} />
       <h3>{a.title}</h3>
       {kind === "full" && a.dek ? <p className="dek">{a.dek}</p> : null}
@@ -121,7 +125,7 @@ export function HomeHero({ lead, latest }: { lead: ArticleRow | null; latest: Ar
     <section className="hero">
       <div>
         <Link className="lead" to="/materia/$slug" params={{ slug: lead.slug }}>
-          <Thumb src={lead.cover_image_url} label={catLabel(lead.category)} eager />
+          <Thumb src={lead.cover_image_url} label={catLabel(lead.category)} eager position={lead.cover_position} />
           <Kick a={lead} />
           <h1>{lead.title}</h1>
           {lead.dek ? <p className="dek">{lead.dek}</p> : null}

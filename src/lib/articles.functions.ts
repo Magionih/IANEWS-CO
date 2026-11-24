@@ -18,6 +18,7 @@ export type ArticleRow = {
   why_it_matters: string | null;
   category: string;
   cover_image_url: string | null;
+  cover_position?: string | null;
   source_name: string | null;
   source_url: string | null;
   author: string | null;
@@ -45,7 +46,7 @@ export const listRecentArticles = createServerFn({ method: "GET" }).handler(
     const { data, error } = await supabase
       .from("articles")
       .select(
-        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at",
+        "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at",
       )
       .order("published_at", { ascending: false })
       .limit(24);
@@ -64,7 +65,7 @@ export const getArticleBySlug = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("articles")
       .select(
-        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at, updated_at, body_markdown, views_count, seo_title, seo_description, tags, analysis_markdown, business_context, editorial_conclusion, business_impacts, sources",
+        "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at, updated_at, body_markdown, views_count, seo_title, seo_description, tags, analysis_markdown, business_context, editorial_conclusion, business_impacts, sources",
       )
       .eq("slug", data.slug)
       .maybeSingle();
@@ -81,7 +82,7 @@ export const listMostRead = createServerFn({ method: "GET" }).handler(
     const { data, error } = await supabase
       .from("articles")
       .select(
-        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at",
+        "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at",
       )
       .order("views_count", { ascending: false })
       .order("published_at", { ascending: false })
@@ -100,7 +101,7 @@ export const listArticlesFiltered = createServerFn({ method: "GET" })
     let query = supabase
       .from("articles")
       .select(
-        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at",
+        "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at",
       )
       .order("published_at", { ascending: false })
       .limit(60);
@@ -131,7 +132,7 @@ export const listArticlesForHub = createServerFn({ method: "GET" })
     const { data: rows, error } = await supabase
       .from("articles")
       .select(
-        "id, slug, title, dek, why_it_matters, category, cover_image_url, source_name, source_url, author, read_minutes, published_at, tags",
+        "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at, tags",
       )
       .order("published_at", { ascending: false })
       .limit(200);

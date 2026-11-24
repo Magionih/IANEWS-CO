@@ -268,7 +268,7 @@ function ArticleCard({ a }: { a: ArticleRow }) {
   const label = labelOf(a.category);
   return (
     <Link to="/materia/$slug" params={{ slug: a.slug }} className="card sm">
-      <ArticleThumb src={a.cover_image_url} alt={a.title} label={label} />
+      <ArticleThumb src={a.cover_image_url} alt={a.title} label={label} position={a.cover_position} />
       <span className="kick">
         <span>{label}</span>
       </span>
@@ -372,6 +372,7 @@ function ArticlePage() {
                   alt={article.title}
                   label={categoryLabel}
                   eager
+                  position={article.cover_position}
                 />
                 {article.cover_image_url ? (
                   <figcaption className="cap">
@@ -575,6 +576,7 @@ function ArticlePage() {
                     alt={next.title}
                     label={labelOf(next.category)}
                     className="r43"
+                    position={next.cover_position}
                   />
                 </Link>
               ) : null}

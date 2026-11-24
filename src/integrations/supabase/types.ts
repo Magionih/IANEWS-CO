@@ -220,6 +220,7 @@ export type Database = {
           business_impacts: string[]
           category: string
           cover_image_url: string | null
+          cover_position: string | null
           created_at: string
           dek: string | null
           editorial_angle: string | null
@@ -253,6 +254,7 @@ export type Database = {
           business_impacts?: string[]
           category?: string
           cover_image_url?: string | null
+          cover_position?: string | null
           created_at?: string
           dek?: string | null
           editorial_angle?: string | null
@@ -286,6 +288,7 @@ export type Database = {
           business_impacts?: string[]
           category?: string
           cover_image_url?: string | null
+          cover_position?: string | null
           created_at?: string
           dek?: string | null
           editorial_angle?: string | null

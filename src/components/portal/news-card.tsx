@@ -1,3 +1,4 @@
+import { coverObjectPosition } from "@/lib/cover-position";
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
@@ -37,12 +38,14 @@ export function NewsThumb({
   label,
   ratio,
   eager = false,
+  position,
 }: {
   src: string | null | undefined;
   alt: string;
   label: string;
   ratio?: "r43" | "r32";
   eager?: boolean;
+  position?: string | null;
 }) {
   const [failed, setFailed] = useState(false);
   const none = !src || failed;
@@ -53,6 +56,7 @@ export function NewsThumb({
         <span>{label}</span>
       ) : (
         <img
+          style={position ? { objectPosition: coverObjectPosition(position) } : undefined}
           src={src}
           alt={alt}
           decoding="async"
@@ -82,7 +86,7 @@ export function NewsCard({ a, dek = true }: { a: ArticleRow; dek?: boolean }) {
   const label = categoryLabel(a.category);
   return (
     <Link className="card full" to="/materia/$slug" params={{ slug: a.slug }}>
-      <NewsThumb src={a.cover_image_url} alt="" label={label} />
+      <NewsThumb src={a.cover_image_url} alt="" label={label} position={a.cover_position} />
       <NewsKick category={a.category} />
       <h3>{a.title}</h3>
       {dek && a.dek ? <p className="dek">{a.dek}</p> : null}
@@ -103,7 +107,7 @@ export function NewsFeature({ a, cta = "Ler a matéria" }: { a: ArticleRow; cta?
         aria-hidden="true"
         tabIndex={-1}
       >
-        <NewsThumb src={a.cover_image_url} alt="" label={label} ratio="r32" eager />
+        <NewsThumb src={a.cover_image_url} alt="" label={label} ratio="r32" eager position={a.cover_position} />
       </Link>
       <div className="feature-txt">
         <NewsKick category={a.category} />
