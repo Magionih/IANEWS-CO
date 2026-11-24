@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -17,7 +17,7 @@ import { VisitTracker } from "@/components/site/visit-tracker";
 import { ExitIntent } from "@/components/site/exit-intent";
 import { PwaManager } from "@/components/site/pwa";
 import { ConsentBanner } from "@/components/site/consent-banner";
-import { ScrollToTop } from "@/components/site/scroll-to-top";
+import { RouteProgress, ScrollToTop } from "@/components/site/scroll-to-top";
 import { supabase } from "@/integrations/supabase/client";
 import { pixel } from "@/lib/pixel";
 
@@ -87,8 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       {
         name: "viewport",
-        content:
-          "width=device-width, initial-scale=1, viewport-fit=cover",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       { name: "author", content: "IA News" },
       { name: "publisher", content: "IA News" },
@@ -111,7 +110,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@ianews" },
       { name: "twitter:image", content: "https://ianewsbr.com/og-ianews.png" },
-      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
     ],
 
     links: [
@@ -128,7 +130,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "alternate", type: "application/rss+xml", title: "IA News", href: "https://ianewsbr.com/feed.xml" },
+      {
+        rel: "alternate",
+        type: "application/rss+xml",
+        title: "IA News",
+        href: "https://ianewsbr.com/feed.xml",
+      },
     ],
     scripts: [
       {
@@ -250,10 +257,17 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const lastUser = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const uid = session?.user?.id ?? null;
+      const prev = lastUser.current;
+      lastUser.current = uid;
+      if (event === "INITIAL_SESSION") return;
+      // O Supabase repete SIGNED_IN ao voltar para a aba: só recarrega se a pessoa mudou.
+      if (event === "SIGNED_IN" && prev === uid) return;
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
@@ -277,6 +291,7 @@ function RootComponent() {
         <Outlet />
       </div>
       <ScrollToTop />
+      <RouteProgress />
       <VisitTracker />
       <SubscribeDialog />
       <ConsentBanner />

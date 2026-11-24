@@ -9,9 +9,13 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-subscribe";
 import { useAuth } from "@/hooks/use-auth";
-import { listAiTools,
+import {
+  listAiTools,
   getLatestBenchLeader,
-  type BenchLeader, getMyToolRatings, type AiTool } from "@/lib/ai-ranking.functions";
+  type BenchLeader,
+  getMyToolRatings,
+  type AiTool,
+} from "@/lib/ai-ranking.functions";
 import {
   AREAS,
   CATEGORIES,
@@ -26,7 +30,8 @@ import { CompareDialog, RatingPrompt, ToolDialog } from "@/components/portal/ran
 type Search = { area?: string; cat?: string; q?: string; all?: boolean; maker?: string };
 
 /** Só guarda o que difere do padrão: assim /ranking não redireciona para uma URL cheia de parâmetros. */
-const str = (v: unknown, def: string) => (typeof v === "string" && v !== "" && v !== def ? v : undefined);
+const str = (v: unknown, def: string) =>
+  typeof v === "string" && v !== "" && v !== def ? v : undefined;
 
 /** Quantas plataformas aparecem antes do botão "Ver todas". */
 const FIRST_ROWS = 20;
@@ -43,7 +48,10 @@ export const Route = createFileRoute("/ranking")({
   }),
   loader: async () => {
     try {
-      const [tools, bench] = await Promise.all([listAiTools(), getLatestBenchLeader().catch(() => null)]);
+      const [tools, bench] = await Promise.all([
+        listAiTools(),
+        getLatestBenchLeader().catch(() => null),
+      ]);
       return { tools, bench };
     } catch (err) {
       console.error("[ranking] loader failed", err);
@@ -56,7 +64,9 @@ export const Route = createFileRoute("/ranking")({
     const total = loaderData?.tools?.length || 50;
     const title = "Ranking IA 2026: as melhores ferramentas de inteligência artificial";
     const bench = loaderData?.bench;
-    const benchTxt = bench ? ` Em inteligência, lidera o ${bench.name}, da ${bench.maker} (${bench.asOf}).` : "";
+    const benchTxt = bench
+      ? ` Em inteligência, lidera o ${bench.name}, da ${bench.maker} (${bench.asOf}).`
+      : "";
     const description = top.length
       ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram entre as ferramentas.${benchTxt} Compare ${total} ferramentas por categoria e fabricante.`
       : "Ranking atualizado das melhores ferramentas de inteligência artificial, por categoria, fabricante e nota dos leitores brasileiros.";
@@ -215,19 +225,40 @@ function RankingPage() {
 
   const isFiltered = activeCat !== "todas" || activeMaker !== "todos" || q.trim() !== "";
 
-  const highlights = useMemo(() => {
-    const bestOf = (label: string, pool: AiTool[], key: string) => {
-      const best = [...pool].sort((a, b) => scoreFor(b, key) - scoreFor(a, key))[0];
-      return best ? { label, tool: best } : null;
-    };
-    const inCat = (c: string) => tools.filter((t) => t.category === c);
-    return [
-      bestOf("Líder do dia", tools, "semanal"),
-      bestOf("Programação", inCat("codigo"), "semanal"),
-      bestOf("Imagem e vídeo", [...inCat("imagem"), ...inCat("video")], "semanal"),
-      bestOf("Jurídico", tools, "juridico"),
-    ].filter(Boolean) as { label: string; tool: AiTool }[];
-  }, [tools]);
+  const podium = filtered.slice(0, 3);
+  // Ordem visual do pódio: 2º, 1º, 3º.
+  const podiumOrder = [
+    podium[1] && { tool: podium[1], pos: 2 },
+    podium[0] && { tool: podium[0], pos: 1 },
+    podium[2] && { tool: podium[2], pos: 3 },
+  ].filter(Boolean) as { tool: AiTool; pos: number }[];
+
+  const leaders = useMemo(
+    () =>
+      CATEGORIES.filter((c) => c.key !== "todas")
+        .map((c) => {
+          const pool = tools.filter((t) => t.category === c.key);
+          const tool = [...pool].sort(
+            (a, b) => scoreFor(b, activeArea) - scoreFor(a, activeArea),
+          )[0];
+          return tool ? { key: c.key, label: c.label, tool, count: pool.length } : null;
+        })
+        .filter(Boolean) as { key: string; label: string; tool: AiTool; count: number }[],
+    [tools, activeArea],
+  );
+
+  const movers = useMemo(
+    () =>
+      tools
+        .map((t) => ({
+          tool: t,
+          delta: t.previous_position > 0 ? t.previous_position - t.rank_position : 0,
+        }))
+        .filter((m) => m.delta > 0)
+        .sort((a, b) => b.delta - a.delta)
+        .slice(0, 4),
+    [tools],
+  );
 
   const topFive = useMemo(
     () => [...tools].sort((a, b) => b.weekly_score - a.weekly_score).slice(0, 5),
@@ -271,116 +302,140 @@ function RankingPage() {
     <>
       <SiteHeader />
       <main id="main">
-        <div className="page" data-page="ranking">
-          <div className="wrap">
-            <div className="page-head">
-              <p className="kick">Ranking IA</p>
-              <h1>As melhores plataformas de IA</h1>
-              <p className="sub">
-                {total ? `${total} plataformas avaliadas` : "Plataformas avaliadas"} com nota de 0 a
-                10. A nota combina desempenho técnico, repercussão nas notícias e avaliação dos
-                leitores.
+        <div className="page rkx" data-page="ranking">
+          <section className="rkx-hero" aria-labelledby="rkx-h1">
+            <div className="wrap">
+              <p className="rkx-kick">
+                <span className="rkx-live" aria-hidden="true" /> Ranking IA · atualizado em{" "}
+                {updatedAt}
               </p>
+              <h1 id="rkx-h1">As melhores plataformas de IA, hoje</h1>
+              <p className="rkx-sub">
+                {total ? `${total} plataformas` : "Plataformas"} com nota de 0 a 10, que combina
+                desempenho técnico, repercussão nas notícias e avaliação dos leitores. Recalculado
+                todo dia, às 6h.
+              </p>
+
+              <div className="rkx-areas" role="group" aria-label="Critério da nota">
+                {AREAS.map((a) => (
+                  <button
+                    key={a.key}
+                    type="button"
+                    aria-pressed={a.key === activeArea}
+                    className={a.key === activeArea ? "on" : undefined}
+                    onClick={() => setSearch({ area: a.key })}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+
+              {podium.length ? (
+                <ol className="rkx-podium" aria-label={`Pódio: ${activeLabel}`}>
+                  {podiumOrder.map(({ tool, pos }) => (
+                    <li key={tool.id} className={"p" + pos}>
+                      <button type="button" onClick={() => setSelected(tool)}>
+                        <span className="rkx-medal" aria-hidden="true">
+                          {pos}º
+                        </span>
+                        <RankLogo m={tool} className="rkx-plogo" />
+                        <b className="rkx-pname">{tool.name}</b>
+                        <span className="rkx-pmk">
+                          {tool.maker === tool.name ? catLabel(tool.category) : tool.maker}
+                        </span>
+                        <span className="rkx-pscore">
+                          {fmtScore(scoreFor(tool, activeArea))}
+                          <small>/10</small>
+                        </span>
+                        <span className="rkx-step" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+
               {filtered.length >= 3 ? (
-                <p className="rk-answer">
+                <p className="rkx-answer">
                   <b>Resposta direta:</b> as três ferramentas de IA melhor colocadas hoje
-                  {activeArea !== "semanal" ? ` em ${activeLabel}` : ""} são{" "}
+                  {activeArea !== "semanal" ? ` em ${activeLabel}` : ""}
+                  {activeCat !== "todas" ? ` (${catLabel(activeCat)})` : ""} são{" "}
                   <b>{filtered[0].name}</b> ({filtered[0].maker}), <b>{filtered[1].name}</b> (
                   {filtered[1].maker}) e <b>{filtered[2].name}</b> ({filtered[2].maker}).
                 </p>
               ) : null}
-              <p className="when" style={{ marginTop: 12 }}>
-                Atualizado em {updatedAt}. Recálculo automático todos os dias, às 6h.
-              </p>
             </div>
+          </section>
 
-            {highlights.length ? (
-              <div className="tiles">
-                {highlights.map((h) => (
-                  <button
-                    key={h.label}
-                    type="button"
-                    className="tile rk-tile"
-                    onClick={() => setSelected(h.tool)}
-                  >
-                    <span className="lb">{h.label}</span>
-                    <span className="who">
-                      <RankLogo m={h.tool} />
-                      <b>{h.tool.name}</b>
-                    </span>
-                    <span className="sc">
-                      {fmtScore(scoreFor(h.tool, "semanal"))}
-                      <small>nota</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
+          <div className="wrap">
+            {leaders.length ? (
+              <section className="rkx-sec" aria-labelledby="rkx-lead-h">
+                <div className="sec-head">
+                  <h2 id="rkx-lead-h">Líder de cada categoria</h2>
+                  <p className="lede">Toque para ver a classificação completa da categoria</p>
+                </div>
+                <div className="rkx-leaders">
+                  {leaders.map(({ key, label, tool, count }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={"rkx-leader" + (activeCat === key ? " on" : "")}
+                      onClick={() => {
+                        setSearch({ cat: activeCat === key ? "todas" : key });
+                        document
+                          .getElementById("classificacao")
+                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                    >
+                      <span className="rkx-lcat">
+                        {label} <i>{count}</i>
+                      </span>
+                      <span className="rkx-lwho">
+                        <RankLogo m={tool} />
+                        <b>{tool.name}</b>
+                      </span>
+                      <span className="rkx-lsc">{fmtScore(scoreFor(tool, activeArea))}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             ) : null}
 
-            <div className="sec-head" style={{ marginTop: 44 }}>
-              <h2>Classificação</h2>
-            </div>
-            <div className="toolbar">
-              <div className="filter" role="search">
-                <label className="filter-q">
-                  <Search className="ico" aria-hidden="true" />
-                  <input
-                    type="search"
-                    value={q}
-                    onChange={(e) => setSearch({ q: e.target.value })}
-                    placeholder="Buscar plataforma ou fabricante"
-                    aria-label="Buscar plataforma ou fabricante"
-                    autoComplete="off"
-                  />
-                </label>
-                <label className="filter-s">
-                  Categoria
-                  <select
-                    aria-label="Categoria"
-                    value={activeCat}
-                    onChange={(e) => setSearch({ cat: e.target.value })}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c.key} value={c.key}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="filter-meta">
-                <span role="status" aria-live="polite">
-                  {countText}
-                </span>
-                {isFiltered ? (
-                  <button
-                    className="more"
-                    type="button"
-                    onClick={() => setSearch({ cat: "todas", maker: "todos", q: "" })}
-                  >
-                    Limpar
+            {movers.length ? (
+              <section className="rkx-movers" aria-label="Quem mais subiu desde ontem">
+                <span className="rkx-mv-t">▲ Subiram desde ontem</span>
+                {movers.map(({ tool, delta }) => (
+                  <button key={tool.id} type="button" onClick={() => setSelected(tool)}>
+                    <RankLogo m={tool} />
+                    <b>{tool.name}</b>
+                    <i>+{delta}</i>
                   </button>
-                ) : null}
-              </div>
+                ))}
+              </section>
+            ) : null}
+
+            <div
+              className="sec-head"
+              id="classificacao"
+              style={{ marginTop: 44, scrollMarginTop: 80 }}
+            >
+              <h2>Classificação completa</h2>
+              <p className="lede">{activeLabel}</p>
             </div>
 
-            <div className="rk-opts">
-              <label>
-                Nota
-                <select
-                  aria-label="Critério da nota"
-                  value={activeArea}
-                  onChange={(e) => setSearch({ area: e.target.value })}
-                >
-                  {AREAS.map((a) => (
-                    <option key={a.key} value={a.key}>
-                      {a.label}
-                    </option>
-                  ))}
-                </select>
+            <div className="rkx-tools">
+              <label className="filter-q rkx-q">
+                <Search className="ico" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={q}
+                  onChange={(e) => setSearch({ q: e.target.value })}
+                  placeholder="Buscar plataforma ou fabricante"
+                  aria-label="Buscar plataforma ou fabricante"
+                  autoComplete="off"
+                />
               </label>
-              <label>
-                Fabricante
+              <label className="rkx-sel">
+                <span>Fabricante</span>
                 <select
                   aria-label="Fabricante"
                   value={activeMaker}
@@ -394,18 +449,36 @@ function RankingPage() {
                   ))}
                 </select>
               </label>
-              <button
-                type="button"
-                className={"btn s rk-cmp-go" + (compareTools.length >= 2 ? " blue" : " line")}
-                onClick={() =>
-                  compareTools.length >= 2
-                    ? setCompareOpen(true)
-                    : toast.info("Marque 2 ou 3 ferramentas na lista para comparar.")
-                }
-              >
-                <GitCompare className="ico" aria-hidden="true" />
-                Comparar{compareTools.length ? ` (${compareTools.length})` : ""}
-              </button>
+            </div>
+            <div className="rkx-cats" role="group" aria-label="Categoria">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  aria-pressed={c.key === activeCat}
+                  className={c.key === activeCat ? "on" : undefined}
+                  onClick={() => setSearch({ cat: c.key })}
+                >
+                  {c.key === "todas" ? "Todas" : c.label}
+                </button>
+              ))}
+            </div>
+            <div className="rkx-meta">
+              <span role="status" aria-live="polite">
+                {countText}
+              </span>
+              {isFiltered ? (
+                <button
+                  className="more"
+                  type="button"
+                  onClick={() => setSearch({ cat: "todas", maker: "todos", q: "" })}
+                >
+                  Limpar filtros
+                </button>
+              ) : null}
+              <span className="rkx-tip">
+                <GitCompare className="ico" aria-hidden="true" /> marque até 3 para comparar
+              </span>
             </div>
 
             <div
@@ -421,7 +494,7 @@ function RankingPage() {
                     key={m.id}
                     id={m.slug ?? m.id}
                     role="listitem"
-                    className={"rk-item" + (i < 3 ? " t3" : "")}
+                    className={"rk-item" + (i < 3 ? " t3 m" + (i + 1) : "") + (on ? " sel" : "")}
                   >
                     <div className="rk-row rk-x" onClick={() => setSelected(m)}>
                       <span className="rk-pos">{String(i + 1).padStart(2, "0")}</span>
@@ -581,6 +654,36 @@ function RankingPage() {
           </div>
         </div>
       </main>
+
+      {compareTools.length ? (
+        <div className="rkx-cmpbar" role="region" aria-label="Comparação">
+          <div className="rkx-cmp-logos">
+            {compareTools.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                title={`Remover ${t.name}`}
+                onClick={() => toggleCompare(t.id)}
+              >
+                <RankLogo m={t} />
+                <span>{t.name}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn s blue"
+            disabled={compareTools.length < 2}
+            onClick={() => setCompareOpen(true)}
+          >
+            <GitCompare className="ico" aria-hidden="true" />
+            {compareTools.length < 2 ? "Marque mais 1" : `Comparar ${compareTools.length}`}
+          </button>
+          <button type="button" className="more" onClick={() => setCompareIds([])}>
+            Limpar
+          </button>
+        </div>
+      ) : null}
 
       <CompareDialog
         tools={compareTools}

@@ -117,23 +117,135 @@ export function HomeCard({ a, kind }: { a: ArticleRow; kind?: "row" | "full" | "
   );
 }
 
-/* ---------- hero ---------- */
-export function HomeHero({ lead, latest }: { lead: ArticleRow | null; latest: ArticleRow[] }) {
-  if (!lead) return null;
-  const by = (lead.author || lead.source_name || "IANews").split(",")[0];
+/* ---------- topo: "Últimas" + carrossel de destaques ---------- */
+const ROTATE_MS = 6000;
+
+function HeroCarousel({ items }: { items: ArticleRow[] }) {
+  const track = useRef<HTMLDivElement>(null);
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const n = items.length;
+
+  const go = useCallback(
+    (i: number) => {
+      const el = track.current;
+      if (!el || n === 0) return;
+      const next = ((i % n) + n) % n;
+      el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+      setIdx(next);
+    },
+    [n],
+  );
+
+  // Atualiza o ponto ativo quando a pessoa arrasta com o dedo.
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      clearTimeout(t);
+      t = setTimeout(() => setIdx(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))), 80);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      clearTimeout(t);
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // Gira sozinho; para em hover, foco, toque, aba oculta ou "reduzir movimento".
+  useEffect(() => {
+    if (paused || n < 2) return;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") go(idx + 1);
+    }, ROTATE_MS);
+    return () => clearInterval(id);
+  }, [paused, n, idx, go]);
+
+  if (n === 0) return null;
   return (
-    <section className="hero">
-      <div>
-        <Link className="lead" to="/materia/$slug" params={{ slug: lead.slug }}>
-          <Thumb src={lead.cover_image_url} label={catLabel(lead.category)} eager position={lead.cover_position} />
-          <Kick a={lead} />
-          <h1>{lead.title}</h1>
-          {lead.dek ? <p className="dek">{lead.dek}</p> : null}
-          <span className="when">
-            {by} · {readLine(lead)}
-          </span>
-        </Link>
+    <section
+      className="hc"
+      aria-roledescription="carrossel"
+      aria-label="Destaques"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+    >
+      <div className="hc-head">
+        <h2>Destaques</h2>
+        {n > 1 ? (
+          <div className="hc-nav">
+            <button type="button" aria-label="Destaque anterior" onClick={() => go(idx - 1)}>
+              ‹
+            </button>
+            <button type="button" aria-label="Próximo destaque" onClick={() => go(idx + 1)}>
+              ›
+            </button>
+          </div>
+        ) : null}
       </div>
+      <div className="hc-track" ref={track}>
+        {items.map((a, i) => (
+          <div
+            key={a.id}
+            className="hc-slide home-capa"
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} de ${n}`}
+            aria-hidden={i !== idx}
+          >
+            <Link
+              className="card full"
+              to="/materia/$slug"
+              params={{ slug: a.slug }}
+              tabIndex={i === idx ? 0 : -1}
+            >
+              <Thumb
+                src={a.cover_image_url}
+                label={catLabel(a.category)}
+                eager={i === 0}
+                position={a.cover_position}
+              />
+              <Kick a={a} />
+              <h3>{a.title}</h3>
+              {a.dek ? <p className="dek">{a.dek}</p> : null}
+              <span className="when">{readLine(a)}</span>
+            </Link>
+          </div>
+        ))}
+      </div>
+      {n > 1 ? (
+        <div className="hc-dots" role="tablist" aria-label="Escolher destaque">
+          {items.map((a, i) => (
+            <button
+              key={a.id}
+              type="button"
+              role="tab"
+              aria-selected={i === idx}
+              aria-label={`Destaque ${i + 1}`}
+              className={i === idx ? "on" : undefined}
+              onClick={() => go(i)}
+            />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+export function HomeHero({ featured, latest }: { featured: ArticleRow[]; latest: ArticleRow[] }) {
+  if (featured.length === 0 && latest.length === 0) return null;
+  return (
+    <div className="hero top2">
+      <h1 className="sr-only">IA News: notícias de inteligência artificial para quem decide</h1>
       {latest.length > 0 ? (
         <aside className="latest" aria-label="Últimas notícias">
           <h2>Últimas</h2>
@@ -147,7 +259,8 @@ export function HomeHero({ lead, latest }: { lead: ArticleRow | null; latest: Ar
           </Link>
         </aside>
       ) : null}
-    </section>
+      <HeroCarousel items={featured} />
+    </div>
   );
 }
 
@@ -481,7 +594,9 @@ export function HomeParticipe() {
           <h2 id="hp-part-h" className="hp-part-h">
             Participe da IA News
           </h2>
-          <p>Conte a história da sua empresa, indique quem faz a IA acontecer e venha para o Palco.</p>
+          <p>
+            Conte a história da sua empresa, indique quem faz a IA acontecer e venha para o Palco.
+          </p>
         </div>
         <ParticipeCards placement="home-participe" />
       </div>

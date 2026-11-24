@@ -35,7 +35,13 @@ export const Route = createFileRoute("/")({
     // O domínio fgiaeducacao.com.br abre a landing da FGIA Educação na raiz.
     const host = await getRequestHostname().catch(() => "");
     if (isFgiaHost(host)) {
-      return { fgia: true, articles: [] as ArticleRow[], mostRead: [] as ArticleRow[], tools: [] as AiTool[], brasil: [] as ArticleRow[] };
+      return {
+        fgia: true,
+        articles: [] as ArticleRow[],
+        mostRead: [] as ArticleRow[],
+        tools: [] as AiTool[],
+        brasil: [] as ArticleRow[],
+      };
     }
     const [articles, mostRead, tools, brasil] = await Promise.all([
       listRecentArticles().catch((err) => {
@@ -122,10 +128,9 @@ function PortalHome() {
     return out;
   };
 
-  // Hero: a mais recente com foto (senão a mais recente) + 4 "Últimas".
-  const lead = articles.find((a) => a.cover_image_url) ?? articles[0] ?? null;
-  if (lead) used.add(lead.id);
-  const latest = take(articles, 4);
+  // Topo: 5 "Últimas" (as mais recentes) e, ao lado, 5 destaques com foto que giram sozinhos.
+  const latest = take(articles, 5);
+  const featured = take(articles, 5, (a) => !!a.cover_image_url);
   const news = take(articles, 6);
 
   // IA no Brasil: editoria "brasil"; sem matérias dela, as recentes que sobraram.
@@ -148,7 +153,7 @@ function PortalHome() {
       <main id="main">
         <div className="wrap">
           <SinceLastVisit dates={articles.map((a) => a.published_at)} />
-          <HomeHero lead={lead} latest={latest} />
+          <HomeHero featured={featured} latest={latest} />
           <HomeSlimBand />
           <HomeParticipe />
           <HomeNews items={news} />

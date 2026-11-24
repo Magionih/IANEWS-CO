@@ -41,7 +41,25 @@ export default defineConfig(({ command, mode }) => {
           client: { files: ["**/server/**"], specifiers: ["server-only"] },
         },
       }),
-      ...(command === "build" ? [nitro({ preset: process.env.NITRO_PRESET || "vercel", vercel: { functions: { maxDuration: 300 } } } as never)] : []),
+      ...(command === "build" ? [nitro({
+        preset: process.env.NITRO_PRESET || "vercel",
+        vercel: { functions: { maxDuration: 300 } },
+        // Cabeçalhos de segurança em todas as respostas.
+        routeRules: {
+          "/**": {
+            headers: {
+              "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+              "X-Content-Type-Options": "nosniff",
+              "X-Frame-Options": "SAMEORIGIN",
+              "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests",
+              "Referrer-Policy": "strict-origin-when-cross-origin",
+              "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(self), usb=(), interest-cohort=()",
+              "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+            },
+          },
+          "/assets/**": { headers: { "Cache-Control": "public, max-age=31536000, immutable" } },
+        },
+      } as never)] : []),
       viteReact(),
     ],
   };
