@@ -143,3 +143,28 @@
   .fg-sticky { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: rgba(7, 11, 22, 0.96); border-top: 1px solid var(--fg-line); gap: 10px; }
   .fg-sticky .fg-btn { flex: 1; padding: 12px; font-size: 15px; }
 }
+
+/* Celular: botões na largura toda, contagem numa linha, cartões e formulários com menos borda. */
+@media (max-width: 640px) {
+  .fg-hero { gap: 28px; padding-top: 24px; padding-bottom: 48px; }
+  .fg-photo img { aspect-ratio: 4 / 4.4; }
+  .fg-photo figcaption { padding: 20px 18px; font-size: 14px; }
+  .fg-ctas { flex-direction: column; gap: 10px; }
+  .fg-ctas .fg-btn { width: 100%; }
+  .fg-count { flex-wrap: nowrap; gap: 8px; }
+  .fg-count > :not(.box) { flex: 0 0 auto; font-size: 13px; }
+  .fg-count .box { flex: 1 1 0; min-width: 0; padding: 8px 6px; }
+  .fg-count b { font-size: 22px; }
+  .fg-count small { font-size: 10px; letter-spacing: 0.1em; }
+  .fg-card { padding: 24px 18px; }
+  .fg-crit .fg-card { padding: 24px 18px; }
+  .fg-form h3 { font-size: 28px; }
+  .fg-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+  .fg-tab { width: 100%; }
+  .fg-form .fg-btn { width: 100%; }
+  .fg-faq-item button { font-size: 17px; padding: 18px 0; }
+  .fg-faq-item p { font-size: 16px; }
+  .fg-band .fg-wrap { padding-top: 48px; padding-bottom: 48px; }
+  .fg-band .fg-btn { width: 100%; }
+  .fg-section { padding-top: 52px; padding-bottom: 52px; }
+}

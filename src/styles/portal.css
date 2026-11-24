@@ -1835,3 +1835,16 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
   .pd-card>div{padding:16px 18px 18px}
 }
 .pq-palco .pq-media img{object-position:50% 60%}
+
+/* Banner de cookies: no computador os botões ficam à direita; no celular, lado a lado na largura toda. */
+.cb-acts { max-width: 320px; }
+.cb-acts .btn { min-height: 38px; }
+@media (max-width: 640px) {
+  .cb-acts { max-width: none; width: 100%; }
+}
+
+/* Palco no celular: o selo do topo cabe numa linha. */
+@media (max-width: 640px) {
+  .pd-pill { font-size: 11.5px; letter-spacing: .08em; padding: 7px 12px; white-space: nowrap; }
+  .pd-pill-tz { display: none; }
+}

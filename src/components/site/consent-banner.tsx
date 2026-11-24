@@ -63,7 +63,7 @@ export function ConsentBanner() {
         borderTop: "1px solid var(--p-rule)",
         boxShadow: "0 -10px 30px rgba(11,14,19,.08)",
         // Compacto: no celular ocupa duas linhas e não cobre o formulário nem o botão de compra.
-        paddingBlock: "10px calc(10px + env(safe-area-inset-bottom, 0px))",
+        paddingBlock: "8px calc(8px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       <div
@@ -86,12 +86,12 @@ export function ConsentBanner() {
             lineHeight: 1.4,
           }}
         >
-          Usamos cookies essenciais e, se você aceitar, de medição.{" "}
+          Cookies de medição só com o seu aceite.{" "}
           <Link to="/termos" hash="cookies">
             Saiba mais
           </Link>
         </p>
-        <div style={{ display: "flex", gap: 8, flex: "1 0 auto", justifyContent: "flex-end", maxWidth: 320 }}>
+        <div className="cb-acts" style={{ display: "flex", gap: 8, flex: "1 0 auto", justifyContent: "flex-end" }}>
           <button type="button" className="btn line s" style={{ flex: 1 }} onClick={() => writeConsent("essential")}>
             Só essenciais
           </button>

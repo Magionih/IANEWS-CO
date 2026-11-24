@@ -489,7 +489,7 @@ function PalcoPage() {
           <div className="wrap pd-hero-in">
             <p className="pd-pill">
               <span className="pd-dot" aria-hidden="true" />
-              Ao vivo · 16 de dezembro · 19h (Brasília)
+              Ao vivo · 16 de dezembro · 19h<span className="pd-pill-tz"> (Brasília)</span>
             </p>
             <h1>Raio-X 2026 da IA nas empresas brasileiras</h1>
             <p className="pd-sub">
