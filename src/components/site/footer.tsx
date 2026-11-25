@@ -16,7 +16,10 @@ export function SiteFooter() {
             <Link className="logo" to="/" aria-label="IANews">
               <img src={logoWhite} alt="IANews" width={795} height={160} />
             </Link>
-            <p>A corrida da IA, explicada para quem decide. Notícias, ranking de plataformas e as pessoas por trás.</p>
+            <p>
+              A corrida da IA, explicada para quem decide. Notícias, ranking de plataformas e as
+              pessoas por trás.
+            </p>
             {!subscribed && (
               <div>
                 <p className="lb">Newsletter diária, grátis</p>
@@ -42,6 +45,7 @@ export function SiteFooter() {
               </Link>
             ))}
             <Link to="/artigos/inteligencia-artificial-nas-empresas">IA nas empresas</Link>
+            <Link to="/empresas-de-ia">Empresas de IA</Link>
           </div>
           <div>
             <h4>IANews</h4>
@@ -53,7 +57,11 @@ export function SiteFooter() {
             </Link>
             <Link to="/sobre">Como fazemos</Link>
             <Link to="/contato">Contato</Link>
-            <a href="https://www.instagram.com/ianews.co/" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://www.instagram.com/ianews.co/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Instagram @ianews.co
             </a>
           </div>
@@ -61,14 +69,24 @@ export function SiteFooter() {
         <div className="legal">
           <span>
             © {new Date().getFullYear()} IA News ·{" "}
-            <Link to="/termos" style={{ display: "inline", padding: 0, textDecoration: "underline" }}>
+            <Link
+              to="/termos"
+              style={{ display: "inline", padding: 0, textDecoration: "underline" }}
+            >
               Privacidade e termos
             </Link>{" "}
             ·{" "}
             <button
               type="button"
               onClick={openConsentSettings}
-              style={{ background: "none", border: 0, padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer" }}
+              style={{
+                background: "none",
+                border: 0,
+                padding: 0,
+                color: "inherit",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
             >
               Cookies
             </button>

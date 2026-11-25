@@ -9,7 +9,8 @@ import { trackCta } from "@/lib/cta-tracking";
 
 const AMANDA =
   "https://hgydwvuowxxkdgtlqrdy.supabase.co/storage/v1/object/public/covers/amanda-diniz-divos-da-ia-empresa-agentica/2ab712919abf.jpg";
-const PALCO = "https://images.pexels.com/photos/9275222/pexels-photo-9275222.jpeg?auto=compress&cs=tinysrgb&w=400";
+const PALCO =
+  "https://images.pexels.com/photos/9275222/pexels-photo-9275222.jpeg?auto=compress&cs=tinysrgb&w=400";
 const FACES = [
   { src: "/gente/tarciana.jpg", alt: "Tarciana Medeiros" },
   { src: "/gente/diego.jpg", alt: "Diego Barreto" },
@@ -19,7 +20,13 @@ const FACES = [
 
 type Placement = "links-bio" | "home-participe" | "materia-participe";
 
-export function ParticipeCards({ placement, utm = false }: { placement: Placement; utm?: boolean }) {
+export function ParticipeCards({
+  placement,
+  utm = false,
+}: {
+  placement: Placement;
+  utm?: boolean;
+}) {
   const ref = useCtaImpression(placement, "participe");
   const click = (variant: string) => () => trackCta({ event: "click", placement, variant });
   const u = (campaign: string) =>
@@ -29,7 +36,13 @@ export function ParticipeCards({ placement, utm = false }: { placement: Placemen
     <div ref={ref} className={"pq-grid" + (placement === "home-participe" ? "" : " is-stack")}>
       <Link to="/pauta" search={u("pauta")} className="pq-card pq-pauta" onClick={click("pauta")}>
         <span className="pq-media">
-          <img src={AMANDA} alt="Amanda Diniz, do Divos da IA, que contou sua história na IA News" loading="lazy" width={160} height={160} />
+          <img
+            src={AMANDA}
+            alt="Amanda Diniz, do Divos da IA, que contou sua história na IA News"
+            loading="lazy"
+            width={160}
+            height={160}
+          />
         </span>
         <span className="pq-body">
           <span className="pq-k">Sua empresa na IA News</span>
@@ -38,7 +51,12 @@ export function ParticipeCards({ placement, utm = false }: { placement: Placemen
         </span>
       </Link>
 
-      <Link to="/lista100" hash="candidatura" className="pq-card pq-lista" onClick={click("lista100")}>
+      <Link
+        to="/lista100"
+        hash="candidatura"
+        className="pq-card pq-lista"
+        onClick={click("lista100")}
+      >
         <span className="pq-media pq-faces">
           {FACES.map((f) => (
             <img key={f.src} src={f.src} alt={f.alt} loading="lazy" width={80} height={80} />
@@ -53,7 +71,13 @@ export function ParticipeCards({ placement, utm = false }: { placement: Placemen
 
       <Link to="/palco" search={u("palco")} className="pq-card pq-palco" onClick={click("palco")}>
         <span className="pq-media">
-          <img src={PALCO} alt="Plateia assistindo a uma apresentação" loading="lazy" width={160} height={160} />
+          <img
+            src={PALCO}
+            alt="Plateia assistindo a uma apresentação"
+            loading="lazy"
+            width={160}
+            height={160}
+          />
         </span>
         <span className="pq-body">
           <span className="pq-k">Ao vivo · 16/12 · 19h</span>

@@ -113,7 +113,10 @@ export function PortalSubscribeForm({
       onDone?.({ alreadySubscribed: Boolean(res.alreadySubscribed), email: value });
     } catch (err) {
       setMsg({
-        t: err instanceof Error && err.message ? err.message : "Não foi possível assinar agora. Tente de novo.",
+        t:
+          err instanceof Error && err.message
+            ? err.message
+            : "Não foi possível assinar agora. Tente de novo.",
         ok: false,
       });
     } finally {
@@ -144,7 +147,15 @@ export function PortalSubscribeForm({
 
   return (
     <form onSubmit={submit} noValidate>
-      <input ref={hp} className="hp" type="text" name="site" tabIndex={-1} autoComplete="off" aria-hidden="true" />
+      <input
+        ref={hp}
+        className="hp"
+        type="text"
+        name="site"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
       {layout === "row" ? (
         <div className="form-row">
           {field}
@@ -156,7 +167,11 @@ export function PortalSubscribeForm({
           {btn}
         </>
       )}
-      <p className={"msg" + (msg ? (msg.ok ? " ok" : " err") : "")} role="status" aria-live="polite">
+      <p
+        className={"msg" + (msg ? (msg.ok ? " ok" : " err") : "")}
+        role="status"
+        aria-live="polite"
+      >
         {msg?.t ?? ""}
       </p>
     </form>

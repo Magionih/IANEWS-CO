@@ -25,7 +25,8 @@ export function ContentEngagement({
     };
 
     const flush = (force = false) => {
-      const should = force || seconds === 10 || seconds === 30 || (seconds > 30 && seconds % 60 === 0);
+      const should =
+        force || seconds === 10 || seconds === 30 || (seconds > 30 && seconds % 60 === 0);
       if (!should || seconds < 5 || seconds === lastSent) return;
       lastSent = seconds;
       sendEngagement({

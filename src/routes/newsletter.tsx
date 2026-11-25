@@ -13,9 +13,9 @@ const articlesOptions = queryOptions({
   queryKey: ["articles", "recent"],
   queryFn: () => listRecentArticles(),
 });
-const title = "Newsletter de IA grátis: o resumo de inteligência artificial para quem decide | IA News";
+const title = "Newsletter de IA grátis: inteligência artificial em 5 minutos | IA News";
 const description =
-  "Receba a newsletter gratuita da IA News: curadoria das notícias de inteligência artificial que importam para negócios, em 5 minutos, todo dia às 7h, e Ranking IA semanal. Sem hype.";
+  "Newsletter gratuita da IA News: as notícias de inteligência artificial que importam para negócios, em 5 minutos, todo dia às 7h. Sem hype.";
 const WHATSAPP_URL = "https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL";
 
 export const Route = createFileRoute("/newsletter")({

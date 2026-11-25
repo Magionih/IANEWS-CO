@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 
-import { supabase } from "@/integrations/supabase/client";
+import { hasStoredSession, loadSupabase } from "@/integrations/supabase/lazy";
 
 function getSessionId() {
   try {
@@ -31,8 +31,10 @@ export function VisitTracker() {
     const send = async () => {
       let userId: string | null = null;
       try {
-        const { data } = await supabase.auth.getSession();
-        userId = data.session?.user.id ?? null;
+        if (hasStoredSession()) {
+          const { data } = await (await loadSupabase()).auth.getSession();
+          userId = data.session?.user.id ?? null;
+        }
       } catch {
         userId = null;
       }

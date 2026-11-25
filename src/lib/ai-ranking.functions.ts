@@ -1,9 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
-function serverClient() {
+async function serverClient() {
+  // Import dinâmico: mantém a biblioteca do Supabase fora do JavaScript do navegador.
+  const { createClient } = await import("@supabase/supabase-js");
   return createClient<Database>(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PUBLISHABLE_KEY!,
@@ -57,7 +58,7 @@ function normalize(row: Record<string, unknown>): AiTool {
 
 export const listAiTools = createServerFn({ method: "GET" }).handler(
   async (): Promise<AiTool[]> => {
-    const supabase = serverClient();
+    const supabase = await serverClient();
     const { data, error } = await supabase
       .from("ai_tools")
       .select(COLS)

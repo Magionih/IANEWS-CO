@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { PALCO_DESCRICAO, PALCO_PAGAMENTO_URL, PALCO_VALOR } from "@/lib/palco-validate";
 import { PAGO, asaas, asaasKey, cnpjValido, cpfValido, soDigitos } from "@/lib/asaas.server";
-import { PALCO_CAPI, capiAtiva, capiCompraPalco, enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
+import {
+  PALCO_CAPI,
+  capiAtiva,
+  capiCompraPalco,
+  enviarCapi,
+  lerMetaCtx,
+} from "@/lib/meta-capi.server";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 /* Checkout do Palco IA News Online (/palco/checkout).
    GET  ?i=<inscrição>&t=<token>            → dados do pedido e status (consulta o Asaas se ainda estiver pendente)
@@ -28,7 +35,9 @@ async function carregar(i: string | null, t: string | null) {
   const db = supabaseAdmin as any;
   const { data } = await db
     .from("palco_inscricoes")
-    .select("id, nome, email, whatsapp, empresa, status, checkout_token, asaas_customer_id, asaas_payment_id, pagamento_metodo, meta_ctx, capi_checkout_em")
+    .select(
+      "id, nome, email, whatsapp, empresa, status, checkout_token, asaas_customer_id, asaas_payment_id, pagamento_metodo, meta_ctx, capi_checkout_em",
+    )
     .eq("id", i)
     .eq("checkout_token", t)
     .maybeSingle();
@@ -43,7 +52,12 @@ function dataVencimento(dias: number) {
 async function marcarPago(db: any, id: string, metodo?: string | null) {
   await db
     .from("palco_inscricoes")
-    .update({ status: "pago", pago_em: new Date().toISOString(), pagamento_atualizado_em: new Date().toISOString(), ...(metodo ? { pagamento_metodo: metodo } : {}) })
+    .update({
+      status: "pago",
+      pago_em: new Date().toISOString(),
+      pagamento_atualizado_em: new Date().toISOString(),
+      ...(metodo ? { pagamento_metodo: metodo } : {}),
+    })
     .eq("id", id)
     .neq("status", "pago");
   await capiCompraPalco(db, id);
@@ -55,7 +69,8 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
       GET: async ({ request }) => {
         const u = new URL(request.url);
         const found = await carregar(u.searchParams.get("i"), u.searchParams.get("t"));
-        if (!found) return Response.json({ ok: false, error: "Pedido não encontrado." }, { status: 404 });
+        if (!found)
+          return Response.json({ ok: false, error: "Pedido não encontrado." }, { status: 404 });
         const { db, row } = found;
         let status = row.status as string;
         if (status !== "pago" && status !== "cortesia" && row.asaas_payment_id && asaasKey()) {
@@ -81,6 +96,8 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
       },
 
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "palco-checkout", 10, 600);
+        if (limited) return limited;
         let body: Record<string, unknown>;
         try {
           body = (await request.json()) as Record<string, unknown>;
@@ -88,20 +105,28 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
           return Response.json({ ok: false, error: "Envio inválido." }, { status: 400 });
         }
         const found = await carregar(String(body["i"] ?? ""), String(body["t"] ?? ""));
-        if (!found) return Response.json({ ok: false, error: "Pedido não encontrado." }, { status: 404 });
+        if (!found)
+          return Response.json({ ok: false, error: "Pedido não encontrado." }, { status: 404 });
         const { db, row } = found;
-        if (row.status === "pago" || row.status === "cortesia") return Response.json({ ok: true, pago: true });
+        if (row.status === "pago" || row.status === "cortesia")
+          return Response.json({ ok: true, pago: true });
 
-        const metodo = (["pix", "cartao", "boleto"].includes(String(body["metodo"])) ? body["metodo"] : "pix") as Metodo;
+        const metodo = (
+          ["pix", "cartao", "boleto"].includes(String(body["metodo"])) ? body["metodo"] : "pix"
+        ) as Metodo;
 
         // API de Conversões: guarda o contexto mais recente (quem aceitou os cookies depois da inscrição também entra)
         // e manda o InitiateCheckout uma vez, com o mesmo event_id do Pixel (checkout-<id>).
-        const ctx = lerMetaCtx(body["meta"], request) ?? (row.meta_ctx as ReturnType<typeof lerMetaCtx>);
+        const ctx =
+          lerMetaCtx(body["meta"], request) ?? (row.meta_ctx as ReturnType<typeof lerMetaCtx>);
         if (ctx && capiAtiva()) {
           const primeiro = !row.capi_checkout_em;
           await db
             .from("palco_inscricoes")
-            .update({ meta_ctx: ctx, ...(primeiro ? { capi_checkout_em: new Date().toISOString() } : {}) })
+            .update({
+              meta_ctx: ctx,
+              ...(primeiro ? { capi_checkout_em: new Date().toISOString() } : {}),
+            })
             .eq("id", row.id);
           if (primeiro) {
             await enviarCapi(
@@ -119,7 +144,10 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
 
         const doc = soDigitos(String(body["documento"] ?? ""));
         if (!(cpfValido(doc) || cnpjValido(doc))) {
-          return Response.json({ ok: false, errors: { documento: "Confira o CPF ou CNPJ." } }, { status: 422 });
+          return Response.json(
+            { ok: false, errors: { documento: "Confira o CPF ou CNPJ." } },
+            { status: 422 },
+          );
         }
 
         try {
@@ -139,7 +167,9 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
             });
             customer = c.id;
           } else {
-            await asaas(`/customers/${customer}`, { method: "PUT", body: { cpfCnpj: doc } }).catch(() => null);
+            await asaas(`/customers/${customer}`, { method: "PUT", body: { cpfCnpj: doc } }).catch(
+              () => null,
+            );
           }
 
           // Reaproveita a cobrança aberta da mesma forma de pagamento; senão cria outra.
@@ -153,7 +183,10 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
             if (pay && pay.status !== "PENDING") pay = null;
           }
           if (!pay) {
-            if (row.asaas_payment_id) await asaas(`/payments/${row.asaas_payment_id}`, { method: "DELETE" }).catch(() => null);
+            if (row.asaas_payment_id)
+              await asaas(`/payments/${row.asaas_payment_id}`, { method: "DELETE" }).catch(
+                () => null,
+              );
             pay = await asaas("/payments", {
               method: "POST",
               body: {
@@ -180,14 +213,37 @@ export const Route = createFileRoute("/api/public/palco-checkout")({
             .eq("id", row.id);
 
           if (metodo === "pix") {
-            const qr = await asaas<{ encodedImage: string; payload: string; expirationDate?: string }>(`/payments/${cobranca.id}/pixQrCode`);
-            return Response.json({ ok: true, modo: "api", metodo, pix: { imagem: qr.encodedImage, codigo: qr.payload, expira: qr.expirationDate ?? null } });
+            const qr = await asaas<{
+              encodedImage: string;
+              payload: string;
+              expirationDate?: string;
+            }>(`/payments/${cobranca.id}/pixQrCode`);
+            return Response.json({
+              ok: true,
+              modo: "api",
+              metodo,
+              pix: {
+                imagem: qr.encodedImage,
+                codigo: qr.payload,
+                expira: qr.expirationDate ?? null,
+              },
+            });
           }
-          return Response.json({ ok: true, modo: "api", metodo, url: (metodo === "boleto" && cobranca.bankSlipUrl) || cobranca.invoiceUrl });
+          return Response.json({
+            ok: true,
+            modo: "api",
+            metodo,
+            url: (metodo === "boleto" && cobranca.bankSlipUrl) || cobranca.invoiceUrl,
+          });
         } catch (err) {
           console.error("[palco-checkout] asaas", err instanceof Error ? err.message : err);
           return Response.json(
-            { ok: false, error: "Não conseguimos gerar o pagamento agora. Tente de novo em instantes ou use o link alternativo.", url: PALCO_PAGAMENTO_URL },
+            {
+              ok: false,
+              error:
+                "Não conseguimos gerar o pagamento agora. Tente de novo em instantes ou use o link alternativo.",
+              url: PALCO_PAGAMENTO_URL,
+            },
             { status: 502 },
           );
         }

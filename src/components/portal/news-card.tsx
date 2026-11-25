@@ -1,4 +1,5 @@
 import { coverObjectPosition } from "@/lib/cover-position";
+import { coverImg, isResizable } from "@/lib/img";
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
@@ -48,8 +49,11 @@ export function NewsThumb({
   position?: string | null;
 }) {
   const [failed, setFailed] = useState(false);
+  const [orig, setOrig] = useState(false);
   const none = !src || failed;
   const cls = "thumb" + (ratio ? " " + ratio : "") + (none ? " none" : "");
+  const pic = orig ? { src: src ?? undefined } : coverImg(src, eager ? 1280 : 640);
+  const sizes = eager ? "(max-width: 900px) 100vw, 800px" : "(max-width: 640px) 120px, 400px";
   return (
     <span className={cls}>
       {none ? (
@@ -57,11 +61,13 @@ export function NewsThumb({
       ) : (
         <img
           style={position ? { objectPosition: coverObjectPosition(position) } : undefined}
-          src={src}
+          src={pic.src}
+          srcSet={pic.srcSet}
+          sizes={pic.srcSet ? sizes : undefined}
           alt={alt}
           decoding="async"
           loading={eager ? "eager" : "lazy"}
-          onError={() => setFailed(true)}
+          onError={() => (!orig && isResizable(src) ? setOrig(true) : setFailed(true))}
         />
       )}
     </span>
@@ -107,7 +113,14 @@ export function NewsFeature({ a, cta = "Ler a matéria" }: { a: ArticleRow; cta?
         aria-hidden="true"
         tabIndex={-1}
       >
-        <NewsThumb src={a.cover_image_url} alt="" label={label} ratio="r32" eager position={a.cover_position} />
+        <NewsThumb
+          src={a.cover_image_url}
+          alt=""
+          label={label}
+          ratio="r32"
+          eager
+          position={a.cover_position}
+        />
       </Link>
       <div className="feature-txt">
         <NewsKick category={a.category} />

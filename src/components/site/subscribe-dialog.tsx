@@ -21,7 +21,8 @@ export function openSubscribe(from?: string) {
   const source = from ?? "generico";
   trackCta({ event: "click", placement: source, variant: "ir-para-assinar" });
   if (goToSubscribePage) goToSubscribePage(source);
-  else if (typeof window !== "undefined") window.location.assign(`/assinar?from=${encodeURIComponent(source)}`);
+  else if (typeof window !== "undefined")
+    window.location.assign(`/assinar?from=${encodeURIComponent(source)}`);
 }
 
 /** Abre o pop-up de assinatura. */
@@ -43,7 +44,11 @@ function subscribe(listener: () => void) {
 }
 
 export function SubscribeDialog() {
-  const isOpen = useSyncExternalStore(subscribe, () => open, () => false);
+  const isOpen = useSyncExternalStore(
+    subscribe,
+    () => open,
+    () => false,
+  );
   const [done, setDone] = useState<null | { already: boolean }>(null);
   const navigate = useNavigate();
 
@@ -96,7 +101,9 @@ export function SubscribeDialog() {
                 <path d="m5 12.5 4.5 4.5L19 7.5" />
               </svg>
             </span>
-            <h2 id="pop-title">{done.already ? "Você já está na lista" : "Pronto, inscrição feita!"}</h2>
+            <h2 id="pop-title">
+              {done.already ? "Você já está na lista" : "Pronto, inscrição feita!"}
+            </h2>
             <p className="lead-p">
               {done.already
                 ? "A próxima edição chega no seu e-mail."
@@ -120,7 +127,9 @@ export function SubscribeDialog() {
           <div>
             <p className="kick">Newsletter IANews</p>
             <h2 id="pop-title">5 minutos por dia. Zero hype.</h2>
-            <p className="lead-p">A IA muda todo dia. Receba só o que importa para o seu negócio.</p>
+            <p className="lead-p">
+              A IA muda todo dia. Receba só o que importa para o seu negócio.
+            </p>
             <ul className="ticks small">
               <li>Todo dia às 7h da manhã</li>
               <li>Ranking IA toda segunda</li>

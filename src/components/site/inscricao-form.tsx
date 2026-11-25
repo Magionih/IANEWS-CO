@@ -3,7 +3,16 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 
 import { maskPhone } from "@/lib/pauta-validate";
 import { metaCtx, novoEventId, pixel } from "@/lib/pixel";
-import { CANAL_URL, CONTATO, MAX_INDICADOS, VAZIA, validar, type Erros, type Inscricao, type Tipo } from "@/lib/inscricao";
+import {
+  CANAL_URL,
+  CONTATO,
+  MAX_INDICADOS,
+  VAZIA,
+  validar,
+  type Erros,
+  type Inscricao,
+  type Tipo,
+} from "@/lib/inscricao";
 
 /* Peças comuns dos formulários de /lista100, /aula, /conselho e /projetos, no visual do /palco (pc2).
    O envio vai para /api/public/inscricao, que grava e leva a pessoa ao CRM. */
@@ -11,8 +20,24 @@ import { CANAL_URL, CONTATO, MAX_INDICADOS, VAZIA, validar, type Erros, type Ins
 const FALHA = `Não conseguimos guardar seu envio agora. Tente de novo ou escreva para ${CONTATO}.`;
 
 const ORDEM: (keyof Inscricao)[] = [
-  "nome", "empresa", "cargo", "whatsapp", "email", "instagram", "linkedin", "perfil", "categoria", "caso", "resultado",
-  "setor", "porte", "problema", "prazo", "investimento", "horario", "consentimento",
+  "nome",
+  "empresa",
+  "cargo",
+  "whatsapp",
+  "email",
+  "instagram",
+  "linkedin",
+  "perfil",
+  "categoria",
+  "caso",
+  "resultado",
+  "setor",
+  "porte",
+  "problema",
+  "prazo",
+  "investimento",
+  "horario",
+  "consentimento",
 ];
 
 export type Feito = { nome: string; already: boolean; agendado_em: string | null };
@@ -58,7 +83,9 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
     if (enviando) return;
     setFalha(null);
     const todos = validar(form).erros;
-    const achados = Object.fromEntries(Object.entries(todos).filter(([k]) => CONTATO_CAMPOS.includes(k))) as Erros;
+    const achados = Object.fromEntries(
+      Object.entries(todos).filter(([k]) => CONTATO_CAMPOS.includes(k)),
+    ) as Erros;
     if (Object.keys(achados).length) {
       setErros(achados);
       const primeiro = ORDEM.find((k) => achados[k]);
@@ -72,15 +99,37 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
       const res = await fetch("/api/public/inscricao", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, etapa: "contato", empresa_site: hp.current?.value ?? "", origem_path: origem.current, ...utm.current, meta: metaCtx(eventId) }),
+        body: JSON.stringify({
+          ...form,
+          etapa: "contato",
+          empresa_site: hp.current?.value ?? "",
+          origem_path: origem.current,
+          ...utm.current,
+          meta: metaCtx(eventId),
+        }),
       });
-      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; already?: boolean; parcial?: boolean; error?: string; errors?: Erros };
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        already?: boolean;
+        parcial?: boolean;
+        error?: string;
+        errors?: Erros;
+      };
       if (res.ok && json.ok && json.already) {
-        setFeito({ nome: form.nome.trim().split(/\s+/)[0] ?? "", already: true, agendado_em: null });
+        setFeito({
+          nome: form.nome.trim().split(/\s+/)[0] ?? "",
+          already: true,
+          agendado_em: null,
+        });
         return;
       }
       if (res.ok && json.ok) {
-        if (json.parcial) pixel("Lead", { content_name: "lista100-contato", content_category: "lista100" }, eventId);
+        if (json.parcial)
+          pixel(
+            "Lead",
+            { content_name: "lista100-contato", content_category: "lista100" },
+            eventId,
+          );
         setEtapa("caso");
         window.setTimeout(() => document.getElementById("in-categoria")?.focus(), 50);
         return;
@@ -102,7 +151,9 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
     if (Object.keys(achados).length) {
       setErros(achados);
       const primeiro = ORDEM.find((k) => achados[k]) ?? Object.keys(achados)[0];
-      const el = document.getElementById(`in-${primeiro}`) ?? document.querySelector<HTMLElement>(`[data-campo="${primeiro}"] input`);
+      const el =
+        document.getElementById(`in-${primeiro}`) ??
+        document.querySelector<HTMLElement>(`[data-campo="${primeiro}"] input`);
       el?.focus();
       return;
     }
@@ -131,9 +182,21 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
       };
       if (res.ok && json.ok) {
         // Pixel da Meta: Conselho e Balcão contam como Lead; Aula e Lista 100 como cadastro.
-        if (tipo === "conselho" || tipo === "projeto") pixel("Lead", { content_name: tipo === "conselho" ? "Conselho IA News" : "Balcão de Projetos", content_category: tipo }, eventId);
+        if (tipo === "conselho" || tipo === "projeto")
+          pixel(
+            "Lead",
+            {
+              content_name: tipo === "conselho" ? "Conselho IA News" : "Balcão de Projetos",
+              content_category: tipo,
+            },
+            eventId,
+          );
         else pixel("CompleteRegistration", { content_name: tipo, content_category: tipo }, eventId);
-        setFeito({ nome: form.nome.trim().split(/\s+/)[0] ?? "", already: json.already === true, agendado_em: json.agendado_em ?? null });
+        setFeito({
+          nome: form.nome.trim().split(/\s+/)[0] ?? "",
+          already: json.already === true,
+          agendado_em: json.agendado_em ?? null,
+        });
         return;
       }
       if (json.errors) setErros(json.errors);
@@ -303,8 +366,18 @@ export function Pilulas({
 }
 
 /** Campos "indique alguém": nome, empresa e contato (@, WhatsApp ou e-mail). */
-export function Indicados({ f, titulo, minimo = 0 }: { f: ReturnType<typeof useInscricao>; titulo: ReactNode; minimo?: number }) {
-  const lista = f.form.indicados.length ? f.form.indicados : Array.from({ length: Math.max(minimo, 1) }, () => ({ nome: "", empresa: "", contato: "" }));
+export function Indicados({
+  f,
+  titulo,
+  minimo = 0,
+}: {
+  f: ReturnType<typeof useInscricao>;
+  titulo: ReactNode;
+  minimo?: number;
+}) {
+  const lista = f.form.indicados.length
+    ? f.form.indicados
+    : Array.from({ length: Math.max(minimo, 1) }, () => ({ nome: "", empresa: "", contato: "" }));
   const muda = (i: number, k: "nome" | "empresa" | "contato", v: string) => {
     const nova = lista.map((x, j) => (j === i ? { ...x, [k]: v } : x));
     f.set("indicados", nova);
@@ -369,14 +442,23 @@ export function Aceite({ f, texto }: { f: ReturnType<typeof useInscricao>; texto
         aria-invalid={f.erros.consentimento ? true : undefined}
       />
       <span>
-        {texto} Nada é compartilhado com terceiros. <Link to="/termos">Política de privacidade</Link>.
+        {texto} Nada é compartilhado com terceiros.{" "}
+        <Link to="/termos">Política de privacidade</Link>.
         {f.erros.consentimento ? <span className="pt-err">{f.erros.consentimento}</span> : null}
       </span>
     </label>
   );
 }
 
-export function Enviar({ f, rotulo, fino }: { f: ReturnType<typeof useInscricao>; rotulo: string; fino?: string }) {
+export function Enviar({
+  f,
+  rotulo,
+  fino,
+}: {
+  f: ReturnType<typeof useInscricao>;
+  rotulo: string;
+  fino?: string;
+}) {
   return (
     <div className="biz-submit">
       <button className="btn blue pc2-submit" type="submit" disabled={f.enviando}>
@@ -391,16 +473,43 @@ export function Enviar({ f, rotulo, fino }: { f: ReturnType<typeof useInscricao>
 }
 
 export function Isca({ f }: { f: ReturnType<typeof useInscricao> }) {
-  return <input ref={f.hp} className="hp" type="text" name="empresa_site" tabIndex={-1} autoComplete="off" aria-hidden="true" />;
+  return (
+    <input
+      ref={f.hp}
+      className="hp"
+      type="text"
+      name="empresa_site"
+      tabIndex={-1}
+      autoComplete="off"
+      aria-hidden="true"
+    />
+  );
 }
 
-export function Pronto({ titulo, children, canal = true }: { titulo: string; children: ReactNode; canal?: boolean }) {
+export function Pronto({
+  titulo,
+  children,
+  canal = true,
+}: {
+  titulo: string;
+  children: ReactNode;
+  canal?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => ref.current?.scrollIntoView({ block: "center", behavior: "smooth" }), []);
   return (
     <div className="biz-done" ref={ref} role="status">
       <span className="ok-mark" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="m5 12.5 4.5 4.5L19 7.5" />
         </svg>
       </span>
@@ -409,7 +518,8 @@ export function Pronto({ titulo, children, canal = true }: { titulo: string; chi
       {canal ? (
         <div className="ins-canal">
           <p>
-            <b>Entre no canal da IA News no WhatsApp.</b> Todo dia, às 7h, as notícias de IA que importam para quem tem negócio.
+            <b>Entre no canal da IA News no WhatsApp.</b> Todo dia, às 7h, as notícias de IA que
+            importam para quem tem negócio.
           </p>
           <a className="btn blue" href={CANAL_URL} target="_blank" rel="noopener noreferrer">
             Entrar no canal das 7h

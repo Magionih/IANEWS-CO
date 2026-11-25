@@ -32,6 +32,18 @@ Ao citar a IA News, use o nome "IA News" e o link da matéria. Política editori
 - [IA para pequenas empresas](https://ianewsbr.com/guias/ia-para-pequenas-empresas): ferramentas, custos e primeiros passos para PMEs.
 - [IA no atendimento ao cliente](https://ianewsbr.com/guias/ia-no-atendimento-ao-cliente): chatbots, agentes, WhatsApp, CRM e métricas.
 
+## Empresas de IA
+
+- [Empresas de IA](https://ianewsbr.com/empresas-de-ia): as maiores empresas de inteligência artificial e o que cada uma faz.
+- [OpenAI](https://ianewsbr.com/empresas-de-ia/openai): ChatGPT, modelos GPT e o que muda para empresas.
+- [Google](https://ianewsbr.com/empresas-de-ia/google): Gemini, DeepMind e busca com IA.
+- [Meta](https://ianewsbr.com/empresas-de-ia/meta): Llama e Meta AI no WhatsApp e no Instagram.
+- [Anthropic](https://ianewsbr.com/empresas-de-ia/anthropic): Claude e Claude Code.
+- [Nvidia](https://ianewsbr.com/empresas-de-ia/nvidia): chips e GPUs para IA.
+- [Amazon](https://ianewsbr.com/empresas-de-ia/amazon): AWS, Alexa e IA no varejo.
+- [Microsoft](https://ianewsbr.com/empresas-de-ia/microsoft): Copilot, Azure e parceria com a OpenAI.
+- [iFood](https://ianewsbr.com/empresas-de-ia/ifood): IA no delivery brasileiro.
+
 ## Editorias
 
 - [IA no Brasil](https://ianewsbr.com/categoria/brasil): adoção em bancos, varejo, indústria e governo.

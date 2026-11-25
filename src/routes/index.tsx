@@ -57,9 +57,9 @@ export const Route = createFileRoute("/")({
   head: ({ loaderData }) => {
     if (loaderData?.fgia) return fgiaHead("https://fgiaeducacao.com.br/");
     const items = (loaderData?.articles ?? []).slice(0, 10);
-    const title = "IA News: notícias de inteligência artificial, IA para empresas e Ranking IA";
+    const title = "IA News: notícias de inteligência artificial e IA nas empresas";
     const description =
-      "Notícias diárias de inteligência artificial no Brasil e no mundo, histórias de empresários que crescem com IA, guias de agentes de IA e o Ranking IA das melhores ferramentas. Newsletter grátis às 7h.";
+      "Notícias diárias de inteligência artificial: OpenAI, Google, Meta e empresas brasileiras que crescem com IA, guias e o Ranking IA. Newsletter grátis às 7h.";
     const cover = items[0]?.cover_image_url ?? FALLBACK_COVERS[0];
     return {
       meta: [

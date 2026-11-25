@@ -19,7 +19,10 @@ export function Breadcrumbs({ items, className }: { items: Crumb[]; className?: 
                   {item.label}
                 </Link>
               ) : (
-                <span className={last ? "font-semibold text-foreground" : undefined} aria-current={last ? "page" : undefined}>
+                <span
+                  className={last ? "font-semibold text-foreground" : undefined}
+                  aria-current={last ? "page" : undefined}
+                >
                   {item.label}
                 </span>
               )}

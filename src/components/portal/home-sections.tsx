@@ -1,4 +1,5 @@
 import { coverObjectPosition } from "@/lib/cover-position";
+import { coverImg, isResizable } from "@/lib/img";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ParticipeCards } from "@/components/site/participe";
 import { Link } from "@tanstack/react-router";
@@ -52,7 +53,11 @@ function Thumb({
   position?: string | null;
 }) {
   const [failed, setFailed] = useState(false);
+  const [orig, setOrig] = useState(false);
   const none = !src || failed;
+  const pic = orig ? { src: src ?? undefined } : coverImg(src, ratio === "r43" ? 640 : 1280);
+  const sizes =
+    ratio === "r43" ? "(max-width: 640px) 120px, 180px" : "(max-width: 900px) 100vw, 700px";
   return (
     <span className={"thumb" + (ratio ? " " + ratio : "") + (none ? " none" : "")}>
       {none ? (
@@ -60,11 +65,14 @@ function Thumb({
       ) : (
         <img
           style={position ? { objectPosition: coverObjectPosition(position) } : undefined}
-          src={src}
+          src={pic.src}
+          srcSet={pic.srcSet}
+          sizes={pic.srcSet ? sizes : undefined}
           alt=""
           decoding="async"
           loading={eager ? "eager" : "lazy"}
-          onError={() => setFailed(true)}
+          fetchPriority={eager ? "high" : undefined}
+          onError={() => (!orig && isResizable(src) ? setOrig(true) : setFailed(true))}
         />
       )}
     </span>

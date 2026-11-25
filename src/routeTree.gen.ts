@@ -46,6 +46,8 @@ import { Route as ArtigosInteligenciaArtificialNasEmpresasRouteImport } from './
 import { Route as AutorHenriqueMagioniRouteImport } from './routes/autor.henrique-magioni'
 import { Route as BriefingTokenRouteImport } from './routes/briefing.$token'
 import { Route as CategoriaCatRouteImport } from './routes/categoria.$cat'
+import { Route as EmpresasDeIaIndexRouteImport } from './routes/empresas-de-ia.index'
+import { Route as EmpresasDeIaEmpresaRouteImport } from './routes/empresas-de-ia.$empresa'
 import { Route as GuiasHubRouteImport } from './routes/guias.$hub'
 import { Route as Lista100CriteriosRouteImport } from './routes/lista100_.criterios'
 import { Route as MateriaSlugRouteImport } from './routes/materia.$slug'
@@ -273,6 +275,16 @@ const BriefingTokenRoute = BriefingTokenRouteImport.update({
 const CategoriaCatRoute = CategoriaCatRouteImport.update({
   id: '/categoria/$cat',
   path: '/categoria/$cat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresasDeIaIndexRoute = EmpresasDeIaIndexRouteImport.update({
+  id: '/empresas-de-ia/',
+  path: '/empresas-de-ia/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresasDeIaEmpresaRoute = EmpresasDeIaEmpresaRouteImport.update({
+  id: '/empresas-de-ia/$empresa',
+  path: '/empresas-de-ia/$empresa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuiasHubRoute = GuiasHubRouteImport.update({
@@ -540,12 +552,14 @@ export interface FileRoutesByFullPath {
   '/autor/henrique-magioni': typeof AutorHenriqueMagioniRoute
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
+  '/empresas-de-ia/$empresa': typeof EmpresasDeIaEmpresaRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/lista100/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/palco/checkout': typeof PalcoCheckoutRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
+  '/empresas-de-ia/': typeof EmpresasDeIaIndexRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
@@ -621,12 +635,14 @@ export interface FileRoutesByTo {
   '/autor/henrique-magioni': typeof AutorHenriqueMagioniRoute
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
+  '/empresas-de-ia/$empresa': typeof EmpresasDeIaEmpresaRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/lista100/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/palco/checkout': typeof PalcoCheckoutRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
+  '/empresas-de-ia': typeof EmpresasDeIaIndexRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
@@ -704,12 +720,14 @@ export interface FileRoutesById {
   '/autor/henrique-magioni': typeof AutorHenriqueMagioniRoute
   '/briefing/$token': typeof BriefingTokenRoute
   '/categoria/$cat': typeof CategoriaCatRoute
+  '/empresas-de-ia/$empresa': typeof EmpresasDeIaEmpresaRoute
   '/guias/$hub': typeof GuiasHubRoute
   '/lista100_/criterios': typeof Lista100CriteriosRoute
   '/materia/$slug': typeof MateriaSlugRoute
   '/palco_/checkout': typeof PalcoCheckoutRoute
   '/previa/$token': typeof PreviaTokenRoute
   '/s/$code': typeof SCodeRoute
+  '/empresas-de-ia/': typeof EmpresasDeIaIndexRoute
   '/api/public/ad-metrics': typeof ApiPublicAdMetricsRoute
   '/api/public/briefing': typeof ApiPublicBriefingRoute
   '/api/public/cta': typeof ApiPublicCtaRoute
@@ -787,12 +805,14 @@ export interface FileRouteTypes {
     | '/autor/henrique-magioni'
     | '/briefing/$token'
     | '/categoria/$cat'
+    | '/empresas-de-ia/$empresa'
     | '/guias/$hub'
     | '/lista100/criterios'
     | '/materia/$slug'
     | '/palco/checkout'
     | '/previa/$token'
     | '/s/$code'
+    | '/empresas-de-ia/'
     | '/api/public/ad-metrics'
     | '/api/public/briefing'
     | '/api/public/cta'
@@ -868,12 +888,14 @@ export interface FileRouteTypes {
     | '/autor/henrique-magioni'
     | '/briefing/$token'
     | '/categoria/$cat'
+    | '/empresas-de-ia/$empresa'
     | '/guias/$hub'
     | '/lista100/criterios'
     | '/materia/$slug'
     | '/palco/checkout'
     | '/previa/$token'
     | '/s/$code'
+    | '/empresas-de-ia'
     | '/api/public/ad-metrics'
     | '/api/public/briefing'
     | '/api/public/cta'
@@ -950,12 +972,14 @@ export interface FileRouteTypes {
     | '/autor/henrique-magioni'
     | '/briefing/$token'
     | '/categoria/$cat'
+    | '/empresas-de-ia/$empresa'
     | '/guias/$hub'
     | '/lista100_/criterios'
     | '/materia/$slug'
     | '/palco_/checkout'
     | '/previa/$token'
     | '/s/$code'
+    | '/empresas-de-ia/'
     | '/api/public/ad-metrics'
     | '/api/public/briefing'
     | '/api/public/cta'
@@ -1031,12 +1055,14 @@ export interface RootRouteChildren {
   AutorHenriqueMagioniRoute: typeof AutorHenriqueMagioniRoute
   BriefingTokenRoute: typeof BriefingTokenRoute
   CategoriaCatRoute: typeof CategoriaCatRoute
+  EmpresasDeIaEmpresaRoute: typeof EmpresasDeIaEmpresaRoute
   GuiasHubRoute: typeof GuiasHubRoute
   Lista100CriteriosRoute: typeof Lista100CriteriosRoute
   MateriaSlugRoute: typeof MateriaSlugRoute
   PalcoCheckoutRoute: typeof PalcoCheckoutRoute
   PreviaTokenRoute: typeof PreviaTokenRoute
   SCodeRoute: typeof SCodeRoute
+  EmpresasDeIaIndexRoute: typeof EmpresasDeIaIndexRoute
   ApiPublicAdMetricsRoute: typeof ApiPublicAdMetricsRoute
   ApiPublicBriefingRoute: typeof ApiPublicBriefingRoute
   ApiPublicCtaRoute: typeof ApiPublicCtaRoute
@@ -1335,6 +1361,20 @@ declare module '@tanstack/react-router' {
       path: '/categoria/$cat'
       fullPath: '/categoria/$cat'
       preLoaderRoute: typeof CategoriaCatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresas-de-ia/': {
+      id: '/empresas-de-ia/'
+      path: '/empresas-de-ia'
+      fullPath: '/empresas-de-ia/'
+      preLoaderRoute: typeof EmpresasDeIaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresas-de-ia/$empresa': {
+      id: '/empresas-de-ia/$empresa'
+      path: '/empresas-de-ia/$empresa'
+      fullPath: '/empresas-de-ia/$empresa'
+      preLoaderRoute: typeof EmpresasDeIaEmpresaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guias/$hub': {
@@ -1691,12 +1731,14 @@ const rootRouteChildren: RootRouteChildren = {
   AutorHenriqueMagioniRoute: AutorHenriqueMagioniRoute,
   BriefingTokenRoute: BriefingTokenRoute,
   CategoriaCatRoute: CategoriaCatRoute,
+  EmpresasDeIaEmpresaRoute: EmpresasDeIaEmpresaRoute,
   GuiasHubRoute: GuiasHubRoute,
   Lista100CriteriosRoute: Lista100CriteriosRoute,
   MateriaSlugRoute: MateriaSlugRoute,
   PalcoCheckoutRoute: PalcoCheckoutRoute,
   PreviaTokenRoute: PreviaTokenRoute,
   SCodeRoute: SCodeRoute,
+  EmpresasDeIaIndexRoute: EmpresasDeIaIndexRoute,
   ApiPublicAdMetricsRoute: ApiPublicAdMetricsRoute,
   ApiPublicBriefingRoute: ApiPublicBriefingRoute,
   ApiPublicCtaRoute: ApiPublicCtaRoute,

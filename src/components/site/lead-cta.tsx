@@ -32,8 +32,7 @@ export function LeadCta({
 }) {
   const ref = useCtaImpression(placement, variant, articleSlug);
   const openFor = () => openSubscribe(placement);
-  const onWhats = () =>
-    trackCta({ event: "click", placement, variant: "whatsapp", articleSlug });
+  const onWhats = () => trackCta({ event: "click", placement, variant: "whatsapp", articleSlug });
   if (variant === "inline") {
     return (
       <div

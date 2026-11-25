@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
-import { AULA, PERFIL_DA_CATEGORIA, validar, VAZIA, type Inscricao, type Tipo } from "@/lib/inscricao";
+import {
+  AULA,
+  PERFIL_DA_CATEGORIA,
+  validar,
+  VAZIA,
+  type Inscricao,
+  type Tipo,
+} from "@/lib/inscricao";
 import { enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 /* Recebe as inscrições de /lista100, /aula, /conselho e /projetos. Revalida tudo, descarta robôs (campo isca),
    limita 5 envios por hora por IP ou e-mail e grava em site_inscricoes. Um gatilho no banco leva a pessoa (e os
@@ -10,7 +18,8 @@ import { enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
 
 const AVISO_PARA = ["ianewscomercial@gmail.com"];
 const LIMITE_HORA = 5;
-const FALHA = "Não conseguimos guardar seu envio agora. Tente de novo ou escreva para ianewscomercial@gmail.com.";
+const FALHA =
+  "Não conseguimos guardar seu envio agora. Tente de novo ou escreva para ianewscomercial@gmail.com.";
 const TIPOS: Tipo[] = ["lista100", "indicacao", "aula", "conselho", "projeto"];
 /** Um envio por e-mail nestes tipos; os outros (indicação, projeto) podem se repetir. */
 const UNICO: Tipo[] = ["lista100", "aula", "conselho"];
@@ -21,7 +30,8 @@ const opt = (v: unknown, max = 300) => str(v, max).trim() || null;
 /** Passo 1 da Lista 100: só valem os erros dos campos de contato. */
 function soContato(erros: Record<string, string | undefined>) {
   const out: Record<string, string> = {};
-  for (const k of ["nome", "empresa", "whatsapp", "email", "instagram", "consentimento"]) if (erros[k]) out[k] = erros[k] as string;
+  for (const k of ["nome", "empresa", "whatsapp", "email", "instagram", "consentimento"])
+    if (erros[k]) out[k] = erros[k] as string;
   return out;
 }
 
@@ -43,7 +53,8 @@ export const Route = createFileRoute("/api/public/inscricao")({
     handlers: {
       GET: async ({ request }) => {
         const url = new URL(request.url);
-        if (url.searchParams.get("horarios") !== "conselho") return Response.json({ ok: false }, { status: 404 });
+        if (url.searchParams.get("horarios") !== "conselho")
+          return Response.json({ ok: false }, { status: 404 });
         try {
           return Response.json(
             { ok: true, horarios: await horariosLivres() },
@@ -56,6 +67,8 @@ export const Route = createFileRoute("/api/public/inscricao")({
       },
 
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "inscricao", 8, 600);
+        if (limited) return limited;
         let body: Record<string, unknown>;
         try {
           body = (await request.json()) as Record<string, unknown>;
@@ -65,11 +78,15 @@ export const Route = createFileRoute("/api/public/inscricao")({
         if (str(body["empresa_site"]).trim()) return Response.json({ ok: true });
 
         const tipo = str(body["tipo"], 20) as Tipo;
-        if (!TIPOS.includes(tipo)) return Response.json({ ok: false, error: "Envio inválido." }, { status: 400 });
+        if (!TIPOS.includes(tipo))
+          return Response.json({ ok: false, error: "Envio inválido." }, { status: 400 });
 
         const entrada: Inscricao = { ...VAZIA };
         for (const k of Object.keys(VAZIA) as (keyof Inscricao)[]) {
-          if (k === "indicados") entrada.indicados = Array.isArray(body.indicados) ? (body.indicados as Inscricao["indicados"]) : [];
+          if (k === "indicados")
+            entrada.indicados = Array.isArray(body.indicados)
+              ? (body.indicados as Inscricao["indicados"])
+              : [];
           else if (k === "consentimento") entrada.consentimento = body.consentimento === true;
           else (entrada as Record<string, unknown>)[k] = str(body[k], 1000);
         }
@@ -80,12 +97,18 @@ export const Route = createFileRoute("/api/public/inscricao")({
         const validado = validar(entrada);
         const erros = etapa === "contato" ? soContato(validado.erros) : validado.erros;
         const limpa = validado.limpa;
-        if (Object.keys(erros).length) return Response.json({ ok: false, errors: erros }, { status: 422 });
+        if (Object.keys(erros).length)
+          return Response.json({ ok: false, errors: erros }, { status: 422 });
 
         const base = await db();
 
         // Candidatura parcial (só o passo 1) desta pessoa, se houver.
-        type Linha = { id: string; pessoa_id: string | null; negocio_id: string | null; dados: Record<string, string> };
+        type Linha = {
+          id: string;
+          pessoa_id: string | null;
+          negocio_id: string | null;
+          dados: Record<string, string>;
+        };
         let parcial = null as Linha | null;
         if (UNICO.includes(tipo)) {
           const { data: anteriores } = await base
@@ -99,7 +122,8 @@ export const Route = createFileRoute("/api/public/inscricao")({
           const lista = (anteriores ?? []) as Linha[];
           parcial = lista.find((r) => r.dados?.etapa === "contato") ?? null;
           const completa = lista.some((r) => r.dados?.etapa !== "contato");
-          if (completa && limpa.indicados.length === 0) return Response.json({ ok: true, already: true });
+          if (completa && limpa.indicados.length === 0)
+            return Response.json({ ok: true, already: true });
           if (etapa === "contato" && parcial) return Response.json({ ok: true, parcial: true });
         }
 
@@ -108,7 +132,8 @@ export const Route = createFileRoute("/api/public/inscricao")({
         // Passo 2 da Lista 100: completa a candidatura parcial (não cria outra pessoa nem outro negócio).
         if (etapa !== "contato" && parcial) {
           const dadosCaso: Record<string, string> = {};
-          for (const k of ["categoria", "caso", "resultado", "instagram"] as const) if (limpa[k]) dadosCaso[k] = limpa[k];
+          for (const k of ["categoria", "caso", "resultado", "instagram"] as const)
+            if (limpa[k]) dadosCaso[k] = limpa[k];
           const { etapa: _e, ...resto } = parcial.dados ?? {};
           const { error: errUp } = await base
             .from("site_inscricoes")
@@ -132,7 +157,9 @@ export const Route = createFileRoute("/api/public/inscricao")({
               `Categoria: ${limpa.categoria}`,
               `Caso: ${limpa.caso}`,
               `Resultado: ${limpa.resultado}`,
-              limpa.indicados.length ? `Indicou ${limpa.indicados.length} nome(s) no formulário` : "",
+              limpa.indicados.length
+                ? `Indicou ${limpa.indicados.length} nome(s) no formulário`
+                : "",
             ]
               .filter(Boolean)
               .join("\n"),
@@ -140,15 +167,26 @@ export const Route = createFileRoute("/api/public/inscricao")({
             negocio_id: parcial.negocio_id,
           });
           if (ctxMeta?.event_id) {
-            await enviarCapi("CompleteRegistration", ctxMeta.event_id, { email: limpa.email, phone: limpa.whatsapp, nome: limpa.nome }, ctxMeta, {
-              content_name: "lista100",
-              content_category: "lista100",
-            });
+            await enviarCapi(
+              "CompleteRegistration",
+              ctxMeta.event_id,
+              { email: limpa.email, phone: limpa.whatsapp, nome: limpa.nome },
+              ctxMeta,
+              {
+                content_name: "lista100",
+                content_category: "lista100",
+              },
+            );
           }
           try {
             const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
             await sendTemplateEmail("inscricao-confirmation", limpa.email, {
-              templateData: { tipo, nome: limpa.nome, agendado_em: null, indicados: limpa.indicados.length },
+              templateData: {
+                tipo,
+                nome: limpa.nome,
+                agendado_em: null,
+                indicados: limpa.indicados.length,
+              },
               replyTo: "ianewscomercial@gmail.com",
             });
           } catch (err) {
@@ -159,15 +197,31 @@ export const Route = createFileRoute("/api/public/inscricao")({
 
         const ua = request.headers.get("user-agent") ?? "";
         const ip =
-          request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "sem-ip";
-        const ipHash = createHash("sha256").update(`${ip}|ianews-inscricao`).digest("hex").slice(0, 40);
+          request.headers.get("x-real-ip") ??
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+          "sem-ip";
+        const ipHash = createHash("sha256")
+          .update(`${ip}|ianews-inscricao`)
+          .digest("hex")
+          .slice(0, 40);
         const desde = new Date(Date.now() - 60 * 60 * 1000).toISOString();
         const recentes = (col: "ip_hash" | "email", v: string) =>
-          base.from("site_inscricoes").select("id", { count: "exact", head: true }).gte("created_at", desde).eq(col, v);
-        const [porIp, porEmail] = await Promise.all([recentes("ip_hash", ipHash), recentes("email", limpa.email)]);
+          base
+            .from("site_inscricoes")
+            .select("id", { count: "exact", head: true })
+            .gte("created_at", desde)
+            .eq(col, v);
+        const [porIp, porEmail] = await Promise.all([
+          recentes("ip_hash", ipHash),
+          recentes("email", limpa.email),
+        ]);
         if (Math.max(porIp.count ?? 0, porEmail.count ?? 0) >= LIMITE_HORA) {
           return Response.json(
-            { ok: false, error: "Recebemos vários envios deste acesso na última hora. Tente de novo mais tarde." },
+            {
+              ok: false,
+              error:
+                "Recebemos vários envios deste acesso na última hora. Tente de novo mais tarde.",
+            },
             { status: 429 },
           );
         }
@@ -179,16 +233,39 @@ export const Route = createFileRoute("/api/public/inscricao")({
           agendado = new Date(limpa.horario).toISOString();
           if (!livres.includes(agendado)) {
             return Response.json(
-              { ok: false, errors: { horario: "Esse horário acabou de ser reservado. Escolha outro." }, refresh: true },
+              {
+                ok: false,
+                errors: { horario: "Esse horário acabou de ser reservado. Escolha outro." },
+                refresh: true,
+              },
               { status: 409 },
             );
           }
         }
 
-        const perfil = tipo === "lista100" ? PERFIL_DA_CATEGORIA[limpa.categoria] ?? null : limpa.perfil || (tipo === "projeto" ? "empresario" : null);
+        const perfil =
+          tipo === "lista100"
+            ? (PERFIL_DA_CATEGORIA[limpa.categoria] ?? null)
+            : limpa.perfil || (tipo === "projeto" ? "empresario" : null);
         const dados: Record<string, string> = {};
-        for (const k of ["categoria", "caso", "resultado", "setor", "porte", "problema", "prazo", "investimento", "materia", "instagram", "linkedin"] as const) {
-          if (limpa[k] && !(etapa === "contato" && (k === "caso" || k === "resultado" || k === "categoria"))) dados[k] = limpa[k];
+        for (const k of [
+          "categoria",
+          "caso",
+          "resultado",
+          "setor",
+          "porte",
+          "problema",
+          "prazo",
+          "investimento",
+          "materia",
+          "instagram",
+          "linkedin",
+        ] as const) {
+          if (
+            limpa[k] &&
+            !(etapa === "contato" && (k === "caso" || k === "resultado" || k === "categoria"))
+          )
+            dados[k] = limpa[k];
         }
         if (etapa === "contato") dados.etapa = "contato";
         if (tipo === "aula") dados.aula = AULA.inicio;
@@ -214,29 +291,44 @@ export const Route = createFileRoute("/api/public/inscricao")({
           ip_hash: ipHash,
         };
 
-        const { data: gravado, error } = await base.from("site_inscricoes").insert(row).select("pessoa_id, negocio_id").single();
+        const { data: gravado, error } = await base
+          .from("site_inscricoes")
+          .insert(row)
+          .select("pessoa_id, negocio_id")
+          .single();
         if (!error && etapa === "contato") {
           // Passo 1: o lead já está no CRM. A nota avisa que falta o caso; a Meta recebe um Lead (não o cadastro completo).
           const g = (gravado ?? {}) as { pessoa_id?: string | null; negocio_id?: string | null };
           await base.from("crm_atividades").insert({
             tipo: "nota",
             canal: "site",
-            texto: "Começou a candidatura à Lista 100 (passo 1, só contato). Falta contar o caso: se não terminar, ajudar pelo WhatsApp.",
+            texto:
+              "Começou a candidatura à Lista 100 (passo 1, só contato). Falta contar o caso: se não terminar, ajudar pelo WhatsApp.",
             pessoa_id: g.pessoa_id ?? null,
             negocio_id: g.negocio_id ?? null,
           });
           if (ctxMeta?.event_id && row.status === "recebido") {
-            await enviarCapi("Lead", ctxMeta.event_id, { email: row.email, phone: row.whatsapp, nome: row.nome }, ctxMeta, {
-              content_name: "lista100-contato",
-              content_category: "lista100",
-            });
+            await enviarCapi(
+              "Lead",
+              ctxMeta.event_id,
+              { email: row.email, phone: row.whatsapp, nome: row.nome },
+              ctxMeta,
+              {
+                content_name: "lista100-contato",
+                content_category: "lista100",
+              },
+            );
           }
           return Response.json({ ok: true, parcial: true });
         }
         if (error) {
           if (error.code === "23505") {
             return Response.json(
-              { ok: false, errors: { horario: "Esse horário acabou de ser reservado. Escolha outro." }, refresh: true },
+              {
+                ok: false,
+                errors: { horario: "Esse horário acabou de ser reservado. Escolha outro." },
+                refresh: true,
+              },
               { status: 409 },
             );
           }
@@ -253,7 +345,15 @@ export const Route = createFileRoute("/api/public/inscricao")({
             ctx.event_id,
             { email: row.email, phone: row.whatsapp, nome: row.nome },
             ctx,
-            { content_name: tipo === "conselho" ? "Conselho IA News" : tipo === "projeto" ? "Balcão de Projetos" : tipo, content_category: tipo },
+            {
+              content_name:
+                tipo === "conselho"
+                  ? "Conselho IA News"
+                  : tipo === "projeto"
+                    ? "Balcão de Projetos"
+                    : tipo,
+              content_category: tipo,
+            },
           );
         }
 
@@ -261,10 +361,18 @@ export const Route = createFileRoute("/api/public/inscricao")({
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           await Promise.allSettled([
             ...AVISO_PARA.map((to) =>
-              sendTemplateEmail("inscricao-notification", to, { templateData: row, replyTo: row.email }),
+              sendTemplateEmail("inscricao-notification", to, {
+                templateData: row,
+                replyTo: row.email,
+              }),
             ),
             sendTemplateEmail("inscricao-confirmation", row.email, {
-              templateData: { tipo, nome: row.nome, agendado_em: agendado, indicados: limpa.indicados.length },
+              templateData: {
+                tipo,
+                nome: row.nome,
+                agendado_em: agendado,
+                indicados: limpa.indicados.length,
+              },
               replyTo: "ianewscomercial@gmail.com",
             }),
           ]);

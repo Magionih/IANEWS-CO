@@ -11,7 +11,8 @@ import { listArticlesFiltered, type ArticleRow } from "@/lib/articles.functions"
 type Search = { q?: string; cat?: string };
 
 /** Só guarda o que difere do padrão: assim /noticias não redireciona para /noticias?q=&cat=all. */
-const str = (v: unknown, def: string) => (typeof v === "string" && v !== "" && v !== def ? v : undefined);
+const str = (v: unknown, def: string) =>
+  typeof v === "string" && v !== "" && v !== def ? v : undefined;
 
 export const Route = createFileRoute("/noticias")({
   validateSearch: (search: Partial<Record<keyof Search, unknown>>): Search => ({
@@ -32,11 +33,11 @@ export const Route = createFileRoute("/noticias")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: "Notícias de inteligência artificial hoje: IA no Brasil e no mundo | IA News" },
+      { title: "Notícias de inteligência artificial hoje | IA News" },
       {
         name: "description",
         content:
-          "Últimas notícias de inteligência artificial: lançamentos de ChatGPT, Gemini e Claude, agentes de IA, startups e empresas brasileiras. Busca por palavra-chave e filtro por editoria, atualizado todos os dias.",
+          "Últimas notícias de inteligência artificial: ChatGPT, Gemini, Claude, agentes de IA, startups e empresas brasileiras. Atualizado todos os dias.",
       },
       { property: "og:title", content: "Notícias de inteligência artificial hoje | IA News" },
       {

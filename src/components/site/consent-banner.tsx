@@ -91,11 +91,24 @@ export function ConsentBanner() {
             Saiba mais
           </Link>
         </p>
-        <div className="cb-acts" style={{ display: "flex", gap: 8, flex: "1 0 auto", justifyContent: "flex-end" }}>
-          <button type="button" className="btn line s" style={{ flex: 1 }} onClick={() => writeConsent("essential")}>
+        <div
+          className="cb-acts"
+          style={{ display: "flex", gap: 8, flex: "1 0 auto", justifyContent: "flex-end" }}
+        >
+          <button
+            type="button"
+            className="btn line s"
+            style={{ flex: 1 }}
+            onClick={() => writeConsent("essential")}
+          >
             Só essenciais
           </button>
-          <button type="button" className="btn blue s" style={{ flex: 1 }} onClick={() => writeConsent("all")}>
+          <button
+            type="button"
+            className="btn blue s"
+            style={{ flex: 1 }}
+            onClick={() => writeConsent("all")}
+          >
             Aceitar
           </button>
         </div>

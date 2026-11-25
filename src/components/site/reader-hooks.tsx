@@ -90,7 +90,12 @@ export function ReadNextNudge({
       if (read > 0.75 && rect.bottom > window.innerHeight * 1.3) {
         shown.current = true;
         setShow(true);
-        trackCta({ event: "impression", placement: "leia-a-seguir", variant: "canto", articleSlug: currentSlug });
+        trackCta({
+          event: "impression",
+          placement: "leia-a-seguir",
+          variant: "canto",
+          articleSlug: currentSlug,
+        });
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -102,7 +107,12 @@ export function ReadNextNudge({
   const close = () => {
     setShow(false);
     safeSet(ss(), `ianews_next_closed_${currentSlug}`, "1");
-    trackCta({ event: "click", placement: "leia-a-seguir", variant: "fechar", articleSlug: currentSlug });
+    trackCta({
+      event: "click",
+      placement: "leia-a-seguir",
+      variant: "fechar",
+      articleSlug: currentSlug,
+    });
   };
 
   return (
@@ -116,7 +126,12 @@ export function ReadNextNudge({
         params={{ slug: next.slug }}
         className="rd-next-t"
         onClick={() =>
-          trackCta({ event: "click", placement: "leia-a-seguir", variant: "abrir", articleSlug: currentSlug })
+          trackCta({
+            event: "click",
+            placement: "leia-a-seguir",
+            variant: "abrir",
+            articleSlug: currentSlug,
+          })
         }
       >
         {next.title}
@@ -127,7 +142,15 @@ export function ReadNextNudge({
 }
 
 /** Ao selecionar um trecho da matéria, um botãozinho oferece mandar o trecho no WhatsApp com o link. */
-export function SelectionShare({ url, title, articleSlug }: { url: string; title: string; articleSlug: string }) {
+export function SelectionShare({
+  url,
+  title,
+  articleSlug,
+}: {
+  url: string;
+  title: string;
+  articleSlug: string;
+}) {
   const [pos, setPos] = useState<{ x: number; y: number; text: string } | null>(null);
 
   useEffect(() => {
@@ -135,8 +158,10 @@ export function SelectionShare({ url, title, articleSlug }: { url: string; title
       window.setTimeout(() => {
         const sel = window.getSelection();
         const text = sel?.toString().trim() ?? "";
-        if (!sel || sel.rangeCount === 0 || text.length < 20 || text.length > 600) return setPos(null);
-        const node = sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
+        if (!sel || sel.rangeCount === 0 || text.length < 20 || text.length > 600)
+          return setPos(null);
+        const node =
+          sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
         if (!node?.closest(".prose, .why-box, .dek")) return setPos(null);
         const r = sel.getRangeAt(0).getBoundingClientRect();
         setPos({ x: r.left + r.width / 2, y: r.top + window.scrollY, text });
@@ -160,13 +185,21 @@ export function SelectionShare({ url, title, articleSlug }: { url: string; title
   const wa = `https://wa.me/?text=${encodeURIComponent(`“${quote}”\n\n${title}\n${url}?utm_source=whatsapp&utm_medium=trecho`)}`;
 
   return (
-    <div className="rd-sel" style={{ left: Math.max(70, Math.min(pos.x, window.innerWidth - 70)), top: pos.y - 46 }}>
+    <div
+      className="rd-sel"
+      style={{ left: Math.max(70, Math.min(pos.x, window.innerWidth - 70)), top: pos.y - 46 }}
+    >
       <a
         href={wa}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => {
-          trackCta({ event: "click", placement: "trecho-compartilhar", variant: "whatsapp", articleSlug });
+          trackCta({
+            event: "click",
+            placement: "trecho-compartilhar",
+            variant: "whatsapp",
+            articleSlug,
+          });
           setPos(null);
         }}
       >
@@ -199,7 +232,12 @@ export function ReadStreak({ articleSlug }: { articleSlug: string }) {
 
   useEffect(() => {
     if (count >= 2 && !subscribed) {
-      trackCta({ event: "impression", placement: "materias-hoje", variant: `${count}`, articleSlug });
+      trackCta({
+        event: "impression",
+        placement: "materias-hoje",
+        variant: `${count}`,
+        articleSlug,
+      });
     }
   }, [count, subscribed, articleSlug]);
 
@@ -236,7 +274,13 @@ export function SinceLastVisit({ dates }: { dates: string[] }) {
     <div className="rd-since">
       <span className="rd-dot" aria-hidden="true" />
       {n === 1 ? "1 matéria nova" : `${n} matérias novas`} desde a sua última visita.{" "}
-      <Link to="/noticias" search={{}} onClick={() => trackCta({ event: "click", placement: "desde-ultima-visita", variant: String(n) })}>
+      <Link
+        to="/noticias"
+        search={{}}
+        onClick={() =>
+          trackCta({ event: "click", placement: "desde-ultima-visita", variant: String(n) })
+        }
+      >
         Ver todas →
       </Link>
     </div>

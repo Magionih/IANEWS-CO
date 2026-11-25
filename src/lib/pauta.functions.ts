@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -43,6 +42,7 @@ export type PautaLead = {
 /** Matérias recentes de empresas (startup e Brasil), com capa, para mostrar o tipo de conteúdo. */
 export const listPautaExamples = createServerFn({ method: "GET" }).handler(
   async (): Promise<PautaExample[]> => {
+    const { createClient } = await import("@supabase/supabase-js");
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
       auth: { persistSession: false, autoRefreshToken: false },
     });

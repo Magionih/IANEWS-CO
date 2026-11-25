@@ -13,7 +13,10 @@ export const Route = createFileRoute("/api/public/unsubscribe")({
       },
       GET: async ({ request }) => {
         const token = new URL(request.url).searchParams.get("t") ?? "";
-        return Response.redirect(new URL(`/descadastrar?t=${encodeURIComponent(token)}`, request.url).toString(), 302);
+        return Response.redirect(
+          new URL(`/descadastrar?t=${encodeURIComponent(token)}`, request.url).toString(),
+          302,
+        );
       },
     },
   },

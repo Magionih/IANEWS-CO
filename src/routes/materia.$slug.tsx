@@ -7,7 +7,12 @@ import remarkGfm from "remark-gfm";
 import { SiteHeader } from "@/components/site/header";
 import { ReadingTracker } from "@/components/site/reading-tracker";
 import { ContentEngagement } from "@/components/site/content-engagement";
-import { ReadingProgress, ReadNextNudge, ReadStreak, SelectionShare } from "@/components/site/reader-hooks";
+import {
+  ReadingProgress,
+  ReadNextNudge,
+  ReadStreak,
+  SelectionShare,
+} from "@/components/site/reader-hooks";
 import { SiteFooter } from "@/components/site/footer";
 import { ArticleThumb } from "@/components/portal/article-thumb";
 import { ArticleToc, type TocItem } from "@/components/portal/article-toc";
@@ -20,6 +25,7 @@ import { ArticleShare } from "@/components/portal/article-share";
 import { EDITOR, isIndexable } from "@/lib/seo-quality";
 import { ParticipeCards } from "@/components/site/participe";
 import { HUB_LIST } from "@/lib/hubs";
+import { COMPANIES } from "@/lib/companies";
 import { CATEGORY_SEO } from "@/lib/categories";
 import { type CategoryKey, CATEGORY_MAP } from "@/components/site/category-chip";
 import { getArticleBySlug, listMostRead, type ArticleRow } from "@/lib/articles.functions";
@@ -112,7 +118,7 @@ export const Route = createFileRoute("/materia/$slug")({
     const isNewsroom = !a.author || /reda[cç][aã]o/i.test(a.author);
     return {
       meta: [
-        { title: `${seoTitle} — IA News` },
+        { title: seoTitle.length > 56 ? seoTitle : `${seoTitle} — IA News` },
         ...(isIndexable(a.body_markdown) ? [] : [{ name: "robots", content: "noindex, follow" }]),
         { name: "description", content: desc.slice(0, 155) },
         { property: "og:title", content: seoTitle },
@@ -146,7 +152,11 @@ export const Route = createFileRoute("/materia/$slug")({
             articleSection: CATEGORY_MAP[catOf(a.category)].label,
             isAccessibleForFree: true,
             author: isNewsroom
-              ? { "@type": "Organization", name: "Redação IA News", url: "https://ianewsbr.com/sobre" }
+              ? {
+                  "@type": "Organization",
+                  name: "Redação IA News",
+                  url: "https://ianewsbr.com/sobre",
+                }
               : { "@type": "Person", name: a.author },
             editor: { "@type": "Person", "@id": EDITOR.id, name: EDITOR.name, url: EDITOR.url },
             publisher: {
@@ -166,8 +176,25 @@ export const Route = createFileRoute("/materia/$slug")({
               "@id": `https://ianewsbr.com/materia/${a.slug}`,
             },
             ...(a.tags && a.tags.length
-              ? { keywords: a.tags.join(", "), about: a.tags.slice(0, 6).map((t) => ({ "@type": "Thing", name: t })) }
+              ? {
+                  keywords: a.tags.join(", "),
+                  about: a.tags.slice(0, 6).map((t) => ({ "@type": "Thing", name: t })),
+                }
               : {}),
+            ...(companiesFor(a).length
+              ? {
+                  mentions: companiesFor(a).map((c) => ({
+                    "@type": "Organization",
+                    name: c.name,
+                    url: c.website,
+                    sameAs: [c.wikipedia, `https://ianewsbr.com/empresas-de-ia/${c.slug}`],
+                  })),
+                }
+              : {}),
+            speakable: {
+              "@type": "SpeakableSpecification",
+              cssSelector: ["h1", ".dek", ".why-box .t"],
+            },
             ...(a.source_url ? { citation: a.source_url } : {}),
             inLanguage: "pt-BR",
           }),
@@ -223,13 +250,21 @@ function hubFor(a: { title: string; dek?: string | null; tags?: string[] | null 
   let best: (typeof HUB_LIST)[number] | null = null;
   let bestScore = 1;
   for (const h of HUB_LIST) {
-    const score = h.themes.flatMap((t) => t.terms).reduce((n, term) => (text.includes(term.toLowerCase()) ? n + 1 : n), 0);
+    const score = h.themes
+      .flatMap((t) => t.terms)
+      .reduce((n, term) => (text.includes(term.toLowerCase()) ? n + 1 : n), 0);
     if (score > bestScore) {
       best = h;
       bestScore = score;
     }
   }
   return best;
+}
+
+/** Empresas de IA citadas na matéria (para links internos às páginas de empresa). */
+function companiesFor(a: { title: string; dek?: string | null; tags?: string[] | null }) {
+  const text = `${a.title} ${a.dek ?? ""} ${(a.tags ?? []).join(" ")}`.toLowerCase();
+  return COMPANIES.filter((c) => c.terms.some((t) => text.includes(t))).slice(0, 3);
 }
 
 function catOf(value: string): CategoryKey {
@@ -268,7 +303,12 @@ function ArticleCard({ a }: { a: ArticleRow }) {
   const label = labelOf(a.category);
   return (
     <Link to="/materia/$slug" params={{ slug: a.slug }} className="card sm">
-      <ArticleThumb src={a.cover_image_url} alt={a.title} label={label} position={a.cover_position} />
+      <ArticleThumb
+        src={a.cover_image_url}
+        alt={a.title}
+        label={label}
+        position={a.cover_position}
+      />
       <span className="kick">
         <span>{label}</span>
       </span>
@@ -293,12 +333,11 @@ function ArticlePage() {
   // Crédito da foto de capa fica guardado em sources com kind "foto"; não entra na lista de fontes.
   const photoCredit = allSources.find((s) => s.kind === "foto") ?? null;
   const textSources = allSources.filter((s) => s.kind !== "foto");
-  const sources: Src[] =
-    textSources.length
-      ? textSources
-      : article.source_url
-        ? [{ name: article.source_name ?? "Fonte original", url: article.source_url }]
-        : [];
+  const sources: Src[] = textSources.length
+    ? textSources
+    : article.source_url
+      ? [{ name: article.source_name ?? "Fonte original", url: article.source_url }]
+      : [];
   const impacts = (article.business_impacts ?? []) as string[];
 
   const others: ArticleRow[] = mostRead.filter((a: ArticleRow) => a.slug !== article.slug);
@@ -439,6 +478,20 @@ function ArticlePage() {
                 ) : null;
               })()}
 
+              {(() => {
+                const cos = companiesFor(article);
+                return cos.length ? (
+                  <nav className="art-cos" aria-label="Empresas citadas">
+                    <span>Mais sobre</span>
+                    {cos.map((c) => (
+                      <Link key={c.slug} to="/empresas-de-ia/$empresa" params={{ empresa: c.slug }}>
+                        {c.name}
+                      </Link>
+                    ))}
+                  </nav>
+                ) : null;
+              })()}
+
               <section className="art-part" aria-label="Participe da IA News">
                 <h2 className="art-part-h">Participe da IA News</h2>
                 <ParticipeCards placement="materia-participe" />
@@ -455,13 +508,22 @@ function ArticlePage() {
               <aside className="art-pauta art-projeto" aria-label="Balcão de Projetos IA News">
                 <p>
                   Quer fazer isso na sua empresa?
-                  <small>Conte o que você quer resolver. A IA News apresenta especialistas que já fizeram projetos parecidos, sem custo para você.</small>
+                  <small>
+                    Conte o que você quer resolver. A IA News apresenta especialistas que já fizeram
+                    projetos parecidos, sem custo para você.
+                  </small>
                 </p>
                 <Link
                   className="btn blue"
                   to="/projetos"
                   search={{ materia: article.slug }}
-                  onClick={() => trackCta({ event: "click", placement: "materia-projeto", articleSlug: article.slug })}
+                  onClick={() =>
+                    trackCta({
+                      event: "click",
+                      placement: "materia-projeto",
+                      articleSlug: article.slug,
+                    })
+                  }
                 >
                   Quero fazer isso
                 </Link>
@@ -629,11 +691,7 @@ function ArticlePage() {
                   </li>
                   {HUB_LIST.map((h) => (
                     <li key={h.slug}>
-                      <Link
-                        to="/guias/$hub"
-                        params={{ hub: h.slug }}
-                        search={{}}
-                      >
+                      <Link to="/guias/$hub" params={{ hub: h.slug }} search={{}}>
                         {h.h1}
                       </Link>
                     </li>

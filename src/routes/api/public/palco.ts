@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
-import { validatePalco, validateQualificacao, type PalcoInput, type Qualificacao } from "@/lib/palco-validate";
+import {
+  validatePalco,
+  validateQualificacao,
+  type PalcoInput,
+  type Qualificacao,
+} from "@/lib/palco-validate";
 import { PALCO_CAPI, enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 /* Recebe a inscrição da página /palco. Revalida tudo, descarta robôs (campo isca), limita 3 envios por hora
    por IP ou e-mail, não duplica quem já está na lista e grava em palco_inscricoes. Um gatilho no banco leva a
@@ -10,7 +16,8 @@ import { PALCO_CAPI, enviarCapi, lerMetaCtx } from "@/lib/meta-capi.server";
 
 const NOTIFY_TO = ["ianewscomercial@gmail.com"];
 const LIMIT_PER_HOUR = 3;
-const FAIL = "Não conseguimos guardar sua inscrição agora. Tente de novo ou escreva para ianewscomercial@gmail.com.";
+const FAIL =
+  "Não conseguimos guardar sua inscrição agora. Tente de novo ou escreva para ianewscomercial@gmail.com.";
 
 const str = (v: unknown, max = 1000) => (typeof v === "string" ? v.slice(0, max) : "");
 const optional = (v: unknown, max = 300) => {
@@ -22,6 +29,8 @@ export const Route = createFileRoute("/api/public/palco")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "palco", 10, 600);
+        if (limited) return limited;
         let body: Record<string, unknown>;
         try {
           body = (await request.json()) as Record<string, unknown>;
@@ -64,12 +73,15 @@ export const Route = createFileRoute("/api/public/palco")({
           : null;
         if (qualif) {
           const qErr = validateQualificacao(qualif);
-          if (Object.keys(qErr).length) return Response.json({ ok: false, errors: qErr }, { status: 422 });
+          if (Object.keys(qErr).length)
+            return Response.json({ ok: false, errors: qErr }, { status: 422 });
         }
         // Inscrição feita no checkout da FGIA (com ou sem qualificação): o e-mail leva de volta para lá.
         const viaFgia = fgia || body["checkout"] === "fgia";
         const checkoutUrl = (id: string, token: string) =>
-          viaFgia ? `https://fgiaeducacao.com.br/ingresso?i=${id}&t=${token}` : `https://ianewsbr.com/palco/checkout?i=${id}&t=${token}`;
+          viaFgia
+            ? `https://fgiaeducacao.com.br/ingresso?i=${id}&t=${token}`
+            : `https://ianewsbr.com/palco/checkout?i=${id}&t=${token}`;
 
         const ua = request.headers.get("user-agent") ?? "";
         const ip =
@@ -107,16 +119,33 @@ export const Route = createFileRoute("/api/public/palco")({
               .eq("id", a.id);
             await registrarQualificacao(db, a.id, clean, qualif, body);
           }
-          return Response.json({ ok: true, already: true, id: a.id, token: a.checkout_token, pago: a.status === "pago" || a.status === "cortesia" });
+          return Response.json({
+            ok: true,
+            already: true,
+            id: a.id,
+            token: a.checkout_token,
+            pago: a.status === "pago" || a.status === "cortesia",
+          });
         }
 
         const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
         const recent = (col: "ip_hash" | "email", value: string) =>
-          db.from("palco_inscricoes").select("id", { count: "exact", head: true }).gte("created_at", since).eq(col, value);
-        const [byIp, byEmail] = await Promise.all([recent("ip_hash", ipHash), recent("email", clean.email)]);
+          db
+            .from("palco_inscricoes")
+            .select("id", { count: "exact", head: true })
+            .gte("created_at", since)
+            .eq(col, value);
+        const [byIp, byEmail] = await Promise.all([
+          recent("ip_hash", ipHash),
+          recent("email", clean.email),
+        ]);
         if (Math.max(byIp.count ?? 0, byEmail.count ?? 0) >= LIMIT_PER_HOUR) {
           return Response.json(
-            { ok: false, error: "Recebemos várias inscrições deste acesso na última hora. Tente de novo mais tarde." },
+            {
+              ok: false,
+              error:
+                "Recebemos várias inscrições deste acesso na última hora. Tente de novo mais tarde.",
+            },
             { status: 429 },
           );
         }
@@ -141,7 +170,11 @@ export const Route = createFileRoute("/api/public/palco")({
           meta_ctx: lerMetaCtx(body["meta"], request),
         };
 
-        const { data: criado, error } = await db.from("palco_inscricoes").insert(row).select("id, checkout_token").single();
+        const { data: criado, error } = await db
+          .from("palco_inscricoes")
+          .insert(row)
+          .select("id, checkout_token")
+          .single();
         if (error || !criado) {
           console.error("[palco] insert error", error?.message);
           return Response.json({ ok: false, error: FAIL }, { status: 500 });
@@ -150,15 +183,29 @@ export const Route = createFileRoute("/api/public/palco")({
         if (qualif) await registrarQualificacao(db, criado.id, clean, qualif, body);
 
         // API de Conversões: mesmo event_id do Pixel (lead-<id>), a Meta deduplica. Só com consentimento.
-        await enviarCapi("Lead", `lead-${criado.id}`, { email: row.email, phone: row.whatsapp, nome: row.nome, externalId: criado.id }, row.meta_ctx, PALCO_CAPI);
+        await enviarCapi(
+          "Lead",
+          `lead-${criado.id}`,
+          { email: row.email, phone: row.whatsapp, nome: row.nome, externalId: criado.id },
+          row.meta_ctx,
+          PALCO_CAPI,
+        );
 
         // Avisos por e-mail: não bloqueiam a resposta se o envio falhar.
         try {
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           await Promise.allSettled([
-            ...NOTIFY_TO.map((to) => sendTemplateEmail("palco-notification", to, { templateData: qualif ? { ...row, faturamento: qualif.faturamento } : row, replyTo: row.email })),
+            ...NOTIFY_TO.map((to) =>
+              sendTemplateEmail("palco-notification", to, {
+                templateData: qualif ? { ...row, faturamento: qualif.faturamento } : row,
+                replyTo: row.email,
+              }),
+            ),
             sendTemplateEmail("palco-confirmation", row.email, {
-              templateData: { nome: row.nome, checkout: checkoutUrl(criado.id, criado.checkout_token) },
+              templateData: {
+                nome: row.nome,
+                checkout: checkoutUrl(criado.id, criado.checkout_token),
+              },
               replyTo: "ianewscomercial@gmail.com",
             }),
           ]);
@@ -181,29 +228,61 @@ const PERFIL: Record<string, string> = {
 
 /* Grava a qualificação do checkout da FGIA no CRM: uma nota completa no negócio do Palco, e o faturamento e o
    segmento na empresa (só quando ainda estão vazios). Uma falha aqui não impede o pagamento. */
-async function registrarQualificacao(db: any, inscricaoId: string, clean: PalcoInput, q: Qualificacao, body: Record<string, unknown>) {
+async function registrarQualificacao(
+  db: any,
+  inscricaoId: string,
+  clean: PalcoInput,
+  q: Qualificacao,
+  body: Record<string, unknown>,
+) {
   try {
-    const { data: insc } = await db.from("palco_inscricoes").select("pessoa_id, negocio_id").eq("id", inscricaoId).maybeSingle();
+    const { data: insc } = await db
+      .from("palco_inscricoes")
+      .select("pessoa_id, negocio_id")
+      .eq("id", inscricaoId)
+      .maybeSingle();
     if (!insc?.pessoa_id) return;
     const { data: neg } = insc.negocio_id
       ? await db.from("crm_negocios").select("empresa_id").eq("id", insc.negocio_id).maybeSingle()
       : { data: null };
     let empresaId: string | null = neg?.empresa_id ?? null;
     if (!empresaId) {
-      const { data: emp } = await db.from("crm_empresas").select("id").ilike("nome", q.empresa.trim()).limit(1).maybeSingle();
+      const { data: emp } = await db
+        .from("crm_empresas")
+        .select("id")
+        .ilike("nome", q.empresa.trim())
+        .limit(1)
+        .maybeSingle();
       empresaId = emp?.id ?? null;
       if (empresaId && insc.negocio_id) {
-        await db.from("crm_negocios").update({ empresa_id: empresaId }).eq("id", insc.negocio_id).is("empresa_id", null);
+        await db
+          .from("crm_negocios")
+          .update({ empresa_id: empresaId })
+          .eq("id", insc.negocio_id)
+          .is("empresa_id", null);
       }
     }
     if (empresaId) {
       // porte aceita só startup, pme, grande ou global; a faixa exata de faturamento fica na nota abaixo.
-      const porte = q.faturamento === "Ainda não fatura" ? "startup" : q.faturamento === "Acima de R$ 5 milhões por mês" ? "grande" : "pme";
+      const porte =
+        q.faturamento === "Ainda não fatura"
+          ? "startup"
+          : q.faturamento === "Acima de R$ 5 milhões por mês"
+            ? "grande"
+            : "pme";
       await db.from("crm_empresas").update({ porte }).eq("id", empresaId).is("porte", null);
-      await db.from("crm_empresas").update({ setor: q.setor }).eq("id", empresaId).is("setor", null);
+      await db
+        .from("crm_empresas")
+        .update({ setor: q.setor })
+        .eq("id", empresaId)
+        .is("setor", null);
     }
     const origem = ["utm_source", "utm_medium", "utm_campaign"]
-      .map((k) => (typeof body[k] === "string" && body[k] ? `${k.replace("utm_", "")}=${String(body[k]).slice(0, 80)}` : ""))
+      .map((k) =>
+        typeof body[k] === "string" && body[k]
+          ? `${k.replace("utm_", "")}=${String(body[k]).slice(0, 80)}`
+          : "",
+      )
       .filter(Boolean)
       .join(" · ");
     const texto = [

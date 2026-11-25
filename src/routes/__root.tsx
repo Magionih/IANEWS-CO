@@ -4,10 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -18,7 +19,7 @@ import { ExitIntent } from "@/components/site/exit-intent";
 import { PwaManager } from "@/components/site/pwa";
 import { ConsentBanner } from "@/components/site/consent-banner";
 import { RouteProgress, ScrollToTop } from "@/components/site/scroll-to-top";
-import { supabase } from "@/integrations/supabase/client";
+import { hasStoredSession, loadSupabase } from "@/integrations/supabase/lazy";
 import { pixel } from "@/lib/pixel";
 
 function NotFoundComponent() {
@@ -258,22 +259,41 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const lastUser = useRef<string | null | undefined>(undefined);
+  const pathname = useRouterState({ select: (st) => st.location.pathname });
+  // Só escuta o login quando há sessão salva ou numa tela que usa login:
+  // leitores comuns não baixam a biblioteca de autenticação.
+  const [authArmed, setAuthArmed] = useState(false);
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      const uid = session?.user?.id ?? null;
-      const prev = lastUser.current;
-      lastUser.current = uid;
-      if (event === "INITIAL_SESSION") return;
-      // O Supabase repete SIGNED_IN ao voltar para a aba: só recarrega se a pessoa mudou.
-      if (event === "SIGNED_IN" && prev === uid) return;
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    if (authArmed) return;
+    if (hasStoredSession() || /^\/(auth|cadastro|admin|habitos|crm|briefing|previa)/.test(pathname))
+      setAuthArmed(true);
+  }, [pathname, authArmed]);
+  useEffect(() => {
+    if (!authArmed) return;
+    let unsub: (() => void) | undefined;
+    let alive = true;
+    loadSupabase().then((supabase) => {
+      if (!alive) return;
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, session) => {
+        const uid = session?.user?.id ?? null;
+        const prev = lastUser.current;
+        lastUser.current = uid;
+        if (event === "INITIAL_SESSION") return;
+        // O Supabase repete SIGNED_IN ao voltar para a aba: só recarrega se a pessoa mudou.
+        if (event === "SIGNED_IN" && prev === uid) return;
+        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        router.invalidate();
+        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      });
+      unsub = () => subscription.unsubscribe();
     });
-    return () => subscription.unsubscribe();
-  }, [router, queryClient]);
+    return () => {
+      alive = false;
+      unsub?.();
+    };
+  }, [authArmed, router, queryClient]);
 
   // Pixel da Meta: o script conta a 1ª página; aqui contam as trocas de página dentro do site.
   useEffect(

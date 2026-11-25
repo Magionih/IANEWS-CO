@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 /* API do briefing por link (/briefing/<token>). O token é um UUID aleatório e só existe no link
    enviado ao lead. Tudo passa por funções do banco com a chave de serviço; as fotos vão para um
@@ -45,6 +46,8 @@ export const Route = createFileRoute("/api/public/briefing")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "briefing", 20, 600);
+        if (limited) return limited;
         let body: Record<string, unknown>;
         try {
           body = (await request.json()) as Record<string, unknown>;

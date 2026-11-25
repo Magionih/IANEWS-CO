@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import logoWhite from "@/assets/ianews-logo-white.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useAdminAccess } from "@/hooks/use-admin";
-import { supabase } from "@/integrations/supabase/client";
+import { loadSupabase } from "@/integrations/supabase/lazy";
 import { CATEGORY_SEO_LIST } from "@/lib/categories";
 import { HUB_LIST } from "@/lib/hubs";
 import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
@@ -84,9 +84,21 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
               <small>O resumo de IA para quem decide, grátis</small>
             </span>
           </Link>
+          <Link className="srch-it" to="/empresas-de-ia" onClick={onClose}>
+            <span>
+              <b>Empresas de IA</b>
+              <small>OpenAI, Google, Meta, Anthropic, Nvidia e mais</small>
+            </span>
+          </Link>
           <h5>Editorias</h5>
           {CATEGORY_SEO_LIST.slice(0, 6).map((c) => (
-            <Link key={c.slug} className="srch-it" to="/categoria/$cat" params={{ cat: c.slug }} onClick={onClose}>
+            <Link
+              key={c.slug}
+              className="srch-it"
+              to="/categoria/$cat"
+              params={{ cat: c.slug }}
+              onClick={onClose}
+            >
               <span>
                 <b>{c.label}</b>
               </span>
@@ -115,12 +127,16 @@ export function SiteHeader() {
   }, [path]);
 
   const cur = (p: string) =>
-    (p === "/noticias" ? /^\/(noticias|materia|categoria|guias|artigos)/.test(path) : path.startsWith(p))
+    (
+      p === "/noticias"
+        ? /^\/(noticias|materia|categoria|guias|artigos|empresas-de-ia)/.test(path)
+        : path === p || path.startsWith(p + "/")
+    )
       ? ("page" as const)
       : undefined;
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await (await loadSupabase()).auth.signOut();
     navigate({ to: "/", replace: true });
   }
 
@@ -152,10 +168,11 @@ export function SiteHeader() {
                   <div>
                     {HUB_LIST.map((h) => (
                       <Link key={h.slug} to="/guias/$hub" params={{ hub: h.slug }} search={{}}>
-                        {h.eyebrow || h.title}
+                        {h.h1}
                       </Link>
                     ))}
                     <Link to="/artigos/inteligencia-artificial-nas-empresas">IA nas empresas</Link>
+                    <Link to="/empresas-de-ia">Empresas de IA</Link>
                   </div>
                 </div>
                 <div className="dd-all">
@@ -177,11 +194,7 @@ export function SiteHeader() {
             <Link to="/empresas" aria-current={cur("/empresas")}>
               Para empresas
             </Link>
-            <Link
-              to="/pauta"
-              search={{}}
-              aria-current={cur("/pauta")}
-            >
+            <Link to="/pauta" search={{}} aria-current={cur("/pauta")}>
               Envie sua pauta
             </Link>
             {isAdmin && (
@@ -191,7 +204,12 @@ export function SiteHeader() {
             )}
           </nav>
           <div className="top-act">
-            <button className="icon-btn" type="button" aria-label="Buscar" onClick={() => setSearch(true)}>
+            <button
+              className="icon-btn"
+              type="button"
+              aria-label="Buscar"
+              onClick={() => setSearch(true)}
+            >
               <Icon d={I.search} />
             </button>
             {isAuthenticated ? (
@@ -203,7 +221,11 @@ export function SiteHeader() {
                 Entrar
               </Link>
             )}
-            <button className="btn blue s" type="button" onClick={() => openSubscribeDialog("topo")}>
+            <button
+              className="btn blue s"
+              type="button"
+              onClick={() => openSubscribeDialog("topo")}
+            >
               <span className="cta-long">Assinar newsletter</span>
               <span className="cta-short">Assinar</span>
             </button>
@@ -238,12 +260,7 @@ export function SiteHeader() {
               <Link className="m" to="/empresas" aria-current={cur("/empresas")}>
                 Para empresas
               </Link>
-              <Link
-                className="m"
-                to="/pauta"
-                search={{}}
-                aria-current={cur("/pauta")}
-              >
+              <Link className="m" to="/pauta" search={{}} aria-current={cur("/pauta")}>
                 Envie sua pauta
               </Link>
               <Link className="m" to="/newsletter" aria-current={cur("/newsletter")}>

@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
@@ -52,6 +51,16 @@ export const subscribeLead = createServerFn({ method: "POST" })
     const email = data.email.trim().toLowerCase();
     if (!EMAIL_RE.test(email) || email.length > 255) {
       throw new Error("Informe um e-mail válido.");
+    }
+
+    // Limite por IP: evita usar o formulário para disparar e-mails em massa.
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const { rateLimited } = await import("@/lib/rate-limit.server");
+      const limited = await rateLimited(getRequest(), "newsletter", 6, 600);
+      if (limited) throw new Error("Muitas inscrições em pouco tempo. Tente de novo em alguns minutos.");
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith("Muitas")) throw err;
     }
 
     let country: string | null = null;

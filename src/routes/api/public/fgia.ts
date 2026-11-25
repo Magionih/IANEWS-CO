@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { FGIA_TIPOS, validateFgia, type FgiaInput } from "@/lib/fgia";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 /* Formulários do site da FGIA Educação (fgiaeducacao.com.br): lista de espera do Palco BH, candidatura a
    palestrante e interesse em patrocínio. Tudo cai no CRM central: pessoa (sem duplicar por e-mail ou WhatsApp),
    empresa, negócio no funil certo, atividade com o que a pessoa escreveu e tarefa para a equipe. */
 
-const FAIL = "Não conseguimos guardar seu envio agora. Tente de novo ou fale com a gente no Direct da @fgiaeducacao.";
+const FAIL =
+  "Não conseguimos guardar seu envio agora. Tente de novo ou fale com a gente no Direct da @fgiaeducacao.";
 const ORIGEM = "fgiaeducacao.com.br";
 
 const str = (v: unknown, max = 1000) => (typeof v === "string" ? v.slice(0, max) : "");
@@ -15,6 +17,8 @@ export const Route = createFileRoute("/api/public/fgia")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "fgia", 8, 600);
+        if (limited) return limited;
         let body: Record<string, unknown>;
         try {
           body = (await request.json()) as Record<string, unknown>;
@@ -37,7 +41,8 @@ export const Route = createFileRoute("/api/public/fgia")({
           consentimento: body["consentimento"] === true,
         };
         const { errors, clean } = validateFgia(input);
-        if (Object.keys(errors).length) return Response.json({ ok: false, errors }, { status: 422 });
+        if (Object.keys(errors).length)
+          return Response.json({ ok: false, errors }, { status: 422 });
 
         const cfg = FGIA_TIPOS[clean.tipo];
         const utm = ["utm_source", "utm_medium", "utm_campaign"]
@@ -64,7 +69,11 @@ export const Route = createFileRoute("/api/public/fgia")({
           if (ePessoa || !pessoa) throw new Error(ePessoa?.message ?? "pessoa");
 
           if (clean.instagram) {
-            await db.from("crm_pessoas").update({ instagram: clean.instagram }).eq("id", pessoa).is("instagram", null);
+            await db
+              .from("crm_pessoas")
+              .update({ instagram: clean.instagram })
+              .eq("id", pessoa)
+              .is("instagram", null);
           }
 
           let empresa: string | null = null;
@@ -84,7 +93,9 @@ export const Route = createFileRoute("/api/public/fgia")({
             `Nome: ${clean.nome}`,
             `WhatsApp: ${clean.whatsapp}`,
             `E-mail: ${clean.email}`,
-            clean.empresa ? `Empresa: ${clean.empresa}${clean.cargo ? ` · ${clean.cargo}` : ""}` : "",
+            clean.empresa
+              ? `Empresa: ${clean.empresa}${clean.cargo ? ` · ${clean.cargo}` : ""}`
+              : "",
             clean.instagram ? `Instagram: @${clean.instagram}` : "",
             clean.mensagem ? `Mensagem: ${clean.mensagem}` : "",
             utm ? `Origem: ${utm}` : "",
@@ -145,7 +156,10 @@ export const Route = createFileRoute("/api/public/fgia")({
               replyTo: clean.email,
             });
           } catch (err) {
-            console.error("[fgia] aviso por e-mail falhou", err instanceof Error ? err.message : err);
+            console.error(
+              "[fgia] aviso por e-mail falhou",
+              err instanceof Error ? err.message : err,
+            );
           }
 
           return Response.json({ ok: true });

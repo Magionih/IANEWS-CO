@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 const EVENTS = new Set(["impression", "click", "convert"]);
 const isBot = (ua: string) =>
@@ -9,6 +10,8 @@ export const Route = createFileRoute("/api/public/cta")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "cta", 120, 600);
+        if (limited) return limited;
         try {
           const ua = request.headers.get("user-agent") ?? "";
           if (isBot(ua)) return Response.json({ ok: true, skipped: "bot" });

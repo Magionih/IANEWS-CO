@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 
-import { supabase } from "@/integrations/supabase/client";
+import { hasStoredSession, loadSupabase } from "@/integrations/supabase/lazy";
 import { recordReading } from "@/lib/reading.functions";
 
 export function ReadingTracker({
@@ -27,8 +27,7 @@ export function ReadingTracker({
     started.current = false;
     lastSent.current = -1;
 
-    const device =
-      typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop";
+    const device = typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop";
 
     const readScroll = () => {
       const doc = document.documentElement;
@@ -40,10 +39,10 @@ export function ReadingTracker({
     const send = async (force = false) => {
       const s = seconds.current;
       // envia aos 15s, 60s e depois a cada 2 minutos de leitura ativa
-      const shouldSend =
-        force || s === 15 || s === 60 || (s > 60 && s % 120 === 0);
+      const shouldSend = force || s === 15 || s === 60 || (s > 60 && s % 120 === 0);
       if (!shouldSend || s < 10 || s === lastSent.current) return;
-      const { data } = await supabase.auth.getSession();
+      if (!hasStoredSession()) return;
+      const { data } = await (await loadSupabase()).auth.getSession();
       if (!data.session) return;
       lastSent.current = s;
       try {

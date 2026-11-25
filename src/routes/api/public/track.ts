@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 function parseUA(ua: string) {
   const u = ua.toLowerCase();
@@ -42,6 +43,8 @@ export const Route = createFileRoute("/api/public/track")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "track", 300, 600);
+        if (limited) return limited;
         try {
           const ua = request.headers.get("user-agent") ?? "";
           if (isBot(ua)) return Response.json({ ok: true, skipped: "bot" });
@@ -113,7 +116,10 @@ export const Route = createFileRoute("/api/public/track")({
             utm_campaign: utm["utm_campaign"],
             visitor_hash: visitorHash,
             session_id: (body.sessionId ?? "").slice(0, 60),
-            user_id: body.userId ?? null,
+            user_id:
+              typeof body.userId === "string" && /^[0-9a-f-]{36}$/i.test(body.userId)
+                ? body.userId
+                : null,
             device,
             os,
             browser,

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type {} from "@tanstack/react-start";
 import { CATEGORY_SEO_LIST } from "@/lib/categories";
 import { HUB_LIST } from "@/lib/hubs";
+import { COMPANIES } from "@/lib/companies";
 import { isIndexable } from "@/lib/seo-quality";
 
 const BASE_URL = "https://ianewsbr.com";
@@ -32,6 +33,8 @@ export const Route = createFileRoute("/sitemap.xml")({
             priority: "0.8",
           },
           ...HUB_LIST.map((h) => ({ path: `/guias/${h.slug}`, changefreq: "daily" as const, priority: "0.8" })),
+          { path: "/empresas-de-ia", changefreq: "weekly", priority: "0.8" },
+          ...COMPANIES.map((c) => ({ path: `/empresas-de-ia/${c.slug}`, changefreq: "daily" as const, priority: "0.8" })),
           { path: "/assinar", changefreq: "monthly", priority: "0.7" },
           { path: "/newsletter", changefreq: "daily", priority: "0.9" },
           ...CATEGORY_SEO_LIST.map((c) => ({

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 
 import { validatePauta, type PautaInput } from "@/lib/pauta-validate";
+import { rateLimited } from "@/lib/rate-limit.server";
 
 /* Recebe o formulário da página /pauta. Revalida tudo, descarta robôs (campo isca),
    limita 3 envios por hora por IP ou e-mail, grava em pauta_leads e avisa o comercial. */
@@ -19,6 +20,8 @@ export const Route = createFileRoute("/api/public/pauta")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limited = await rateLimited(request, "pauta", 5, 600);
+        if (limited) return limited;
         let body: Record<string, unknown>;
         try {
           body = (await request.json()) as Record<string, unknown>;
@@ -59,11 +62,22 @@ export const Route = createFileRoute("/api/public/pauta")({
 
         const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
         const recent = (col: "ip_hash" | "email", value: string) =>
-          db.from("pauta_leads").select("id", { count: "exact", head: true }).gte("created_at", since).eq(col, value);
-        const [byIp, byEmail] = await Promise.all([recent("ip_hash", ipHash), recent("email", clean.email)]);
+          db
+            .from("pauta_leads")
+            .select("id", { count: "exact", head: true })
+            .gte("created_at", since)
+            .eq(col, value);
+        const [byIp, byEmail] = await Promise.all([
+          recent("ip_hash", ipHash),
+          recent("email", clean.email),
+        ]);
         if (Math.max(byIp.count ?? 0, byEmail.count ?? 0) >= LIMIT_PER_HOUR) {
           return Response.json(
-            { ok: false, error: "Recebemos várias pautas suas na última hora. Tente de novo mais tarde ou escreva para ianewscomercial@gmail.com." },
+            {
+              ok: false,
+              error:
+                "Recebemos várias pautas suas na última hora. Tente de novo mais tarde ou escreva para ianewscomercial@gmail.com.",
+            },
             { status: 429 },
           );
         }
@@ -97,7 +111,11 @@ export const Route = createFileRoute("/api/public/pauta")({
         if (error) {
           console.error("[pauta] insert error", error.message);
           return Response.json(
-            { ok: false, error: "Não conseguimos enviar agora. Tente de novo ou escreva para ianewscomercial@gmail.com." },
+            {
+              ok: false,
+              error:
+                "Não conseguimos enviar agora. Tente de novo ou escreva para ianewscomercial@gmail.com.",
+            },
             { status: 500 },
           );
         }
@@ -106,7 +124,12 @@ export const Route = createFileRoute("/api/public/pauta")({
         try {
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           await Promise.allSettled([
-            ...NOTIFY_TO.map((to) => sendTemplateEmail("pauta-notification", to, { templateData: row, replyTo: row.email })),
+            ...NOTIFY_TO.map((to) =>
+              sendTemplateEmail("pauta-notification", to, {
+                templateData: row,
+                replyTo: row.email,
+              }),
+            ),
             sendTemplateEmail("pauta-confirmation", row.email, {
               templateData: { nome: row.nome, empresa: row.empresa },
               replyTo: "ianewscomercial@gmail.com",

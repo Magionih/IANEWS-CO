@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-function serverClient() {
+async function serverClient() {
+  // Import dinâmico: mantém a biblioteca do Supabase fora do JavaScript do navegador.
+  const { createClient } = await import("@supabase/supabase-js");
   return createClient<Database>(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PUBLISHABLE_KEY!,
@@ -42,7 +43,7 @@ export type ArticleFull = ArticleRow & {
 
 export const listRecentArticles = createServerFn({ method: "GET" }).handler(
   async (): Promise<ArticleRow[]> => {
-    const supabase = serverClient();
+    const supabase = await serverClient();
     const { data, error } = await supabase
       .from("articles")
       .select(
@@ -61,7 +62,7 @@ export const listRecentArticles = createServerFn({ method: "GET" }).handler(
 export const getArticleBySlug = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }): Promise<ArticleFull | null> => {
-    const supabase = serverClient();
+    const supabase = await serverClient();
     const { data: row, error } = await supabase
       .from("articles")
       .select(
@@ -78,7 +79,7 @@ export const getArticleBySlug = createServerFn({ method: "GET" })
 
 export const listMostRead = createServerFn({ method: "GET" }).handler(
   async (): Promise<ArticleRow[]> => {
-    const supabase = serverClient();
+    const supabase = await serverClient();
     const { data, error } = await supabase
       .from("articles")
       .select(
@@ -97,7 +98,7 @@ export const listMostRead = createServerFn({ method: "GET" }).handler(
 export const listArticlesFiltered = createServerFn({ method: "GET" })
   .inputValidator((data: { q?: string; category?: string }) => data)
   .handler(async ({ data }): Promise<ArticleRow[]> => {
-    const supabase = serverClient();
+    const supabase = await serverClient();
     let query = supabase
       .from("articles")
       .select(
@@ -128,14 +129,16 @@ export const listArticlesFiltered = createServerFn({ method: "GET" })
 export const listArticlesForHub = createServerFn({ method: "GET" })
   .inputValidator((data: { terms: string[]; limit?: number }) => data)
   .handler(async ({ data }): Promise<ArticleRow[]> => {
-    const supabase = serverClient();
+    const supabase = await serverClient();
     const { data: rows, error } = await supabase
       .from("articles")
       .select(
         "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at, tags",
       )
+      .eq("status", "published")
+      .lte("published_at", new Date().toISOString())
       .order("published_at", { ascending: false })
-      .limit(200);
+      .limit(500);
     if (error) {
       console.error("[articles] hub error", error);
       return [];

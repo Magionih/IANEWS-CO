@@ -9,7 +9,8 @@ import { listArticlesForHub, type ArticleRow } from "@/lib/articles.functions";
 type HubSearch = { q?: string; tema?: string };
 
 /** Só guarda o que difere do padrão: assim o guia não redireciona para ?q=&tema=all. */
-const str = (v: unknown, def: string) => (typeof v === "string" && v !== "" && v !== def ? v : undefined);
+const str = (v: unknown, def: string) =>
+  typeof v === "string" && v !== "" && v !== def ? v : undefined;
 
 export const Route = createFileRoute("/guias/$hub")({
   validateSearch: (search: Partial<Record<keyof HubSearch, unknown>>): HubSearch => ({
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/guias/$hub")({
     const url = `${SITE_URL}/guias/${hub.slug}`;
     return {
       meta: [
-        { title: `${hub.title} | IA News` },
+        { title: hub.title.length > 56 ? hub.title : `${hub.title} | IA News` },
         { name: "description", content: hub.description },
         { property: "og:title", content: hub.title },
         { property: "og:description", content: hub.description },

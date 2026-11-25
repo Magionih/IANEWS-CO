@@ -19,8 +19,10 @@ export const Route = createFileRoute("/api/public/health")({
               emailSending: process.env.NEWSLETTER_ENABLED !== "false" && has("RESEND_API_KEY"),
               // Remetente não é segredo: mostra só o domínio e se o formato está certo.
               emailFromSet: process.env.EMAIL_FROM !== undefined,
-              emailFromDomain: ((process.env.EMAIL_FROM ?? "").match(/@([^>\s]+)/)?.[1] ?? null),
-              emailFromFormatOk: /^([^<>]*<)?[^@\s<>]+@[^@\s<>]+\.[a-z]{2,}>?$/i.test((process.env.EMAIL_FROM ?? "").trim()),
+              emailFromDomain: (process.env.EMAIL_FROM ?? "").match(/@([^>\s]+)/)?.[1] ?? null,
+              emailFromFormatOk: /^([^<>]*<)?[^@\s<>]+@[^@\s<>]+\.[a-z]{2,}>?$/i.test(
+                (process.env.EMAIL_FROM ?? "").trim(),
+              ),
               emailFromLength: (process.env.EMAIL_FROM ?? "").length,
               vercelEnv: process.env.VERCEL_ENV ?? null,
             },
