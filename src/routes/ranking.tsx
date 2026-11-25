@@ -68,7 +68,7 @@ export const Route = createFileRoute("/ranking")({
       ? ` Em inteligência, lidera o ${bench.name}, da ${bench.maker} (${bench.asOf}).`
       : "";
     const description = top.length
-      ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram entre as ferramentas.${benchTxt} Compare ${total} ferramentas por categoria e fabricante.`
+      ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram.${benchTxt} Compare ${total} IAs.`
       : "Ranking atualizado das melhores ferramentas de inteligência artificial, por categoria, fabricante e nota dos leitores brasileiros.";
     return {
       meta: [

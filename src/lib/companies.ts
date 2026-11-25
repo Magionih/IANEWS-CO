@@ -313,6 +313,226 @@ export const COMPANIES: Company[] = [
       },
     ],
   },
+
+  {
+    slug: "nubank",
+    name: "Nubank",
+    short: "Nubank",
+    title: "Nubank e IA: inteligência artificial no maior banco digital do Brasil",
+    description:
+      "Como o Nubank usa inteligência artificial em crédito, atendimento e produtos. A cobertura da IA News sobre a IA no banco digital fundado em São Paulo.",
+    h1: "Nubank e inteligência artificial",
+    intro: [
+      "O Nubank nasceu em 2013, em São Paulo, como um banco digital sem agências e virou um dos maiores bancos da América Latina em número de clientes. Dados e inteligência artificial estão no centro de decisões como crédito, prevenção a fraudes e atendimento.",
+      "Aqui reunimos a cobertura da IA News sobre como o Nubank aplica IA e o que isso indica para o setor financeiro brasileiro.",
+    ],
+    facts: [
+      { label: "Fundação", value: "2013" },
+      { label: "Origem", value: "São Paulo (SP)" },
+      { label: "Setor", value: "Banco digital" },
+    ],
+    products: ["Cartão e conta digital", "Crédito com modelos de IA", "Atendimento com IA"],
+    terms: ["nubank"],
+    website: "https://nubank.com.br",
+    wikipedia: "https://pt.wikipedia.org/wiki/Nubank",
+    foundingDate: "2013",
+    founders: ["David Vélez", "Cristina Junqueira", "Edward Wible"],
+    faq: [
+      {
+        q: "Como o Nubank usa inteligência artificial?",
+        a: "Em análise de crédito, prevenção a fraudes, personalização de produtos e atendimento. As matérias desta página trazem os casos e números divulgados.",
+      },
+    ],
+  },
+  {
+    slug: "itau",
+    name: "Itaú Unibanco",
+    short: "Itaú",
+    title: "Itaú e IA: como o maior banco privado do Brasil usa inteligência artificial",
+    description:
+      "A inteligência artificial no Itaú Unibanco: atendimento, assistentes, crédito, segurança e investimentos em IA. A cobertura da IA News sobre o banco.",
+    h1: "Itaú e inteligência artificial",
+    intro: [
+      "O Itaú Unibanco é o maior banco privado do Brasil e um dos que mais investem em tecnologia no país. A inteligência artificial aparece no atendimento, nos assistentes para clientes, na análise de crédito e na segurança.",
+      "Nesta página estão as matérias da IA News sobre a estratégia de IA do Itaú e o que ela sinaliza para outras empresas brasileiras.",
+    ],
+    facts: [
+      { label: "Sede", value: "São Paulo (SP)" },
+      { label: "Setor", value: "Banco" },
+      { label: "Formação", value: "Fusão Itaú e Unibanco (2008)" },
+    ],
+    products: [
+      "Assistentes de IA para clientes",
+      "Atendimento digital",
+      "Crédito e prevenção a fraudes",
+    ],
+    terms: ["itaú", "itau unibanco"],
+    website: "https://www.itau.com.br",
+    wikipedia: "https://pt.wikipedia.org/wiki/Ita%C3%BA_Unibanco",
+    foundingDate: "2008",
+    founders: [],
+    faq: [
+      {
+        q: "Como o Itaú usa inteligência artificial?",
+        a: "No atendimento a clientes, em assistentes digitais, na análise de crédito e na prevenção a fraudes. As matérias desta página trazem os detalhes divulgados pelo banco.",
+      },
+    ],
+  },
+  {
+    slug: "magalu",
+    name: "Magalu",
+    short: "Magalu",
+    title: "Magalu e IA: inteligência artificial no varejo, na Lu e no marketplace",
+    description:
+      "Como o Magalu (Magazine Luiza) usa inteligência artificial no varejo, na assistente Lu, no marketplace e na logística. A cobertura da IA News.",
+    h1: "Magalu e inteligência artificial",
+    intro: [
+      "O Magalu, nome atual do Magazine Luiza, é uma das maiores varejistas do Brasil e um dos casos mais conhecidos de transformação digital no país. A inteligência artificial aparece na assistente virtual Lu, no marketplace, na logística e nas ferramentas para vendedores.",
+      "Reunimos aqui a cobertura da IA News sobre o Magalu e a IA no varejo brasileiro.",
+    ],
+    facts: [
+      { label: "Fundação", value: "1957" },
+      { label: "Origem", value: "Franca (SP)" },
+      { label: "Setor", value: "Varejo e marketplace" },
+    ],
+    products: [
+      "Lu, assistente virtual",
+      "Marketplace",
+      "Logística com IA",
+      "Ferramentas para vendedores",
+    ],
+    terms: ["magalu", "magazine luiza", "luiza trajano"],
+    website: "https://www.magazineluiza.com.br",
+    wikipedia: "https://pt.wikipedia.org/wiki/Magazine_Luiza",
+    foundingDate: "1957",
+    founders: ["Luiza Trajano Donato", "Pelegrino José Donato"],
+    faq: [
+      {
+        q: "Quem é a Lu do Magalu?",
+        a: "É a personagem e assistente virtual do Magalu, usada na comunicação da marca e no atendimento digital.",
+      },
+    ],
+  },
+  {
+    slug: "mercado-livre",
+    name: "Mercado Livre",
+    short: "Mercado Livre",
+    title: "Mercado Livre e IA: inteligência artificial no comércio eletrônico",
+    description:
+      "Como o Mercado Livre usa inteligência artificial em vendas, anúncios, logística e no Mercado Pago. A cobertura da IA News sobre a maior plataforma de e-commerce da América Latina.",
+    h1: "Mercado Livre e inteligência artificial",
+    intro: [
+      "O Mercado Livre é a maior plataforma de comércio eletrônico da América Latina e tem no Brasil o seu principal mercado. Usa inteligência artificial em recomendações, anúncios, logística, atendimento e nos serviços financeiros do Mercado Pago.",
+      "Aqui está a cobertura da IA News sobre o Mercado Livre e a IA no e-commerce.",
+    ],
+    facts: [
+      { label: "Fundação", value: "1999" },
+      { label: "Origem", value: "Buenos Aires (Argentina)" },
+      { label: "Setor", value: "E-commerce e fintech" },
+    ],
+    products: ["Marketplace", "Mercado Pago", "Mercado Ads", "Logística com IA"],
+    terms: ["mercado livre", "mercadolivre", "mercado pago", "galperin"],
+    website: "https://www.mercadolivre.com.br",
+    wikipedia: "https://pt.wikipedia.org/wiki/Mercado_Livre",
+    foundingDate: "1999",
+    founders: ["Marcos Galperin"],
+    faq: [
+      {
+        q: "Como o Mercado Livre usa inteligência artificial?",
+        a: "Em recomendações de produtos, anúncios, prevenção a fraudes, logística e atendimento, além dos serviços do Mercado Pago.",
+      },
+    ],
+  },
+  {
+    slug: "totvs",
+    name: "TOTVS",
+    short: "TOTVS",
+    title: "TOTVS e IA: inteligência artificial nos sistemas de gestão das empresas",
+    description:
+      "Como a TOTVS leva inteligência artificial para ERP e sistemas de gestão de empresas brasileiras. A cobertura da IA News sobre a maior empresa de software do Brasil.",
+    h1: "TOTVS e inteligência artificial",
+    intro: [
+      "A TOTVS é a maior empresa brasileira de software de gestão (ERP), usada por milhares de empresas de todos os tamanhos. Por isso, o modo como ela coloca inteligência artificial nos seus sistemas afeta diretamente o dia a dia de negócios no Brasil.",
+      "Nesta página estão as matérias da IA News sobre a TOTVS e a IA nos sistemas de gestão.",
+    ],
+    facts: [
+      { label: "Fundação", value: "1983" },
+      { label: "Sede", value: "São Paulo (SP)" },
+      { label: "Setor", value: "Software de gestão (ERP)" },
+    ],
+    products: ["ERP", "Sistemas de gestão por setor", "Assistentes de IA nos sistemas"],
+    terms: ["totvs"],
+    website: "https://www.totvs.com",
+    wikipedia: "https://pt.wikipedia.org/wiki/TOTVS",
+    foundingDate: "1983",
+    founders: ["Laércio Cosentino"],
+    faq: [
+      {
+        q: "O que a TOTVS faz?",
+        a: "Desenvolve software de gestão empresarial (ERP) e soluções de tecnologia para empresas brasileiras, cada vez mais com recursos de inteligência artificial.",
+      },
+    ],
+  },
+  {
+    slug: "xai",
+    name: "xAI",
+    short: "xAI",
+    title: "xAI e Grok: notícias da empresa de IA de Elon Musk",
+    description:
+      "Tudo sobre a xAI, empresa de inteligência artificial criada por Elon Musk: o assistente Grok, novos modelos e a disputa com OpenAI e Google.",
+    h1: "xAI e Grok: notícias e análise",
+    intro: [
+      "A xAI é a empresa de inteligência artificial criada por Elon Musk em 2023. Desenvolve o Grok, assistente e família de modelos integrada à rede social X, e disputa espaço com OpenAI, Google e Anthropic.",
+      "Reunimos aqui a cobertura da IA News sobre a xAI e o Grok.",
+    ],
+    facts: [
+      { label: "Fundação", value: "2023" },
+      { label: "Fundador", value: "Elon Musk" },
+      { label: "Principal produto", value: "Grok" },
+    ],
+    products: ["Grok", "Modelos Grok", "API da xAI"],
+    terms: ["xai ", "xai,", "xai.", "grok"],
+    website: "https://x.ai",
+    wikipedia: "https://pt.wikipedia.org/wiki/XAI_(empresa)",
+    foundingDate: "2023",
+    founders: ["Elon Musk"],
+    faq: [
+      {
+        q: "O que é o Grok?",
+        a: "É o assistente de inteligência artificial da xAI, disponível dentro da rede social X e em aplicativo próprio.",
+      },
+    ],
+  },
+  {
+    slug: "apple",
+    name: "Apple",
+    short: "Apple",
+    title: "Apple e IA: notícias da Apple Intelligence, Siri e iPhone",
+    description:
+      "A Apple na inteligência artificial: Apple Intelligence, Siri, IA no iPhone e no Mac, parcerias e o que muda para usuários e empresas no Brasil.",
+    h1: "Apple e inteligência artificial",
+    intro: [
+      "A Apple leva a inteligência artificial para o iPhone, o iPad e o Mac com a Apple Intelligence, e vem reformulando a assistente Siri. A estratégia aposta em processamento no próprio aparelho e em privacidade.",
+      "Aqui reunimos as matérias da IA News sobre a Apple e a IA.",
+    ],
+    facts: [
+      { label: "Fundação", value: "1976" },
+      { label: "Sede", value: "Cupertino (EUA)" },
+      { label: "Plataforma de IA", value: "Apple Intelligence" },
+    ],
+    products: ["Apple Intelligence", "Siri", "Chips Apple Silicon"],
+    terms: ["apple", "iphone", "siri"],
+    website: "https://www.apple.com",
+    wikipedia: "https://pt.wikipedia.org/wiki/Apple",
+    foundingDate: "1976-04-01",
+    founders: ["Steve Jobs", "Steve Wozniak", "Ronald Wayne"],
+    faq: [
+      {
+        q: "O que é a Apple Intelligence?",
+        a: "É o conjunto de recursos de inteligência artificial da Apple para iPhone, iPad e Mac, com escrita assistida, resumos, imagens e uma Siri mais capaz.",
+      },
+    ],
+  },
 ];
 
 export const COMPANY_MAP: Record<string, Company> = Object.fromEntries(

@@ -8,9 +8,9 @@ import { AULA } from "@/lib/inscricao";
    Cada evento sai com dados estruturados de Event para aparecer na busca de eventos do Google. */
 
 const PAGE_URL = "https://ianewsbr.com/eventos";
-const TITLE = "Eventos de inteligência artificial 2026 e 2027: workshops e Palco IA News";
+const TITLE = "Eventos de inteligência artificial: workshops e Palco IA News";
 const DESCRIPTION =
-  "Agenda de eventos de IA da IA News: aula gratuita em 25/11, Palco IA News Online em 16/12 e o primeiro Palco presencial em Belo Horizonte, em 11/02/2027. Casos reais de empresas brasileiras.";
+  "Agenda de eventos de IA da IA News: Palco IA News Online em 16/12 e o primeiro Palco presencial em Belo Horizonte, em 11/02/2027, com casos reais de empresas.";
 
 type Evento = {
   id: string;
@@ -117,14 +117,36 @@ function eventLd(e: Evento) {
       : {
           "@type": "Place",
           name: "Belo Horizonte",
-          address: { "@type": "PostalAddress", addressLocality: "Belo Horizonte", addressRegion: "MG", addressCountry: "BR" },
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Belo Horizonte",
+            addressRegion: "MG",
+            addressCountry: "BR",
+          },
         },
     image: ["https://ianewsbr.com/og-ianews.png"],
     organizer: { "@type": "Organization", name: "IA News", url: "https://ianewsbr.com" },
     ...(e.gratis
-      ? { isAccessibleForFree: true, offers: { "@type": "Offer", url, price: "0", priceCurrency: "BRL", availability: "https://schema.org/InStock" } }
+      ? {
+          isAccessibleForFree: true,
+          offers: {
+            "@type": "Offer",
+            url,
+            price: "0",
+            priceCurrency: "BRL",
+            availability: "https://schema.org/InStock",
+          },
+        }
       : e.id === "palco-online"
-        ? { offers: { "@type": "Offer", url, price: "97", priceCurrency: "BRL", availability: "https://schema.org/InStock" } }
+        ? {
+            offers: {
+              "@type": "Offer",
+              url,
+              price: "97",
+              priceCurrency: "BRL",
+              availability: "https://schema.org/InStock",
+            },
+          }
         : {}),
     url,
   };
@@ -148,7 +170,11 @@ export const Route = createFileRoute("/eventos")({
           "@context": "https://schema.org",
           "@type": "ItemList",
           name: "Eventos de inteligência artificial da IA News",
-          itemListElement: EVENTOS.map((e, i) => ({ "@type": "ListItem", position: i + 1, item: eventLd(e) })),
+          itemListElement: EVENTOS.map((e, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: eventLd(e),
+          })),
         }),
       },
       {
@@ -156,7 +182,11 @@ export const Route = createFileRoute("/eventos")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          mainEntity: FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
         }),
       },
     ],
@@ -174,8 +204,9 @@ function EventosPage() {
             <p className="ev-kick">Agenda IA News</p>
             <h1>Eventos de inteligência artificial para quem decide</h1>
             <p className="ev-lead">
-              Workshops e encontros com casos reais de empresas brasileiras que colocaram IA para trabalhar. Online e ao
-              vivo, e o primeiro Palco presencial em Belo Horizonte em fevereiro de 2027.
+              Workshops e encontros com casos reais de empresas brasileiras que colocaram IA para
+              trabalhar. Online e ao vivo, e o primeiro Palco presencial em Belo Horizonte em
+              fevereiro de 2027.
             </p>
           </div>
         </section>

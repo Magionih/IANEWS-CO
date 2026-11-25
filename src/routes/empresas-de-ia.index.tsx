@@ -8,7 +8,7 @@ import { SITE_URL } from "@/lib/hubs";
 const URL = `${SITE_URL}/empresas-de-ia`;
 const TITLE = "Empresas de IA: OpenAI, Google, Meta, Anthropic, Nvidia e mais";
 const DESCRIPTION =
-  "As maiores empresas de inteligência artificial e o que cada uma faz: OpenAI, Google, Meta, Anthropic, Nvidia, Amazon, Microsoft e iFood, com as notícias da IA News.";
+  "As maiores empresas de IA e o que cada uma faz: OpenAI, Google, Meta, Anthropic, Nvidia, Microsoft, Nubank, Itaú, Magalu e mais, com as notícias da IA News.";
 
 export const Route = createFileRoute("/empresas-de-ia/")({
   head: () => ({

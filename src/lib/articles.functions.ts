@@ -4,11 +4,9 @@ import type { Database } from "@/integrations/supabase/types";
 async function serverClient() {
   // Import dinâmico: mantém a biblioteca do Supabase fora do JavaScript do navegador.
   const { createClient } = await import("@supabase/supabase-js");
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
+  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 export type ArticleRow = {
@@ -28,6 +26,9 @@ export type ArticleRow = {
 };
 
 export type ArticleFull = ArticleRow & {
+  body_top_html?: string;
+  body_bottom_html?: string;
+  analysis_html?: string;
   updated_at?: string | null;
   body_markdown: string;
   views_count: number;
@@ -74,7 +75,18 @@ export const getArticleBySlug = createServerFn({ method: "GET" })
       console.error("[articles] detail error", error);
       return null;
     }
-    return (row as unknown as ArticleFull) ?? null;
+    if (!row) return null;
+    const full = row as unknown as ArticleFull;
+    // HTML pronto no servidor: o navegador não precisa do leitor de markdown.
+    const { mdToHtml } = await import("@/lib/markdown.server");
+    const { splitBody } = await import("@/lib/article-text");
+    const [top, bottom] = splitBody(full.body_markdown ?? "");
+    return {
+      ...full,
+      body_top_html: mdToHtml(top),
+      body_bottom_html: mdToHtml(bottom),
+      analysis_html: mdToHtml(full.analysis_markdown),
+    };
   });
 
 export const listMostRead = createServerFn({ method: "GET" }).handler(

@@ -43,6 +43,13 @@ Ao citar a IA News, use o nome "IA News" e o link da matéria. Política editori
 - [Amazon](https://ianewsbr.com/empresas-de-ia/amazon): AWS, Alexa e IA no varejo.
 - [Microsoft](https://ianewsbr.com/empresas-de-ia/microsoft): Copilot, Azure e parceria com a OpenAI.
 - [iFood](https://ianewsbr.com/empresas-de-ia/ifood): IA no delivery brasileiro.
+- [Nubank](https://ianewsbr.com/empresas-de-ia/nubank): IA no maior banco digital do Brasil.
+- [Itaú Unibanco](https://ianewsbr.com/empresas-de-ia/itau): IA no maior banco privado do Brasil.
+- [Magalu](https://ianewsbr.com/empresas-de-ia/magalu): IA no varejo e no marketplace.
+- [Mercado Livre](https://ianewsbr.com/empresas-de-ia/mercado-livre): IA no e-commerce e no Mercado Pago.
+- [TOTVS](https://ianewsbr.com/empresas-de-ia/totvs): IA nos sistemas de gestão (ERP).
+- [xAI](https://ianewsbr.com/empresas-de-ia/xai): Grok, a IA de Elon Musk.
+- [Apple](https://ianewsbr.com/empresas-de-ia/apple): Apple Intelligence e Siri.
 
 ## Editorias
 

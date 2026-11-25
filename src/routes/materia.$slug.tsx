@@ -1,8 +1,6 @@
-import { isValidElement, type ReactNode } from "react";
 import { trackCta } from "@/lib/cta-tracking";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import ReactMarkdown, { type Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { anchorOf, splitBody } from "@/lib/article-text";
 
 import { SiteHeader } from "@/components/site/header";
 import { ReadingTracker } from "@/components/site/reading-tracker";
@@ -35,34 +33,6 @@ const FALLBACK_COVER =
   "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1600&q=80&auto=format&fit=crop";
 
 /** Divide o markdown em duas partes num limite de parágrafo perto do meio. */
-function splitBody(markdown: string): [string, string] {
-  const blocks = markdown.split(/\n{2,}/).filter((b) => b.trim().length > 0);
-  if (blocks.length < 5) return [markdown, ""];
-  let cut = Math.round(blocks.length * 0.45);
-  // não deixar um intertítulo órfão antes da chamada de newsletter
-  while (cut < blocks.length - 1 && blocks[cut - 1]!.trim().startsWith("#")) cut += 1;
-  return [blocks.slice(0, cut).join("\n\n"), blocks.slice(cut).join("\n\n")];
-}
-
-/** Âncora estável para os intertítulos (usada no índice "Nesta matéria"). */
-function anchorOf(text: string): string {
-  const base = text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  return "s-" + (base || "secao");
-}
-
-function nodeText(node: ReactNode): string {
-  if (node == null || typeof node === "boolean") return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(nodeText).join("");
-  if (isValidElement<{ children?: ReactNode }>(node)) return nodeText(node.props.children);
-  return "";
-}
 
 /** Intertítulos "## ..." do corpo, em texto puro, na ordem em que aparecem. */
 function headingsOf(markdown: string): TocItem[] {
@@ -79,16 +49,10 @@ function headingsOf(markdown: string): TocItem[] {
   return out;
 }
 
-const MD_COMPONENTS: Components = {
-  h2: ({ children }) => <h2 id={anchorOf(nodeText(children))}>{children}</h2>,
-};
-
-function Markdown({ children }: { children: string }) {
-  return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
-      {children}
-    </ReactMarkdown>
-  );
+/** Corpo já convertido em HTML (e sanitizado) no servidor. */
+function Html({ html }: { html?: string }) {
+  if (!html) return null;
+  return <div style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 export const Route = createFileRoute("/materia/$slug")({
@@ -325,7 +289,7 @@ function ArticlePage() {
   const categoryLabel = labelOf(article.category);
   const categorySeo = CATEGORY_SEO[article.category];
   const minutes = article.read_minutes ?? 4;
-  const [bodyTop, bodyBottom] = splitBody(article.body_markdown);
+  const [, bodyBottom] = splitBody(article.body_markdown);
   const url = `https://ianewsbr.com/materia/${article.slug}`;
 
   type Src = { name?: string | null; url?: string | null; kind?: string | null };
@@ -452,9 +416,9 @@ function ArticlePage() {
               />
 
               <div className="prose">
-                <Markdown>{bodyTop}</Markdown>
+                <Html html={article.body_top_html} />
                 <ArticleInlineCta articleSlug={article.slug} />
-                {bodyBottom ? <Markdown>{bodyBottom}</Markdown> : null}
+                {bodyBottom ? <Html html={article.body_bottom_html} /> : null}
               </div>
 
               {article.why_it_matters ? (
@@ -536,7 +500,7 @@ function ArticlePage() {
                   </h2>
                   <p className="art-block-sub">A leitura da nossa redação</p>
                   <div className="prose">
-                    <Markdown>{article.analysis_markdown}</Markdown>
+                    <Html html={article.analysis_html} />
                   </div>
                 </section>
               ) : null}
