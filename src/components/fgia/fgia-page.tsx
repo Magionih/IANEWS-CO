@@ -13,12 +13,21 @@ import {
   type FgiaTipo,
 } from "@/lib/fgia";
 import { pixel } from "@/lib/pixel";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Landing page da FGIA Educação, o palco da IA News. Vende um passo por vez: ingresso do online (16/12),
    lista de espera do presencial em BH (11/02/2027), candidatura a palestrante e patrocínio. */
 
 const Check = () => (
-  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C9A55C" strokeWidth="2">
+  <svg
+    aria-hidden="true"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#C9A55C"
+    strokeWidth="2"
+  >
     <path d="M5 12l5 5L20 7" />
   </svg>
 );
@@ -49,7 +58,8 @@ function useUtm() {
       const v = q.get(k);
       if (v) out[k] = v.slice(0, 80);
     }
-    if (!out.utm_source && window.location.hostname.includes("fgiaeducacao")) out.utm_source = "fgiaeducacao.com.br";
+    if (!out.utm_source && window.location.hostname.includes("fgiaeducacao"))
+      out.utm_source = "fgiaeducacao.com.br";
     setUtm(out);
   }, []);
   return utm;
@@ -80,8 +90,12 @@ function FgiaForm({ tipo, utm }: { tipo: FgiaTipo; utm: Record<string, string> }
     setState((s) => (s === "ok" ? "ok" : "idle"));
   }, [tipo]);
 
-  const set = (k: keyof FgiaInput) => (e: { target: { value: string; checked?: boolean; type?: string } }) =>
-    setV((p) => ({ ...p, [k]: e.target.type === "checkbox" ? !!e.target.checked : e.target.value }));
+  const set =
+    (k: keyof FgiaInput) => (e: { target: { value: string; checked?: boolean; type?: string } }) =>
+      setV((p) => ({
+        ...p,
+        [k]: e.target.type === "checkbox" ? !!e.target.checked : e.target.value,
+      }));
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -95,7 +109,11 @@ function FgiaForm({ tipo, utm }: { tipo: FgiaTipo; utm: Record<string, string> }
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...v, site: hp, ...utm }),
       });
-      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; errors?: FgiaErrors; error?: string };
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        errors?: FgiaErrors;
+        error?: string;
+      };
       if (res.ok && json.ok) {
         setState("ok");
         try {
@@ -116,9 +134,15 @@ function FgiaForm({ tipo, utm }: { tipo: FgiaTipo; utm: Record<string, string> }
 
   if (state === "ok") {
     const msg: Record<FgiaTipo, [string, string]> = {
-      lista_bh: ["Você está na", "Quando a pré-venda de BH abrir, você fica sabendo primeiro, pelo WhatsApp."],
+      lista_bh: [
+        "Você está na",
+        "Quando a pré-venda de BH abrir, você fica sabendo primeiro, pelo WhatsApp.",
+      ],
       palestrar: ["Case recebido.", "A curadoria da IA News avalia e fala com você pelo WhatsApp."],
-      patrocinio: ["Recebemos.", "O Henrique Magioni ou a equipe da IA News falam com você pelo WhatsApp."],
+      patrocinio: [
+        "Recebemos.",
+        "O Henrique Magioni ou a equipe da IA News falam com você pelo WhatsApp.",
+      ],
     };
     return (
       <div className="fg-ok" role="status">
@@ -151,27 +175,48 @@ function FgiaForm({ tipo, utm }: { tipo: FgiaTipo; utm: Record<string, string> }
       <div className="fg-hp" aria-hidden="true">
         <label>
           Site
-          <input tabIndex={-1} autoComplete="off" value={hp} onChange={(e) => setHp(e.target.value)} />
+          <input
+            tabIndex={-1}
+            autoComplete="off"
+            value={hp}
+            onChange={(e) => setHp(e.target.value)}
+          />
         </label>
       </div>
       {field("nome", "Nome completo", { autoComplete: "name", required: true })}
-      {field("whatsapp", "WhatsApp com DDD", { type: "tel", inputMode: "tel", autoComplete: "tel", required: true })}
+      {field("whatsapp", "WhatsApp com DDD", {
+        type: "tel",
+        inputMode: "tel",
+        autoComplete: "tel",
+        required: true,
+      })}
       {field("email", "E-mail", { type: "email", autoComplete: "email", required: true })}
-      {field("empresa", tipo === "lista_bh" ? "Empresa (opcional)" : "Empresa", { autoComplete: "organization" })}
+      {field("empresa", tipo === "lista_bh" ? "Empresa (opcional)" : "Empresa", {
+        autoComplete: "organization",
+      })}
       {tipo !== "lista_bh" ? field("cargo", "Cargo", { autoComplete: "organization-title" }) : null}
-      {tipo === "palestrar" ? field("instagram", "Instagram (opcional)", { placeholder: "@seuperfil" }) : null}
+      {tipo === "palestrar"
+        ? field("instagram", "Instagram (opcional)", { placeholder: "@seuperfil" })
+        : null}
       {tipo !== "lista_bh" ? (
         <label className="fg-field">
-          {tipo === "palestrar" ? "O seu case: o que a IA faz na empresa e qual foi o resultado" : "Mensagem (opcional)"}
-          <textarea value={v.mensagem} onChange={set("mensagem")} aria-invalid={!!errors.mensagem} maxLength={800} />
+          {tipo === "palestrar"
+            ? "O seu case: o que a IA faz na empresa e qual foi o resultado"
+            : "Mensagem (opcional)"}
+          <textarea
+            value={v.mensagem}
+            onChange={set("mensagem")}
+            aria-invalid={!!errors.mensagem}
+            maxLength={800}
+          />
           {errors.mensagem ? <span className="err">{errors.mensagem}</span> : null}
         </label>
       ) : null}
       <label className="fg-check">
         <input type="checkbox" checked={v.consentimento} onChange={set("consentimento")} />
         <span>
-          Aceito receber contato da IA News e da FGIA Educação por WhatsApp e e-mail sobre os eventos. Posso sair quando
-          quiser.
+          Aceito receber contato da IA News e da FGIA Educação por WhatsApp e e-mail sobre os
+          eventos. Posso sair quando quiser.
         </span>
       </label>
       {errors.consentimento ? <span className="fg-alert">{errors.consentimento}</span> : null}
@@ -237,8 +282,8 @@ export function FgiaPage() {
               Quem faz, <i>ensina.</i>
             </h1>
             <p className="fg-lead">
-              Eventos de inteligência artificial para empresários. Só sobe ao palco quem já colocou IA para trabalhar numa
-              empresa, com curadoria da redação da IA News.
+              Eventos de inteligência artificial para empresários. Só sobe ao palco quem já colocou
+              IA para trabalhar numa empresa, com curadoria da redação da IA News.
             </p>
             <div className="fg-ctas">
               <a href={ingresso} className="fg-btn fg-btn-gold">
@@ -248,7 +293,10 @@ export function FgiaPage() {
                 Lista de espera de BH
               </a>
             </div>
-            <div className="fg-count" aria-label={`Faltam ${cd.d} dias, ${cd.h} horas e ${cd.m} minutos para o Palco online`}>
+            <div
+              className="fg-count"
+              aria-label={`Faltam ${cd.d} dias, ${cd.h} horas e ${cd.m} minutos para o Palco online`}
+            >
               <span style={{ fontSize: 14, color: "#9AA0AE", marginRight: 6 }}>Online em</span>
               <div className="box">
                 <b>{cd.d}</b>
@@ -265,7 +313,12 @@ export function FgiaPage() {
             </div>
           </div>
           <figure className="fg-photo" style={{ margin: 0 }}>
-            <img src="/fgia/henrique.jpg" alt="Henrique Magioni, fundador da IA News e anfitrião dos eventos" width={724} height={905} />
+            <img
+              src="/fgia/henrique.jpg"
+              alt="Henrique Magioni, fundador da IA News e anfitrião dos eventos"
+              width={724}
+              height={905}
+            />
             <figcaption>
               <b>Henrique Magioni</b>
               <br />
@@ -303,8 +356,9 @@ export function FgiaPage() {
                 Raio-X 2026: o que deu certo com IA nas empresas <i>brasileiras</i>
               </h2>
               <p className="fg-p">
-                Em 1h30, o Henrique Magioni abre o que funcionou de verdade quando empresas brasileiras colocaram IA para
-                trabalhar, a partir dos casos que a IA News apurou em 2026, e o que fazer em 2027.
+                Em 1h30, o Henrique Magioni abre o que funcionou de verdade quando empresas
+                brasileiras colocaram IA para trabalhar, a partir dos casos que a IA News apurou em
+                2026, e o que fazer em 2027.
               </p>
               <ol className="fg-prog">
                 {FGIA_PROGRAMA.map((it) => (
@@ -354,14 +408,21 @@ export function FgiaPage() {
           <div className="fg-stack">
             <div className="fg-kick">Presencial · Belo Horizonte · quinta</div>
             <div className="fg-date">
-              11.02<i className="fg-gold" style={{ fontStyle: "italic" }}>.27</i>
+              11.02
+              <i className="fg-gold" style={{ fontStyle: "italic" }}>
+                .27
+              </i>
             </div>
-            <h2 className="fg-serif" style={{ margin: 0, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1.05 }}>
+            <h2
+              className="fg-serif"
+              style={{ margin: 0, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1.05 }}
+            >
               O primeiro Palco IA News <i>presencial</i>
             </h2>
             <p className="fg-p">
-              Uma tarde de cases, conversas e networking com empresários que usam IA no dia a dia. Local, valores e
-              palestrantes serão anunciados em breve. Quem estiver no online de 16.12 compra primeiro.
+              Uma tarde de cases, conversas e networking com empresários que usam IA no dia a dia.
+              Local, valores e palestrantes serão anunciados em breve. Quem estiver no online de
+              16.12 compra primeiro.
             </p>
           </div>
           <div className="fg-card">
@@ -373,9 +434,18 @@ export function FgiaPage() {
         </section>
 
         <section id="henrique" className="fg-light">
-          <div className="fg-wrap fg-section fg-two center" style={{ gridTemplateColumns: "0.9fr 1.2fr" }}>
+          <div
+            className="fg-wrap fg-section fg-two center"
+            style={{ gridTemplateColumns: "0.9fr 1.2fr" }}
+          >
             <figure className="fg-photo2" style={{ margin: 0 }}>
-              <img src="/fgia/henrique-microfone.jpg" alt="Henrique Magioni no microfone da IA News" width={1000} height={1333} loading="lazy" />
+              <img
+                src="/fgia/henrique-microfone.jpg"
+                alt="Henrique Magioni no microfone da IA News"
+                width={1000}
+                height={1333}
+                loading="lazy"
+              />
             </figure>
             <div className="fg-stack">
               <div className="fg-kick">Anfitrião</div>
@@ -383,15 +453,26 @@ export function FgiaPage() {
                 Henrique <i>Magioni</i>
               </h2>
               <p className="fg-p">
-                Fundador e CEO da IA News, o ecossistema de mídia sobre inteligência artificial com newsletter, portal e
-                canais nas redes. Toda semana a redação conta a história de quem colocou IA para trabalhar no Brasil. No
-                Palco, o Henrique abre esses bastidores ao vivo.
+                Fundador e CEO da IA News, o ecossistema de mídia sobre inteligência artificial com
+                newsletter, portal e canais nas redes. Toda semana a redação conta a história de
+                quem colocou IA para trabalhar no Brasil. No Palco, o Henrique abre esses bastidores
+                ao vivo.
               </p>
               <div className="fg-ctas">
-                <a href="https://www.instagram.com/henriquemagioni/" className="fg-btn fg-btn-line" target="_blank" rel="noopener">
+                <a
+                  href="https://www.instagram.com/henriquemagioni/"
+                  className="fg-btn fg-btn-line"
+                  target="_blank"
+                  rel="noopener"
+                >
                   @henriquemagioni
                 </a>
-                <a href="https://ianewsbr.com" className="fg-btn fg-btn-line" target="_blank" rel="noopener">
+                <a
+                  href="https://ianewsbr.com"
+                  className="fg-btn fg-btn-line"
+                  target="_blank"
+                  rel="noopener"
+                >
                   ianewsbr.com
                 </a>
               </div>
@@ -407,19 +488,38 @@ export function FgiaPage() {
                 Colocou IA para trabalhar? <i>Suba no palco.</i>
               </h2>
               <p className="fg-p">
-                A curadoria procura empresários e executivos com um case real para o Palco de BH. E empresas que querem a
-                marca no palco têm espaço para a marca e tempo de fala no evento.
+                A curadoria procura empresários e executivos com um case real para o Palco de BH. E
+                empresas que querem a marca no palco têm espaço para a marca e tempo de fala no
+                evento.
               </p>
-              <a href={FGIA_DIRECT_URL} className="fg-btn fg-btn-ghost" style={{ alignSelf: "flex-start" }} target="_blank" rel="noopener">
+              <a
+                href={FGIA_DIRECT_URL}
+                className="fg-btn fg-btn-ghost"
+                style={{ alignSelf: "flex-start" }}
+                target="_blank"
+                rel="noopener"
+              >
                 Prefere o Direct? Mande PALESTRA
               </a>
             </div>
             <div className="fg-card">
               <div className="fg-tabs" role="tablist" aria-label="Tipo de contato">
-                <button type="button" role="tab" className="fg-tab" aria-selected={aba === "palestrar"} onClick={() => setAba("palestrar")}>
+                <button
+                  type="button"
+                  role="tab"
+                  className="fg-tab"
+                  aria-selected={aba === "palestrar"}
+                  onClick={() => setAba("palestrar")}
+                >
                   Quero palestrar
                 </button>
-                <button type="button" role="tab" className="fg-tab" aria-selected={aba === "patrocinio"} onClick={() => setAba("patrocinio")}>
+                <button
+                  type="button"
+                  role="tab"
+                  className="fg-tab"
+                  aria-selected={aba === "patrocinio"}
+                  onClick={() => setAba("patrocinio")}
+                >
                   Quero patrocinar
                 </button>
               </div>
@@ -453,7 +553,11 @@ export function FgiaPage() {
             <div style={{ borderTop: "1px solid rgba(244,239,230,.15)" }}>
               {FGIA_FAQ.map((q, i) => (
                 <div className="fg-faq-item" key={q.q}>
-                  <button type="button" aria-expanded={open === i} onClick={() => setOpen(open === i ? -1 : i)}>
+                  <button
+                    type="button"
+                    aria-expanded={open === i}
+                    onClick={() => setOpen(open === i ? -1 : i)}
+                  >
                     {q.q}
                     <span aria-hidden="true">{open === i ? "−" : "+"}</span>
                   </button>
@@ -466,7 +570,15 @@ export function FgiaPage() {
 
         <section className="fg-band">
           <div className="fg-wrap">
-            <h2 className="fg-serif" style={{ margin: 0, fontSize: "clamp(36px, 4.5vw, 56px)", lineHeight: 1, flex: "999 1 480px" }}>
+            <h2
+              className="fg-serif"
+              style={{
+                margin: 0,
+                fontSize: "clamp(36px, 4.5vw, 56px)",
+                lineHeight: 1,
+                flex: "999 1 480px",
+              }}
+            >
               16.12, às 19h. <i>Garanta o seu lugar.</i>
             </h2>
             <a href={ingresso} className="fg-btn fg-btn-dark">
@@ -479,7 +591,13 @@ export function FgiaPage() {
       <footer className="fg-footer">
         <div className="fg-wrap">
           <div className="fg-brand" style={{ fontSize: 18 }}>
-            FGIA <span className="sub" style={{ letterSpacing: 0, fontSize: 14, fontWeight: 500, color: "#9AA0AE" }}>Educação® · o palco da IA News</span>
+            FGIA{" "}
+            <span
+              className="sub"
+              style={{ letterSpacing: 0, fontSize: 14, fontWeight: 500, color: "#9AA0AE" }}
+            >
+              Educação® · o palco da IA News
+            </span>
           </div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             <a href={FGIA_INSTAGRAM} target="_blank" rel="noopener">
@@ -527,8 +645,18 @@ export function fgiaHead(url: string) {
       eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
       eventStatus: "https://schema.org/EventScheduled",
       location: { "@type": "VirtualLocation", url: "https://ianewsbr.com/palco" },
-      organizer: { "@type": "Organization", name: "FGIA Educação · IA News", url: "https://fgiaeducacao.com.br" },
-      offers: { "@type": "Offer", price: "97", priceCurrency: "BRL", url: "https://fgiaeducacao.com.br/ingresso", availability: "https://schema.org/InStock" },
+      organizer: {
+        "@type": "Organization",
+        name: "FGIA Educação · IA News",
+        url: "https://fgiaeducacao.com.br",
+      },
+      offers: {
+        "@type": "Offer",
+        price: "97",
+        priceCurrency: "BRL",
+        url: "https://fgiaeducacao.com.br/ingresso",
+        availability: "https://schema.org/InStock",
+      },
       image,
     },
     {
@@ -538,8 +666,21 @@ export function fgiaHead(url: string) {
       startDate: "2027-02-11",
       eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
       eventStatus: "https://schema.org/EventScheduled",
-      location: { "@type": "Place", name: "Belo Horizonte", address: { "@type": "PostalAddress", addressLocality: "Belo Horizonte", addressRegion: "MG", addressCountry: "BR" } },
-      organizer: { "@type": "Organization", name: "FGIA Educação · IA News", url: "https://fgiaeducacao.com.br" },
+      location: {
+        "@type": "Place",
+        name: "Belo Horizonte",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Belo Horizonte",
+          addressRegion: "MG",
+          addressCountry: "BR",
+        },
+      },
+      organizer: {
+        "@type": "Organization",
+        name: "FGIA Educação · IA News",
+        url: "https://fgiaeducacao.com.br",
+      },
       image,
     },
   ];
@@ -562,6 +703,6 @@ export function fgiaHead(url: string) {
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" as const },
       { rel: "stylesheet", href: FGIA_HEAD.fonts },
     ],
-    scripts: events.map((e) => ({ type: "application/ld+json", children: JSON.stringify(e) })),
+    scripts: events.map((e) => ({ type: "application/ld+json", children: jsonLd(e) })),
   };
 }

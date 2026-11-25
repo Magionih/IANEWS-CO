@@ -21,6 +21,7 @@ import { ConsentBanner } from "@/components/site/consent-banner";
 import { RouteProgress, ScrollToTop } from "@/components/site/scroll-to-top";
 import { hasStoredSession, loadSupabase } from "@/integrations/supabase/lazy";
 import { pixel } from "@/lib/pixel";
+import { jsonLd } from "@/lib/json-ld";
 
 function NotFoundComponent() {
   return (
@@ -141,7 +142,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@graph": [
             {
@@ -202,7 +203,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         type: "application/ld+json",
-        children: JSON.stringify(
+        children: jsonLd(
           [
             { name: "Notícias de IA", url: "https://ianewsbr.com/noticias" },
             { name: "Ranking IA", url: "https://ianewsbr.com/ranking" },

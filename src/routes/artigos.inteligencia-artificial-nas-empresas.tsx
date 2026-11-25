@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
+import { jsonLd } from "@/lib/json-ld";
 
 const TITLE = "IA para empresas: guia prático de implementação (2026)";
 const DESCRIPTION =
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/artigos/inteligencia-artificial-nas-empre
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "Article",
           headline: TITLE,
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/artigos/inteligencia-artificial-nas-empre
       },
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [

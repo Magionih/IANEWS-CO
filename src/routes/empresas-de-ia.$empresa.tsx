@@ -6,6 +6,7 @@ import { NewsListing } from "@/components/portal/news-card";
 import { COMPANIES, COMPANY_MAP } from "@/lib/companies";
 import { SITE_URL } from "@/lib/hubs";
 import { listArticlesForHub, type ArticleRow } from "@/lib/articles.functions";
+import { jsonLd } from "@/lib/json-ld";
 
 export const Route = createFileRoute("/empresas-de-ia/$empresa")({
   loader: async ({ params }) => {
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/empresas-de-ia/$empresa")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@graph": [
               {

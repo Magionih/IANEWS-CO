@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { AULA } from "@/lib/inscricao";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Agenda de eventos da IA News: online, gratuitos e o presencial de BH.
    Cada evento sai com dados estruturados de Event para aparecer na busca de eventos do Google. */
@@ -166,7 +167,7 @@ export const Route = createFileRoute("/eventos")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "ItemList",
           name: "Eventos de inteligência artificial da IA News",
@@ -179,7 +180,7 @@ export const Route = createFileRoute("/eventos")({
       },
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: FAQ.map((f) => ({

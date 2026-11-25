@@ -16,6 +16,7 @@ import {
   type PalcoInput,
   type PalcoPapel,
 } from "@/lib/palco-validate";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Palco IA News Online · 16/12, 19h às 20h30, ao vivo. Ingresso de R$ 97 (o link de pagamento vai por WhatsApp e
    e-mail depois da inscrição). O presencial em Belo Horizonte ficou para fevereiro de 2027.
@@ -28,9 +29,15 @@ const TITLE = "Palco IA News Online · 16 de dezembro, ao vivo | IA News";
 const DESCRIPTION =
   "Workshop online e ao vivo, em 16/12, às 19h (Brasília): o Raio-X do que deu certo com IA nas empresas brasileiras em 2026, o Playbook IA 2027 e a revelação da Lista IA News 100. Ingresso de R$ 97, com gravação e garantia de 7 dias.";
 
-type PalcoSearch = { utm_source?: string; utm_medium?: string; utm_campaign?: string; papel?: PalcoPapel };
+type PalcoSearch = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  papel?: PalcoPapel;
+};
 
-const short = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
+const short = (v: unknown, max: number) =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
 
 export const Route = createFileRoute("/palco")({
   validateSearch: (s: Record<string, unknown>): PalcoSearch => ({
@@ -54,7 +61,7 @@ export const Route = createFileRoute("/palco")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "Event",
           name: "Palco IA News Online: Raio-X 2026 da IA nas empresas brasileiras",
@@ -80,7 +87,7 @@ export const Route = createFileRoute("/palco")({
       },
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: FAQ.map((f) => ({
@@ -146,13 +153,49 @@ const LEVA = [
 
 /* Os 90 minutos, bloco a bloco. `min` define a largura de cada bloco na faixa da programação. */
 const AGENDA = [
-  { time: "19h00", min: 5, title: "Abertura", d: "Henrique Magioni, fundador da IA News, abre a noite e explica como as perguntas funcionam." },
-  { time: "19h05", min: 20, title: "Raio-X IA News 2026", d: "Setores, usos e resultados: o que as empresas brasileiras fizeram com IA este ano." },
-  { time: "19h25", min: 25, title: "O que deu certo, setor por setor", d: "Os casos que a IA News apurou em 2026: o problema, o que a empresa fez, o resultado publicado e o erro que não vale repetir." },
-  { time: "19h50", min: 15, title: "Playbook IA 2027", d: "Como escolher, contratar e medir um projeto de IA. E como vender IA para empresas." },
-  { time: "20h05", min: 10, title: "Anúncio da Lista IA News 100", d: "Os 100 nomes que fazem IA de verdade nos negócios no Brasil, revelados ao vivo.", hi: true },
-  { time: "20h15", min: 10, title: "Mesa IA News", d: "Henrique Magioni responde às perguntas enviadas na inscrição e no chat." },
-  { time: "20h25", min: 5, title: "Encerramento", d: "Próximos passos, Conselho IA News e o presencial de fevereiro." },
+  {
+    time: "19h00",
+    min: 5,
+    title: "Abertura",
+    d: "Henrique Magioni, fundador da IA News, abre a noite e explica como as perguntas funcionam.",
+  },
+  {
+    time: "19h05",
+    min: 20,
+    title: "Raio-X IA News 2026",
+    d: "Setores, usos e resultados: o que as empresas brasileiras fizeram com IA este ano.",
+  },
+  {
+    time: "19h25",
+    min: 25,
+    title: "O que deu certo, setor por setor",
+    d: "Os casos que a IA News apurou em 2026: o problema, o que a empresa fez, o resultado publicado e o erro que não vale repetir.",
+  },
+  {
+    time: "19h50",
+    min: 15,
+    title: "Playbook IA 2027",
+    d: "Como escolher, contratar e medir um projeto de IA. E como vender IA para empresas.",
+  },
+  {
+    time: "20h05",
+    min: 10,
+    title: "Anúncio da Lista IA News 100",
+    d: "Os 100 nomes que fazem IA de verdade nos negócios no Brasil, revelados ao vivo.",
+    hi: true,
+  },
+  {
+    time: "20h15",
+    min: 10,
+    title: "Mesa IA News",
+    d: "Henrique Magioni responde às perguntas enviadas na inscrição e no chat.",
+  },
+  {
+    time: "20h25",
+    min: 5,
+    title: "Encerramento",
+    d: "Próximos passos, Conselho IA News e o presencial de fevereiro.",
+  },
 ];
 
 const INCLUI = [
@@ -160,7 +203,10 @@ const INCLUI = [
   { t: "Gravação por 30 dias", d: "Para rever ou assistir se não puder no horário" },
   { t: "Slides do Raio-X IA News 2026", d: "Os dados apresentados, para usar no seu planejamento" },
   { t: "Playbook IA 2027", d: "Roteiro para quem compra e para quem vende IA" },
-  { t: "R$ 97 de crédito no presencial", d: "Vira desconto no Palco IA News em Belo Horizonte, em fevereiro" },
+  {
+    t: "R$ 97 de crédito no presencial",
+    d: "Vira desconto no Palco IA News em Belo Horizonte, em fevereiro",
+  },
   { t: "Garantia de 7 dias", d: "Desistiu em até 7 dias depois da compra? Devolvemos 100%" },
 ];
 
@@ -169,8 +215,14 @@ const FAQ = [
     q: "Como eu pago?",
     a: "Logo depois da inscrição, você vai direto para a página de pagamento, com Pix, cartão ou boleto. O mesmo link também chega por e-mail. A vaga é confirmada com o pagamento.",
   },
-  { q: "Como eu assisto?", a: "É online e ao vivo. O link de acesso chega por WhatsApp e e-mail, na véspera e 2 horas antes do início." },
-  { q: "E se eu não puder ver ao vivo?", a: "A gravação fica disponível por 30 dias para quem se inscreveu." },
+  {
+    q: "Como eu assisto?",
+    a: "É online e ao vivo. O link de acesso chega por WhatsApp e e-mail, na véspera e 2 horas antes do início.",
+  },
+  {
+    q: "E se eu não puder ver ao vivo?",
+    a: "A gravação fica disponível por 30 dias para quem se inscreveu.",
+  },
   {
     q: "E se eu desistir?",
     a: `Você tem 7 dias depois da compra para desistir. É só escrever para ${CONTACT_EMAIL} e devolvemos 100% do valor, pelo mesmo meio de pagamento.`,
@@ -187,7 +239,10 @@ const FAQ = [
     q: "Quero patrocinar.",
     a: `Escreva para ${CONTACT_EMAIL}. A equipe da IA News te procura com as cotas de apoio e de apresentação.`,
   },
-  { q: "Quem organiza?", a: "A IA News, com a FGIA Educação, a vertical de eventos e aulas da IA News." },
+  {
+    q: "Quem organiza?",
+    a: "A IA News, com a FGIA Educação, a vertical de eventos e aulas da IA News.",
+  },
 ];
 
 /* Cases e falas reais, de empresários que a IA News entrevistou. Não são os palestrantes do Palco:
@@ -304,7 +359,15 @@ const EMPTY: PalcoInput = {
   consentimento: false,
 };
 
-const ORDER: (keyof PalcoInput)[] = ["nome", "empresa", "cargo", "whatsapp", "email", "papel", "consentimento"];
+const ORDER: (keyof PalcoInput)[] = [
+  "nome",
+  "empresa",
+  "cargo",
+  "whatsapp",
+  "email",
+  "papel",
+  "consentimento",
+];
 
 function scrollToForm() {
   document.getElementById("inscricao")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -313,8 +376,21 @@ function scrollToForm() {
 
 function Check() {
   return (
-    <svg className="plv-check" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      className="plv-check"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="m5 12.5 4.5 4.5L19 7.5"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -339,7 +415,11 @@ function PalcoPage() {
     // Contagem regressiva até 16/12, 19h (só no navegador, para não divergir do HTML do servidor).
     const tick = () => {
       const ms = Math.max(0, EVENT_START - Date.now());
-      setLeft({ d: Math.floor(ms / 864e5), h: Math.floor((ms % 864e5) / 36e5), m: Math.floor((ms % 36e5) / 6e4) });
+      setLeft({
+        d: Math.floor(ms / 864e5),
+        h: Math.floor((ms % 864e5) / 36e5),
+        m: Math.floor((ms % 36e5) / 6e4),
+      });
     };
     tick();
     const t = window.setInterval(tick, 30000);
@@ -400,7 +480,11 @@ function PalcoPage() {
     if (Object.keys(found).length) {
       setErrors(found);
       const first = ORDER.find((k) => found[k]);
-      if (first) (first === "papel" ? document.getElementById("pc-papel-1") : document.getElementById(`pc-${first}`))?.focus();
+      if (first)
+        (first === "papel"
+          ? document.getElementById("pc-papel-1")
+          : document.getElementById(`pc-${first}`)
+        )?.focus();
       return;
     }
     setSending(true);
@@ -438,9 +522,14 @@ function PalcoPage() {
         return;
       }
       if (json.errors) setErrors(json.errors);
-      setFailMsg(json.error ?? `Não conseguimos guardar sua inscrição agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`);
+      setFailMsg(
+        json.error ??
+          `Não conseguimos guardar sua inscrição agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`,
+      );
     } catch {
-      setFailMsg(`Não conseguimos guardar sua inscrição agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`);
+      setFailMsg(
+        `Não conseguimos guardar sua inscrição agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`,
+      );
     } finally {
       setSending(false);
     }
@@ -464,7 +553,9 @@ function PalcoPage() {
           value={form[key]}
           aria-invalid={err ? true : undefined}
           aria-describedby={err ? `pc-${key}-err` : undefined}
-          onChange={(e) => set(key, key === "whatsapp" ? maskPhone(e.target.value) : e.target.value)}
+          onChange={(e) =>
+            set(key, key === "whatsapp" ? maskPhone(e.target.value) : e.target.value)
+          }
           {...rest}
         />
         {err ? (
@@ -493,8 +584,9 @@ function PalcoPage() {
             </p>
             <h1>Raio-X 2026 da IA nas empresas brasileiras</h1>
             <p className="pd-sub">
-              O que deu certo com IA nas empresas brasileiras em 2026, o Playbook IA 2027 e a revelação da Lista IA News 100.
-              Online, em 1h30, para quem decide onde investir em 2027.
+              O que deu certo com IA nas empresas brasileiras em 2026, o Playbook IA 2027 e a
+              revelação da Lista IA News 100. Online, em 1h30, para quem decide onde investir em
+              2027.
             </p>
             <div className="pd-cta">
               <button className="pd-btn" type="button" onClick={scrollToForm}>
@@ -515,7 +607,9 @@ function PalcoPage() {
                 <b>{left ? String(left.m).padStart(2, "0") : "–"}</b>min
               </span>
             </div>
-            <p className="pd-fine">Gravação por 30 dias · Garantia de 7 dias · Pix, cartão ou boleto</p>
+            <p className="pd-fine">
+              Gravação por 30 dias · Garantia de 7 dias · Pix, cartão ou boleto
+            </p>
           </div>
         </section>
 
@@ -543,8 +637,9 @@ function PalcoPage() {
               Em 2026 todo mundo falou de IA. Pouca gente mostrou resultado.
             </h2>
             <p className="pd-lead">
-              A IA News publicou mais de 320 matérias sobre IA nas empresas e mapeou 523 empresas do setor. Neste workshop,
-              a redação abre o que viu. Você sai da noite com três coisas na mão:
+              A IA News publicou mais de 320 matérias sobre IA nas empresas e mapeou 523 empresas do
+              setor. Neste workshop, a redação abre o que viu. Você sai da noite com três coisas na
+              mão:
             </p>
             <div className="pd-cards">
               {LEVA.map((c, i) => (
@@ -569,8 +664,9 @@ function PalcoPage() {
               A redação que apresenta o Palco é a mesma que contou estas histórias.
             </h2>
             <p className="pd-lead">
-              Empresários brasileiros que colocaram IA para trabalhar e mostraram os números para a IA News. No Palco, a
-              redação junta o que aprendeu com essas histórias e com as outras 320 matérias do ano.
+              Empresários brasileiros que colocaram IA para trabalhar e mostraram os números para a
+              IA News. No Palco, a redação junta o que aprendeu com essas histórias e com as outras
+              320 matérias do ano.
             </p>
           </div>
           <div className="pd-rail" role="list">
@@ -582,7 +678,13 @@ function PalcoPage() {
                 to="/materia/$slug"
                 params={{ slug: c.slug }}
               >
-                <img src={COVER(c.slug, c.img)} alt={c.who} loading="lazy" width={600} height={750} />
+                <img
+                  src={COVER(c.slug, c.img)}
+                  alt={c.who}
+                  loading="lazy"
+                  width={600}
+                  height={750}
+                />
                 <div className="pd-case-txt">
                   <b>{c.n}</b>
                   <span className="pd-case-t">{c.t}</span>
@@ -606,7 +708,13 @@ function PalcoPage() {
           <div className="pd-rail" role="list">
             {FALAS.map((f) => (
               <figure key={f.who} role="listitem" className="pd-fala">
-                <svg className="pd-quote" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                <svg
+                  className="pd-quote"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
                   <path
                     fill="currentColor"
                     d="M10 7H6a3 3 0 0 0-3 3v4h4v4l3-4v-7zm11 0h-4a3 3 0 0 0-3 3v4h4v4l3-4v-7z"
@@ -648,8 +756,8 @@ function PalcoPage() {
               ))}
             </div>
             <p className="pd-note">
-              Não é um curso técnico: não tem código nem tutorial de ferramenta. É para quem decide onde a empresa coloca
-              tempo e dinheiro em IA.
+              Não é um curso técnico: não tem código nem tutorial de ferramenta. É para quem decide
+              onde a empresa coloca tempo e dinheiro em IA.
             </p>
           </div>
         </section>
@@ -663,7 +771,11 @@ function PalcoPage() {
             </h2>
             <div className="pd-strip" aria-hidden="true">
               {AGENDA.map((a) => (
-                <span key={a.time} className={a.hi ? "hi" : undefined} style={{ flexGrow: a.min, flexBasis: 0 }} />
+                <span
+                  key={a.time}
+                  className={a.hi ? "hi" : undefined}
+                  style={{ flexGrow: a.min, flexBasis: 0 }}
+                />
               ))}
             </div>
             <ol className="pd-agenda">
@@ -687,8 +799,8 @@ function PalcoPage() {
             <div>
               <h2>A Lista IA News 100 é revelada ao vivo, às 20h05.</h2>
               <p>
-                Os 100 nomes que fazem IA de verdade nos negócios no Brasil. Ninguém paga para entrar, e o anúncio acontece
-                primeiro para quem está no Palco.
+                Os 100 nomes que fazem IA de verdade nos negócios no Brasil. Ninguém paga para
+                entrar, e o anúncio acontece primeiro para quem está no Palco.
               </p>
             </div>
             <Link className="pd-ghost" to="/lista100">
@@ -703,8 +815,8 @@ function PalcoPage() {
             <div className="pd-offer-copy">
               <h2 id="pd-ofe">Um ingresso. Dois eventos.</h2>
               <p className="pd-offer-lead">
-                Os {PRECO} do online voltam como crédito no Palco IA News presencial, em Belo Horizonte, em fevereiro de
-                2027. E quem vai ao online tem prioridade na compra.
+                Os {PRECO} do online voltam como crédito no Palco IA News presencial, em Belo
+                Horizonte, em fevereiro de 2027. E quem vai ao online tem prioridade na compra.
               </p>
               <ul className="pd-inclui">
                 {INCLUI.map((i) => (
@@ -758,7 +870,12 @@ function PalcoPage() {
                     <fieldset>
                       <legend className="pc2-sr">Seus dados</legend>
                       <div className="biz-fields">
-                        {field("nome", "Nome completo", { autoComplete: "name", maxLength: 160, placeholder: "Seu nome", full: true })}
+                        {field("nome", "Nome completo", {
+                          autoComplete: "name",
+                          maxLength: 160,
+                          placeholder: "Seu nome",
+                          full: true,
+                        })}
                         {field("whatsapp", "WhatsApp", {
                           type: "tel",
                           inputMode: "tel",
@@ -795,7 +912,12 @@ function PalcoPage() {
                         })}
                         <label className="f" htmlFor="pc-setor">
                           <span>Setor</span>
-                          <select className="field" id="pc-setor" value={form.setor} onChange={(e) => set("setor", e.target.value)}>
+                          <select
+                            className="field"
+                            id="pc-setor"
+                            value={form.setor}
+                            onChange={(e) => set("setor", e.target.value)}
+                          >
                             <option value="">Escolha</option>
                             {SETORES.map((s) => (
                               <option key={s} value={s}>
@@ -840,8 +962,9 @@ function PalcoPage() {
                         {sending ? "Enviando…" : `Garantir minha vaga por ${PRECO}`}
                       </button>
                       <span className="fine">
-                        Em seguida, você paga por Pix, cartão ou boleto. Ao continuar, você aceita receber as informações do
-                        Palco por WhatsApp e e-mail. <Link to="/termos">Privacidade</Link>.
+                        Em seguida, você paga por Pix, cartão ou boleto. Ao continuar, você aceita
+                        receber as informações do Palco por WhatsApp e e-mail.{" "}
+                        <Link to="/termos">Privacidade</Link>.
                       </span>
                       <p className="msg err" role="status" aria-live="polite">
                         {failMsg ?? ""}
@@ -852,11 +975,23 @@ function PalcoPage() {
               </div>
               <p className="pd-guarantee">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                  <path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="m8.5 12 2.5 2.5 4.5-5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 <span>
-                  <b>Garantia de 7 dias.</b> Desistiu? Devolvemos 100%, pelo mesmo meio de pagamento.
+                  <b>Garantia de 7 dias.</b> Desistiu? Devolvemos 100%, pelo mesmo meio de
+                  pagamento.
                 </span>
               </p>
             </div>
@@ -866,13 +1001,19 @@ function PalcoPage() {
         {/* 10. Presencial de fevereiro */}
         <section className="pd-sec">
           <div className="wrap pd-next">
-            <img src={IMG(3143850, 1200)} alt="Palco iluminado diante de uma plateia" loading="lazy" width={1200} height={800} />
+            <img
+              src={IMG(3143850, 1200)}
+              alt="Palco iluminado diante de uma plateia"
+              loading="lazy"
+              width={1200}
+              height={800}
+            />
             <div>
               <p className="pd-kick">Fevereiro de 2027</p>
               <h2 className="pd-h2">Depois do online, o Palco sobe em Belo Horizonte.</h2>
               <p className="pd-lead">
-                O primeiro Palco IA News presencial acontece em fevereiro, com cases, expositores e networking. Quem
-                participar do online tem prioridade e usa os {PRECO} como desconto.
+                O primeiro Palco IA News presencial acontece em fevereiro, com cases, expositores e
+                networking. Quem participar do online tem prioridade e usa os {PRECO} como desconto.
               </p>
             </div>
           </div>
@@ -888,7 +1029,10 @@ function PalcoPage() {
               </div>
               <div>
                 <h3>FGIA Educação</h3>
-                <p>A vertical de eventos e aulas da IA News, onde só ensina quem já colocou IA para trabalhar.</p>
+                <p>
+                  A vertical de eventos e aulas da IA News, onde só ensina quem já colocou IA para
+                  trabalhar.
+                </p>
               </div>
               <div>
                 <h3>Henrique Magioni</h3>
@@ -935,7 +1079,12 @@ function PalcoPage() {
               <b>Palco IA News Online</b>
               <small>16/12, 19h · {PRECO}</small>
             </span>
-            <button className="pd-btn" type="button" onClick={scrollToForm} tabIndex={showBar ? 0 : -1}>
+            <button
+              className="pd-btn"
+              type="button"
+              onClick={scrollToForm}
+              tabIndex={showBar ? 0 : -1}
+            >
               Garantir vaga
             </button>
           </div>

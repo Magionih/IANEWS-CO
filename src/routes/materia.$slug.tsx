@@ -27,6 +27,7 @@ import { COMPANIES } from "@/lib/companies";
 import { CATEGORY_SEO } from "@/lib/categories";
 import { type CategoryKey, CATEGORY_MAP } from "@/components/site/category-chip";
 import { getArticleBySlug, listMostRead, type ArticleRow } from "@/lib/articles.functions";
+import { jsonLd } from "@/lib/json-ld";
 
 /** Usada só nos metadados (og:image / JSON-LD) quando a matéria não tem capa. */
 const FALLBACK_COVER =
@@ -105,7 +106,7 @@ export const Route = createFileRoute("/materia/$slug")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@type": "NewsArticle",
             headline: a.title.slice(0, 110),
@@ -165,7 +166,7 @@ export const Route = createFileRoute("/materia/$slug")({
         },
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [

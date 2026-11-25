@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { NewsGrid } from "@/components/portal/news-card";
 import { listRecentArticles, type ArticleRow } from "@/lib/articles.functions";
 import { EDITOR } from "@/lib/seo-quality";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Página do editor-chefe. Dá ao Google e às IAs uma pessoa responsável pelo conteúdo (E-E-A-T)
    e liga as matérias, que trazem "Edição: Henrique Magioni" na assinatura, a um perfil verificável. */
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/autor/henrique-magioni")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "ProfilePage",
           url: EDITOR.url,
@@ -81,19 +82,25 @@ function AutorPage() {
 
         <section className="wrap autor-bio">
           <p>
-            <b>Henrique Magioni</b> é fundador, CEO e editor-chefe da IA News, veículo brasileiro que cobre inteligência
-            artificial para quem decide: empresários, executivos e fornecedores de IA. A redação publica notícias todos os
-            dias, entrevistas com empresários brasileiros que crescem com IA, a newsletter das 7h e o Ranking IA.
+            <b>Henrique Magioni</b> é fundador, CEO e editor-chefe da IA News, veículo brasileiro
+            que cobre inteligência artificial para quem decide: empresários, executivos e
+            fornecedores de IA. A redação publica notícias todos os dias, entrevistas com
+            empresários brasileiros que crescem com IA, a newsletter das 7h e o Ranking IA.
           </p>
           <p>
-            Henrique conduz a linha editorial da IA News: priorizar histórias de pessoas e empresas reais, com números e
-            fontes, em vez de promessas. Também comanda a FGIA Educação, vertical de eventos e aulas da IA News, e é o
-            anfitrião do <Link to="/palco">Palco IA News</Link>, onde apresenta o Raio-X da IA nas empresas brasileiras e
-            a <Link to="/lista100">Lista IA News 100</Link>.
+            Henrique conduz a linha editorial da IA News: priorizar histórias de pessoas e empresas
+            reais, com números e fontes, em vez de promessas. Também comanda a FGIA Educação,
+            vertical de eventos e aulas da IA News, e é o anfitrião do{" "}
+            <Link to="/palco">Palco IA News</Link>, onde apresenta o Raio-X da IA nas empresas
+            brasileiras e a <Link to="/lista100">Lista IA News 100</Link>.
           </p>
           <p>
-            Como a redação trabalha, usa IA e escolhe as pautas: <Link to="/sobre">política editorial</Link>. Para enviar
-            uma história: <Link to="/pauta" search={{}}>Envie sua pauta</Link>.
+            Como a redação trabalha, usa IA e escolhe as pautas:{" "}
+            <Link to="/sobre">política editorial</Link>. Para enviar uma história:{" "}
+            <Link to="/pauta" search={{}}>
+              Envie sua pauta
+            </Link>
+            .
           </p>
           <p className="autor-social">
             <a href="https://www.instagram.com/henriquemagioni/" rel="me noopener" target="_blank">

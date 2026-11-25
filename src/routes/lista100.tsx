@@ -14,6 +14,7 @@ import {
   useInscricao,
 } from "@/components/site/inscricao-form";
 import { CATEGORIAS_LISTA, CONTATO, LISTA, MAX } from "@/lib/inscricao";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Lista IA News 100 · Quem faz IA no Brasil. Candidatura e indicação gratuitas; a escolha é da redação e do júri.
    O envio vai para /api/public/inscricao e cai no CRM (funil Lista IA News 100). */
@@ -38,10 +39,14 @@ export const Route = createFileRoute("/lista100")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          mainEntity: FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
         }),
       },
     ],
@@ -59,17 +64,45 @@ const FACTS = [
 ];
 
 const PASSOS = [
-  { n: "1", t: "Candidatura ou indicação", d: `Qualquer pessoa pode se candidatar ou indicar alguém até ${LISTA.fecha}.` },
-  { n: "2", t: "Avaliação", d: `A redação e o júri leem cada caso de ${LISTA.avaliacao}. Vale o que a IA já entrega, com resultado.` },
-  { n: "3", t: "Aviso", d: "Os escolhidos recebem o aviso antes, em sigilo, com o convite para o Palco IA News Online." },
-  { n: "4", t: "Anúncio", d: `A lista sai ao vivo no Palco IA News Online, em ${LISTA.anuncio}, às 19h, e no dia seguinte no site.` },
+  {
+    n: "1",
+    t: "Candidatura ou indicação",
+    d: `Qualquer pessoa pode se candidatar ou indicar alguém até ${LISTA.fecha}.`,
+  },
+  {
+    n: "2",
+    t: "Avaliação",
+    d: `A redação e o júri leem cada caso de ${LISTA.avaliacao}. Vale o que a IA já entrega, com resultado.`,
+  },
+  {
+    n: "3",
+    t: "Aviso",
+    d: "Os escolhidos recebem o aviso antes, em sigilo, com o convite para o Palco IA News Online.",
+  },
+  {
+    n: "4",
+    t: "Anúncio",
+    d: `A lista sai ao vivo no Palco IA News Online, em ${LISTA.anuncio}, às 19h, e no dia seguinte no site.`,
+  },
 ];
 
 const FAQ = [
-  { q: "Quanto custa para entrar?", a: "Nada. A Lista IA News 100 é editorial: ninguém paga para se candidatar, ser indicado ou ser escolhido." },
-  { q: "Posso me candidatar e indicar outras pessoas?", a: "Sim. No fim da candidatura há o campo \"indique alguém\". Você também pode só indicar, sem se candidatar." },
-  { q: "Preciso ser de uma empresa grande?", a: "Não. Contam o caso e o resultado, não o tamanho da empresa." },
-  { q: "Meu caso fica público?", a: "Só se você for escolhido, e só o que você autorizar. Números sensíveis podem ir como percentual." },
+  {
+    q: "Quanto custa para entrar?",
+    a: "Nada. A Lista IA News 100 é editorial: ninguém paga para se candidatar, ser indicado ou ser escolhido.",
+  },
+  {
+    q: "Posso me candidatar e indicar outras pessoas?",
+    a: 'Sim. No fim da candidatura há o campo "indique alguém". Você também pode só indicar, sem se candidatar.',
+  },
+  {
+    q: "Preciso ser de uma empresa grande?",
+    a: "Não. Contam o caso e o resultado, não o tamanho da empresa.",
+  },
+  {
+    q: "Meu caso fica público?",
+    a: "Só se você for escolhido, e só o que você autorizar. Números sensíveis podem ir como percentual.",
+  },
 ];
 
 function Lista100Page() {
@@ -90,8 +123,9 @@ function Lista100Page() {
                 <span>Quem faz IA no Brasil.</span>
               </h1>
               <p className="pc2-sub">
-                Os 100 nomes que estão colocando IA para trabalhar de verdade nos negócios brasileiros. Escolhidos pela redação e
-                por um júri do ecossistema, pelo caso e pelo resultado.
+                Os 100 nomes que estão colocando IA para trabalhar de verdade nos negócios
+                brasileiros. Escolhidos pela redação e por um júri do ecossistema, pelo caso e pelo
+                resultado.
               </p>
               <ul className="pc2-facts">
                 {FACTS.map((x) => (
@@ -110,7 +144,11 @@ function Lista100Page() {
               <div className="pc2-form-head">
                 <span className="pc2-badge">Gratuita · até {LISTA.fecha}</span>
                 <h2>{candidato ? "Candidate-se" : "Indique quem merece"}</h2>
-                <p>{candidato ? "Dois passos rápidos: seus dados e o seu caso de IA." : "Indique até 5 pessoas. A gente convida e conta que foi você."}</p>
+                <p>
+                  {candidato
+                    ? "Dois passos rápidos: seus dados e o seu caso de IA."
+                    : "Indique até 5 pessoas. A gente convida e conta que foi você."}
+                </p>
               </div>
               <div className="ins-modo" role="tablist" aria-label="O que você quer fazer">
                 <button
@@ -134,7 +172,15 @@ function Lista100Page() {
               </div>
               <div className="biz-card pt-card-form">
                 {f.feito ? (
-                  <Pronto titulo={f.feito.already ? "Sua candidatura já estava com a gente" : candidato ? "Candidatura recebida!" : "Indicação recebida!"}>
+                  <Pronto
+                    titulo={
+                      f.feito.already
+                        ? "Sua candidatura já estava com a gente"
+                        : candidato
+                          ? "Candidatura recebida!"
+                          : "Indicação recebida!"
+                    }
+                  >
                     <p>
                       {candidato
                         ? `Pronto${f.feito.nome ? `, ${f.feito.nome}` : ""}. O júri avalia de ${LISTA.avaliacao}, e os escolhidos recebem o aviso antes do anúncio de ${LISTA.anuncio}. A confirmação foi para o seu e-mail.`
@@ -142,11 +188,18 @@ function Lista100Page() {
                     </p>
                   </Pronto>
                 ) : (
-                  <form className="biz-form" onSubmit={(e) => (candidato && f.etapa === "contato" ? f.enviarContato(e) : f.enviar(e))} noValidate>
+                  <form
+                    className="biz-form"
+                    onSubmit={(e) =>
+                      candidato && f.etapa === "contato" ? f.enviarContato(e) : f.enviar(e)
+                    }
+                    noValidate
+                  >
                     <Isca f={f} />
                     {candidato ? (
                       <p className="ins-passo">
-                        <b>Passo {f.etapa === "contato" ? "1" : "2"} de 2</b> · {f.etapa === "contato" ? "seus dados" : "o seu caso de IA"}
+                        <b>Passo {f.etapa === "contato" ? "1" : "2"} de 2</b> ·{" "}
+                        {f.etapa === "contato" ? "seus dados" : "o seu caso de IA"}
                       </p>
                     ) : null}
 
@@ -154,7 +207,15 @@ function Lista100Page() {
                       <fieldset>
                         <legend className="pc2-sr">Seus dados</legend>
                         <div className="biz-fields">
-                          <Campo f={f} k="nome" rotulo="Nome completo" autoComplete="name" maxLength={160} placeholder="Seu nome" cheio />
+                          <Campo
+                            f={f}
+                            k="nome"
+                            rotulo="Nome completo"
+                            autoComplete="name"
+                            maxLength={160}
+                            placeholder="Seu nome"
+                            cheio
+                          />
                           <Campo
                             f={f}
                             k="empresa"
@@ -164,8 +225,27 @@ function Lista100Page() {
                             maxLength={160}
                             placeholder="Nome da empresa"
                           />
-                          <Campo f={f} k="whatsapp" rotulo="WhatsApp" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16} placeholder="(00) 00000-0000" />
-                          <Campo f={f} k="email" rotulo="E-mail" type="email" inputMode="email" autoComplete="email" maxLength={254} placeholder="voce@empresa.com.br" cheio={candidato} />
+                          <Campo
+                            f={f}
+                            k="whatsapp"
+                            rotulo="WhatsApp"
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel-national"
+                            maxLength={16}
+                            placeholder="(00) 00000-0000"
+                          />
+                          <Campo
+                            f={f}
+                            k="email"
+                            rotulo="E-mail"
+                            type="email"
+                            inputMode="email"
+                            autoComplete="email"
+                            maxLength={254}
+                            placeholder="voce@empresa.com.br"
+                            cheio={candidato}
+                          />
                         </div>
                       </fieldset>
                     ) : (
@@ -174,7 +254,11 @@ function Lista100Page() {
                           Candidatura de <b>{f.form.nome.trim().split(/\s+/)[0]}</b>
                           {f.form.empresa ? ` · ${f.form.empresa}` : ""}
                         </span>
-                        <button type="button" className="ins-mais" onClick={() => f.setEtapa("contato")}>
+                        <button
+                          type="button"
+                          className="ins-mais"
+                          onClick={() => f.setEtapa("contato")}
+                        >
                           Corrigir dados
                         </button>
                       </div>
@@ -184,8 +268,21 @@ function Lista100Page() {
                       <fieldset>
                         <legend className="pc2-legend">O seu caso de IA</legend>
                         <div className="biz-fields">
-                          <Escolha f={f} k="categoria" rotulo="Categoria" opcoes={CATEGORIAS_LISTA} />
-                          <Campo f={f} k="cargo" rotulo="Cargo" opcional autoComplete="organization-title" maxLength={120} placeholder="Fundador, CEO..." />
+                          <Escolha
+                            f={f}
+                            k="categoria"
+                            rotulo="Categoria"
+                            opcoes={CATEGORIAS_LISTA}
+                          />
+                          <Campo
+                            f={f}
+                            k="cargo"
+                            rotulo="Cargo"
+                            opcional
+                            autoComplete="organization-title"
+                            maxLength={120}
+                            placeholder="Fundador, CEO..."
+                          />
                           <Texto
                             f={f}
                             k="caso"
@@ -203,29 +300,55 @@ function Lista100Page() {
                             linhas={2}
                             placeholder="Ex.: 38% mais consultas marcadas em 3 meses."
                           />
-                          <Campo f={f} k="instagram" rotulo="Instagram" opcional maxLength={120} placeholder="@perfil" />
+                          <Campo
+                            f={f}
+                            k="instagram"
+                            rotulo="Instagram"
+                            opcional
+                            maxLength={120}
+                            placeholder="@perfil"
+                          />
                         </div>
                       </fieldset>
                     ) : null}
 
                     {candidato && f.etapa === "caso" ? (
-                      <details className="pc2-more" open={f.form.indicados.some((i) => i.nome || i.contato)}>
+                      <details
+                        className="pc2-more"
+                        open={f.form.indicados.some((i) => i.nome || i.contato)}
+                      >
                         <summary>
                           Conhece alguém que também deveria estar na lista? <small>opcional</small>
                         </summary>
-                        <Indicados f={f} titulo={<span className="pc2-sr">Pessoas indicadas</span>} />
+                        <Indicados
+                          f={f}
+                          titulo={<span className="pc2-sr">Pessoas indicadas</span>}
+                        />
                       </details>
                     ) : !candidato ? (
                       <Indicados f={f} titulo="Quem você indica" minimo={1} />
                     ) : null}
 
                     {!candidato || f.etapa === "contato" ? (
-                      <Aceite f={f} texto="Aceito receber o resultado da Lista e as novidades da IA News por WhatsApp e e-mail." />
+                      <Aceite
+                        f={f}
+                        texto="Aceito receber o resultado da Lista e as novidades da IA News por WhatsApp e e-mail."
+                      />
                     ) : null}
                     <Enviar
                       f={f}
-                      rotulo={!candidato ? "Enviar indicação" : f.etapa === "contato" ? "Continuar para o meu caso" : "Enviar candidatura"}
-                      fino={candidato && f.etapa === "contato" ? "Gratuito. No próximo passo, você conta o caso em 2 minutos." : "Gratuito. Não se paga nada para entrar na lista."}
+                      rotulo={
+                        !candidato
+                          ? "Enviar indicação"
+                          : f.etapa === "contato"
+                            ? "Continuar para o meu caso"
+                            : "Enviar candidatura"
+                      }
+                      fino={
+                        candidato && f.etapa === "contato"
+                          ? "Gratuito. No próximo passo, você conta o caso em 2 minutos."
+                          : "Gratuito. Não se paga nada para entrar na lista."
+                      }
                     />
                   </form>
                 )}
@@ -265,7 +388,8 @@ function Lista100Page() {
               ))}
             </div>
             <p className="pc2-note">
-              Critérios completos, júri e datas em <Link to="/lista100/criterios">ianewsbr.com/lista100/criterios</Link>.
+              Critérios completos, júri e datas em{" "}
+              <Link to="/lista100/criterios">ianewsbr.com/lista100/criterios</Link>.
             </p>
           </section>
 

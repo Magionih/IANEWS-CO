@@ -24,6 +24,7 @@ import { listAiTools, type AiTool } from "@/lib/ai-ranking.functions";
 import { FgiaPage, fgiaHead } from "@/components/fgia/fgia-page";
 import { isFgiaHost } from "@/lib/fgia";
 import { getRequestHostname } from "@/lib/fgia-host";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Imagem de compartilhamento usada só quando nenhuma matéria tem capa. */
 const FALLBACK_COVERS = [
@@ -77,7 +78,7 @@ export const Route = createFileRoute("/")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             "@id": "https://ianewsbr.com/#homepage",

@@ -26,6 +26,7 @@ import {
   scoreFor,
 } from "@/components/portal/rank-shared";
 import { CompareDialog, RatingPrompt, ToolDialog } from "@/components/portal/rank-dialogs";
+import { jsonLd } from "@/lib/json-ld";
 
 type Search = { area?: string; cat?: string; q?: string; all?: boolean; maker?: string };
 
@@ -84,7 +85,7 @@ export const Route = createFileRoute("/ranking")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@graph": [
               {

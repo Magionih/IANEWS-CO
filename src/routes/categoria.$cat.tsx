@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { CATEGORY_SEO, CATEGORY_SEO_LIST } from "@/lib/categories";
 import { NewsListing } from "@/components/portal/news-card";
 import { listArticlesFiltered, type ArticleRow } from "@/lib/articles.functions";
+import { jsonLd } from "@/lib/json-ld";
 
 const SITE = "https://ianewsbr.com";
 
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/categoria/$cat")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@graph": [
               {

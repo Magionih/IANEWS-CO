@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
+import { jsonLd } from "@/lib/json-ld";
 
 export const Route = createFileRoute("/sobre")({
   head: () => ({
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/sobre")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "AboutPage",
           url: "https://ianewsbr.com/sobre",
@@ -40,7 +41,12 @@ export const Route = createFileRoute("/sobre")({
             url: "https://ianewsbr.com/autor/henrique-magioni",
             jobTitle: "Fundador e CEO da IA News",
             worksFor: { "@id": "https://ianewsbr.com/#organization" },
-            knowsAbout: ["Inteligência artificial", "IA para empresas", "Agentes de IA", "Startups de IA no Brasil"],
+            knowsAbout: [
+              "Inteligência artificial",
+              "IA para empresas",
+              "Agentes de IA",
+              "Startups de IA no Brasil",
+            ],
           },
         }),
       },

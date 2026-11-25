@@ -7,6 +7,7 @@ import { CATEGORY_SEO_LIST } from "@/lib/categories";
 import { CATEGORY_MAP, type CategoryKey } from "@/components/site/category-chip";
 import { NewsListing, SearchIcon } from "@/components/portal/news-card";
 import { listArticlesFiltered, type ArticleRow } from "@/lib/articles.functions";
+import { jsonLd } from "@/lib/json-ld";
 
 type Search = { q?: string; cat?: string };
 
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/noticias")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           name: "Notícias de inteligência artificial",
@@ -65,7 +66,7 @@ export const Route = createFileRoute("/noticias")({
       },
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
@@ -81,7 +82,7 @@ export const Route = createFileRoute("/noticias")({
       },
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "ItemList",
           name: "Notícias de inteligência artificial",

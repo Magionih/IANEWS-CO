@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { COMPANIES } from "@/lib/companies";
 import { SITE_URL } from "@/lib/hubs";
+import { jsonLd } from "@/lib/json-ld";
 
 const URL = `${SITE_URL}/empresas-de-ia`;
 const TITLE = "Empresas de IA: OpenAI, Google, Meta, Anthropic, Nvidia e mais";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/empresas-de-ia/")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           url: URL,

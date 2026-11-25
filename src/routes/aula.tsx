@@ -3,8 +3,17 @@ import { useEffect, useState } from "react";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { Aceite, Campo, Enviar, Isca, Pilulas, Pronto, useInscricao } from "@/components/site/inscricao-form";
+import {
+  Aceite,
+  Campo,
+  Enviar,
+  Isca,
+  Pilulas,
+  Pronto,
+  useInscricao,
+} from "@/components/site/inscricao-form";
 import { AULA, CANAL_URL, CONTATO, PERFIS } from "@/lib/inscricao";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Aula ao vivo da IA News: workshop online gratuito, uma vez por mês, dado por quem já colocou IA para trabalhar.
    A inscrição cai no CRM (funil Aula ao vivo) e leva a pessoa ao WhatsApp da IA News; os lembretes saem do CRM. */
@@ -26,7 +35,7 @@ export const Route = createFileRoute("/aula")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "Event",
           name: `Aula ao vivo IA News: ${AULA.titulo}`,
@@ -39,7 +48,13 @@ export const Route = createFileRoute("/aula")({
           location: { "@type": "VirtualLocation", url: PAGE_URL },
           image: ["https://ianewsbr.com/og-ianews.png"],
           organizer: { "@type": "Organization", name: "IA News", url: "https://ianewsbr.com" },
-          offers: { "@type": "Offer", url: PAGE_URL, price: "0", priceCurrency: "BRL", availability: "https://schema.org/InStock" },
+          offers: {
+            "@type": "Offer",
+            url: PAGE_URL,
+            price: "0",
+            priceCurrency: "BRL",
+            availability: "https://schema.org/InStock",
+          },
         }),
       },
     ],
@@ -59,8 +74,14 @@ const FACTS = [
 ];
 
 const LEVA = [
-  { t: "Casos reais, com números", d: "Dois empresários mostram onde a IA entrou na venda, quanto custou e o que mudou." },
-  { t: "O que copiar na segunda-feira", d: "Cada caso termina com o passo que você pode aplicar na sua empresa." },
+  {
+    t: "Casos reais, com números",
+    d: "Dois empresários mostram onde a IA entrou na venda, quanto custou e o que mudou.",
+  },
+  {
+    t: "O que copiar na segunda-feira",
+    d: "Cada caso termina com o passo que você pode aplicar na sua empresa.",
+  },
   { t: "Perguntas ao vivo", d: "Os últimos 15 minutos são para as suas perguntas." },
 ];
 
@@ -71,7 +92,11 @@ function AulaPage() {
   useEffect(() => {
     const tick = () => {
       const ms = Math.max(0, INICIO - Date.now());
-      setLeft({ d: Math.floor(ms / 864e5), h: Math.floor((ms % 864e5) / 36e5), m: Math.floor((ms % 36e5) / 6e4) });
+      setLeft({
+        d: Math.floor(ms / 864e5),
+        h: Math.floor((ms % 864e5) / 36e5),
+        m: Math.floor((ms % 36e5) / 6e4),
+      });
     };
     tick();
     const t = window.setInterval(tick, 30000);
@@ -100,7 +125,8 @@ function AulaPage() {
                 <span>Quem faz, ensina.</span>
               </h1>
               <p className="pc2-sub">
-                {AULA.duracao} ao vivo com Henrique Magioni, CEO da IA News, e casos de empresas que já colocaram IA para vender. Gratuita, online e sem enrolação.
+                {AULA.duracao} ao vivo com Henrique Magioni, CEO da IA News, e casos de empresas que
+                já colocaram IA para vender. Gratuita, online e sem enrolação.
               </p>
               <ul className="pc2-facts">
                 {FACTS.map((x) => (
@@ -133,12 +159,20 @@ function AulaPage() {
               </div>
               <div className="biz-card pt-card-form">
                 {f.feito ? (
-                  <Pronto titulo={f.feito.already ? "Você já estava inscrito" : "Vaga garantida!"} canal={false}>
+                  <Pronto
+                    titulo={f.feito.already ? "Você já estava inscrito" : "Vaga garantida!"}
+                    canal={false}
+                  >
                     <p>
                       {`Pronto${f.feito.nome ? `, ${f.feito.nome}` : ""}. A aula é ${AULA.dataLonga}, às ${AULA.hora}. Entre no WhatsApp da IA News para receber o link e os lembretes.`}
                     </p>
                     <div className="actions">
-                      <a className="btn blue" href={CANAL_URL} target="_blank" rel="noopener noreferrer">
+                      <a
+                        className="btn blue"
+                        href={CANAL_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Abrir o WhatsApp da IA News
                       </a>
                     </div>
@@ -149,15 +183,57 @@ function AulaPage() {
                     <fieldset>
                       <legend className="pc2-sr">Seus dados</legend>
                       <div className="biz-fields">
-                        <Campo f={f} k="nome" rotulo="Nome completo" autoComplete="name" maxLength={160} placeholder="Seu nome" cheio />
-                        <Campo f={f} k="whatsapp" rotulo="WhatsApp" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16} placeholder="(00) 00000-0000" />
-                        <Campo f={f} k="email" rotulo="E-mail" type="email" inputMode="email" autoComplete="email" maxLength={254} placeholder="voce@empresa.com.br" />
-                        <Campo f={f} k="empresa" rotulo="Empresa" opcional autoComplete="organization" maxLength={160} placeholder="Nome da empresa" cheio />
+                        <Campo
+                          f={f}
+                          k="nome"
+                          rotulo="Nome completo"
+                          autoComplete="name"
+                          maxLength={160}
+                          placeholder="Seu nome"
+                          cheio
+                        />
+                        <Campo
+                          f={f}
+                          k="whatsapp"
+                          rotulo="WhatsApp"
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          maxLength={16}
+                          placeholder="(00) 00000-0000"
+                        />
+                        <Campo
+                          f={f}
+                          k="email"
+                          rotulo="E-mail"
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          maxLength={254}
+                          placeholder="voce@empresa.com.br"
+                        />
+                        <Campo
+                          f={f}
+                          k="empresa"
+                          rotulo="Empresa"
+                          opcional
+                          autoComplete="organization"
+                          maxLength={160}
+                          placeholder="Nome da empresa"
+                          cheio
+                        />
                       </div>
                     </fieldset>
                     <Pilulas f={f} k="perfil" legenda="Você é" opcoes={PERFIS} />
-                    <Aceite f={f} texto="Aceito receber o link, os lembretes e as novidades da IA News por WhatsApp e e-mail." />
-                    <Enviar f={f} rotulo="Quero minha vaga" fino="Gratuita. Ao enviar, abrimos o WhatsApp da IA News." />
+                    <Aceite
+                      f={f}
+                      texto="Aceito receber o link, os lembretes e as novidades da IA News por WhatsApp e e-mail."
+                    />
+                    <Enviar
+                      f={f}
+                      rotulo="Quero minha vaga"
+                      fino="Gratuita. Ao enviar, abrimos o WhatsApp da IA News."
+                    />
                   </form>
                 )}
               </div>
@@ -179,7 +255,10 @@ function AulaPage() {
                 </article>
               ))}
             </div>
-            <p className="pc2-note">Quem apresenta é Henrique Magioni, fundador e CEO da IA News, ao vivo no YouTube da IA News.</p>
+            <p className="pc2-note">
+              Quem apresenta é Henrique Magioni, fundador e CEO da IA News, ao vivo no YouTube da IA
+              News.
+            </p>
           </section>
 
           <section className="pc2-sec pc2-who" aria-labelledby="a-quem">
@@ -214,7 +293,10 @@ function AulaPage() {
             <div className="faq">
               <details>
                 <summary>É gratuita mesmo?</summary>
-                <p>Sim. A Aula ao vivo é aberta e gratuita; só pedimos a inscrição para mandar o link.</p>
+                <p>
+                  Sim. A Aula ao vivo é aberta e gratuita; só pedimos a inscrição para mandar o
+                  link.
+                </p>
               </details>
               <details>
                 <summary>Vai ter gravação?</summary>

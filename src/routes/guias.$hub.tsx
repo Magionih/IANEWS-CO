@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { NewsListing, SearchIcon } from "@/components/portal/news-card";
 import { HUBS, SITE_URL, type HubConfig, type HubTheme } from "@/lib/hubs";
 import { listArticlesForHub, type ArticleRow } from "@/lib/articles.functions";
+import { jsonLd } from "@/lib/json-ld";
 
 type HubSearch = { q?: string; tema?: string };
 
@@ -52,7 +53,7 @@ export const Route = createFileRoute("/guias/$hub")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             name: hub.title,
@@ -64,7 +65,7 @@ export const Route = createFileRoute("/guias/$hub")({
         },
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
@@ -81,7 +82,7 @@ export const Route = createFileRoute("/guias/$hub")({
         },
         {
           type: "application/ld+json",
-          children: JSON.stringify({
+          children: jsonLd({
             "@context": "https://schema.org",
             "@type": "ItemList",
             name: hub.title,
@@ -98,7 +99,7 @@ export const Route = createFileRoute("/guias/$hub")({
           ? [
               {
                 type: "application/ld+json",
-                children: JSON.stringify({
+                children: jsonLd({
                   "@context": "https://schema.org",
                   "@type": "FAQPage",
                   mainEntity: hub.faq.map((f) => ({

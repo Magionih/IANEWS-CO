@@ -16,6 +16,7 @@ import {
   type PautaErrors,
   type PautaInput,
 } from "@/lib/pauta-validate";
+import { jsonLd } from "@/lib/json-ld";
 
 /* Envie sua pauta: porta de entrada para empresas e fundadores que usam IA.
    Sem preço: o valor aparece só na conversa comercial. */
@@ -25,7 +26,12 @@ const TITLE = "Envie sua pauta: divulgue sua empresa de IA na imprensa | IA News
 const DESCRIPTION =
   "Sua empresa usa inteligência artificial? Envie sua pauta e conte sua história para a redação da IA News. O envio é gratuito e respondemos em até 2 dias úteis.";
 
-type PautaSearch = { utm_source?: string; utm_medium?: string; utm_campaign?: string; materia?: string };
+type PautaSearch = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  materia?: string;
+};
 
 const examplesOptions = queryOptions({
   queryKey: ["pauta", "examples"],
@@ -33,7 +39,8 @@ const examplesOptions = queryOptions({
   staleTime: 5 * 60 * 1000,
 });
 
-const short = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
+const short = (v: unknown, max: number) =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
 
 export const Route = createFileRoute("/pauta")({
   validateSearch: (s: Record<string, unknown>): PautaSearch => ({
@@ -57,10 +64,14 @@ export const Route = createFileRoute("/pauta")({
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
+        children: jsonLd({
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          mainEntity: FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
         }),
       },
     ],
@@ -191,14 +202,21 @@ function PautaPage() {
           utm_campaign: search.utm_campaign ?? null,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; errors?: PautaErrors };
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        errors?: PautaErrors;
+      };
       if (res.ok && json.ok) {
         setDoneName(form.nome.trim().split(/\s+/)[0] ?? "");
         setForm(EMPTY);
         return;
       }
       if (json.errors) setErrors(json.errors);
-      setFailMsg(json.error ?? `Não conseguimos enviar agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`);
+      setFailMsg(
+        json.error ??
+          `Não conseguimos enviar agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`,
+      );
     } catch {
       setFailMsg(`Não conseguimos enviar agora. Tente de novo ou escreva para ${CONTACT_EMAIL}.`);
     } finally {
@@ -224,7 +242,9 @@ function PautaPage() {
           value={form[key]}
           aria-invalid={err ? true : undefined}
           aria-describedby={err ? `pt-${key}-err` : undefined}
-          onChange={(e) => set(key, key === "whatsapp" ? maskPhone(e.target.value) : e.target.value)}
+          onChange={(e) =>
+            set(key, key === "whatsapp" ? maskPhone(e.target.value) : e.target.value)
+          }
           {...rest}
         />
         {err ? (
@@ -248,8 +268,8 @@ function PautaPage() {
             <p className="kick">Envie sua pauta</p>
             <h1>Sua empresa usa IA? Conte sua história para a IA News.</h1>
             <p className="sub">
-              A IA News mostra quem está construindo com inteligência artificial no Brasil e no mundo. Envie sua pauta e
-              nossa redação avalia.
+              A IA News mostra quem está construindo com inteligência artificial no Brasil e no
+              mundo. Envie sua pauta e nossa redação avalia.
             </p>
             <button className="btn blue" type="button" onClick={scrollToForm}>
               Enviar minha pauta
@@ -305,7 +325,12 @@ function PautaPage() {
               </div>
               <div className="pt-grid">
                 {examples.map((a) => (
-                  <Link key={a.slug} to="/materia/$slug" params={{ slug: a.slug }} className="pt-ex">
+                  <Link
+                    key={a.slug}
+                    to="/materia/$slug"
+                    params={{ slug: a.slug }}
+                    className="pt-ex"
+                  >
                     <ArticleThumb
                       src={a.cover_image_url}
                       alt=""
@@ -347,14 +372,20 @@ function PautaPage() {
                   </span>
                   <h2>Pauta recebida!</h2>
                   <p>
-                    Obrigado{doneName ? `, ${doneName}` : ""}. Nossa redação vai avaliar e responder em até 2 dias úteis
-                    pelo WhatsApp ou e-mail. Enquanto isso, veja as últimas matérias da IA News.
+                    Obrigado{doneName ? `, ${doneName}` : ""}. Nossa redação vai avaliar e responder
+                    em até 2 dias úteis pelo WhatsApp ou e-mail. Enquanto isso, veja as últimas
+                    matérias da IA News.
                   </p>
                   <div className="actions">
                     <Link className="btn blue" to="/noticias" search={{}}>
                       Ver matérias
                     </Link>
-                    <a className="btn line" href="https://www.instagram.com/ianews.co/" target="_blank" rel="noopener noreferrer">
+                    <a
+                      className="btn line"
+                      href="https://www.instagram.com/ianews.co/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       Instagram @ianews.co
                     </a>
                   </div>
@@ -375,9 +406,22 @@ function PautaPage() {
                       <i>1</i>Quem é você
                     </legend>
                     <div className="biz-fields">
-                      {field("nome", "Nome completo", { autoComplete: "name", maxLength: 160, placeholder: "Seu nome", full: true })}
-                      {field("cargo", "Cargo", { autoComplete: "organization-title", maxLength: 120, placeholder: "CEO, fundador, marketing..." })}
-                      {field("empresa", "Empresa", { autoComplete: "organization", maxLength: 160, placeholder: "Nome da empresa" })}
+                      {field("nome", "Nome completo", {
+                        autoComplete: "name",
+                        maxLength: 160,
+                        placeholder: "Seu nome",
+                        full: true,
+                      })}
+                      {field("cargo", "Cargo", {
+                        autoComplete: "organization-title",
+                        maxLength: 120,
+                        placeholder: "CEO, fundador, marketing...",
+                      })}
+                      {field("empresa", "Empresa", {
+                        autoComplete: "organization",
+                        maxLength: 160,
+                        placeholder: "Nome da empresa",
+                      })}
                       {field("whatsapp", "WhatsApp", {
                         type: "tel",
                         inputMode: "tel",
@@ -400,8 +444,17 @@ function PautaPage() {
                       <i>2</i>Onde encontrar a empresa
                     </legend>
                     <div className="biz-fields">
-                      {field("site", "Site da empresa", { inputMode: "url", maxLength: 300, placeholder: "empresa.com.br", optional: true })}
-                      {field("instagram", "Instagram", { maxLength: 300, placeholder: "@perfil", optional: true })}
+                      {field("site", "Site da empresa", {
+                        inputMode: "url",
+                        maxLength: 300,
+                        placeholder: "empresa.com.br",
+                        optional: true,
+                      })}
+                      {field("instagram", "Instagram", {
+                        maxLength: 300,
+                        placeholder: "@perfil",
+                        optional: true,
+                      })}
                       {field("linkedin", "LinkedIn", {
                         inputMode: "url",
                         maxLength: 300,
@@ -431,8 +484,14 @@ function PautaPage() {
                           onChange={(e) => set("descricao", e.target.value)}
                         />
                         <span className="pt-count" id="pt-descricao-count">
-                          {errors.descricao ? <span className="pt-err">{errors.descricao}</span> : <span />}
-                          <span className={descLen > 0 && descLen < DESC_MIN ? "pt-low" : undefined}>
+                          {errors.descricao ? (
+                            <span className="pt-err">{errors.descricao}</span>
+                          ) : (
+                            <span />
+                          )}
+                          <span
+                            className={descLen > 0 && descLen < DESC_MIN ? "pt-low" : undefined}
+                          >
                             {descLen}/{DESC_MAX}
                           </span>
                         </span>
@@ -456,9 +515,15 @@ function PautaPage() {
                       aria-invalid={errors.consentimento ? true : undefined}
                     />
                     <span>
-                      Concordo que a IA News use estes dados para avaliar minha pauta e entrar em contato. Nada é
-                      compartilhado com terceiros. <Link to="/termos" hash="pauta">Política de privacidade</Link>.
-                      {errors.consentimento ? <span className="pt-err">{errors.consentimento}</span> : null}
+                      Concordo que a IA News use estes dados para avaliar minha pauta e entrar em
+                      contato. Nada é compartilhado com terceiros.{" "}
+                      <Link to="/termos" hash="pauta">
+                        Política de privacidade
+                      </Link>
+                      .
+                      {errors.consentimento ? (
+                        <span className="pt-err">{errors.consentimento}</span>
+                      ) : null}
                     </span>
                   </label>
 
