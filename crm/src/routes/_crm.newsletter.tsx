@@ -35,12 +35,19 @@ const ORIGEM_LEGIVEL: Record<string, string> = {
   "links-bio": "Link da bio",
   popup: "Pop-up",
   footer: "Rodapé",
+  topo: "Topo do site",
+  "materia-meio": "Meio da matéria",
+  "materia-final": "Fim da matéria",
+  "form-contato": "Formulário de contato",
+  "links-bio-hero": "Link da bio",
+  home: "Home",
+  newsletter: "Página da newsletter",
 };
 
 function origemDe(l: LeadNewsletter): string {
   if (l.utm_source) return `${l.utm_source}${l.utm_campaign ? ` · ${l.utm_campaign}` : ""}`;
   if (l.cta_placement) return ORIGEM_LEGIVEL[l.cta_placement] ?? l.cta_placement;
-  if (l.source) return l.source;
+  if (l.source) return ORIGEM_LEGIVEL[l.source] ?? l.source;
   return l.landing_path ?? "site";
 }
 

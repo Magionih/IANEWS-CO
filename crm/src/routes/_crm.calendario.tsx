@@ -46,6 +46,7 @@ const DIA_LONGO = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
   timeZone: "UTC",
 });
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 function somarMes(mes: string, n: number) {
@@ -98,7 +99,7 @@ function CalendarioPage() {
   const agendados = doMes.filter((c) => situacao(c) === "agendado").length;
   const publicados = doMes.filter((c) => situacao(c) === "publicado").length;
   const [ano, m] = mes.split("-").map(Number);
-  const tituloMes = MES_NOME.format(new Date(Date.UTC(ano, m - 1, 1)));
+  const tituloMes = maiuscula(MES_NOME.format(new Date(Date.UTC(ano, m - 1, 1))));
 
   if (isLoading) return <Carregando texto="Montando o calendário..." />;
   if (error) return <Erro erro={error} />;
@@ -203,39 +204,17 @@ function CalendarioPage() {
                   </span>
                   {itens.length ? (
                     <>
-                      {/* celular: só a contagem */}
-                      <span className="flex flex-wrap gap-1 sm:hidden">
+                      <span className="flex flex-col gap-1">
                         {ag ? (
-                          <i className="rounded-full bg-primary px-1.5 text-[10px] font-semibold not-italic text-white">
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
                             {ag}
-                          </i>
+                            <span className="hidden sm:inline"> agendado{ag > 1 ? "s" : ""}</span>
+                          </span>
                         ) : null}
                         {pub ? (
-                          <i className="rounded-full bg-emerald-500 px-1.5 text-[10px] font-semibold not-italic text-white">
+                          <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700">
                             {pub}
-                          </i>
-                        ) : null}
-                      </span>
-                      {/* computador: os 2 primeiros títulos */}
-                      <span className="hidden space-y-1 sm:block">
-                        {itens.slice(0, 2).map((c) => (
-                          <span
-                            key={c.id}
-                            className={cn(
-                              "block truncate rounded px-1.5 py-0.5 text-[11px] leading-tight",
-                              situacao(c) === "agendado"
-                                ? "bg-primary/10 text-primary"
-                                : situacao(c) === "publicado"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-muted text-muted-foreground",
-                            )}
-                          >
-                            {HORA.format(new Date(c.published_at))} {c.title}
-                          </span>
-                        ))}
-                        {itens.length > 2 ? (
-                          <span className="block px-1.5 text-[11px] font-semibold text-muted-foreground">
-                            +{itens.length - 2} mais
+                            <span className="hidden sm:inline"> publicado{pub > 1 ? "s" : ""}</span>
                           </span>
                         ) : null}
                       </span>
@@ -275,8 +254,8 @@ function CalendarioPage() {
       <Sheet open={!!dia} onOpenChange={(v) => !v && setDia(null)}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]">
           <div className="border-b px-5 py-4 pr-12">
-            <SheetTitle className="text-base capitalize">
-              {dia ? DIA_LONGO.format(new Date(`${dia}T12:00:00Z`)) : ""}
+            <SheetTitle className="text-base">
+              {dia ? maiuscula(DIA_LONGO.format(new Date(`${dia}T12:00:00Z`))) : ""}
             </SheetTitle>
             <p className="text-xs text-muted-foreground">{doDia.length} conteúdo(s)</p>
           </div>

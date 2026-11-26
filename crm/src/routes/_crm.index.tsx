@@ -608,10 +608,18 @@ const HORA = new Intl.DateTimeFormat("pt-BR", {
 });
 const DIA_SEMANA = new Intl.DateTimeFormat("pt-BR", {
   weekday: "short",
-  day: "2-digit",
-  month: "short",
   timeZone: "America/Sao_Paulo",
 });
+const DIA_MES = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "America/Sao_Paulo",
+});
+/** "Sex 27/11" */
+function diaCurto(d: Date) {
+  const w = DIA_SEMANA.format(d).replace(".", "");
+  return `${w.charAt(0).toUpperCase()}${w.slice(1)} ${DIA_MES.format(d)}`;
+}
 
 function ProximosConteudos({ lista }: { lista?: ConteudoAgenda[] }) {
   return (
@@ -640,8 +648,8 @@ function ProximosConteudos({ lista }: { lista?: ConteudoAgenda[] }) {
             return (
               <li key={c.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
                 <span className="w-[86px] shrink-0">
-                  <span className="block text-[12px] font-semibold capitalize">
-                    {DIA_SEMANA.format(d).replace(".", "")}
+                  <span className="block whitespace-nowrap text-[12px] font-semibold">
+                    {diaCurto(d)}
                   </span>
                   <span className="tabular block text-[11px] text-muted-foreground">
                     {HORA.format(d)}
