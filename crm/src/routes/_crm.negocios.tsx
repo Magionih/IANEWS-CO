@@ -282,7 +282,9 @@ function NegociosPage() {
             <Select value={ordem} onValueChange={(v) => setOrdem(v as typeof ordem)}>
               <SelectTrigger className="h-9 w-auto gap-1.5 border-0 bg-transparent px-2 text-[13px] font-medium shadow-none hover:bg-muted">
                 <ArrowDownUp className="h-3.5 w-3.5" />
-                <SelectValue />
+                <span className="hidden xl:inline">
+                  <SelectValue />
+                </span>
               </SelectTrigger>
               <SelectContent align="end">
                 <SelectItem value="recentes">Mais recentes</SelectItem>
@@ -321,7 +323,7 @@ function NegociosPage() {
           </>
         }
       >
-        <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-card px-3 sm:w-56 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+        <div className="flex h-9 w-full min-w-0 shrink items-center gap-2 rounded-lg border bg-card px-3 sm:w-56 lg:w-44 xl:w-56 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}

@@ -59,8 +59,10 @@ export function BarraFerramentas({
   direita?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 lg:flex-nowrap">
+        {children}
+      </div>
       {direita ? <div className="flex shrink-0 items-center gap-2">{direita}</div> : null}
     </div>
   );
