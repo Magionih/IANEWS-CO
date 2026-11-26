@@ -137,7 +137,7 @@ function ComercialPage() {
 
       <Funil etapas={data.etapas} />
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Conversoes d={data} />
         <Secao titulo="Pipeline por etapa" colado>
           {data.pipeline.porEtapa.length ? (
@@ -171,7 +171,7 @@ function ComercialPage() {
         </Secao>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Parados lista={data.parados} onAbrir={setAberto} />
         <div className="space-y-5">
           <Secao
@@ -196,7 +196,7 @@ function ComercialPage() {
           </Secao>
           <Secao titulo="Perdas e motivos" colado>
             <Lista
-              linhas={data.perdas.map((p) => ({
+              linhas={data.perdas.slice(0, 8).map((p) => ({
                 k: p.motivo,
                 a: `${p.qtd}`,
                 b: fmtMoeda(p.valor),
@@ -402,7 +402,9 @@ function Lista({
     <ul className="divide-y">
       {linhas.map((l) => (
         <li key={l.k} className="flex items-center gap-3 px-4 py-2 text-[13px] sm:px-5">
-          <span className="min-w-0 flex-1 truncate font-medium">{l.k}</span>
+          <span className="min-w-0 flex-1 truncate font-medium" title={l.k}>
+            {l.k}
+          </span>
           <span className="tabular w-10 text-right text-muted-foreground">{l.a}</span>
           <span className="tabular w-24 text-right font-semibold">{l.b}</span>
         </li>

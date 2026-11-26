@@ -296,9 +296,10 @@ function Resumo({ d }: { d: Financeiro }) {
               detalhe="vencido há 30+ dias ÷ vendas de 90 dias"
             />
             <Indicador
-              rotulo="A receber por idade"
-              valor={`${fmtMoeda(d.receberIdade.ate7)} · ${fmtMoeda(d.receberIdade.ate30)} · ${fmtMoeda(d.receberIdade.mais30)}`}
-              detalhe="0–7 · 8–30 · 30+ dias"
+              rotulo="A receber há 30+ dias"
+              valor={fmtMoeda(d.receberIdade.mais30)}
+              detalhe={`0–7 dias ${fmtMoeda(d.receberIdade.ate7)} · 8–30 ${fmtMoeda(d.receberIdade.ate30)}`}
+              alerta={d.receberIdade.mais30 > 0}
             />
             <Indicador
               rotulo="Concentração (top 3)"
