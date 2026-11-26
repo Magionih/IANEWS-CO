@@ -136,7 +136,7 @@ function CalendarioPage() {
           </Button>
           <h2
             className={cn(
-              "min-w-[170px] text-center text-lg font-semibold capitalize",
+              "min-w-[170px] text-center text-lg font-semibold",
               isFetching && "opacity-60",
             )}
           >
@@ -233,7 +233,7 @@ function CalendarioPage() {
                 <li key={d} className="px-4 py-3 sm:px-5">
                   <p
                     className={cn(
-                      "mb-1.5 text-[13px] font-semibold capitalize",
+                      "mb-1.5 text-[13px] font-semibold",
                       d === hoje && "text-primary",
                     )}
                   >
