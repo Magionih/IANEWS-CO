@@ -59,7 +59,7 @@ export function BarraFerramentas({
   direita?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+    <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>
       {direita ? <div className="flex shrink-0 items-center gap-2">{direita}</div> : null}
     </div>
@@ -248,7 +248,7 @@ export function Etiqueta({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset",
+        "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset",
         tom === "neutro" && "bg-muted text-muted-foreground ring-border",
         tom === "azul" && "bg-primary/[0.07] text-primary ring-primary/20",
         tom === "alerta" && "bg-destructive/[0.07] text-destructive ring-destructive/20",
@@ -375,7 +375,8 @@ export function Alternador<T extends string>({
 
 /** Iniciais do membro em círculo (responsável, dono). */
 export function Avatar({ nome, className }: { nome: string; className?: string }) {
-  const partes = nome.split(/\s+/).filter(Boolean);
+  // Só palavras que começam com letra ou número ("Matéria · Patrícia" → "MP").
+  const partes = nome.split(/\s+/).filter((p) => /^[\p{L}\p{N}]/u.test(p));
   const ini = ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "—";
   return (
     <span

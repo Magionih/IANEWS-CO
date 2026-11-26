@@ -276,7 +276,7 @@ function NegociosPage() {
       <BarraFerramentas
         direita={
           <>
-            <span className="tabular hidden text-[13px] text-muted-foreground sm:inline">
+            <span className="tabular hidden text-[13px] text-muted-foreground 2xl:inline">
               {fmtNum(filtrados.length)} negócios
             </span>
             <Select value={ordem} onValueChange={(v) => setOrdem(v as typeof ordem)}>
@@ -321,7 +321,7 @@ function NegociosPage() {
           </>
         }
       >
-        <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-card px-3 sm:w-64 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+        <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-card px-3 sm:w-56 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
