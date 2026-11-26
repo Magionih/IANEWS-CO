@@ -398,3 +398,63 @@ export function contem(alvo: (string | null | undefined)[], busca: string) {
   if (!q) return true;
   return alvo.some((v) => normalizar(v).includes(q));
 }
+
+// ---------- Métricas estratégicas (financeiro, funil, produtos) ----------
+
+/** Produtos à venda (ids da tabela crm_produtos; o preço fica no banco e é editável). */
+export const PRODUTOS: { value: string; label: string }[] = [
+  { value: "destaque", label: "Destaque avulso" },
+  { value: "presenca", label: "Plano Presença" },
+  { value: "autoridade", label: "Plano Autoridade" },
+  { value: "patrocinio", label: "Plano Patrocínio" },
+  { value: "palco", label: "Palco online (ingresso)" },
+  { value: "evento", label: "Cotas de evento e Conselho" },
+];
+
+export const FORMAS_PAGAMENTO: { value: string; label: string }[] = [
+  { value: "pix", label: "Pix" },
+  { value: "link_asaas", label: "Link Asaas" },
+  { value: "cartao", label: "Cartão" },
+  { value: "boleto", label: "Boleto" },
+  { value: "transferencia", label: "Transferência" },
+  { value: "dinheiro", label: "Dinheiro" },
+];
+
+/** Centros de custo (cada lançamento e cada venda cai em um). */
+export const CENTROS: { value: string; label: string }[] = [
+  { value: "midia", label: "Mídia" },
+  { value: "fgia", label: "FGIA Educação" },
+  { value: "eventos", label: "Eventos" },
+  { value: "conselho", label: "Conselho" },
+];
+
+export type Natureza = "receita" | "imposto" | "taxa" | "variavel" | "fixo" | "investimento";
+
+export const NATUREZAS: { value: Natureza; label: string; dica: string }[] = [
+  { value: "receita", label: "Receita", dica: "dinheiro que entra" },
+  { value: "imposto", label: "Imposto", dica: "Simples Nacional e outros" },
+  { value: "taxa", label: "Taxa", dica: "Asaas, cartão" },
+  { value: "variavel", label: "Custo variável", dica: "cresce com as vendas" },
+  { value: "fixo", label: "Custo fixo", dica: "todo mês, vendendo ou não" },
+  { value: "investimento", label: "Investimento", dica: "anúncios, eventos, equipamentos" },
+];
+
+export const CATEGORIAS: Record<Natureza, string[]> = {
+  receita: ["Venda de mídia", "Evento", "Educação", "Conselho", "Outras receitas"],
+  imposto: ["Simples Nacional", "Outros impostos"],
+  taxa: ["Asaas", "Cartão", "Outras taxas"],
+  variavel: ["Comissão", "Produção terceirizada", "Outros variáveis"],
+  fixo: ["Equipe", "Pró-labore", "Contabilidade", "Ferramentas", "Telefone", "Outros fixos"],
+  investimento: ["Meta Ads", "Eventos", "Equipamentos", "Produto", "Outros investimentos"],
+};
+
+/** Centro de custo de um funil (para o resultado por área). */
+export function centroDoFunil(funil?: string | null): string {
+  if (funil === "aula") return "fgia";
+  if (funil === "evento" || funil === "presencial") return "eventos";
+  if (funil === "conselho" || funil === "lista100" || funil === "implementacao") return "conselho";
+  return "midia";
+}
+
+export const fmtPct = (n?: number | null, casas = 0) =>
+  n == null || !Number.isFinite(n) ? "—" : `${(n * 100).toFixed(casas).replace(".", ",")}%`;

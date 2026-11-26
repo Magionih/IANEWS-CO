@@ -136,6 +136,18 @@ export type CrmNegocio = {
   tags: string[];
   created_at: string;
   updated_at: string;
+  /** Campos das métricas estratégicas (podem faltar em consultas antigas). */
+  produto?: string | null;
+  abordagem?: string | null;
+  valor_proposto?: number | null;
+  chance?: number | null;
+  pagamento_previsto_em?: string | null;
+  forma_pagamento?: string | null;
+  nf_numero?: string | null;
+  respondeu_em?: string | null;
+  proposta_em?: string | null;
+  pago_em?: string | null;
+  publicado_em?: string | null;
 };
 
 /** Negócio com os nomes já resolvidos para cartões e listas. */

@@ -14,12 +14,16 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as CrmIndexRouteImport } from './routes/_crm.index'
 import { Route as CrmAudienciaRouteImport } from './routes/_crm.audiencia'
 import { Route as CrmCalendarioRouteImport } from './routes/_crm.calendario'
+import { Route as CrmClientesRouteImport } from './routes/_crm.clientes'
+import { Route as CrmComercialRouteImport } from './routes/_crm.comercial'
 import { Route as CrmConfigRouteImport } from './routes/_crm.config'
 import { Route as CrmDirectRouteImport } from './routes/_crm.direct'
 import { Route as CrmFilaRouteImport } from './routes/_crm.fila'
+import { Route as CrmFinanceiroRouteImport } from './routes/_crm.financeiro'
 import { Route as CrmListaRouteImport } from './routes/_crm.lista'
 import { Route as CrmNegociosRouteImport } from './routes/_crm.negocios'
 import { Route as CrmNewsletterRouteImport } from './routes/_crm.newsletter'
+import { Route as CrmOperacaoRouteImport } from './routes/_crm.operacao'
 import { Route as CrmPainelRouteImport } from './routes/_crm.painel'
 import { Route as CrmPautasRouteImport } from './routes/_crm.pautas'
 import { Route as CrmProducoesRouteImport } from './routes/_crm.producoes'
@@ -58,6 +62,16 @@ const CrmCalendarioRoute = CrmCalendarioRouteImport.update({
   path: '/calendario',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmClientesRoute = CrmClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmComercialRoute = CrmComercialRouteImport.update({
+  id: '/comercial',
+  path: '/comercial',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmConfigRoute = CrmConfigRouteImport.update({
   id: '/config',
   path: '/config',
@@ -73,6 +87,11 @@ const CrmFilaRoute = CrmFilaRouteImport.update({
   path: '/fila',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmFinanceiroRoute = CrmFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmListaRoute = CrmListaRouteImport.update({
   id: '/lista',
   path: '/lista',
@@ -86,6 +105,11 @@ const CrmNegociosRoute = CrmNegociosRouteImport.update({
 const CrmNewsletterRoute = CrmNewsletterRouteImport.update({
   id: '/newsletter',
   path: '/newsletter',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmOperacaoRoute = CrmOperacaoRouteImport.update({
+  id: '/operacao',
+  path: '/operacao',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmPainelRoute = CrmPainelRouteImport.update({
@@ -159,12 +183,16 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/audiencia': typeof CrmAudienciaRoute
   '/calendario': typeof CrmCalendarioRoute
+  '/clientes': typeof CrmClientesRoute
+  '/comercial': typeof CrmComercialRoute
   '/config': typeof CrmConfigRoute
   '/direct': typeof CrmDirectRoute
   '/fila': typeof CrmFilaRoute
+  '/financeiro': typeof CrmFinanceiroRoute
   '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
   '/newsletter': typeof CrmNewsletterRoute
+  '/operacao': typeof CrmOperacaoRoute
   '/painel': typeof CrmPainelRoute
   '/pautas': typeof CrmPautasRoute
   '/producoes': typeof CrmProducoesRoute
@@ -183,12 +211,16 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/audiencia': typeof CrmAudienciaRoute
   '/calendario': typeof CrmCalendarioRoute
+  '/clientes': typeof CrmClientesRoute
+  '/comercial': typeof CrmComercialRoute
   '/config': typeof CrmConfigRoute
   '/direct': typeof CrmDirectRoute
   '/fila': typeof CrmFilaRoute
+  '/financeiro': typeof CrmFinanceiroRoute
   '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
   '/newsletter': typeof CrmNewsletterRoute
+  '/operacao': typeof CrmOperacaoRoute
   '/painel': typeof CrmPainelRoute
   '/pautas': typeof CrmPautasRoute
   '/producoes': typeof CrmProducoesRoute
@@ -210,12 +242,16 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_crm/audiencia': typeof CrmAudienciaRoute
   '/_crm/calendario': typeof CrmCalendarioRoute
+  '/_crm/clientes': typeof CrmClientesRoute
+  '/_crm/comercial': typeof CrmComercialRoute
   '/_crm/config': typeof CrmConfigRoute
   '/_crm/direct': typeof CrmDirectRoute
   '/_crm/fila': typeof CrmFilaRoute
+  '/_crm/financeiro': typeof CrmFinanceiroRoute
   '/_crm/lista': typeof CrmListaRoute
   '/_crm/negocios': typeof CrmNegociosRoute
   '/_crm/newsletter': typeof CrmNewsletterRoute
+  '/_crm/operacao': typeof CrmOperacaoRoute
   '/_crm/painel': typeof CrmPainelRoute
   '/_crm/pautas': typeof CrmPautasRoute
   '/_crm/producoes': typeof CrmProducoesRoute
@@ -238,12 +274,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/audiencia'
     | '/calendario'
+    | '/clientes'
+    | '/comercial'
     | '/config'
     | '/direct'
     | '/fila'
+    | '/financeiro'
     | '/lista'
     | '/negocios'
     | '/newsletter'
+    | '/operacao'
     | '/painel'
     | '/pautas'
     | '/producoes'
@@ -262,12 +302,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/audiencia'
     | '/calendario'
+    | '/clientes'
+    | '/comercial'
     | '/config'
     | '/direct'
     | '/fila'
+    | '/financeiro'
     | '/lista'
     | '/negocios'
     | '/newsletter'
+    | '/operacao'
     | '/painel'
     | '/pautas'
     | '/producoes'
@@ -288,12 +332,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/_crm/audiencia'
     | '/_crm/calendario'
+    | '/_crm/clientes'
+    | '/_crm/comercial'
     | '/_crm/config'
     | '/_crm/direct'
     | '/_crm/fila'
+    | '/_crm/financeiro'
     | '/_crm/lista'
     | '/_crm/negocios'
     | '/_crm/newsletter'
+    | '/_crm/operacao'
     | '/_crm/painel'
     | '/_crm/pautas'
     | '/_crm/producoes'
@@ -354,6 +402,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmCalendarioRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/clientes': {
+      id: '/_crm/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof CrmClientesRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/comercial': {
+      id: '/_crm/comercial'
+      path: '/comercial'
+      fullPath: '/comercial'
+      preLoaderRoute: typeof CrmComercialRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/config': {
       id: '/_crm/config'
       path: '/config'
@@ -375,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmFilaRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/financeiro': {
+      id: '/_crm/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof CrmFinanceiroRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/lista': {
       id: '/_crm/lista'
       path: '/lista'
@@ -394,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/newsletter'
       fullPath: '/newsletter'
       preLoaderRoute: typeof CrmNewsletterRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/operacao': {
+      id: '/_crm/operacao'
+      path: '/operacao'
+      fullPath: '/operacao'
+      preLoaderRoute: typeof CrmOperacaoRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/painel': {
@@ -493,12 +569,16 @@ declare module '@tanstack/react-router' {
 interface CrmRouteChildren {
   CrmAudienciaRoute: typeof CrmAudienciaRoute
   CrmCalendarioRoute: typeof CrmCalendarioRoute
+  CrmClientesRoute: typeof CrmClientesRoute
+  CrmComercialRoute: typeof CrmComercialRoute
   CrmConfigRoute: typeof CrmConfigRoute
   CrmDirectRoute: typeof CrmDirectRoute
   CrmFilaRoute: typeof CrmFilaRoute
+  CrmFinanceiroRoute: typeof CrmFinanceiroRoute
   CrmListaRoute: typeof CrmListaRoute
   CrmNegociosRoute: typeof CrmNegociosRoute
   CrmNewsletterRoute: typeof CrmNewsletterRoute
+  CrmOperacaoRoute: typeof CrmOperacaoRoute
   CrmPainelRoute: typeof CrmPainelRoute
   CrmPautasRoute: typeof CrmPautasRoute
   CrmProducoesRoute: typeof CrmProducoesRoute
@@ -516,12 +596,16 @@ interface CrmRouteChildren {
 const CrmRouteChildren: CrmRouteChildren = {
   CrmAudienciaRoute: CrmAudienciaRoute,
   CrmCalendarioRoute: CrmCalendarioRoute,
+  CrmClientesRoute: CrmClientesRoute,
+  CrmComercialRoute: CrmComercialRoute,
   CrmConfigRoute: CrmConfigRoute,
   CrmDirectRoute: CrmDirectRoute,
   CrmFilaRoute: CrmFilaRoute,
+  CrmFinanceiroRoute: CrmFinanceiroRoute,
   CrmListaRoute: CrmListaRoute,
   CrmNegociosRoute: CrmNegociosRoute,
   CrmNewsletterRoute: CrmNewsletterRoute,
+  CrmOperacaoRoute: CrmOperacaoRoute,
   CrmPainelRoute: CrmPainelRoute,
   CrmPautasRoute: CrmPautasRoute,
   CrmProducoesRoute: CrmProducoesRoute,

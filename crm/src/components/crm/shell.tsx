@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
-  BarChart3,
+  BadgeCheck,
   Building2,
   CalendarCheck,
   CalendarDays,
@@ -16,12 +16,10 @@ import {
   Gauge,
   Home,
   KanbanSquare,
-  Layers,
   ListOrdered,
   Loader2,
   LogOut,
   Mail,
-  Megaphone,
   Menu,
   MessageCircle,
   Newspaper,
@@ -31,8 +29,10 @@ import {
   Share,
   Shield,
   SquarePlus,
+  TrendingUp,
   Users,
   UsersRound,
+  Wallet,
   X,
 } from "lucide-react";
 
@@ -62,6 +62,10 @@ type Item = {
 
 type Grupo = { titulo: string; itens: Item[] };
 
+/* Menu nas 5 camadas do documento de métricas estratégicas:
+   Financeiro · Comercial · Operação · Audiência · Clientes e produtos.
+   Verticais, Publicidade, Relatórios e Painel da operação saíram do menu (as telas continuam
+   abrindo pelo endereço) porque os números delas agora estão nas camadas. */
 const GRUPOS: Grupo[] = [
   {
     titulo: "Geral",
@@ -71,26 +75,25 @@ const GRUPOS: Grupo[] = [
     ],
   },
   {
-    titulo: "Vendas",
-    itens: [
-      { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
-      { to: "/verticais", rotulo: "Verticais", icone: Layers },
-      { to: "/empresas", rotulo: "Empresas", icone: Building2 },
-      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
-      { to: "/publicidade", rotulo: "Publicidade", icone: Megaphone },
-    ],
+    titulo: "Financeiro",
+    itens: [{ to: "/financeiro", rotulo: "Caixa e resultado", icone: Wallet, admin: true }],
   },
   {
-    titulo: "Prospecção",
+    titulo: "Comercial",
     itens: [
+      { to: "/comercial", rotulo: "Funil e metas", icone: TrendingUp },
+      { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
+      { to: "/empresas", rotulo: "Empresas", icone: Building2 },
+      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
       { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
       { to: "/fila", rotulo: "Fila do dia", icone: Send },
       { to: "/direct", rotulo: "Direct", icone: MessageCircle },
     ],
   },
   {
-    titulo: "Conteúdo",
+    titulo: "Operação",
     itens: [
+      { to: "/operacao", rotulo: "Fila de produção", icone: Gauge },
       { to: "/calendario", rotulo: "Calendário", icone: CalendarDays },
       { to: "/pautas", rotulo: "Pautas e conteúdo", icone: Newspaper },
       { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
@@ -99,15 +102,14 @@ const GRUPOS: Grupo[] = [
   {
     titulo: "Audiência",
     itens: [
-      { to: "/newsletter", rotulo: "Leads da newsletter", icone: Mail },
       { to: "/audiencia", rotulo: "Site e newsletter", icone: Users },
+      { to: "/newsletter", rotulo: "Leads da newsletter", icone: Mail },
     ],
   },
   {
-    titulo: "Análise",
+    titulo: "Clientes",
     itens: [
-      { to: "/relatorios", rotulo: "Relatórios", icone: BarChart3 },
-      { to: "/painel", rotulo: "Painel da operação", icone: Gauge },
+      { to: "/clientes", rotulo: "Clientes e produtos", icone: BadgeCheck, admin: true },
       { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
     ],
   },

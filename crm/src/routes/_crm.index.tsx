@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
+import { AlertasDono, ListaDoDia, NumerosDono, ParaComecar } from "@/components/crm/painel-dono";
 import { MensagemDialog, TarefaDialog, type DadosMensagem } from "@/components/crm/dialogs";
 import { NegocioDialog, NegocioPainel } from "@/components/crm/negocio";
 import { useAcao } from "@/components/crm/queries";
@@ -48,7 +49,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import type { NegocioCompleto } from "@/lib/crm/carregar";
 import { getHoje, type FilaViraramPauta, type PainelHoje } from "@/lib/crm/hoje.functions";
-import { getResumoInicio, type ConteudoAgenda } from "@/lib/crm/inicio.functions";
+import { getPainelDono } from "@/lib/crm/metricas.functions";
 import { criarLeadDeEmpresa } from "@/lib/crm/negocios.functions";
 import { concluirTarefa } from "@/lib/crm/tarefas.functions";
 import {
@@ -66,9 +67,9 @@ export const Route = createFileRoute("/_crm/")({
   component: InicioPage,
 });
 
-/* Início: primeiro os números que importam (faturamento, negociação, leads),
-   depois "O que fazer agora" em cartões — cada cartão abre a sua lista num painel lateral,
-   sem uma página infinita — e por fim os próximos conteúdos e o funil. */
+/* Início = painel do dono (documento de métricas estratégicas): até 8 números, alertas
+   automáticos, a rotina da equipe ("O que fazer agora") e as listas do dia
+   (cobrança, fila de produção com pagos primeiro e follow-up). */
 
 type Painel =
   | "tarefas"
@@ -80,140 +81,10 @@ type Painel =
   | "pauta"
   | "aquecidos";
 
-const TONS_ETAPA = [
-  "bg-primary/25",
-  "bg-primary/40",
-  "bg-primary/55",
-  "bg-primary/70",
-  "bg-primary/85",
-  "bg-primary",
-  "bg-[#1640b8]",
-  "bg-[#0f2f8a]",
-  "bg-[#0b2266]",
-];
-
-/** Funil aberto: uma linha por funil com o total, o valor e a barra das etapas; toque para abrir as etapas. */
-function FunilAberto({ visao }: { visao: PainelHoje["visao"] }) {
-  const { funilNome } = useCrm();
-  const [aberto, setAberto] = useState<string | null>(null);
-  const [todos, setTodos] = useState(false);
-  const ordenados = [...visao.funis].sort((a, b) => b.qtd - a.qtd);
-  const funis = todos ? ordenados : ordenados.slice(0, 5);
-  const total = ordenados.reduce((s, f) => s + f.qtd, 0);
-  return (
-    <Secao
-      titulo="Funil aberto"
-      contagem={total}
-      colado
-      acoes={
-        <span className="text-xs text-muted-foreground">
-          {fmtMoeda(visao.pipeline)} em negociação
-        </span>
-      }
-    >
-      {funis.length ? (
-        <ul className="divide-y">
-          {funis.map((f) => {
-            const etapas = f.etapas.filter((e) => e.qtd > 0).sort((a, b) => a.ordem - b.ordem);
-            const maior = [...etapas].sort((a, b) => b.qtd - a.qtd)[0];
-            const exp = aberto === f.funil_id;
-            return (
-              <li key={f.funil_id}>
-                <button
-                  type="button"
-                  onClick={() => setAberto(exp ? null : f.funil_id)}
-                  aria-expanded={exp}
-                  className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition hover:bg-[#f8faff] sm:grid-cols-[minmax(180px,260px)_1fr_auto] sm:px-5"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-[13.5px] font-semibold">
-                      {funilNome(f.funil_id)}
-                    </span>
-                    <span className="block truncate text-[11.5px] text-muted-foreground">
-                      {maior ? `mais em ${maior.nome} (${fmtNum(maior.qtd)})` : "sem negócios"}
-                    </span>
-                  </span>
-                  <span className="order-3 col-span-2 flex h-2 w-full gap-[2px] overflow-hidden rounded-full bg-muted sm:order-none sm:col-span-1">
-                    {etapas.map((e, i) => (
-                      <span
-                        key={e.nome}
-                        title={`${e.nome}: ${fmtNum(e.qtd)}`}
-                        className={cn("h-full", TONS_ETAPA[Math.min(i, TONS_ETAPA.length - 1)])}
-                        style={{ width: `${(e.qtd / Math.max(1, f.qtd)) * 100}%` }}
-                      />
-                    ))}
-                  </span>
-                  <span className="flex items-center gap-2 text-right">
-                    <span>
-                      <span className="tabular block text-[15px] font-semibold">
-                        {fmtNum(f.qtd)}
-                      </span>
-                      <span className="tabular block text-[11px] text-muted-foreground">
-                        {f.valor ? fmtMoeda(f.valor) : "—"}
-                      </span>
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform",
-                        exp && "rotate-180",
-                      )}
-                    />
-                  </span>
-                </button>
-                {exp ? (
-                  <div className="bg-[#f8f9fb] px-4 pb-3 pt-1 sm:px-5">
-                    <ul className="grid gap-x-6 gap-y-1.5 py-2 sm:grid-cols-2 xl:grid-cols-3">
-                      {etapas.map((e, i) => (
-                        <li key={e.nome} className="flex items-center gap-2 text-[12.5px]">
-                          <span
-                            className={cn(
-                              "h-2 w-2 shrink-0 rounded-full",
-                              TONS_ETAPA[Math.min(i, TONS_ETAPA.length - 1)],
-                            )}
-                          />
-                          <span className="min-w-0 flex-1 truncate">{e.nome}</span>
-                          <span className="tabular font-semibold">{fmtNum(e.qtd)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      to="/negocios"
-                      search={{ funil: f.funil_id }}
-                      className="text-xs font-semibold text-primary hover:underline"
-                    >
-                      Abrir o funil
-                    </Link>
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
-          {ordenados.length > 5 ? (
-            <li>
-              <button
-                type="button"
-                onClick={() => setTodos((v) => !v)}
-                className="flex w-full items-center justify-center gap-1 px-4 py-2.5 text-xs font-semibold text-primary hover:bg-[#f8faff]"
-              >
-                {todos ? "Mostrar só os 5 maiores" : `Ver todos os funis (${ordenados.length})`}
-                <ChevronDown className={cn("h-3.5 w-3.5", todos && "rotate-180")} />
-              </button>
-            </li>
-          ) : null}
-        </ul>
-      ) : (
-        <div className="p-4">
-          <Vazio>Nenhum negócio aberto.</Vazio>
-        </div>
-      )}
-    </Secao>
-  );
-}
-
 function InicioPage() {
   const { userId } = useCrm();
   const fetchHoje = useServerFn(getHoje);
-  const fetchResumo = useServerFn(getResumoInicio);
+  const fetchPainel = useServerFn(getPainelDono);
   const concluir = useServerFn(concluirTarefa);
   const criarLead = useServerFn(criarLeadDeEmpresa);
   const { executar } = useAcao();
@@ -229,16 +100,15 @@ function InicioPage() {
     queryFn: () => fetchHoje(),
     refetchInterval: 5 * 60_000,
   });
-  const resumo = useQuery({
-    queryKey: ["crm", "inicio"],
-    queryFn: () => fetchResumo(),
+  const painelDono = useQuery({
+    queryKey: ["crm", "painel-dono"],
+    queryFn: () => fetchPainel(),
     refetchInterval: 5 * 60_000,
   });
 
   if (hoje.isLoading) return <Carregando />;
   if (hoje.error || !hoje.data) return <Erro erro={hoje.error} />;
   const data = hoje.data;
-  const r = resumo.data;
 
   const tarefas = soMinhas
     ? data.tarefas.filter((t) => t.responsavel_id === userId || !t.responsavel_id)
@@ -341,12 +211,15 @@ function InicioPage() {
               className="h-9"
               onClick={() => {
                 hoje.refetch();
-                resumo.refetch();
+                painelDono.refetch();
               }}
-              disabled={hoje.isFetching || resumo.isFetching}
+              disabled={hoje.isFetching || painelDono.isFetching}
             >
               <RefreshCw
-                className={cn("h-4 w-4", (hoje.isFetching || resumo.isFetching) && "animate-spin")}
+                className={cn(
+                  "h-4 w-4",
+                  (hoje.isFetching || painelDono.isFetching) && "animate-spin",
+                )}
               />
               <span className="hidden sm:inline">Atualizar</span>
             </Button>
@@ -361,65 +234,30 @@ function InicioPage() {
         }
       />
 
-      {/* 1. Números do negócio */}
+      {/* 1. Painel do dono: no máximo 8 números + alertas automáticos */}
       <section aria-label="Números do negócio" className="space-y-3">
         <TituloBloco>Seu negócio</TituloBloco>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-          <Numero
-            rotulo="Faturado no mês"
-            valor={r ? fmtMoeda(r.faturadoMes) : "…"}
-            detalhe={r ? <Variacao atual={r.faturadoMes} anterior={r.faturadoMesAnterior} /> : null}
-            destaque="azul"
-            icone={CircleDollarSign}
-          />
-          <Numero
-            rotulo="A receber"
-            valor={r ? fmtMoeda(r.aReceber) : "…"}
-            detalhe={r ? `${r.aReceberQtd} fechados aguardando pagamento` : null}
-            icone={BadgeDollarSign}
-          />
-          <Numero
-            rotulo="Em negociação"
-            valor={r ? fmtNum(r.negociacaoQtd) : "…"}
-            detalhe={
-              r
-                ? r.negociacaoValor
-                  ? `clientes · ${fmtMoeda(r.negociacaoValor)} em propostas`
-                  : "clientes que já responderam"
-                : null
-            }
-            icone={Handshake}
-          />
-          <Numero
-            rotulo="Fechados no mês"
-            valor={r ? fmtNum(r.fechadosMes) : "…"}
-            detalhe={r ? <Variacao atual={r.fechadosMes} anterior={r.fechadosMesAnterior} /> : null}
-            icone={Trophy}
-          />
-          <Numero
-            rotulo="Novos leads"
-            valor={fmtNum(data.semana.novosLeads)}
-            detalhe={`últimos 7 dias · ${fmtNum(data.semana.mensagensEnviadas)} mensagens enviadas`}
-            icone={UserPlus}
-          />
-          <Link to="/newsletter" className="block rounded-xl transition hover:-translate-y-0.5">
-            <Numero
-              rotulo="Newsletter"
-              valor={r?.newsletterAtivos != null ? fmtNum(r.newsletterAtivos) : "—"}
-              detalhe={
-                r?.newsletterNovos7 != null
-                  ? `assinantes · +${fmtNum(r.newsletterNovos7)} em 7 dias`
-                  : "assinantes ativos"
-              }
-              icone={Mail}
-            />
-          </Link>
-        </div>
+        {painelDono.data ? (
+          <NumerosDono d={painelDono.data} />
+        ) : painelDono.error ? (
+          <Erro erro={painelDono.error} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Calculando os números…</p>
+        )}
       </section>
+
+      {painelDono.data?.comecar.length ? <ParaComecar itens={painelDono.data.comecar} /> : null}
+
+      {painelDono.data ? (
+        <section aria-label="Alertas" className="space-y-3">
+          <TituloBloco>Alertas</TituloBloco>
+          <AlertasDono alertas={painelDono.data.alertas} />
+        </section>
+      ) : null}
 
       {/* 2. O que fazer agora */}
       <section aria-label="O que fazer agora" className="space-y-3">
-        <TituloBloco>O que fazer agora</TituloBloco>
+        <TituloBloco>Rotina da equipe</TituloBloco>
         {/* celular: lista compacta */}
         <ul className="divide-y overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)] md:hidden">
           {cartoes.map((c) => (
@@ -502,11 +340,37 @@ function InicioPage() {
         </div>
       </section>
 
-      {/* 3. Conteúdo e funil */}
-      <div className="grid gap-5 xl:grid-cols-[1fr_1.15fr]">
-        <ProximosConteudos lista={r?.proximos} />
-        <FunilAberto visao={data.visao} />
-      </div>
+      {/* 3. Listas do dia: cobrança, produção (pagos primeiro) e follow-up */}
+      {painelDono.data ? (
+        <section aria-label="Listas do dia" className="space-y-3">
+          <TituloBloco>Listas do dia</TituloBloco>
+          <div className="grid gap-5 xl:grid-cols-3">
+            {painelDono.data.admin ? (
+              <ListaDoDia
+                titulo="Cobranças"
+                itens={painelDono.data.cobrancas}
+                vazio="Nada para cobrar."
+                link="/financeiro"
+                onAbrir={abrirNegocio}
+              />
+            ) : null}
+            <ListaDoDia
+              titulo="Fila de produção"
+              itens={painelDono.data.producao}
+              vazio="Nada na fila."
+              link="/operacao"
+              onAbrir={abrirNegocio}
+            />
+            <ListaDoDia
+              titulo="Follow-up (parados 3+ dias)"
+              itens={painelDono.data.followups}
+              vazio="Nenhum negócio parado."
+              link="/comercial"
+              onAbrir={abrirNegocio}
+            />
+          </div>
+        </section>
+      ) : null}
 
       <Sheet open={!!painel} onOpenChange={(v) => !v && setPainel(null)}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[520px]">
@@ -636,81 +500,6 @@ function TituloBloco({ children }: { children: ReactNode }) {
     <h2 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </h2>
-  );
-}
-
-const HORA = new Intl.DateTimeFormat("pt-BR", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "America/Sao_Paulo",
-});
-const DIA_SEMANA = new Intl.DateTimeFormat("pt-BR", {
-  weekday: "short",
-  timeZone: "America/Sao_Paulo",
-});
-const DIA_MES = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  timeZone: "America/Sao_Paulo",
-});
-/** "Sex 27/11" */
-function diaCurto(d: Date) {
-  const w = DIA_SEMANA.format(d).replace(".", "");
-  return `${w.charAt(0).toUpperCase()}${w.slice(1)} ${DIA_MES.format(d)}`;
-}
-
-function ProximosConteudos({ lista }: { lista?: ConteudoAgenda[] }) {
-  return (
-    <Secao
-      titulo={
-        <span className="flex items-center gap-2">
-          <Newspaper className="h-4 w-4 text-primary" /> Próximos conteúdos
-        </span>
-      }
-      colado
-      acoes={
-        <Link
-          to="/calendario"
-          className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-        >
-          <CalendarDays className="h-3.5 w-3.5" /> Calendário
-        </Link>
-      }
-    >
-      {!lista ? (
-        <p className="p-5 text-sm text-muted-foreground">Carregando…</p>
-      ) : lista.length ? (
-        <ul className="divide-y">
-          {lista.map((c) => {
-            const d = new Date(c.published_at);
-            return (
-              <li key={c.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
-                <span className="w-[86px] shrink-0">
-                  <span className="block whitespace-nowrap text-[12px] font-semibold">
-                    {diaCurto(d)}
-                  </span>
-                  <span className="tabular block text-[11px] text-muted-foreground">
-                    {HORA.format(d)}
-                  </span>
-                </span>
-                <a
-                  href={linkMateria(c.slug) ?? undefined}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="line-clamp-2 min-w-0 flex-1 text-[13px] font-medium leading-snug hover:text-primary"
-                >
-                  {c.title}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <div className="p-5">
-          <Vazio>Nenhum conteúdo agendado.</Vazio>
-        </div>
-      )}
-    </Secao>
   );
 }
 

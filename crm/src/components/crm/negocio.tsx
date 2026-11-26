@@ -57,7 +57,9 @@ import {
   labelDe,
   linkMateria,
   ORIGENS,
+  FORMAS_PAGAMENTO,
   PAGAMENTO_LABEL,
+  PRODUTOS,
   prazoRelativo,
   sugestaoTipoNegocio,
   TIPOS_NEGOCIO,
@@ -233,6 +235,13 @@ export function NegocioDialog({
         dono_id: negocio.dono_id,
         proxima_acao: negocio.proxima_acao ?? "",
         proxima_acao_em: negocio.proxima_acao_em ?? "",
+        produto: negocio.produto ?? null,
+        abordagem: negocio.abordagem ?? "",
+        valor_proposto: negocio.valor_proposto ?? "",
+        chance: negocio.chance ?? "",
+        forma_pagamento: negocio.forma_pagamento ?? null,
+        pagamento_previsto_em: negocio.pagamento_previsto_em ?? "",
+        nf_numero: negocio.nf_numero ?? "",
       });
     } else {
       const funil = inicial?.funil_id ?? "materia";
@@ -443,6 +452,83 @@ export function NegocioDialog({
               </SelectContent>
             </Select>
           </Campo>
+          <p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:col-span-2">
+            Venda e pagamento
+          </p>
+          <Campo rotulo="Produto">
+            <Select
+              value={f.produto ?? "nenhum"}
+              onValueChange={(v) => set("produto", v === "nenhum" ? null : v)}
+            >
+              <SelectTrigger className="h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nenhum">A definir</SelectItem>
+                {PRODUTOS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Campo>
+          <Campo
+            rotulo="Abordagem / teste"
+            dica="Ex.: roteiro A, áudio, collab. Compara conversões."
+          >
+            <Input
+              value={f.abordagem ?? ""}
+              onChange={(e) => set("abordagem", e.target.value)}
+              placeholder="roteiro A"
+            />
+          </Campo>
+          <Campo rotulo="Valor proposto (R$)" dica="O valor final fica em Valor.">
+            <Input
+              inputMode="decimal"
+              value={f.valor_proposto ?? ""}
+              onChange={(e) => set("valor_proposto", e.target.value)}
+              placeholder="550,00"
+            />
+          </Campo>
+          <Campo rotulo="Chance de fechar (%)" dica="Vazio = automática pela etapa.">
+            <Input
+              inputMode="numeric"
+              value={f.chance ?? ""}
+              onChange={(e) => set("chance", e.target.value)}
+              placeholder="automática"
+            />
+          </Campo>
+          <Campo rotulo="Forma de pagamento">
+            <Select
+              value={f.forma_pagamento ?? "nenhum"}
+              onValueChange={(v) => set("forma_pagamento", v === "nenhum" ? null : v)}
+            >
+              <SelectTrigger className="h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nenhum">A definir</SelectItem>
+                {FORMAS_PAGAMENTO.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Campo>
+          <Campo rotulo="Pagamento previsto para">
+            <Input
+              type="date"
+              value={f.pagamento_previsto_em ?? ""}
+              onChange={(e) => set("pagamento_previsto_em", e.target.value)}
+            />
+          </Campo>
+          {f.status_pagamento === "pago" ? (
+            <Campo rotulo="Nº da nota fiscal" dica="Só com o pagamento confirmado.">
+              <Input value={f.nf_numero ?? ""} onChange={(e) => set("nf_numero", e.target.value)} />
+            </Campo>
+          ) : null}
           {negocio ? (
             <>
               <Campo rotulo="Próxima ação">

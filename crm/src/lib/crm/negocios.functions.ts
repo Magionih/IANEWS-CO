@@ -5,6 +5,7 @@ import {
   dia,
   funilId,
   dinheiro,
+  inteiro,
   listaIds,
   obrigatorio,
   requireCrmAccess,
@@ -94,6 +95,13 @@ export type NegocioInput = {
   motivo_perda?: string | null;
   ativo?: boolean;
   tags?: string[];
+  produto?: string | null;
+  abordagem?: string | null;
+  valor_proposto?: number | string | null;
+  chance?: number | string | null;
+  pagamento_previsto_em?: string | null;
+  forma_pagamento?: string | null;
+  nf_numero?: string | null;
 };
 
 export const saveNegocio = createServerFn({ method: "POST" })
@@ -127,7 +135,31 @@ export const saveNegocio = createServerFn({ method: "POST" })
     campo("motivo_perda", () => texto(data.motivo_perda, 500));
     campo("ativo", () => data.ativo !== false);
     campo("tags", () => listaIds(data.tags));
+    campo("produto", () => texto(data.produto, 40));
+    campo("abordagem", () => texto(data.abordagem, 120));
+    campo("valor_proposto", () => dinheiro(data.valor_proposto));
+    campo("chance", () => inteiro(data.chance, 0, 100));
+    campo("pagamento_previsto_em", () => dia(data.pagamento_previsto_em));
+    campo("forma_pagamento", () => texto(data.forma_pagamento, 40));
+    campo("nf_numero", () => texto(data.nf_numero, 60));
     if (!data.id && !("dono_id" in data)) row.dono_id = context.userId;
+
+    // Regra do financeiro: nota fiscal só depois do pagamento confirmado.
+    if (row.nf_numero) {
+      let status = row.status_pagamento as string | undefined;
+      if (!status && data.id) {
+        const atual = checar(
+          await db
+            .from("crm_negocios")
+            .select("status_pagamento")
+            .eq("id", uuidObrigatorio(data.id, "o negócio"))
+            .single(),
+        ) as { status_pagamento: string };
+        status = atual.status_pagamento;
+      }
+      if (status !== "pago")
+        throw new Error("Nota fiscal só pode ser registrada com o pagamento confirmado (Pago).");
+    }
 
     if (data.id) {
       const id = uuidObrigatorio(data.id, "o negócio");
