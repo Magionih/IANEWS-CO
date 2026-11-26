@@ -421,7 +421,46 @@ function InicioPage() {
       {/* 2. O que fazer agora */}
       <section aria-label="O que fazer agora" className="space-y-3">
         <TituloBloco>O que fazer agora</TituloBloco>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {/* celular: lista compacta */}
+        <ul className="divide-y overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)] md:hidden">
+          {cartoes.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => setPainel(c.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 px-4 py-3 text-left active:bg-muted",
+                  c.qtd === 0 && "opacity-55",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                    c.tom === "alerta" && c.qtd
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-primary/[0.08] text-primary",
+                  )}
+                >
+                  <c.icone className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-semibold">{c.rotulo}</span>
+                  <span className="block truncate text-[12px] text-muted-foreground">{c.dica}</span>
+                </span>
+                <span
+                  className={cn(
+                    "tabular text-[17px] font-semibold",
+                    c.tom === "alerta" && c.qtd ? "text-destructive" : "",
+                  )}
+                >
+                  {fmtNum(c.qtd)}
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden grid-cols-4 gap-3 md:grid">
           {cartoes.map((c) => (
             <button
               key={c.id}

@@ -143,7 +143,7 @@ function NewsletterPage() {
         contagem={visiveis.length}
         colado
         acoes={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <Alternador
               valor={filtro}
               onChange={setFiltro}
@@ -154,13 +154,13 @@ function NewsletterPage() {
                 { valor: "saiu", rotulo: "Saíram" },
               ]}
             />
-            <label className="relative">
+            <label className="relative w-full sm:w-auto">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar nome ou e-mail"
-                className="h-8 w-56 pl-8 text-[13px]"
+                className="h-8 w-full pl-8 text-[13px] sm:w-56"
               />
             </label>
           </div>
@@ -188,7 +188,10 @@ function NewsletterPage() {
                     </a>
                   </span>
                   <span className="order-3 col-span-2 min-w-0 text-xs text-muted-foreground sm:order-none sm:col-span-1">
-                    <span className="block truncate">{origemDe(l)}</span>
+                    <span className="block truncate">
+                      {origemDe(l)}
+                      <span className="sm:hidden"> · {fmtDataHora(l.created_at)}</span>
+                    </span>
                     {l.article_slug ? (
                       <a
                         href={linkMateria(l.article_slug) ?? undefined}
