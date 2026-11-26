@@ -728,34 +728,25 @@ async function filaProducao(db: CrmDb, vendas: NegocioBase[], hoje: string) {
 
 // ---------- Audiência (resumo de 7 dias) ----------
 
-async function audiencia7(db: CrmDb, hoje: string) {
-  const ini = somarDias(hoje, -6);
-  const iniAnt = somarDias(hoje, -13);
-  const fimAnt = somarDias(hoje, -7);
-  const [a, b, m] = await Promise.all([
-    db.rpc("crm_audiencia", { p_inicio: ini, p_fim: hoje }),
-    db.rpc("crm_audiencia", { p_inicio: iniAnt, p_fim: fimAnt }),
-    db.rpc("crm_audiencia", { p_inicio: somarDias(hoje, -34), p_fim: fimAnt }),
-  ]);
-  if (a.error || !a.data) return null;
-  const atual = a.data as {
+async function audiencia7(db: CrmDb) {
+  // Função leve no banco (só contagens dos últimos 7 dias e da semana anterior).
+  const { data, error } = await db.rpc("crm_pulso_audiencia");
+  if (error || !data) return null;
+  const x = data as {
+    assinantes: number;
+    novos: number;
+    descadastros: number;
+    descadastros_4sem: number;
     visitas: number;
-    visitantes: number;
-    assinantes_ativos: number;
-    novos_periodo: number;
-    descadastros_periodo: number;
+    visitas_ant: number;
   };
-  const ant = (b.data ?? null) as typeof atual | null;
-  const mes = (m.data ?? null) as typeof atual | null;
-  const descMediaSemana = mes ? mes.descadastros_periodo / 4 : null;
   return {
-    visitas: atual.visitas,
-    visitantes: atual.visitantes,
-    visitasAnt: ant?.visitas ?? null,
-    assinantes: atual.assinantes_ativos,
-    novos: atual.novos_periodo,
-    descadastros: atual.descadastros_periodo,
-    descMediaSemana,
+    visitas: x.visitas,
+    visitasAnt: x.visitas_ant,
+    assinantes: x.assinantes,
+    novos: x.novos,
+    descadastros: x.descadastros,
+    descMediaSemana: x.descadastros_4sem / 4,
   };
 }
 
@@ -827,7 +818,7 @@ export const getPainelDono = createServerFn({ method: "GET" })
       isAdmin ? lerPagos(db) : Promise.resolve([] as NegocioBase[]),
       isAdmin ? lerLancamentos(db) : Promise.resolve([] as Lancamento[]),
       filaProducao(db, vendas, hoje),
-      isAdmin ? audiencia7(db, hoje) : Promise.resolve(null),
+      isAdmin ? audiencia7(db) : Promise.resolve(null),
     ]);
 
     const alertas: Alerta[] = [];
