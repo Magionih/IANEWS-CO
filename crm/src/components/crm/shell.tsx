@@ -7,6 +7,7 @@ import {
   BarChart3,
   Building2,
   CalendarCheck,
+  CalendarDays,
   ChevronRight,
   Clapperboard,
   Gauge,
@@ -16,6 +17,7 @@ import {
   ListOrdered,
   Loader2,
   LogOut,
+  Mail,
   Megaphone,
   Menu,
   MessageCircle,
@@ -58,45 +60,57 @@ type Grupo = { titulo: string; itens: Item[] };
 
 const GRUPOS: Grupo[] = [
   {
-    titulo: "Operação",
+    titulo: "Geral",
     itens: [
-      { to: "/", rotulo: "Hoje", icone: Home, exato: true },
-      { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
-      { to: "/fila", rotulo: "Fila do dia", icone: Send },
-      { to: "/direct", rotulo: "Direct", icone: MessageCircle },
+      { to: "/", rotulo: "Início", icone: Home, exato: true },
       { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
     ],
   },
   {
-    titulo: "Comercial",
+    titulo: "Vendas",
     itens: [
-      { to: "/verticais", rotulo: "Verticais", icone: Layers },
       { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
+      { to: "/verticais", rotulo: "Verticais", icone: Layers },
       { to: "/empresas", rotulo: "Empresas", icone: Building2 },
       { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
       { to: "/publicidade", rotulo: "Publicidade", icone: Megaphone },
     ],
   },
   {
+    titulo: "Prospecção",
+    itens: [
+      { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
+      { to: "/fila", rotulo: "Fila do dia", icone: Send },
+      { to: "/direct", rotulo: "Direct", icone: MessageCircle },
+    ],
+  },
+  {
     titulo: "Conteúdo",
     itens: [
+      { to: "/calendario", rotulo: "Calendário", icone: CalendarDays },
       { to: "/pautas", rotulo: "Pautas e conteúdo", icone: Newspaper },
       { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
-      { to: "/audiencia", rotulo: "Audiência", icone: Users },
+    ],
+  },
+  {
+    titulo: "Audiência",
+    itens: [
+      { to: "/newsletter", rotulo: "Leads da newsletter", icone: Mail },
+      { to: "/audiencia", rotulo: "Site e newsletter", icone: Users },
     ],
   },
   {
     titulo: "Análise",
     itens: [
-      { to: "/painel", rotulo: "Painel", icone: Gauge },
       { to: "/relatorios", rotulo: "Relatórios", icone: BarChart3 },
+      { to: "/painel", rotulo: "Painel da operação", icone: Gauge },
       { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
     ],
   },
 ];
 
 /** Abas fixas na base do celular (o resto fica em "Menu"). */
-const ABAS = ["/", "/lista", "/negocios", "/tarefas"];
+const ABAS = ["/", "/negocios", "/tarefas", "/calendario"];
 
 const PAPEL_NOME: Record<string, string> = {
   admin: "Administrador",

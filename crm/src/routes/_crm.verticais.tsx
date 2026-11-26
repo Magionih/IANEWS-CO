@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight, ChevronDown, RefreshCw } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { CabecalhoPagina, Carregando, Erro, Secao, Vazio } from "@/components/crm/ui";
@@ -13,6 +13,8 @@ import { getVerticais, type EtapaResumo, type VisaoVerticais } from "@/lib/crm/v
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_crm/verticais")({
+  validateSearch: (s: Record<string, unknown>): { v?: string } =>
+    typeof s.v === "string" && s.v ? { v: s.v } : {},
   component: VerticaisPage,
 });
 
@@ -88,6 +90,9 @@ function somar(etapas: CrmEtapa[], resumo: Map<string, EtapaResumo>): Totais {
 function VerticaisPage() {
   const { funis, etapasDo, funilNome } = useCrm();
   const fetchVisao = useServerFn(getVerticais);
+  const { v } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [verMov, setVerMov] = useState(false);
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["crm", "verticais"],
     queryFn: () => fetchVisao(),
@@ -98,11 +103,11 @@ function VerticaisPage() {
 
   const grupos = useMemo(() => {
     const ativos = funis.filter((f) => f.ativo).sort((a, b) => a.ordem - b.ordem);
-    const lista = VERTICAIS.map((v) => ({
-      ...v,
-      funis: ativos.filter((f) => f.vertical === v.nome),
+    const lista = VERTICAIS.map((vv) => ({
+      ...vv,
+      funis: ativos.filter((f) => f.vertical === vv.nome),
     }));
-    const outros = ativos.filter((f) => !VERTICAIS.some((v) => v.nome === f.vertical));
+    const outros = ativos.filter((f) => !VERTICAIS.some((vv) => vv.nome === f.vertical));
     if (outros.length)
       lista.push({
         nome: "Outros funis",
@@ -115,11 +120,22 @@ function VerticaisPage() {
   if (isLoading) return <Carregando texto="Montando as verticais..." />;
   if (error || !data) return <Erro erro={error} />;
 
+  const atual = grupos.find((g) => slug(g.nome) === v) ?? grupos[0];
+  const totais = (g: (typeof grupos)[number]) =>
+    somar(
+      g.funis.flatMap((f) => etapasDo(f.id)),
+      resumo,
+    );
+  const t = atual ? totais(atual) : null;
+  const recentes = atual
+    ? data.recentes.filter((m) => atual.funis.some((f) => f.id === m.funil_id))
+    : [];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <CabecalhoPagina
         titulo="Verticais"
-        descricao="Todas as verticais da IA News num lugar: cada funil com as suas etapas, quantos negócios há em cada uma e o que se moveu nos últimos 7 dias. Clique numa etapa para abrir o quadro."
+        descricao="Escolha uma vertical para ver os funis dela, etapa por etapa."
         acoes={
           <Button
             variant="outline"
@@ -128,75 +144,113 @@ function VerticaisPage() {
             onClick={() => refetch()}
             disabled={isFetching}
           >
-            <RefreshCw className={cn("mr-1.5 h-4 w-4", isFetching && "animate-spin")} /> Atualizar
+            <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
         }
       />
 
-      <section
-        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
-        aria-label="Resumo das verticais"
+      {/* Abas das verticais: rolam de lado no celular, sem mexer no resto da tela. */}
+      <nav
+        aria-label="Verticais"
+        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
       >
         {grupos.map((g) => {
-          const t = somar(
-            g.funis.flatMap((f) => etapasDo(f.id)),
-            resumo,
-          );
-          const mov = g.funis.reduce((s, f) => s + (data.atividade7d[f.id]?.movidos ?? 0), 0);
+          const on = g === atual;
+          const n = totais(g).abertos;
           return (
-            <a
+            <button
               key={g.nome}
-              href={`#v-${slug(g.nome)}`}
-              className="rounded-xl border bg-card shadow-[var(--shadow-card)] p-4 transition hover:border-primary"
+              type="button"
+              onClick={() =>
+                navigate({ search: { v: slug(g.nome) }, replace: true, resetScroll: false })
+              }
+              aria-pressed={on}
+              className={cn(
+                "flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition",
+                on
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "bg-card text-foreground hover:border-primary/50",
+              )}
             >
-              <p className="font-mono-eyebrow text-primary">{g.nome}</p>
-              <p className="mt-1 text-2xl font-semibold tracking-[-0.02em]">{fmtNum(t.abertos)}</p>
-              <p className="text-xs text-muted-foreground">em andamento</p>
-              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <dt className="text-muted-foreground">Ganhos</dt>
-                <dd className="text-right font-semibold">{fmtNum(t.ganhos)}</dd>
-                <dt className="text-muted-foreground">Movidos 7d</dt>
-                <dd className="text-right font-semibold">{fmtNum(mov)}</dd>
-                <dt className="text-muted-foreground">Para hoje</dt>
-                <dd className="text-right font-semibold">{fmtNum(t.hoje)}</dd>
-                <dt className="text-muted-foreground">Atrasados</dt>
-                <dd className={cn("text-right font-semibold", t.atencao && "text-destructive")}>
-                  {fmtNum(t.atencao)}
-                </dd>
-                {t.valorGanho || t.valorAberto ? (
-                  <>
-                    <dt className="text-muted-foreground">Receita</dt>
-                    <dd className="text-right font-semibold">{fmtMoeda(t.valorGanho)}</dd>
-                  </>
-                ) : null}
-              </dl>
-            </a>
+              {g.nome}
+              <span
+                className={cn(
+                  "tabular rounded-full px-1.5 text-[11px]",
+                  on ? "bg-white/20" : "bg-muted text-muted-foreground",
+                )}
+              >
+                {fmtNum(n)}
+              </span>
+            </button>
           );
         })}
-      </section>
+      </nav>
 
-      <div className="grid gap-6 2xl:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
-          {grupos.map((g) => (
-            <section key={g.nome} id={`v-${slug(g.nome)}`} className="scroll-mt-24 space-y-3">
-              <div>
-                <h2 className="text-lg font-semibold tracking-[-0.02em]">{g.nome}</h2>
-                <p className="text-sm text-muted-foreground">{g.papel}</p>
+      {atual && t ? (
+        <>
+          <section className="rounded-xl border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+            <p className="text-sm text-muted-foreground">{atual.papel}</p>
+            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Mini rotulo="Em andamento" valor={fmtNum(t.abertos)} />
+              <Mini rotulo="Ganhos" valor={fmtNum(t.ganhos)} tom="ok" />
+              <Mini
+                rotulo="Atrasados"
+                valor={fmtNum(t.atencao)}
+                tom={t.atencao ? "alerta" : undefined}
+              />
+              <Mini rotulo="Receita" valor={fmtMoeda(t.valorGanho)} />
+            </dl>
+          </section>
+
+          <div className="space-y-4">
+            {atual.funis.map((f) => (
+              <FunilCartao
+                key={f.id}
+                funil={f}
+                etapas={etapasDo(f.id)}
+                resumo={resumo}
+                atividade={data.atividade7d[f.id]}
+              />
+            ))}
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setVerMov((x) => !x)}
+              className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+            >
+              {verMov ? "Esconder" : "Ver"} movimentações recentes ({recentes.length})
+              <ChevronDown className={cn("h-4 w-4 transition", verMov && "rotate-180")} />
+            </button>
+            {verMov ? (
+              <div className="mt-3">
+                <Recentes recentes={recentes} funilNome={funilNome} />
               </div>
-              {g.funis.map((f) => (
-                <FunilCartao
-                  key={f.id}
-                  funil={f}
-                  etapas={etapasDo(f.id)}
-                  resumo={resumo}
-                  atividade={data.atividade7d[f.id]}
-                />
-              ))}
-            </section>
-          ))}
-        </div>
-        <Recentes recentes={data.recentes} funilNome={funilNome} />
-      </div>
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <Vazio>Nenhum funil ativo.</Vazio>
+      )}
+    </div>
+  );
+}
+
+function Mini({ rotulo, valor, tom }: { rotulo: string; valor: string; tom?: "ok" | "alerta" }) {
+  return (
+    <div>
+      <dt className="text-[11.5px] font-medium text-muted-foreground">{rotulo}</dt>
+      <dd
+        className={cn(
+          "tabular mt-0.5 text-[22px] font-semibold tracking-[-0.02em]",
+          tom === "ok" && "text-emerald-600",
+          tom === "alerta" && "text-destructive",
+        )}
+      >
+        {valor}
+      </dd>
     </div>
   );
 }
@@ -214,119 +268,88 @@ function FunilCartao({
 }) {
   const t = somar(etapas, resumo);
   const max = Math.max(1, ...etapas.map((e) => resumo.get(e.id)?.qtd ?? 0));
+  const comNegocios = etapas.filter((e) => (resumo.get(e.id)?.qtd ?? 0) > 0);
+  const [todas, setTodas] = useState(false);
+  const lista = todas ? etapas : comNegocios;
   return (
-    <div className="rounded-xl border bg-card shadow-[var(--shadow-card)]">
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
+    <section className="min-w-0 rounded-xl border bg-card shadow-[var(--shadow-card)]">
+      <header className="flex items-start justify-between gap-3 border-b px-4 py-3 sm:px-5">
         <div className="min-w-0">
-          <h3 className="font-bold">{funil.nome}</h3>
-          {funil.descricao ? (
-            <p className="text-xs text-muted-foreground">{funil.descricao}</p>
-          ) : null}
+          <h3 className="text-[15px] font-semibold">{funil.nome}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {fmtNum(t.abertos)} em andamento · {fmtNum(t.ganhos)} ganhos
+            {t.atencao ? (
+              <span className="text-destructive"> · {fmtNum(t.atencao)} atrasados</span>
+            ) : null}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span>
-            <b className="text-sm">{fmtNum(t.abertos)}</b> em andamento
-          </span>
-          <span>
-            <b className="text-sm text-emerald-600">{fmtNum(t.ganhos)}</b> ganhos
-          </span>
-          {t.valorGanho ? (
-            <span>
-              <b className="text-sm">{fmtMoeda(t.valorGanho)}</b> fechado
-            </span>
-          ) : null}
-          {t.valorAberto ? (
-            <span>
-              <b className="text-sm">{fmtMoeda(t.valorAberto)}</b> em negociação
-            </span>
-          ) : null}
-          <span className={cn(t.atencao && "text-destructive")}>
-            <b className="text-sm">{fmtNum(t.atencao)}</b> atrasados
-          </span>
-          <Link
-            to="/negocios"
-            search={{ funil: funil.id }}
-            className="flex items-center gap-1 font-semibold text-primary hover:underline"
-          >
-            Abrir quadro <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
+        <Link
+          to="/negocios"
+          search={{ funil: funil.id }}
+          className="flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:border-primary"
+        >
+          Abrir quadro <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </header>
       {t.total ? (
-        <div className="overflow-x-auto p-3">
-          <ol className="flex min-w-max gap-2">
-            {etapas.map((e) => {
-              const r = resumo.get(e.id);
-              const qtd = r?.qtd ?? 0;
-              return (
-                <li key={e.id}>
-                  <Link
-                    to="/negocios"
-                    search={{ funil: funil.id }}
-                    title={e.criterio_entrada ?? e.nome}
-                    className={cn(
-                      "flex h-full w-[132px] flex-col rounded-lg border p-2.5 transition hover:border-primary",
-                      e.tipo === "ganha" &&
-                        "border-emerald-500/40 bg-emerald-50/60 dark:bg-emerald-950/20",
-                      e.tipo === "perdida" && "bg-muted/50 text-muted-foreground",
-                      !qtd && "opacity-60",
-                    )}
-                  >
-                    <span className="line-clamp-2 min-h-[2rem] text-[11px] font-semibold leading-tight">
-                      {e.nome}
-                    </span>
-                    <span className="mt-1 text-xl font-semibold tracking-[-0.02em]">
-                      {fmtNum(qtd)}
-                    </span>
-                    <span className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                      <span
-                        className={cn(
-                          "block h-full rounded-full",
-                          e.tipo === "ganha"
-                            ? "bg-emerald-500"
-                            : e.tipo === "perdida"
-                              ? "bg-muted-foreground/40"
-                              : "bg-primary",
-                        )}
-                        style={{ width: `${(qtd / max) * 100}%` }}
-                      />
-                    </span>
-                    <span className="mt-1.5 space-y-0.5 text-[10.5px] text-muted-foreground">
-                      {r?.entraram_7d ? (
-                        <span className="block">+{fmtNum(r.entraram_7d)} em 7 dias</span>
-                      ) : null}
-                      {e.tipo === "aberta" && r?.hoje ? (
-                        <span className="block font-semibold text-primary">
-                          {fmtNum(r.hoje)} para hoje
-                        </span>
-                      ) : null}
-                      {r?.valor ? <span className="block">{fmtMoeda(r.valor)}</span> : null}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+        <ol className="divide-y">
+          {lista.map((e) => {
+            const r = resumo.get(e.id);
+            const qtd = r?.qtd ?? 0;
+            return (
+              <li key={e.id}>
+                <Link
+                  to="/negocios"
+                  search={{ funil: funil.id }}
+                  title={e.criterio_entrada ?? e.nome}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 px-4 py-2.5 transition hover:bg-[#f8faff] sm:grid-cols-[minmax(140px,220px)_1fr_auto] sm:px-5"
+                >
+                  <span className="truncate text-[13px] font-medium">{e.nome}</span>
+                  <span className="order-3 col-span-2 h-1.5 overflow-hidden rounded-full bg-muted sm:order-none sm:col-span-1">
+                    <span
+                      className={cn(
+                        "block h-full rounded-full",
+                        e.tipo === "ganha"
+                          ? "bg-emerald-500"
+                          : e.tipo === "perdida"
+                            ? "bg-muted-foreground/40"
+                            : "bg-primary",
+                      )}
+                      style={{ width: `${(qtd / max) * 100}%` }}
+                    />
+                  </span>
+                  <span className="text-right">
+                    <span className="tabular text-[14px] font-semibold">{fmtNum(qtd)}</span>
+                    {r?.entraram_7d ? (
+                      <span className="ml-1.5 text-[11px] text-emerald-600">
+                        +{fmtNum(r.entraram_7d)}
+                      </span>
+                    ) : null}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
       ) : (
-        <p className="px-4 py-5 text-sm text-muted-foreground">Nenhum negócio neste funil ainda.</p>
+        <p className="px-5 py-4 text-sm text-muted-foreground">Nenhum negócio neste funil ainda.</p>
       )}
-      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t px-4 py-2 text-[11px] text-muted-foreground">
-        <span>Últimos 7 dias:</span>
+      <footer className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-[11.5px] text-muted-foreground sm:px-5">
         <span>
-          <b className="text-foreground">{fmtNum(t.novos7d)}</b> novos
+          7 dias: {fmtNum(t.novos7d)} novos · {fmtNum(atividade?.enviadas ?? 0)} mensagens ·{" "}
+          {fmtNum(atividade?.recebidas ?? 0)} respostas
         </span>
-        <span>
-          <b className="text-foreground">{fmtNum(atividade?.movidos ?? 0)}</b> mudanças de etapa
-        </span>
-        <span>
-          <b className="text-foreground">{fmtNum(atividade?.enviadas ?? 0)}</b> mensagens enviadas
-        </span>
-        <span>
-          <b className="text-foreground">{fmtNum(atividade?.recebidas ?? 0)}</b> respostas
-        </span>
+        {comNegocios.length < etapas.length ? (
+          <button
+            type="button"
+            onClick={() => setTodas((x) => !x)}
+            className="font-semibold text-primary hover:underline"
+          >
+            {todas ? "Só etapas com negócios" : `Ver todas as ${etapas.length} etapas`}
+          </button>
+        ) : null}
       </footer>
-    </div>
+    </section>
   );
 }
 
@@ -344,9 +367,9 @@ function Recentes({
   funilNome: (id?: string | null) => string;
 }) {
   return (
-    <Secao titulo="Movimentações recentes" className="h-fit 2xl:sticky 2xl:top-20">
+    <Secao titulo="Movimentações recentes">
       {recentes.length ? (
-        <ol className="max-h-[75vh] space-y-3 overflow-y-auto pr-1">
+        <ol className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
           {recentes.map((m) => (
             <li key={m.id} className="border-l-2 border-primary/40 pl-3 text-sm">
               <p className="text-[11px] text-muted-foreground">
