@@ -12,6 +12,8 @@ export type ResumoInicio = {
   faturadoMes: number;
   faturadoMesQtd: number;
   faturadoTotal: number;
+  faturadoMesAnterior: number;
+  fechadosMesAnterior: number;
   aReceber: number;
   aReceberQtd: number;
   negociacaoQtd: number;
@@ -46,11 +48,27 @@ function inicioDoMes(): string {
   return new Date(`${hoje.slice(0, 7)}-01T00:00:00-03:00`).toISOString();
 }
 
+/** Início do mês anterior e o mesmo dia do mês anterior (para comparar períodos iguais). */
+function mesAnterior(): { ini: string; ate: string } {
+  const hoje = hojeBR();
+  const [a, m, d] = hoje.split("-").map(Number);
+  const am = m === 1 ? 12 : m - 1;
+  const aa = m === 1 ? a - 1 : a;
+  const ultimo = new Date(Date.UTC(aa, am, 0)).getUTCDate();
+  const mm = String(am).padStart(2, "0");
+  const dd = String(Math.min(d, ultimo)).padStart(2, "0");
+  return {
+    ini: new Date(`${aa}-${mm}-01T00:00:00-03:00`).toISOString(),
+    ate: new Date(`${aa}-${mm}-${dd}T23:59:59-03:00`).toISOString(),
+  };
+}
+
 export const getResumoInicio = createServerFn({ method: "GET" })
   .middleware([requireCrmAccess])
   .handler(async ({ context }): Promise<ResumoInicio> => {
     const { db, isAdmin } = context;
     const mes = inicioDoMes();
+    const ant = mesAnterior();
     const agora = new Date().toISOString();
     const ha7 = new Date(Date.now() - 7 * 86_400_000).toISOString();
 
@@ -82,6 +100,8 @@ export const getResumoInicio = createServerFn({ method: "GET" })
       faturadoMes: 0,
       faturadoMesQtd: 0,
       faturadoTotal: 0,
+      faturadoMesAnterior: 0,
+      fechadosMesAnterior: 0,
       aReceber: 0,
       aReceberQtd: 0,
       negociacaoQtd: 0,
@@ -98,7 +118,10 @@ export const getResumoInicio = createServerFn({ method: "GET" })
       const valor = Number(n.valor ?? 0);
       if (etapa.tipo === "ganha") {
         const doMes = !!n.fechado_em && n.fechado_em >= mes;
+        const doAnterior = !!n.fechado_em && n.fechado_em >= ant.ini && n.fechado_em <= ant.ate;
         if (doMes) r.fechadosMes += 1;
+        if (doAnterior) r.fechadosMesAnterior += 1;
+        if (doAnterior && n.status_pagamento === "pago") r.faturadoMesAnterior += valor;
         if (n.status_pagamento === "pago") {
           r.faturadoTotal += valor;
           if (doMes) {

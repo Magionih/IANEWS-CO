@@ -9,32 +9,59 @@ import { baixarCsv, GRUPO_DESCRICAO, type CsvColuna } from "@/lib/crm/utils";
 
 /* Peças visuais comuns das telas do CRM (identidade do painel, azul nos destaques). */
 
+/** Cabeçalho da página: no computador é uma barra fixa no topo (título à esquerda, ações à direita);
+ *  a descrição vira um ícone de ajuda para não poluir a tela. `titulo` aceita um elemento
+ *  (ex.: seletor de funil no lugar do título). */
 export function CabecalhoPagina({
   titulo,
   descricao,
   acoes,
 }: {
-  titulo: string;
+  titulo: ReactNode;
   descricao?: string;
   acoes?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 md:items-end md:gap-6">
-      <div className="min-w-0 flex-1">
-        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] sm:text-[26px]">
-          {titulo}
-        </h1>
+    <div className="mb-1 flex items-center justify-between gap-3 lg:sticky lg:top-0 lg:z-20 lg:-mx-6 lg:mb-5 lg:h-[60px] lg:border-b lg:bg-card/95 lg:px-6 lg:backdrop-blur-md">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        {typeof titulo === "string" ? (
+          <h1 className="truncate text-[20px] font-semibold leading-tight tracking-[-0.015em] lg:text-[18px]">
+            {titulo}
+          </h1>
+        ) : (
+          titulo
+        )}
         {descricao ? (
-          <p className="mt-1 hidden max-w-3xl text-[13.5px] leading-relaxed text-muted-foreground sm:block">
-            {descricao}
-          </p>
+          <span
+            title={descricao}
+            aria-label={descricao}
+            className="hidden h-5 w-5 shrink-0 cursor-help items-center justify-center rounded-full border text-[11px] font-semibold text-muted-foreground lg:inline-flex"
+          >
+            ?
+          </span>
         ) : null}
       </div>
       {acoes ? (
-        <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2 md:max-w-[62%] [&>*]:shrink-0">
+        <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2 md:max-w-[65%] [&>*]:shrink-0">
           {acoes}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/** Barra de ferramentas logo abaixo do cabeçalho (busca, visão, filtros, contagem, ordenação). */
+export function BarraFerramentas({
+  children,
+  direita,
+}: {
+  children: ReactNode;
+  direita?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>
+      {direita ? <div className="flex shrink-0 items-center gap-2">{direita}</div> : null}
     </div>
   );
 }
@@ -417,5 +444,95 @@ export function FaixaNumeros({
       </dl>
       {children}
     </section>
+  );
+}
+
+/** Rodapé de tabela com paginação ("Anterior · 1 2 3 · Próxima"). */
+export function Paginacao({
+  pagina,
+  total,
+  porPagina,
+  onMudar,
+}: {
+  pagina: number;
+  total: number;
+  porPagina: number;
+  onMudar: (p: number) => void;
+}) {
+  const paginas = Math.max(1, Math.ceil(total / porPagina));
+  if (paginas <= 1)
+    return (
+      <div className="border-t px-5 py-2.5 text-[12px] text-muted-foreground">{total} itens</div>
+    );
+  const ini = Math.max(0, Math.min(pagina - 2, paginas - 5));
+  const nums = Array.from({ length: Math.min(5, paginas) }, (_, i) => ini + i);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t px-5 py-2.5 text-[12.5px]">
+      <span className="text-muted-foreground">
+        {pagina * porPagina + 1}–{Math.min(total, (pagina + 1) * porPagina)} de {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          disabled={pagina === 0}
+          onClick={() => onMudar(pagina - 1)}
+          className="rounded-md px-2.5 py-1 font-medium hover:bg-muted disabled:opacity-40"
+        >
+          Anterior
+        </button>
+        {nums.map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onMudar(n)}
+            className={cn(
+              "tabular h-7 min-w-7 rounded-md px-2 font-semibold",
+              n === pagina ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+            )}
+          >
+            {n + 1}
+          </button>
+        ))}
+        <button
+          type="button"
+          disabled={pagina >= paginas - 1}
+          onClick={() => onMudar(pagina + 1)}
+          className="rounded-md px-2.5 py-1 font-medium hover:bg-muted disabled:opacity-40"
+        >
+          Próxima
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Variação contra o período anterior: "+14% vs. mês anterior" (verde/vermelho). */
+export function Variacao({
+  atual,
+  anterior,
+  rotulo = "vs. mês anterior",
+}: {
+  atual: number;
+  anterior: number;
+  rotulo?: string;
+}) {
+  if (!anterior && !atual) return <span className="text-muted-foreground">sem dados {rotulo}</span>;
+  if (!anterior)
+    return (
+      <span>
+        <b className="font-semibold text-emerald-600">Novo</b>{" "}
+        <span className="text-muted-foreground">{rotulo}</span>
+      </span>
+    );
+  const pct = ((atual - anterior) / anterior) * 100;
+  const sobe = pct >= 0;
+  return (
+    <span>
+      <b className={cn("font-semibold", sobe ? "text-emerald-600" : "text-destructive")}>
+        {sobe ? "+" : ""}
+        {pct.toFixed(1).replace(".", ",")}%
+      </b>{" "}
+      <span className="text-muted-foreground">{rotulo}</span>
+    </span>
   );
 }

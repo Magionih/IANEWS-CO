@@ -104,12 +104,20 @@ export function TagChip({
 }
 
 /** Tags no cartão do kanban (até `max`, o resto vira "+n"). */
-export function TagsDoNegocio({ ids, max = 2 }: { ids?: string[] | null; max?: number }) {
+export function TagsDoNegocio({
+  ids,
+  max = 2,
+  compacto,
+}: {
+  ids?: string[] | null;
+  max?: number;
+  compacto?: boolean;
+}) {
   const { tag } = useCrm();
   const lista = (ids ?? []).map(tag).filter((t): t is CrmTag => !!t);
   if (!lista.length) return null;
   return (
-    <div className="mt-2 flex flex-wrap gap-1">
+    <div className={cn("flex flex-wrap items-center gap-1", !compacto && "mt-2")}>
       {lista.slice(0, max).map((t) => (
         <TagChip key={t.id} tag={t} pequena />
       ))}

@@ -1,20 +1,24 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  ArrowDownUp,
+  BarChart3,
   Check,
-  ChevronsUpDown,
-  KanbanSquare,
+  ChevronDown,
+  ChevronRight,
+  Filter,
   LayoutGrid,
   List,
   Plus,
+  RefreshCw,
   Search,
-  SlidersHorizontal,
 } from "lucide-react";
 import { z } from "zod";
 
 import { useCrm } from "@/components/crm/context";
+import { registrarFunilRecente } from "@/components/crm/shell";
 import {
   NegocioCartao,
   NegocioDialog,
@@ -25,6 +29,7 @@ import { MembroSelect } from "@/components/crm/pickers";
 import { ListaTags } from "@/components/crm/tags";
 import {
   Alternador,
+  BarraFerramentas,
   BotaoCsv,
   CabecalhoPagina,
   Campo,
@@ -86,7 +91,7 @@ const CARTOES_POR_COLUNA = 60;
 const ORDEM_VERTICAIS = ["Ativação e base", "Publicidade", "Eventos", "Conselho", "Parcerias"];
 
 function NegociosPage() {
-  const { funis, etapasDo, membro, funilNome, tag } = useCrm();
+  const { funis, etapasDo, membro, funilNome, tag, userId } = useCrm();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const funil: CrmFunilId = search.funil ?? "materia";
@@ -103,10 +108,15 @@ function NegociosPage() {
   const [origem, setOrigem] = useState("todas");
   const [tipo, setTipo] = useState("todos");
   const [soAtrasados, setSoAtrasados] = useState(false);
+  const [meus, setMeus] = useState(false);
+  const [ordem, setOrdem] = useState<"recentes" | "valor" | "acao" | "parado">("recentes");
+  const [verIndicadores, setVerIndicadores] = useState(false);
   const [novo, setNovo] = useState(false);
   const [sobre, setSobre] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  useEffect(() => registrarFunilRecente(funil), [funil]);
+
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["crm", "negocios", funil],
     queryFn: () => fetchNegocios({ data: { funil_id: funil } }),
   });
@@ -131,6 +141,7 @@ function NegociosPage() {
           (!modalidade || modalidadeDe(n) === modalidade) &&
           (!tagsFiltro.length || (n.tags ?? []).some((t) => tagsFiltro.includes(t))) &&
           (!dono || n.dono_id === dono) &&
+          (!meus || n.dono_id === userId) &&
           (grupo === "todos" || (n.empresa_grupo ?? "sem") === grupo) &&
           (origem === "todas" || n.origem === origem) &&
           (tipo === "todos" || n.tipo === tipo) &&
@@ -138,8 +149,21 @@ function NegociosPage() {
             (n.etapa_tipo === "aberta" && (atrasado(n.proxima_acao_em) || !n.proxima_acao_em))) &&
           contem([n.titulo, n.empresa_nome, n.pessoa_nome, n.proxima_acao], q),
       ),
-    [data, modalidade, tagsFiltro, dono, grupo, origem, tipo, soAtrasados, q],
+    [data, modalidade, tagsFiltro, dono, meus, userId, grupo, origem, tipo, soAtrasados, q],
   );
+  const ordenados = useMemo(() => {
+    const l = [...filtrados];
+    const t = (d?: string | null) => (d ? new Date(d).getTime() : 0);
+    if (ordem === "valor") l.sort((a, b) => Number(b.valor ?? 0) - Number(a.valor ?? 0));
+    else if (ordem === "acao")
+      l.sort((a, b) => (a.proxima_acao_em ?? "9999").localeCompare(b.proxima_acao_em ?? "9999"));
+    else if (ordem === "parado")
+      l.sort(
+        (a, b) =>
+          t(a.ultima_atividade_em ?? a.etapa_desde) - t(b.ultima_atividade_em ?? b.etapa_desde),
+      );
+    return l;
+  }, [filtrados, ordem]);
 
   // Contagem de pagos e cortesias no funil (para os botões do seletor).
   const porModalidade = useMemo(() => {
@@ -155,7 +179,8 @@ function NegociosPage() {
     (grupo !== "todos" ? 1 : 0) +
     (origem !== "todas" ? 1 : 0) +
     (tipo !== "todos" ? 1 : 0) +
-    (soAtrasados ? 1 : 0);
+    (soAtrasados ? 1 : 0) +
+    (meus ? 1 : 0);
   const filtrosAtivos = qtdFiltros > 0;
   const contagemTags = useMemo(() => {
     const c = new Map<string, number>();
@@ -169,14 +194,15 @@ function NegociosPage() {
     setOrigem("todas");
     setTipo("todos");
     setSoAtrasados(false);
+    setMeus(false);
     navigate({ search: (s) => ({ ...s, modalidade: undefined, tags: undefined }), replace: true });
   };
 
   const porEtapa = useMemo(() => {
     const m = new Map<string, NegocioCompleto[]>();
-    for (const n of filtrados) m.set(n.etapa_id, [...(m.get(n.etapa_id) ?? []), n]);
+    for (const n of ordenados) m.set(n.etapa_id, [...(m.get(n.etapa_id) ?? []), n]);
     return m;
-  }, [filtrados]);
+  }, [ordenados]);
 
   const abrir = (id: string | null) =>
     navigate({ search: (s) => ({ ...s, negocio: id ?? undefined }), replace: true });
@@ -192,7 +218,15 @@ function NegociosPage() {
   return (
     <div className="space-y-4">
       <CabecalhoPagina
-        titulo="Negócios"
+        titulo={
+          <SeletorFunil
+            verticais={verticais}
+            funil={funil}
+            onEscolher={(id) =>
+              navigate({ search: { funil: id, modalidade: search.modalidade, tags: search.tags } })
+            }
+          />
+        }
         descricao="Arraste o cartão para mudar de etapa. Borda vermelha: sem próxima ação ou ação vencida."
         acoes={
           <>
@@ -233,69 +267,114 @@ function NegociosPage() {
               ]}
             />
             <Button size="sm" className="h-9" onClick={() => setNovo(true)}>
-              <Plus className="h-4 w-4" /> Novo negócio
+              Negócio <Plus className="h-4 w-4" />
             </Button>
           </>
         }
       />
 
-      {/* Barra única: funil, busca, filtros e modo de visualização. */}
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-        <SeletorFunil
-          verticais={verticais}
-          funil={funil}
-          onEscolher={(id) =>
-            navigate({ search: { funil: id, modalidade: search.modalidade, tags: search.tags } })
-          }
-        />
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border bg-card px-3 shadow-[0_1px_2px_rgb(16_24_40/0.04)] focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar empresa, pessoa ou título"
-              aria-label="Buscar negócios"
-              className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-10 shrink-0 px-3">
-                <SlidersHorizontal className="h-4 w-4" />
-                <span className="hidden sm:inline">Filtros</span>
-                {qtdFiltros ? (
-                  <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-white">
-                    {qtdFiltros}
-                  </span>
-                ) : null}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              className="max-h-[78vh] w-[min(94vw,380px)] overflow-y-auto p-4"
+      <BarraFerramentas
+        direita={
+          <>
+            <span className="tabular hidden text-[13px] text-muted-foreground sm:inline">
+              {fmtNum(filtrados.length)} negócios
+            </span>
+            <Select value={ordem} onValueChange={(v) => setOrdem(v as typeof ordem)}>
+              <SelectTrigger className="h-9 w-auto gap-1.5 border-0 bg-transparent px-2 text-[13px] font-medium shadow-none hover:bg-muted">
+                <ArrowDownUp className="h-3.5 w-3.5" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="recentes">Mais recentes</SelectItem>
+                <SelectItem value="valor">Maior valor</SelectItem>
+                <SelectItem value="acao">Próxima ação</SelectItem>
+                <SelectItem value="parado">Mais tempo parado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              title="Atualizar"
+              onClick={() => refetch()}
+              disabled={isFetching}
             >
+              <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+            </Button>
+            <Button
+              variant={verIndicadores ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              title="Indicadores do funil"
+              onClick={() => setVerIndicadores((v) => !v)}
+            >
+              <BarChart3 className="h-4 w-4" />
+            </Button>
+            <Alternador
+              valor={modo}
+              onChange={setModo}
+              opcoes={[
+                { valor: "kanban", icone: LayoutGrid, titulo: "Quadro" },
+                { valor: "lista", icone: List, titulo: "Lista" },
+              ]}
+            />
+          </>
+        }
+      >
+        <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-card px-3 sm:w-64 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Pesquisar neste funil…"
+            aria-label="Buscar negócios"
+            className="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+          />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </div>
+        <Select
+          value={meus ? "meus" : soAtrasados ? "atrasados" : (modalidade ?? "todos")}
+          onValueChange={(v) => {
+            setMeus(v === "meus");
+            setSoAtrasados(v === "atrasados");
+            navigate({
+              search: (s) => ({
+                ...s,
+                modalidade: v === "paga" || v === "cortesia" ? (v as Modalidade) : undefined,
+              }),
+              replace: true,
+            });
+          }}
+        >
+          <SelectTrigger className="h-9 w-auto gap-2 bg-card text-[13px] font-medium">
+            <List className="h-3.5 w-3.5 text-primary" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os negócios · {fmtNum((data ?? []).length)}</SelectItem>
+            <SelectItem value="meus">Meus negócios</SelectItem>
+            <SelectItem value="atrasados">Precisam de ação</SelectItem>
+            <SelectItem value="paga">Pagos · {fmtNum(porModalidade.paga)}</SelectItem>
+            <SelectItem value="cortesia">Cortesia · {fmtNum(porModalidade.cortesia)}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="h-9 shrink-0 gap-2 bg-card px-3 text-[13px]">
+              <Filter className="h-3.5 w-3.5" />
+              Filtros
+              {qtdFiltros ? (
+                <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-white">
+                  {qtdFiltros}
+                </span>
+              ) : null}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="max-h-[78vh] w-[min(94vw,380px)] overflow-y-auto p-0"
+          >
+            <SecaoFiltro titulo="Negócio" aberta>
               <div className="space-y-3">
-                <Campo rotulo="Modalidade">
-                  <Alternador
-                    className="w-full [&>button]:flex-1 [&>button]:justify-center"
-                    valor={modalidade ?? "todos"}
-                    onChange={(v) =>
-                      navigate({
-                        search: (s) => ({
-                          ...s,
-                          modalidade: v === "todos" ? undefined : (v as Modalidade),
-                        }),
-                        replace: true,
-                      })
-                    }
-                    opcoes={[
-                      { valor: "todos", rotulo: `Todos ${fmtNum((data ?? []).length)}` },
-                      { valor: "paga", rotulo: `Pagos ${fmtNum(porModalidade.paga)}` },
-                      { valor: "cortesia", rotulo: `Cortesia ${fmtNum(porModalidade.cortesia)}` },
-                    ]}
-                  />
-                </Campo>
                 <div className="grid grid-cols-2 gap-3">
                   <Campo rotulo="Dono">
                     <MembroSelect valor={dono} onChange={setDono} incluirTodos placeholder="Dono" />
@@ -354,38 +433,38 @@ function NegociosPage() {
                   </span>
                   <Switch checked={soAtrasados} onCheckedChange={setSoAtrasados} />
                 </label>
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold">Tags</p>
-                  <ListaTags
-                    selecionadas={tagsFiltro}
-                    contagem={contagemTags}
-                    onAlternar={(id) =>
-                      setTagsFiltro(
-                        tagsFiltro.includes(id)
-                          ? tagsFiltro.filter((x) => x !== id)
-                          : [...tagsFiltro, id],
-                      )
-                    }
-                  />
-                </div>
-                {filtrosAtivos ? (
-                  <Button variant="ghost" className="w-full text-primary" onClick={limparFiltros}>
-                    Limpar todos os filtros
-                  </Button>
-                ) : null}
               </div>
-            </PopoverContent>
-          </Popover>
-          <Alternador
-            valor={modo}
-            onChange={setModo}
-            opcoes={[
-              { valor: "kanban", icone: LayoutGrid, titulo: "Quadro" },
-              { valor: "lista", icone: List, titulo: "Lista" },
-            ]}
-          />
-        </div>
-      </div>
+            </SecaoFiltro>
+            <SecaoFiltro titulo="Tags" contagem={tagsFiltro.length}>
+              <div>
+                <ListaTags
+                  selecionadas={tagsFiltro}
+                  contagem={contagemTags}
+                  onAlternar={(id) =>
+                    setTagsFiltro(
+                      tagsFiltro.includes(id)
+                        ? tagsFiltro.filter((x) => x !== id)
+                        : [...tagsFiltro, id],
+                    )
+                  }
+                />
+              </div>
+            </SecaoFiltro>
+            <div className="flex items-center justify-between border-t px-4 py-2.5">
+              <span className="text-xs text-muted-foreground">
+                {qtdFiltros ? `${qtdFiltros} filtro(s) ativo(s)` : "Nenhum filtro"}
+              </span>
+              <button
+                type="button"
+                onClick={limparFiltros}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                Resetar
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </BarraFerramentas>
 
       {filtrosAtivos ? (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -413,8 +492,9 @@ function NegociosPage() {
             <ChipFiltro onTirar={() => setTipo("todos")}>{labelDe(TIPOS_NEGOCIO, tipo)}</ChipFiltro>
           ) : null}
           {soAtrasados ? (
-            <ChipFiltro onTirar={() => setSoAtrasados(false)}>Só atrasados</ChipFiltro>
+            <ChipFiltro onTirar={() => setSoAtrasados(false)}>Precisam de ação</ChipFiltro>
           ) : null}
+          {meus ? <ChipFiltro onTirar={() => setMeus(false)}>Meus negócios</ChipFiltro> : null}
           {tagsFiltro.map((id) => (
             <ChipFiltro key={id} onTirar={() => setTagsFiltro(tagsFiltro.filter((x) => x !== id))}>
               {tag(id)?.nome ?? "Tag"}
@@ -430,14 +510,16 @@ function NegociosPage() {
         </div>
       ) : null}
 
-      {data ? <IndicadoresFunil lista={filtrados} etapas={etapas} modalidade={modalidade} /> : null}
+      {data && verIndicadores ? (
+        <IndicadoresFunil lista={filtrados} etapas={etapas} modalidade={modalidade} />
+      ) : null}
 
       {isLoading ? (
         <Carregando />
       ) : error ? (
         <Erro erro={error} />
       ) : modo === "kanban" ? (
-        <div className="-mx-4 snap-x snap-mandatory overflow-x-auto scroll-px-4 px-4 pb-4 sm:mx-0 sm:snap-none sm:px-0">
+        <div className="-mx-4 snap-x snap-mandatory overflow-x-auto scroll-px-4 px-4 pb-4 sm:-mx-6 sm:snap-none sm:px-6">
           <div className="flex min-w-max gap-3">
             {etapas.map((e) => {
               const todos = porEtapa.get(e.id) ?? [];
@@ -456,35 +538,39 @@ function NegociosPage() {
                   onDragLeave={() => setSobre((s) => (s === e.id ? null : s))}
                   onDrop={(ev) => soltar(e.id, ev)}
                   className={cn(
-                    "flex w-[84vw] max-w-[300px] shrink-0 snap-start flex-col rounded-xl border bg-[#eef1f5]/70 sm:w-[280px]",
-                    sobre === e.id && "border-primary bg-primary/5",
-                    e.tipo === "ganha" && "bg-emerald-50/60 dark:bg-emerald-950/20",
+                    "flex w-[84vw] max-w-[300px] shrink-0 snap-start flex-col rounded-xl bg-[#eef0f4] sm:w-[288px]",
+                    sobre === e.id && "bg-primary/[0.07] ring-2 ring-primary/40",
                     e.tipo === "perdida" && "opacity-80",
                   )}
                 >
-                  <div className="border-b px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[13px] font-semibold">
-                        {e.ordem < 90 ? `${e.ordem}. ` : ""}
+                  <div className="px-3 pb-2 pt-3" title={e.criterio_entrada ?? e.acao_padrao ?? ""}>
+                    <div className="flex items-center gap-2">
+                      <p className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">
                         {e.nome}
                       </p>
-                      <span className="rounded-full bg-card px-2 py-0.5 text-xs font-semibold">
-                        {todos.length}
+                      <span
+                        className={cn(
+                          "tabular rounded-md px-1.5 py-0.5 text-[11.5px] font-semibold",
+                          e.tipo === "ganha"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-primary/10 text-primary",
+                        )}
+                      >
+                        {fmtNum(todos.length)}
                       </span>
                     </div>
-                    <p
-                      className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground"
-                      title={e.criterio_entrada ?? ""}
-                    >
-                      {e.acao_padrao
-                        ? `${e.acao_padrao}${e.prazo_dias != null ? ` · ${e.prazo_dias}d` : ""}`
-                        : (e.criterio_entrada ?? "")}
+                    <p className="tabular mt-0.5 text-[12px] text-muted-foreground">
+                      {fmtMoeda(total)}
                     </p>
-                    {total ? (
-                      <p className="text-[11px] font-semibold text-primary">{fmtMoeda(total)}</p>
-                    ) : null}
+                    {e.tipo === "ganha" ? (
+                      <span className="mt-2 block h-[3px] rounded-full bg-emerald-500" />
+                    ) : e.tipo === "perdida" ? (
+                      <span className="mt-2 block h-[3px] rounded-full bg-slate-300" />
+                    ) : (
+                      <span className="mt-2 block h-[3px] rounded-full bg-primary/60" />
+                    )}
                   </div>
-                  <div className="flex max-h-[68vh] flex-col gap-2 overflow-y-auto p-2">
+                  <div className="flex max-h-[calc(100dvh-220px)] flex-col gap-2 overflow-y-auto px-2 pb-2">
                     {lista.length ? (
                       lista.map((n) => (
                         <NegocioCartao key={n.id} n={n} onAbrir={() => abrir(n.id)} arrastavel />
@@ -520,7 +606,7 @@ function NegociosPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtrados.map((n) => {
+              {ordenados.map((n) => {
                 const vermelho =
                   n.etapa_tipo === "aberta" && (atrasado(n.proxima_acao_em) || !n.proxima_acao_em);
                 return (
@@ -704,7 +790,53 @@ function IndicadoresFunil({
   );
 }
 
-/** Escolha do funil: um botão com o funil atual que abre a lista por vertical. */
+/** Seção recolhível do painel de filtros (como "Negócio", "Tags"). */
+function SecaoFiltro({
+  titulo,
+  contagem,
+  aberta,
+  children,
+}: {
+  titulo: string;
+  contagem?: number;
+  aberta?: boolean;
+  children: React.ReactNode;
+}) {
+  const [on, setOn] = useState(!!aberta);
+  return (
+    <div className="border-b last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOn((x) => !x)}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-[13px] font-semibold hover:bg-muted/50"
+      >
+        <span className="flex-1">{titulo}</span>
+        {contagem ? (
+          <span className="rounded-full bg-primary/10 px-1.5 text-[11px] font-semibold text-primary">
+            {contagem}
+          </span>
+        ) : null}
+        <ChevronDown
+          className={cn("h-4 w-4 text-muted-foreground transition", on && "rotate-180")}
+        />
+      </button>
+      {on ? <div className="px-4 pb-4">{children}</div> : null}
+    </div>
+  );
+}
+
+const CORES_VERTICAL = ["#1f5eff", "#12875a", "#c6a15b", "#6c4ae6", "#d6404a", "#0e9791"];
+function sigla(nome: string) {
+  return nome
+    .split(/\s+/)
+    .filter((p) => p.length > 2)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+}
+
+/** Escolha do funil, no lugar do título: "VERTICAL → Funil", abre a lista por vertical com busca. */
 function SeletorFunil({
   verticais,
   funil,
@@ -718,67 +850,107 @@ function SeletorFunil({
   onEscolher: (id: CrmFunilId) => void;
 }) {
   const [aberto, setAberto] = useState(false);
-  const atual = verticais.flatMap((v) => v.funis.map((f) => ({ ...f, vertical: v.nome })));
-  const f = atual.find((x) => x.id === funil);
+  const [q, setQ] = useState("");
+  const todos = verticais.flatMap((v, i) =>
+    v.funis.map((f) => ({
+      ...f,
+      vertical: v.nome,
+      cor: CORES_VERTICAL[i % CORES_VERTICAL.length],
+    })),
+  );
+  const f = todos.find((x) => x.id === funil);
+  const busca = q.trim().toLowerCase();
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex h-10 min-w-0 items-center gap-2.5 rounded-lg border bg-card px-3 text-left shadow-[0_1px_2px_rgb(16_24_40/0.04)] transition hover:border-primary/40 lg:w-72"
+          className="flex h-9 min-w-0 max-w-full items-center gap-2 rounded-lg border bg-card px-2.5 text-left transition hover:border-primary/40"
         >
-          <KanbanSquare className="h-4 w-4 shrink-0 text-primary" />
-          <span className="min-w-0 flex-1 leading-tight">
-            <span className="block truncate text-[11px] text-muted-foreground">
-              {f?.vertical ?? "Funil"}
-            </span>
-            <span className="block truncate text-[13px] font-semibold">{f?.nome ?? funil}</span>
+          <span
+            className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded px-1 text-[10px] font-bold text-white"
+            style={{ background: f?.cor ?? "#1f5eff" }}
+          >
+            {sigla(f?.vertical ?? "Funil")}
           </span>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="hidden truncate text-[12.5px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline">
+            {f?.vertical ?? "Funil"}
+          </span>
+          <ChevronRight className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground sm:inline" />
+          <span className="truncate text-[14px] font-semibold">{f?.nome ?? funil}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="max-h-[70vh] w-[min(94vw,340px)] overflow-y-auto p-1.5"
-      >
-        {verticais.map((v) => (
-          <div key={v.nome} className="py-1">
-            <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-semibold text-muted-foreground">
-              {v.nome}
-            </p>
-            {v.funis.map((x) => (
-              <button
-                key={x.id}
-                type="button"
-                onClick={() => {
-                  setAberto(false);
-                  onEscolher(x.id);
-                }}
-                className={cn(
-                  "flex w-full items-start gap-2 rounded-md px-2.5 py-2 text-left hover:bg-muted",
-                  x.id === funil && "bg-primary/[0.07]",
-                )}
-              >
-                <span className="min-w-0 flex-1">
+      <PopoverContent align="start" className="w-[min(94vw,420px)] p-0">
+        <div className="border-b p-2">
+          <div className="flex h-9 items-center gap-2 rounded-md border px-2.5 focus-within:border-primary">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar funis e verticais…"
+              className="w-full bg-transparent text-[13px] outline-none"
+            />
+          </div>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto p-1.5">
+          <p className="px-2.5 pb-1 pt-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Verticais e funis
+          </p>
+          {verticais.map((v, vi) => {
+            const lista = v.funis.filter(
+              (x) =>
+                !busca ||
+                x.nome.toLowerCase().includes(busca) ||
+                v.nome.toLowerCase().includes(busca),
+            );
+            if (!lista.length) return null;
+            return (
+              <div key={v.nome} className="py-1">
+                <p className="flex items-center gap-2 px-2.5 pb-1 pt-1 text-[12px] font-bold uppercase tracking-wide">
                   <span
+                    className="flex h-5 min-w-5 items-center justify-center rounded px-1 text-[10px] font-bold text-white"
+                    style={{ background: CORES_VERTICAL[vi % CORES_VERTICAL.length] }}
+                  >
+                    {sigla(v.nome)}
+                  </span>
+                  <span className="flex-1">{v.nome}</span>
+                  <span className="text-[11px] font-normal normal-case text-muted-foreground">
+                    {v.funis.length} funis
+                  </span>
+                </p>
+                {lista.map((x) => (
+                  <button
+                    key={x.id}
+                    type="button"
+                    onClick={() => {
+                      setAberto(false);
+                      setQ("");
+                      onEscolher(x.id);
+                    }}
                     className={cn(
-                      "block text-[13px] font-medium",
-                      x.id === funil && "text-primary",
+                      "flex w-full items-center gap-2 rounded-md py-1.5 pl-9 pr-2.5 text-left hover:bg-muted",
+                      x.id === funil && "bg-primary/[0.07]",
                     )}
                   >
-                    {x.nome}
-                  </span>
-                  {x.descricao ? (
-                    <span className="block truncate text-[11px] text-muted-foreground">
-                      {x.descricao}
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "block truncate text-[13px]",
+                          x.id === funil && "font-semibold text-primary",
+                        )}
+                      >
+                        {x.nome}
+                      </span>
                     </span>
-                  ) : null}
-                </span>
-                {x.id === funil ? <Check className="mt-0.5 h-4 w-4 text-primary" /> : null}
-              </button>
-            ))}
-          </div>
-        ))}
+                    {x.id === funil ? <Check className="h-4 w-4 text-primary" /> : null}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </PopoverContent>
     </Popover>
   );

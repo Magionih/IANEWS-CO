@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Building2, Plus, Search } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { EmpresaDialog } from "@/components/crm/dialogs";
@@ -15,6 +15,9 @@ import {
   GrupoBadge,
   Numero,
   Vazio,
+  Avatar,
+  BarraFerramentas,
+  Paginacao,
 } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { contem, fmtNum, labelDe, ORIGENS, PORTES } from "@/lib/crm/utils";
+
+const POR_PAGINA = 100;
 
 export const Route = createFileRoute("/_crm/empresas/")({
   component: EmpresasPage,
@@ -40,6 +45,7 @@ function EmpresasPage() {
   const [status, setStatus] = useState("ativas");
   const [dono, setDono] = useState<string | null>(null);
   const [nova, setNova] = useState(false);
+  const [pagina, setPagina] = useState(0);
 
   const lista = useMemo(
     () =>
@@ -103,23 +109,56 @@ function EmpresasPage() {
         }
       />
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Numero rotulo="Empresas ativas" valor={fmtNum(ativas.length)} />
-        <Numero rotulo="Grupo A" valor={fmtNum(conta("A"))} destaque="azul" />
-        <Numero rotulo="Grupo B" valor={fmtNum(conta("B"))} />
-        <Numero rotulo="Grupo C" valor={fmtNum(conta("C"))} />
-        <Numero rotulo="Clientes" valor={fmtNum(ativas.filter((e) => e.e_cliente).length)} />
-      </section>
-
-      <div className="grid grid-cols-3 gap-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar nome, Instagram, site, setor ou cidade"
-          className="col-span-3 h-10 lg:col-span-1"
-        />
-        <Select value={grupo} onValueChange={setGrupo}>
-          <SelectTrigger className="h-10">
+      <BarraFerramentas
+        direita={
+          <span className="tabular text-[13px] text-muted-foreground">
+            {fmtNum(lista.length)} empresas · A {fmtNum(conta("A"))} · B {fmtNum(conta("B"))} · C{" "}
+            {fmtNum(conta("C"))}
+          </span>
+        }
+      >
+        <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-card px-3 sm:w-72 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+          <input
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPagina(0);
+            }}
+            placeholder="Nome, Instagram, site, setor ou cidade"
+            aria-label="Buscar empresas"
+            className="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+          />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </div>
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v);
+            setPagina(0);
+          }}
+        >
+          <SelectTrigger className="h-9 w-auto gap-2 bg-card text-[13px] font-medium">
+            <Building2 className="h-3.5 w-3.5 text-primary" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ativas">Todas as empresas</SelectItem>
+            <SelectItem value="todas">Incluir inativas</SelectItem>
+            <SelectItem value="clientes">Clientes</SelectItem>
+            <SelectItem value="anunciantes">Anunciantes</SelectItem>
+            <SelectItem value="apareceram">Já apareceram em conteúdo</SelectItem>
+            <SelectItem value="sem_negocio">Sem negócio aberto</SelectItem>
+            <SelectItem value="inativas">Inativas</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={grupo}
+          onValueChange={(v) => {
+            setGrupo(v);
+            setPagina(0);
+          }}
+        >
+          <SelectTrigger className="h-9 w-auto bg-card text-[13px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -129,83 +168,88 @@ function EmpresasPage() {
             <SelectItem value="C">Grupo C (até 39)</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="h-10">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ativas">Ativas</SelectItem>
-            <SelectItem value="todas">Todas</SelectItem>
-            <SelectItem value="clientes">Clientes</SelectItem>
-            <SelectItem value="anunciantes">Anunciantes</SelectItem>
-            <SelectItem value="apareceram">Já apareceram em conteúdo</SelectItem>
-            <SelectItem value="sem_negocio">Sem negócio aberto</SelectItem>
-            <SelectItem value="inativas">Inativas</SelectItem>
-          </SelectContent>
-        </Select>
-        <MembroSelect valor={dono} onChange={setDono} incluirTodos placeholder="Dono" />
-      </div>
+        <MembroSelect
+          valor={dono}
+          onChange={setDono}
+          incluirTodos
+          placeholder="Dono"
+          className="h-9 w-full bg-card text-[13px] sm:w-44"
+        />
+      </BarraFerramentas>
 
       {isLoading ? (
         <Carregando />
       ) : error ? (
         <Erro erro={error} />
       ) : lista.length ? (
-        <div className="overflow-x-auto rounded-xl border bg-card shadow-[var(--shadow-card)]">
-          <table className="w-full min-w-[820px] text-sm">
-            <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2">Empresa</th>
-                <th className="px-3 py-2">Grupo</th>
-                <th className="px-3 py-2">Setor / porte</th>
-                <th className="px-3 py-2 text-right">Pessoas</th>
-                <th className="px-3 py-2 text-right">Menções</th>
-                <th className="px-3 py-2 text-right">Negócios</th>
-                <th className="px-3 py-2">Dono</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {lista.map((e) => (
-                <tr
-                  key={e.id}
-                  className="cursor-pointer hover:bg-muted/40"
-                  onClick={() => navigate({ to: "/empresas/$id", params: { id: e.id } })}
-                >
-                  <td className="px-3 py-2">
-                    <Link
-                      to="/empresas/$id"
-                      params={{ id: e.id }}
-                      className="font-semibold hover:text-primary"
-                      onClick={(ev) => ev.stopPropagation()}
-                    >
-                      {e.nome}
-                    </Link>
-                    <div className="mt-0.5 flex flex-wrap gap-1">
-                      {e.e_cliente ? <Etiqueta tom="ok">cliente</Etiqueta> : null}
-                      {e.e_anunciante ? <Etiqueta tom="azul">anunciante</Etiqueta> : null}
-                      {e.brasileira === false ? <Etiqueta>estrangeira</Etiqueta> : null}
-                      {!e.ativo ? <Etiqueta tom="alerta">inativa</Etiqueta> : null}
-                      {e.instagram ? (
-                        <span className="text-xs text-muted-foreground">@{e.instagram}</span>
-                      ) : null}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <GrupoBadge grupo={e.grupo} manual={e.grupo_manual} pontuacao={e.pontuacao} />
-                  </td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {[e.setor, labelDe(PORTES, e.porte) !== "—" ? labelDe(PORTES, e.porte) : null]
-                      .filter(Boolean)
-                      .join(" · ") || "—"}
-                  </td>
-                  <td className="px-3 py-2 text-right">{e.pessoas}</td>
-                  <td className="px-3 py-2 text-right">{e.mencoes}</td>
-                  <td className="px-3 py-2 text-right">{e.negocios_abertos}</td>
-                  <td className="px-3 py-2">{membro(e.dono_id)}</td>
+        <div className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-sm">
+              <thead className="text-left">
+                <tr>
+                  <th className="px-5 py-3">Empresa</th>
+                  <th className="px-3 py-3">Grupo</th>
+                  <th className="px-3 py-3">Setor / porte</th>
+                  <th className="px-3 py-3 text-right">Pessoas</th>
+                  <th className="px-3 py-3 text-right">Menções</th>
+                  <th className="px-3 py-3 text-right">Negócios</th>
+                  <th className="px-3 py-3">Dono</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {lista.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA).map((e) => (
+                  <tr
+                    key={e.id}
+                    className="cursor-pointer hover:bg-muted/40"
+                    onClick={() => navigate({ to: "/empresas/$id", params: { id: e.id } })}
+                  >
+                    <td className="px-5 py-3">
+                      <span className="flex items-start gap-3">
+                        <Avatar nome={e.nome} className="mt-0.5 h-8 w-8 rounded-lg text-[11px]" />
+                        <span className="min-w-0">
+                          <Link
+                            to="/empresas/$id"
+                            params={{ id: e.id }}
+                            className="font-semibold hover:text-primary"
+                            onClick={(ev) => ev.stopPropagation()}
+                          >
+                            {e.nome}
+                          </Link>
+                          <div className="mt-0.5 flex flex-wrap gap-1">
+                            {e.e_cliente ? <Etiqueta tom="ok">cliente</Etiqueta> : null}
+                            {e.e_anunciante ? <Etiqueta tom="azul">anunciante</Etiqueta> : null}
+                            {e.brasileira === false ? <Etiqueta>estrangeira</Etiqueta> : null}
+                            {!e.ativo ? <Etiqueta tom="alerta">inativa</Etiqueta> : null}
+                            {e.instagram ? (
+                              <span className="text-xs text-muted-foreground">@{e.instagram}</span>
+                            ) : null}
+                          </div>
+                        </span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <GrupoBadge grupo={e.grupo} manual={e.grupo_manual} pontuacao={e.pontuacao} />
+                    </td>
+                    <td className="px-3 py-3 text-muted-foreground">
+                      {[e.setor, labelDe(PORTES, e.porte) !== "—" ? labelDe(PORTES, e.porte) : null]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
+                    </td>
+                    <td className="px-3 py-3 text-right">{e.pessoas}</td>
+                    <td className="px-3 py-3 text-right">{e.mencoes}</td>
+                    <td className="px-3 py-3 text-right">{e.negocios_abertos}</td>
+                    <td className="px-3 py-3">{membro(e.dono_id)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Paginacao
+            pagina={pagina}
+            total={lista.length}
+            porPagina={POR_PAGINA}
+            onMudar={setPagina}
+          />
         </div>
       ) : (
         <Vazio>Nenhuma empresa com esses filtros.</Vazio>

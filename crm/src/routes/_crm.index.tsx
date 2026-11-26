@@ -41,6 +41,7 @@ import {
   Numero,
   Secao,
   Vazio,
+  Variacao,
 } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -367,9 +368,7 @@ function InicioPage() {
           <Numero
             rotulo="Faturado no mês"
             valor={r ? fmtMoeda(r.faturadoMes) : "…"}
-            detalhe={
-              r ? `${r.faturadoMesQtd} pagamentos · total ${fmtMoeda(r.faturadoTotal)}` : null
-            }
+            detalhe={r ? <Variacao atual={r.faturadoMes} anterior={r.faturadoMesAnterior} /> : null}
             destaque="azul"
             icone={CircleDollarSign}
           />
@@ -394,7 +393,7 @@ function InicioPage() {
           <Numero
             rotulo="Fechados no mês"
             valor={r ? fmtNum(r.fechadosMes) : "…"}
-            detalhe={`${fmtNum(data.semana.fechados)} nos últimos 7 dias`}
+            detalhe={r ? <Variacao atual={r.fechadosMes} anterior={r.fechadosMesAnterior} /> : null}
             icone={Trophy}
           />
           <Numero

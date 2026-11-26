@@ -8,6 +8,9 @@ import {
   Building2,
   CalendarCheck,
   CalendarDays,
+  ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
   ChevronRight,
   Clapperboard,
   Gauge,
@@ -34,6 +37,7 @@ import {
 } from "lucide-react";
 
 import logo from "@/assets/ianews-logo-white.png";
+import logoEscuro from "@/assets/ianews-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -160,6 +164,7 @@ function iniciais(nome: string) {
 export function CrmShell({ children }: { children: ReactNode }) {
   const [busca, setBusca] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [recolhido, setRecolhido] = useRecolhido();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   // ⌘K / Ctrl+K abre a busca em qualquer tela.
@@ -178,11 +183,14 @@ export function CrmShell({ children }: { children: ReactNode }) {
   useEffect(() => setMenu(false), [path]);
 
   return (
-    <div className="app-shell bg-background lg:pl-64">
-      <MenuLateral onBuscar={() => setBusca(true)} />
+    <div className="app-shell bg-background" data-recolhido={recolhido ? "1" : "0"}>
+      <MenuLateral
+        recolhido={recolhido}
+        onRecolher={() => setRecolhido(!recolhido)}
+        onBuscar={() => setBusca(true)}
+      />
       <TopoCelular onBuscar={() => setBusca(true)} onMenu={() => setMenu(true)} />
-      <TopoComputador onBuscar={() => setBusca(true)} />
-      <main className="crm-main mx-auto w-full max-w-[1440px] px-4 pt-4 sm:px-6 lg:px-8 lg:pt-6">
+      <main className="crm-main mx-auto w-full max-w-[1600px] px-4 pt-4 sm:px-6 lg:pt-0">
         {children}
       </main>
       <BarraAbas onMenu={() => setMenu(true)} />
@@ -193,61 +201,181 @@ export function CrmShell({ children }: { children: ReactNode }) {
   );
 }
 
+/** Menu lateral recolhido ou aberto (lembrado neste navegador). */
+function useRecolhido(): [boolean, (v: boolean) => void] {
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    try {
+      setV(window.localStorage.getItem("crm-menu-recolhido") === "1");
+    } catch {
+      /* sem armazenamento */
+    }
+  }, []);
+  return [
+    v,
+    (x: boolean) => {
+      setV(x);
+      try {
+        window.localStorage.setItem("crm-menu-recolhido", x ? "1" : "0");
+      } catch {
+        /* ignora */
+      }
+    },
+  ];
+}
+
+/** Funis abertos recentemente (aparecem embaixo de "Negócios" no menu). */
+const CHAVE_RECENTES = "crm-funis-recentes";
+export function registrarFunilRecente(id: string) {
+  try {
+    const atual = JSON.parse(window.localStorage.getItem(CHAVE_RECENTES) ?? "[]") as string[];
+    const novo = [id, ...atual.filter((x) => x !== id)].slice(0, 4);
+    window.localStorage.setItem(CHAVE_RECENTES, JSON.stringify(novo));
+    window.dispatchEvent(new Event(CHAVE_RECENTES));
+  } catch {
+    /* ignora */
+  }
+}
+function useFunisRecentes() {
+  const [ids, setIds] = useState<string[]>([]);
+  useEffect(() => {
+    const ler = () => {
+      try {
+        setIds(JSON.parse(window.localStorage.getItem(CHAVE_RECENTES) ?? "[]"));
+      } catch {
+        setIds([]);
+      }
+    };
+    ler();
+    window.addEventListener(CHAVE_RECENTES, ler);
+    return () => window.removeEventListener(CHAVE_RECENTES, ler);
+  }, []);
+  return ids;
+}
+
 /* ---------- Computador ---------- */
 
-function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
+function MenuLateral({
+  recolhido,
+  onRecolher,
+  onBuscar,
+}: {
+  recolhido: boolean;
+  onRecolher: () => void;
+  onBuscar: () => void;
+}) {
   const grupos = useGrupos();
   const ativo = useAtivo();
+  const { funilNome } = useCrm();
+  const recentes = useFunisRecentes();
+  const funilAtual = useRouterState({
+    select: (s) => (s.location.search as { funil?: string }).funil,
+  });
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-nav-border bg-nav text-nav-foreground lg:flex">
-      <div className="flex h-[var(--topbar-h)] items-center gap-2.5 px-5">
-        <Link to="/" className="flex items-center gap-2.5" aria-label="Início do CRM">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sb)] flex-col border-r border-nav-border bg-nav text-nav-foreground transition-[width] duration-200 lg:flex">
+      <div
+        className={cn(
+          "flex h-[60px] shrink-0 items-center gap-2",
+          recolhido ? "justify-center px-2" : "px-4",
+        )}
+      >
+        <Link to="/" className="flex items-center gap-2" aria-label="Início do CRM">
           <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />
-          <img src={logo} alt="IA News" className="h-[15px] w-auto" />
+          {recolhido ? null : <img src={logoEscuro} alt="IA News" className="h-[15px] w-auto" />}
         </Link>
-        <span className="ml-auto rounded-md border border-nav-border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-nav-muted">
-          CRM
-        </span>
+        {recolhido ? null : (
+          <button
+            type="button"
+            onClick={onRecolher}
+            title="Recolher menu"
+            aria-label="Recolher menu"
+            className="ml-auto rounded-md p-1.5 text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      <div className="px-3 pb-2">
+      <div className={cn("pb-2", recolhido ? "px-2" : "px-3")}>
         <button
           type="button"
           onClick={onBuscar}
-          className="flex w-full items-center gap-2 rounded-lg border border-nav-border bg-white/[0.03] px-3 py-2 text-left text-[13px] text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground"
+          title="Buscar (⌘K)"
+          className={cn(
+            "flex w-full items-center gap-2 rounded-lg border border-nav-border bg-card text-left text-[13px] text-nav-muted shadow-[0_1px_2px_rgb(16_24_40/0.04)] transition hover:border-primary/40 hover:text-nav-foreground",
+            recolhido ? "justify-center px-0 py-2" : "px-3 py-2",
+          )}
         >
           <Search className="h-4 w-4" />
-          <span className="flex-1">Buscar</span>
-          <kbd className="rounded border border-nav-border px-1.5 text-[10px] font-medium">⌘K</kbd>
+          {recolhido ? null : (
+            <>
+              <span className="flex-1">Buscar…</span>
+              <kbd className="rounded border border-nav-border bg-background px-1.5 text-[10px] font-medium">
+                ⌘K
+              </kbd>
+            </>
+          )}
         </button>
       </div>
 
-      <nav className="nav-scroll flex-1 overflow-y-auto px-3 pb-4" aria-label="Menu do CRM">
-        {grupos.map((g) => (
-          <div key={g.titulo} className="mt-4 first:mt-2">
-            <p className="px-3 pb-1.5 text-[11px] font-semibold text-nav-muted/80">{g.titulo}</p>
+      <nav
+        className={cn("nav-scroll flex-1 overflow-y-auto pb-4", recolhido ? "px-2" : "px-3")}
+        aria-label="Menu do CRM"
+      >
+        {grupos.map((g, gi) => (
+          <div key={g.titulo} className={cn(gi > 0 && "mt-2 border-t border-nav-border pt-2")}>
             <ul className="space-y-0.5">
               {g.itens.map((i) => {
                 const on = ativo(i);
+                const ehNegocios = i.to === "/negocios";
                 return (
                   <li key={i.to}>
                     <Link
                       to={i.to}
+                      title={recolhido ? i.rotulo : undefined}
                       aria-current={on ? "page" : undefined}
                       className={cn(
-                        "group relative flex items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13.5px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
+                        "group relative flex items-center gap-2.5 rounded-lg text-[13.5px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
+                        recolhido ? "justify-center px-0 py-2.5" : "px-3 py-[7px]",
                         on &&
-                          "bg-primary/[0.16] text-white hover:bg-primary/[0.2] hover:text-white",
+                          "bg-primary/[0.08] text-primary hover:bg-primary/[0.1] hover:text-primary",
                       )}
                     >
                       {on ? (
                         <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-primary" />
                       ) : null}
-                      <i.icone
-                        className={cn("h-[17px] w-[17px] shrink-0", on ? "text-[#8db0ff]" : "")}
-                      />
-                      {i.rotulo}
+                      <i.icone className="h-[17px] w-[17px] shrink-0" />
+                      {recolhido ? null : (
+                        <>
+                          <span className="flex-1 truncate">{i.rotulo}</span>
+                          {ehNegocios && recentes.length ? (
+                            <ChevronDown
+                              className={cn("h-3.5 w-3.5 transition", !on && "-rotate-90")}
+                            />
+                          ) : null}
+                        </>
+                      )}
                     </Link>
+                    {ehNegocios && on && !recolhido && recentes.length ? (
+                      <div className="mb-1 ml-[26px] mt-1 border-l border-nav-border pl-3">
+                        <p className="py-1 text-[10.5px] font-semibold uppercase tracking-wide text-nav-muted/80">
+                          Funis recentes
+                        </p>
+                        {recentes.map((id) => (
+                          <Link
+                            key={id}
+                            to="/negocios"
+                            search={{ funil: id }}
+                            className={cn(
+                              "block truncate rounded-md px-2 py-1 text-[12.5px] text-nav-muted hover:bg-nav-hover hover:text-nav-foreground",
+                              funilAtual === id && "font-semibold text-primary",
+                            )}
+                          >
+                            {funilNome(id)}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
@@ -256,12 +384,23 @@ function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
         ))}
       </nav>
 
-      <ContaLateral />
+      {recolhido ? (
+        <button
+          type="button"
+          onClick={onRecolher}
+          title="Abrir menu"
+          aria-label="Abrir menu"
+          className="mx-auto mb-2 rounded-md p-2 text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground"
+        >
+          <ChevronsRight className="h-4 w-4" />
+        </button>
+      ) : null}
+      <ContaLateral recolhido={recolhido} />
     </aside>
   );
 }
 
-function ContaLateral() {
+function ContaLateral({ recolhido }: { recolhido?: boolean }) {
   const { userId, membro, papeis } = useCrm();
   const email = useEmail();
   const sair = useSair();
@@ -269,11 +408,19 @@ function ContaLateral() {
   const papel = papeis.filter((p) => p !== "reader").map((p) => PAPEL_NOME[p] ?? p)[0];
   return (
     <div className="border-t border-nav-border p-3">
-      <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+      <div
+        className={cn(
+          "flex items-center gap-3 rounded-lg py-2",
+          recolhido ? "justify-center px-0" : "px-2",
+        )}
+      >
+        <span
+          title={recolhido ? nome : undefined}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white"
+        >
           {iniciais(nome)}
         </span>
-        <div className="min-w-0 flex-1">
+        <div className={cn("min-w-0 flex-1", recolhido && "hidden")}>
           <p className="truncate text-[13px] font-semibold text-nav-foreground">{nome}</p>
           <p className="truncate text-[11px] text-nav-muted">{papel ?? email}</p>
         </div>
@@ -282,7 +429,10 @@ function ContaLateral() {
           onClick={sair}
           title="Sair"
           aria-label="Sair"
-          className="rounded-md p-1.5 text-nav-muted transition hover:bg-nav-hover hover:text-white"
+          className={cn(
+            "rounded-md p-1.5 text-nav-muted transition hover:bg-nav-hover hover:text-destructive",
+            recolhido && "hidden",
+          )}
         >
           <LogOut className="h-4 w-4" />
         </button>
@@ -301,47 +451,12 @@ function useTituloAtual() {
   return null;
 }
 
-function TopoComputador({ onBuscar }: { onBuscar: () => void }) {
-  const atual = useTituloAtual();
-  const data = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  const hoje = data.charAt(0).toUpperCase() + data.slice(1);
-  return (
-    <header className="sticky top-0 z-20 hidden h-[var(--topbar-h)] items-center gap-4 border-b bg-card/85 px-8 backdrop-blur-md lg:flex">
-      <nav aria-label="Onde você está" className="flex min-w-0 items-center gap-1.5 text-sm">
-        <span className="text-muted-foreground">{atual?.grupo ?? "CRM"}</span>
-        {atual ? (
-          <>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
-            <span className="truncate font-semibold">{atual.item.rotulo}</span>
-          </>
-        ) : null}
-      </nav>
-      <div className="ml-auto flex items-center gap-3">
-        <span className="hidden text-xs text-muted-foreground xl:inline">{hoje}</span>
-        <button
-          type="button"
-          onClick={onBuscar}
-          className="flex w-72 items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-left text-[13px] text-muted-foreground transition hover:border-primary/40"
-        >
-          <Search className="h-4 w-4" />
-          <span className="flex-1 truncate">Buscar empresa, pessoa, e-mail…</span>
-          <kbd className="rounded border bg-card px-1.5 text-[10px] font-medium">⌘K</kbd>
-        </button>
-      </div>
-    </header>
-  );
-}
-
 /* ---------- Celular / app ---------- */
 
 function TopoCelular({ onBuscar, onMenu }: { onBuscar: () => void; onMenu: () => void }) {
   const atual = useTituloAtual();
   return (
-    <header className="safe-top sticky top-0 z-30 bg-nav text-nav-foreground lg:hidden">
+    <header className="safe-top sticky top-0 z-30 border-b border-nav-border bg-nav text-nav-foreground lg:hidden">
       <div className="flex h-[var(--topbar-h)] items-center gap-2 px-3">
         <Link to="/" className="flex items-center gap-2 pl-1" aria-label="Início do CRM">
           <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />

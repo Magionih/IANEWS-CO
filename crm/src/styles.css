@@ -96,13 +96,13 @@
   --radius: 0.625rem;
   /* Plataforma: navegação navy, área de trabalho neutra e fria, azul IA News nas ações. */
   --lime: #1f5eff;
-  --nav: #0b1220;
-  --nav-foreground: #eef1f7;
-  --nav-muted: #8b95a8;
-  --nav-hover: rgb(255 255 255 / 0.06);
-  --nav-border: rgb(255 255 255 / 0.08);
-  --canvas: #f4f6f9;
-  --background: #f4f6f9;
+  --nav: #ffffff;
+  --nav-foreground: #1b2232;
+  --nav-muted: #5b6476;
+  --nav-hover: #f2f4f8;
+  --nav-border: #eceef3;
+  --canvas: #f6f7f9;
+  --background: #f6f7f9;
   --foreground: #0e1424;
   --ink: #0e1424;
   --surface: #ffffff;
@@ -120,7 +120,7 @@
   --accent-foreground: #0e1424;
   --destructive: #d92d20;
   --destructive-foreground: #ffffff;
-  --border: #e3e7ee;
+  --border: #e8eaf0;
   --input: #d9dee7;
   --ring: #1f5eff;
   --gold: #c6a15b;
@@ -140,13 +140,13 @@
   --chart-3: #c6a15b;
   --chart-4: #6c4ae6;
   --chart-5: #0e9791;
-  --sidebar: #0b1220;
-  --sidebar-foreground: #eef1f7;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b2232;
   --sidebar-primary: #1f5eff;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgb(255 255 255 / 0.06);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-accent: #f2f4f8;
+  --sidebar-accent-foreground: #1b2232;
+  --sidebar-border: #eceef3;
   --sidebar-ring: #1f5eff;
   /* Alturas fixas da moldura (topo e barra de abas no celular). */
   --topbar-h: 3.5rem;
@@ -445,7 +445,20 @@ body {
 /* Barra de rolagem discreta no menu lateral. */
 .nav-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.12) transparent;
+  scrollbar-color: #dfe3ea transparent;
+}
+
+/* Largura do menu lateral (aberto ou recolhido), no computador. */
+.app-shell {
+  --sb: 248px;
+}
+.app-shell[data-recolhido="1"] {
+  --sb: 72px;
+}
+@media (min-width: 1024px) {
+  .app-shell {
+    padding-left: var(--sb);
+  }
 }
 
 /* Tabelas do CRM: cabeçalho discreto, linhas com respiro e destaque ao passar o mouse. */

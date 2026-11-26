@@ -2,16 +2,28 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, ChevronLeft, ChevronRight, List, Plus, Search } from "lucide-react";
+import {
+  Bot,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  List,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { TarefaDialog } from "@/components/crm/dialogs";
 import { NegocioPainel } from "@/components/crm/negocio";
 import { MembroSelect } from "@/components/crm/pickers";
 import { useAcao } from "@/components/crm/queries";
-import { TarefaLinha } from "@/components/crm/tarefa";
 import {
   Alternador,
+  Avatar,
+  BarraFerramentas,
   BotaoCsv,
   CabecalhoPagina,
   Carregando,
@@ -19,10 +31,16 @@ import {
   Vazio,
 } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cancelarTarefa, concluirTarefa, listTarefas } from "@/lib/crm/tarefas.functions";
 import type { CrmTarefaItem } from "@/lib/crm/types";
-import { atrasado, contem, hojeBR, somarDias } from "@/lib/crm/utils";
+import { atrasado, contem, hojeBR, prazoRelativo, somarDias } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_crm/tarefas")({
@@ -30,6 +48,17 @@ export const Route = createFileRoute("/_crm/tarefas")({
 });
 
 const SEMANA = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
+const POR_PAGINA = 150;
+const DIA_GRUPO = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "short",
+  day: "2-digit",
+  month: "short",
+  timeZone: "UTC",
+});
+function rotuloDia(d: string) {
+  const t = DIA_GRUPO.format(new Date(`${d}T12:00:00Z`)).replace(/\./g, "");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
 
 function TarefasPage() {
   const { membro, userId } = useCrm();
@@ -39,7 +68,9 @@ function TarefasPage() {
   const { executar } = useAcao();
   const [modo, setModo] = useState<"lista" | "calendario">("lista");
   const [responsavel, setResponsavel] = useState<string | null>(userId);
-  const [incluirFeitas, setIncluirFeitas] = useState(false);
+  const [status, setStatus] = useState<"pendentes" | "atrasadas" | "feitas">("pendentes");
+  const incluirFeitas = status === "feitas";
+  const [limite, setLimite] = useState(POR_PAGINA);
   const [q, setQ] = useState("");
   const [mes, setMes] = useState(() => hojeBR().slice(0, 7));
   const [editar, setEditar] = useState<CrmTarefaItem | null>(null);
@@ -56,11 +87,29 @@ function TarefasPage() {
     () =>
       (data ?? []).filter(
         (t) =>
+          (status === "feitas" ? t.feita : !t.feita) &&
+          (status !== "atrasadas" || (!!t.vence_em && t.vence_em < hojeBR())) &&
           (!responsavel || t.responsavel_id === responsavel || !t.responsavel_id) &&
           contem([t.titulo, t.descricao, t.empresa_nome, t.pessoa_nome, t.negocio_titulo], q),
       ),
-    [data, responsavel, q],
+    [data, responsavel, q, status],
   );
+  // Agrupa por dia de vencimento (como a lista de atividades), sem data no fim.
+  const porDiaLista = useMemo(() => {
+    const ordenada = [...lista].sort((a, b) =>
+      status === "feitas"
+        ? (b.feita_em ?? "").localeCompare(a.feita_em ?? "")
+        : (a.vence_em ?? "9999").localeCompare(b.vence_em ?? "9999"),
+    );
+    const visiveis = ordenada.slice(0, limite);
+    const m = new Map<string, CrmTarefaItem[]>();
+    for (const t of visiveis) {
+      const k =
+        status === "feitas" ? (t.feita_em ?? "").slice(0, 10) || "sem" : (t.vence_em ?? "sem");
+      m.set(k, [...(m.get(k) ?? []), t]);
+    }
+    return { grupos: [...m.entries()], total: ordenada.length };
+  }, [lista, limite, status]);
   const grupos = useMemo(() => {
     const g = {
       atrasadas: [] as CrmTarefaItem[],
@@ -79,23 +128,6 @@ function TarefasPage() {
     }
     return g;
   }, [lista, hoje]);
-
-  const item = (t: CrmTarefaItem) => (
-    <TarefaLinha
-      key={t.id}
-      t={t}
-      hoje={hoje}
-      onAbrir={() => setEditar(t)}
-      onNegocio={t.negocio_id ? () => setNegocio(t.negocio_id) : undefined}
-      onConcluir={() =>
-        executar(
-          () => concluir({ data: { id: t.id, feita: !t.feita } }),
-          t.feita ? "Tarefa reaberta." : "Tarefa concluída.",
-        )
-      }
-      onDescartar={() => executar(() => cancelar({ data: { id: t.id } }), "Tarefa descartada.")}
-    />
-  );
 
   // Calendário do mês (segunda a domingo).
   const dias = useMemo(() => {
@@ -144,66 +176,57 @@ function TarefasPage() {
         }
       />
 
-      {/* Filtros numa linha só: busca, responsável, feitas e modo. */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex h-10 min-w-0 flex-[1_1_220px] items-center gap-2 rounded-lg border bg-card px-3 shadow-[0_1px_2px_rgb(16_24_40/0.04)] focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <BarraFerramentas
+        direita={
+          <>
+            <span className="tabular hidden text-[13px] text-muted-foreground sm:inline">
+              {lista.length} tarefas
+            </span>
+            <Alternador
+              valor={modo}
+              onChange={setModo}
+              opcoes={[
+                { valor: "lista", icone: List, titulo: "Lista" },
+                { valor: "calendario", icone: CalendarDays, titulo: "Calendário" },
+              ]}
+            />
+          </>
+        }
+      >
+        <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-card px-3 sm:w-64 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar tarefa, empresa ou pessoa"
+            placeholder="Pesquisar…"
             aria-label="Buscar tarefas"
-            className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
           />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
         </div>
-        <div className="flex flex-[1_1_auto] items-center gap-2 sm:flex-none">
-          <MembroSelect
-            valor={responsavel}
-            onChange={setResponsavel}
-            incluirTodos
-            className="h-10 min-w-0 flex-1 sm:w-48 sm:flex-none"
-          />
-          <label
-            className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 text-[13px] font-medium shadow-[0_1px_2px_rgb(16_24_40/0.04)]"
-            title="Mostrar tarefas feitas"
-          >
-            <Switch checked={incluirFeitas} onCheckedChange={setIncluirFeitas} />
-            Feitas
-          </label>
-          <Alternador
-            valor={modo}
-            onChange={setModo}
-            opcoes={[
-              { valor: "lista", icone: List, titulo: "Lista" },
-              { valor: "calendario", icone: CalendarDays, titulo: "Calendário" },
-            ]}
-          />
-        </div>
-      </div>
-
-      {modo === "lista" && !isLoading && !error ? (
-        <div className="grid grid-cols-4 gap-2">
-          {(
-            [
-              ["atrasadas", "Atrasadas", "text-destructive"],
-              ["hoje", "Hoje", "text-primary"],
-              ["semana", "7 dias", ""],
-              ["depois", "Depois", ""],
-            ] as const
-          ).map(([k, r, cor]) => (
-            <a
-              key={k}
-              href={`#tarefas-${k}`}
-              className="rounded-xl border bg-card px-3 py-2.5 shadow-[var(--shadow-card)] transition hover:border-primary/40"
-            >
-              <span className="block text-[11.5px] font-medium text-muted-foreground">{r}</span>
-              <span className={cn("tabular text-xl font-semibold", grupos[k].length && cor)}>
-                {grupos[k].length}
-              </span>
-            </a>
-          ))}
-        </div>
-      ) : null}
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v as typeof status);
+            setLimite(POR_PAGINA);
+          }}
+        >
+          <SelectTrigger className="h-9 w-auto gap-2 bg-card text-[13px] font-medium">
+            <Circle className="h-3.5 w-3.5 text-primary" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pendentes">Pendentes</SelectItem>
+            <SelectItem value="atrasadas">Só atrasadas</SelectItem>
+            <SelectItem value="feitas">Concluídas</SelectItem>
+          </SelectContent>
+        </Select>
+        <MembroSelect
+          valor={responsavel}
+          onChange={setResponsavel}
+          incluirTodos
+          className="h-9 w-full bg-card text-[13px] sm:w-48"
+        />
+      </BarraFerramentas>
 
       {isLoading ? (
         <Carregando />
@@ -211,44 +234,74 @@ function TarefasPage() {
         <Erro erro={error} />
       ) : modo === "lista" ? (
         lista.length ? (
-          <div className="space-y-4">
-            {(
-              [
-                ["atrasadas", "Atrasadas"],
-                ["hoje", "Hoje"],
-                ["semana", "Próximos 7 dias"],
-                ["depois", "Depois / sem data"],
-                ["feitas", "Feitas"],
-              ] as const
-            ).map(([k, titulo]) =>
-              grupos[k].length ? (
-                <section
-                  key={k}
-                  id={`tarefas-${k}`}
-                  className="scroll-mt-20 overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]"
-                >
-                  <h2 className="flex items-center gap-2 border-b bg-[#f8f9fb] px-4 py-2.5 text-[13px] font-semibold sm:px-5">
-                    <span
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        k === "atrasadas"
-                          ? "bg-destructive"
-                          : k === "hoje"
-                            ? "bg-primary"
-                            : k === "feitas"
-                              ? "bg-emerald-500"
-                              : "bg-slate-300",
-                      )}
-                    />
-                    {titulo}
-                    <span className="tabular rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground ring-1 ring-border">
-                      {grupos[k].length}
+          <div className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
+            <div className="hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_150px] gap-4 border-b bg-[#f8f9fb] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground md:grid">
+              <span className="pl-9">Tarefa</span>
+              <span>Contato</span>
+              <span>Negócio</span>
+              <span>Responsável</span>
+            </div>
+            {porDiaLista.grupos.map(([dia, itens]) => {
+              const atrasadas = itens.filter((t) => !t.feita && atrasado(t.vence_em, hoje)).length;
+              const quando =
+                dia === "sem" ? null : dia < hoje ? "Passado" : dia === hoje ? "Hoje" : "Próximo";
+              return (
+                <section key={dia}>
+                  <h2 className="flex flex-wrap items-center gap-2 border-b bg-[#fbfbfd] px-5 py-2 text-[12.5px]">
+                    <span className="font-semibold">
+                      {dia === "sem" ? "Sem data" : rotuloDia(dia)}
                     </span>
+                    {quando ? (
+                      <span
+                        className={cn(
+                          "text-[10.5px] font-semibold uppercase tracking-wide",
+                          quando === "Hoje" ? "text-primary" : "text-muted-foreground",
+                        )}
+                      >
+                        {quando}
+                      </span>
+                    ) : null}
+                    <span className="text-muted-foreground">{itens.length} tarefas</span>
+                    {atrasadas ? (
+                      <span className="flex items-center gap-1 text-[11.5px] font-medium text-destructive">
+                        <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                        {atrasadas} atrasada{atrasadas > 1 ? "s" : ""}
+                      </span>
+                    ) : null}
                   </h2>
-                  <ul className="divide-y">{grupos[k].map(item)}</ul>
+                  <ul className="divide-y">
+                    {itens.map((t) => (
+                      <LinhaTarefa
+                        key={t.id}
+                        t={t}
+                        hoje={hoje}
+                        responsavel={membro(t.responsavel_id)}
+                        onAbrir={() => setEditar(t)}
+                        onNegocio={t.negocio_id ? () => setNegocio(t.negocio_id) : undefined}
+                        onConcluir={() =>
+                          executar(
+                            () => concluir({ data: { id: t.id, feita: !t.feita } }),
+                            t.feita ? "Tarefa reaberta." : "Tarefa concluída.",
+                          )
+                        }
+                        onDescartar={() =>
+                          executar(() => cancelar({ data: { id: t.id } }), "Tarefa descartada.")
+                        }
+                      />
+                    ))}
+                  </ul>
                 </section>
-              ) : null,
-            )}
+              );
+            })}
+            {porDiaLista.total > limite ? (
+              <button
+                type="button"
+                onClick={() => setLimite((l) => l + POR_PAGINA)}
+                className="w-full border-t px-5 py-3 text-[13px] font-semibold text-primary hover:bg-[#f8faff]"
+              >
+                Carregar mais ({porDiaLista.total - limite} restantes)
+              </button>
+            ) : null}
           </div>
         ) : (
           <Vazio>Nenhuma tarefa.</Vazio>
@@ -346,5 +399,96 @@ function TarefasPage() {
       />
       <NegocioPainel id={negocio} onClose={() => setNegocio(null)} />
     </div>
+  );
+}
+
+function LinhaTarefa({
+  t,
+  hoje,
+  responsavel,
+  onAbrir,
+  onNegocio,
+  onConcluir,
+  onDescartar,
+}: {
+  t: CrmTarefaItem;
+  hoje: string;
+  responsavel: string;
+  onAbrir: () => void;
+  onNegocio?: () => void;
+  onConcluir: () => void;
+  onDescartar: () => void;
+}) {
+  const late = !t.feita && atrasado(t.vence_em, hoje);
+  return (
+    <li className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-5 py-2.5 transition hover:bg-[#f8faff] md:grid-cols-[auto_minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_150px] md:gap-4">
+      <button
+        type="button"
+        onClick={onConcluir}
+        aria-label={t.feita ? "Reabrir tarefa" : "Concluir tarefa"}
+        className={cn(
+          "flex h-5 w-5 items-center justify-center rounded-full border-2 transition",
+          t.feita
+            ? "border-emerald-500 bg-emerald-500 text-white"
+            : "border-muted-foreground/40 text-transparent hover:border-primary hover:text-primary",
+        )}
+      >
+        <Check className="h-3 w-3" />
+      </button>
+      <button type="button" onClick={onAbrir} className="min-w-0 text-left">
+        <span
+          className={cn(
+            "flex items-center gap-1.5 truncate text-[13.5px] font-medium",
+            t.feita && "text-muted-foreground line-through",
+          )}
+        >
+          {t.automatica ? <Bot className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : null}
+          <span className="truncate">{t.titulo}</span>
+        </span>
+        <span className="flex items-center gap-1.5 text-[11.5px]">
+          {late ? (
+            <span className="flex items-center gap-1 font-medium text-destructive">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />{" "}
+              {prazoRelativo(t.vence_em)}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">
+              {t.vence_em ? prazoRelativo(t.vence_em) : "sem data"}
+            </span>
+          )}
+        </span>
+      </button>
+      <span className="col-start-2 min-w-0 truncate text-[12.5px] text-muted-foreground md:col-start-auto">
+        {[t.pessoa_nome, t.empresa_nome].filter(Boolean).join(" · ") || "—"}
+      </span>
+      <span className="hidden min-w-0 md:block">
+        {t.negocio_titulo && onNegocio ? (
+          <button
+            type="button"
+            onClick={onNegocio}
+            className="max-w-full truncate rounded-md bg-primary/[0.07] px-2 py-0.5 text-[12px] font-medium text-primary hover:bg-primary/[0.12]"
+          >
+            {t.negocio_titulo}
+          </button>
+        ) : (
+          <span className="text-[12.5px] text-muted-foreground">—</span>
+        )}
+      </span>
+      <span className="row-start-1 flex items-center justify-end gap-2 md:row-start-auto md:justify-start">
+        <Avatar nome={responsavel} />
+        <span className="hidden truncate text-[12.5px] md:inline">{responsavel}</span>
+        {!t.feita ? (
+          <button
+            type="button"
+            onClick={onDescartar}
+            title="Descartar tarefa"
+            aria-label="Descartar tarefa"
+            className="ml-auto rounded p-1 text-muted-foreground opacity-0 transition hover:bg-muted hover:text-destructive group-hover:opacity-100"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </span>
+    </li>
   );
 }

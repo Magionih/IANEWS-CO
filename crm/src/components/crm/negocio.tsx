@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   CalendarClock,
+  Check,
   CheckCircle2,
+  Clock3,
   Loader2,
   MessageCircle,
   NotebookPen,
@@ -36,6 +38,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { NegocioCompleto } from "@/lib/crm/carregar";
 import {
@@ -473,6 +476,17 @@ export function NegocioDialog({
 
 // ---------------- Cartão do kanban ----------------
 
+/** "3h", "2d", "5min": tempo desde a última movimentação, como no cartão do quadro. */
+export function haQuanto(iso?: string | null) {
+  if (!iso) return "—";
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 60) return `${min}min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.round(h / 24);
+  return d < 60 ? `${d}d` : `${Math.round(d / 30)}m`;
+}
+
 export function NegocioCartao({
   n,
   onAbrir,
@@ -484,60 +498,87 @@ export function NegocioCartao({
 }) {
   const { membro } = useCrm();
   const vermelho = n.etapa_tipo === "aberta" && (atrasado(n.proxima_acao_em) || !n.proxima_acao_em);
+  const wpp = n.pessoa_whatsapp ? `https://wa.me/${n.pessoa_whatsapp.replace(/\D/g, "")}` : null;
+  const nome = n.empresa_nome ?? n.titulo;
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       draggable={arrastavel}
       onDragStart={(e) => {
         e.dataTransfer.setData("text/negocio", n.id);
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={onAbrir}
+      onKeyDown={(e) => (e.key === "Enter" ? onAbrir() : undefined)}
       className={cn(
-        "relative w-full shrink-0 overflow-hidden rounded-lg border bg-card p-3 text-left shadow-[var(--shadow-card)] transition hover:border-primary/40 hover:shadow-md",
+        "group relative w-full shrink-0 rounded-xl border border-transparent bg-card p-3 text-left shadow-[0_1px_2px_rgb(16_24_40/0.06)] outline-none transition hover:border-primary/30 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40",
         arrastavel && "cursor-grab active:cursor-grabbing",
       )}
     >
-      {vermelho ? <span className="absolute inset-y-0 left-0 w-[3px] bg-destructive" /> : null}
-      <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug">
-          {n.empresa_nome ?? n.titulo}
-        </p>
-        <GrupoBadge grupo={n.empresa_grupo} />
-      </div>
-      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-        {[n.pessoa_nome, n.empresa_nome && n.titulo !== n.empresa_nome ? n.titulo : null]
-          .filter(Boolean)
-          .join(" · ") || "Sem contato"}
-      </p>
-      {n.valor || n.status_pagamento !== "pendente" ? (
-        <div className="mt-2 flex flex-wrap items-center gap-1">
-          {n.valor ? <Etiqueta tom="azul">{fmtMoeda(n.valor)}</Etiqueta> : null}
-          {n.status_pagamento !== "pendente" ? (
-            <Etiqueta tom={n.status_pagamento === "pago" ? "ok" : "neutro"}>
-              {PAGAMENTO_LABEL[n.status_pagamento]}
-            </Etiqueta>
+      {/* Tags no topo */}
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <TagsDoNegocio ids={n.tags} compacto />
+          <p className="mt-1 line-clamp-1 text-[14px] font-semibold leading-snug">{nome}</p>
+          {n.pessoa_nome || (n.empresa_nome && n.titulo !== n.empresa_nome) ? (
+            <p className="line-clamp-1 text-[12px] text-muted-foreground">
+              {[n.pessoa_nome, n.empresa_nome && n.titulo !== n.empresa_nome ? n.titulo : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           ) : null}
         </div>
-      ) : null}
-      <TagsDoNegocio ids={n.tags} />
-      <div className="mt-2.5 flex items-center gap-2 border-t pt-2">
-        <p
-          className={cn(
-            "flex min-w-0 flex-1 items-center gap-1 text-[11px]",
-            vermelho ? "font-medium text-destructive" : "text-muted-foreground",
-          )}
-          title={n.proxima_acao ?? undefined}
-        >
-          <CalendarClock className="h-3 w-3 shrink-0" />
-          <span className="truncate">
-            {n.proxima_acao_em ? prazoRelativo(n.proxima_acao_em) : "Sem data"}
-            {n.proxima_acao ? ` · ${n.proxima_acao}` : " · sem próxima ação"}
-          </span>
-        </p>
-        <Avatar nome={membro(n.dono_id)} />
+        <GrupoBadge grupo={n.empresa_grupo} />
       </div>
-    </button>
+
+      {/* Próxima ação, no lugar da prévia da conversa */}
+      <div
+        className={cn(
+          "mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px]",
+          vermelho
+            ? "bg-destructive/[0.07] text-destructive"
+            : "bg-[#f3f5f9] text-muted-foreground",
+        )}
+        title={n.proxima_acao ?? undefined}
+      >
+        <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+        <span className="min-w-0 flex-1 truncate">{n.proxima_acao ?? "Sem próxima ação"}</span>
+        <span className="shrink-0 font-medium">
+          {n.proxima_acao_em ? prazoRelativo(n.proxima_acao_em) : ""}
+        </span>
+      </div>
+
+      {/* Rodapé: dono, atalhos, valor e tempo */}
+      <div className="mt-2.5 flex items-center gap-2 text-[11.5px] text-muted-foreground">
+        <Avatar nome={membro(n.dono_id)} />
+        {wpp ? (
+          <a
+            href={wpp}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            title="Abrir WhatsApp"
+            className="rounded p-0.5 hover:bg-muted hover:text-emerald-600"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
+        <span
+          className={cn(
+            "tabular font-medium",
+            n.status_pagamento === "pago" ? "text-emerald-600" : "text-foreground/80",
+          )}
+          title={PAGAMENTO_LABEL[n.status_pagamento]}
+        >
+          {n.status_pagamento === "cortesia" ? "Cortesia" : fmtMoeda(n.valor ?? 0)}
+        </span>
+        <span className="ml-auto flex items-center gap-1" title="Última movimentação">
+          <Clock3 className="h-3 w-3" />
+          {haQuanto(n.ultima_atividade_em ?? n.etapa_desde)}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -563,178 +604,404 @@ export function NegocioPainel({ id, onClose }: { id: string | null; onClose: () 
   const etapas = useMemo(() => (n ? etapasDo(n.funil_id) : []), [n, etapasDo]);
   const tarefasAbertas = data?.tarefas.filter((t) => !t.feita) ?? [];
 
+  const caminho = etapas.filter((e) => e.tipo !== "perdida" && e.ordem < 90);
+  const atual = n ? etapas.find((e) => e.id === n.etapa_id) : undefined;
+  const perdida = etapas.find((e) => e.tipo === "perdida");
+  const idxAtual = n ? caminho.findIndex((e) => e.id === n.etapa_id) : -1;
+  const vermelho =
+    !!n && n.etapa_tipo === "aberta" && (atrasado(n.proxima_acao_em) || !n.proxima_acao_em);
+  const wpp = n?.pessoa_whatsapp ? `https://wa.me/${n.pessoa_whatsapp.replace(/\D/g, "")}` : null;
+
   return (
     <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-[880px]">
         {isLoading || !n ? (
-          error ? (
-            <Erro erro={error} />
-          ) : (
-            <Carregando />
-          )
+          <div className="p-6">{error ? <Erro erro={error} /> : <Carregando />}</div>
         ) : (
           <>
-            <SheetHeader className="text-left">
-              <p className="font-mono-eyebrow text-primary">{funilNome(n.funil_id)}</p>
-              <SheetTitle className="text-xl">{n.titulo}</SheetTitle>
-              <SheetDescription asChild>
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  {n.empresa_id ? (
-                    <Link
-                      to="/empresas/$id"
-                      params={{ id: n.empresa_id }}
-                      className="font-semibold text-primary hover:underline"
-                    >
-                      {n.empresa_nome}
-                    </Link>
-                  ) : null}
-                  {n.pessoa_id ? (
-                    <Link
-                      to="/pessoas/$id"
-                      params={{ id: n.pessoa_id }}
-                      className="hover:underline"
-                    >
-                      {n.pessoa_nome}
-                    </Link>
-                  ) : null}
-                  <GrupoBadge grupo={n.empresa_grupo} />
-                </div>
-              </SheetDescription>
-            </SheetHeader>
+            {/* Trilha */}
+            <div className="flex items-center gap-1.5 border-b px-5 py-3 pr-12 text-[12.5px] text-muted-foreground">
+              <span className="truncate">{funilNome(n.funil_id)}</span>
+              <span>›</span>
+              <span className="truncate font-semibold text-foreground">{n.titulo}</span>
+            </div>
 
-            <div className="mt-4 grid gap-3">
-              <Campo rotulo="Etapa">
-                <Select value={n.etapa_id} onValueChange={(v) => moverPara(n, v)}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {etapas.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.ordem < 90 ? `${e.ordem}. ` : ""}
-                        {e.nome}
-                        {e.acao_padrao ? ` — ${e.acao_padrao}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Campo>
-
-              <div
-                className={cn(
-                  "rounded-lg border p-3 text-sm",
-                  n.etapa_tipo === "aberta" &&
-                    (atrasado(n.proxima_acao_em) || !n.proxima_acao_em) &&
-                    "border-destructive/50 bg-destructive/5",
-                )}
-              >
-                <p className="font-mono-eyebrow text-muted-foreground">Próxima ação</p>
-                <p className="mt-1 font-semibold">
-                  {n.proxima_acao ?? "Sem próxima ação definida"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {n.proxima_acao_em
-                    ? `${fmtDia(n.proxima_acao_em)} (${prazoRelativo(n.proxima_acao_em)})`
-                    : "Defina uma data em Editar."}
-                </p>
-              </div>
-
-              <EditorTags negocioId={n.id} ids={n.tags} />
-
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <dt className="text-muted-foreground">Valor</dt>
-                <dd className="font-semibold">{fmtMoeda(n.valor)}</dd>
-                <dt className="text-muted-foreground">Pagamento</dt>
-                <dd>{PAGAMENTO_LABEL[n.status_pagamento]}</dd>
-                <dt className="text-muted-foreground">Tipo</dt>
-                <dd>{labelDe(TIPOS_NEGOCIO, n.tipo)}</dd>
-                <dt className="text-muted-foreground">Origem</dt>
-                <dd>
-                  {labelDe(ORIGENS, n.origem)}
-                  {n.canal_origem ? ` · ${n.canal_origem}` : ""}
-                </dd>
-                <dt className="text-muted-foreground">Dono</dt>
-                <dd>{membro(n.dono_id)}</dd>
-                <dt className="text-muted-foreground">Na etapa desde</dt>
-                <dd>{fmtDia(n.etapa_desde)}</dd>
-                {n.article_slug ? (
-                  <>
-                    <dt className="text-muted-foreground">Matéria</dt>
-                    <dd className="truncate">
-                      <a
-                        href={linkMateria(n.article_slug)!}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline"
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {/* Cabeçalho */}
+              <SheetHeader className="space-y-0 border-b px-5 py-4 text-left">
+                <div className="flex items-start gap-3">
+                  <Avatar nome={n.empresa_nome ?? n.titulo} className="h-11 w-11 text-[14px]" />
+                  <div className="min-w-0 flex-1">
+                    <SheetTitle className="flex items-center gap-2 text-[19px] leading-tight">
+                      <span className="truncate">{n.empresa_nome ?? n.titulo}</span>
+                      <GrupoBadge grupo={n.empresa_grupo} />
+                      <button
+                        type="button"
+                        onClick={() => setEditar(true)}
+                        title="Editar negócio"
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                       >
-                        {n.article_title}
-                      </a>
-                    </dd>
-                  </>
-                ) : null}
-                {n.motivo_perda ? (
-                  <>
-                    <dt className="text-muted-foreground">Motivo da perda</dt>
-                    <dd>{n.motivo_perda}</dd>
-                  </>
-                ) : null}
-              </dl>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button onClick={() => setMensagem(true)}>
-                  <MessageCircle className="h-4 w-4" /> Mensagem
-                </Button>
-                <Button variant="outline" onClick={() => setAtividade(true)}>
-                  <NotebookPen className="h-4 w-4" /> Registrar
-                </Button>
-                <Button variant="outline" onClick={() => setTarefa(true)}>
-                  <Plus className="h-4 w-4" /> Tarefa
-                </Button>
-                <Button variant="outline" onClick={() => setEditar(true)}>
-                  <Pencil className="h-4 w-4" /> Editar
-                </Button>
-              </div>
-
-              <Secao titulo="Tarefas abertas" contagem={tarefasAbertas.length}>
-                {tarefasAbertas.length ? (
-                  <ul className="space-y-2">
-                    {tarefasAbertas.map((t) => (
-                      <li key={t.id} className="flex items-start gap-2 text-sm">
-                        <button
-                          type="button"
-                          aria-label="Concluir tarefa"
-                          className="mt-0.5 text-muted-foreground hover:text-primary"
-                          onClick={() =>
-                            executar(
-                              () => concluir({ data: { id: t.id, feita: true } }),
-                              "Tarefa concluída.",
-                            )
-                          }
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                        </button>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={cn(atrasado(t.vence_em) && "font-semibold text-destructive")}
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    </SheetTitle>
+                    <SheetDescription asChild>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px]">
+                        {n.empresa_nome && n.titulo !== n.empresa_nome ? (
+                          <span>{n.titulo}</span>
+                        ) : null}
+                        {n.pessoa_id ? (
+                          <Link
+                            to="/pessoas/$id"
+                            params={{ id: n.pessoa_id }}
+                            className="text-primary hover:underline"
                           >
-                            {t.titulo}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {prazoRelativo(t.vence_em)} · {membro(t.responsavel_id)}
-                            {t.automatica ? " · automática" : ""}
-                          </span>
+                            {n.pessoa_nome}
+                          </Link>
+                        ) : null}
+                      </div>
+                    </SheetDescription>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-1 text-[12px] font-semibold",
+                        n.etapa_tipo === "ganha"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : n.etapa_tipo === "perdida"
+                            ? "bg-slate-200 text-slate-700"
+                            : "bg-primary/10 text-primary",
+                      )}
+                    >
+                      {n.etapa_tipo === "ganha"
+                        ? "Ganho"
+                        : n.etapa_tipo === "perdida"
+                          ? "Perdido"
+                          : "Em aberto"}
+                    </span>
+                    <span title={`Dono: ${membro(n.dono_id)}`}>
+                      <Avatar nome={membro(n.dono_id)} />
+                    </span>
+                  </div>
+                </div>
+
+                {/* Atalhos */}
+                <div className="mt-3 flex flex-wrap items-center gap-1">
+                  <Atalho titulo="Enviar mensagem" onClick={() => setMensagem(true)}>
+                    <MessageCircle className="h-4 w-4" />
+                  </Atalho>
+                  {wpp ? (
+                    <a
+                      href={wpp}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Abrir WhatsApp"
+                      className="flex h-8 items-center gap-1.5 rounded-md px-2 text-[12.5px] font-medium text-emerald-700 hover:bg-emerald-50"
+                    >
+                      WhatsApp
+                    </a>
+                  ) : null}
+                  <Atalho titulo="Registrar atividade" onClick={() => setAtividade(true)}>
+                    <NotebookPen className="h-4 w-4" />
+                  </Atalho>
+                  <Atalho titulo="Nova tarefa" onClick={() => setTarefa(true)}>
+                    <CalendarClock className="h-4 w-4" />
+                  </Atalho>
+                  <Atalho titulo="Editar" onClick={() => setEditar(true)}>
+                    <Pencil className="h-4 w-4" />
+                  </Atalho>
+                  <span className="mx-1 h-5 w-px bg-border" />
+                  <div className="min-w-0 flex-1">
+                    <EditorTags negocioId={n.id} ids={n.tags} />
+                  </div>
+                </div>
+              </SheetHeader>
+
+              {/* Etapas */}
+              <div className="border-b px-5 py-4">
+                <ol className="flex items-start overflow-x-auto pb-1">
+                  {caminho.map((e, i) => {
+                    const feito = idxAtual >= 0 && i < idxAtual;
+                    const agora = e.id === n.etapa_id;
+                    return (
+                      <li key={e.id} className="flex min-w-[96px] flex-1 flex-col items-center">
+                        <div className="flex w-full items-center">
+                          <span
+                            className={cn(
+                              "h-[2px] flex-1",
+                              i === 0
+                                ? "bg-transparent"
+                                : feito || agora
+                                  ? "bg-primary"
+                                  : "bg-border",
+                            )}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => moverPara(n, e.id)}
+                            title={`Mover para ${e.nome}`}
+                            className={cn(
+                              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-bold transition",
+                              feito && "border-primary bg-primary text-white",
+                              agora &&
+                                "border-primary bg-primary text-white ring-4 ring-primary/15",
+                              !feito &&
+                                !agora &&
+                                "border-border bg-card text-muted-foreground hover:border-primary/60",
+                            )}
+                          >
+                            {feito ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                          </button>
+                          <span
+                            className={cn(
+                              "h-[2px] flex-1",
+                              i === caminho.length - 1
+                                ? "bg-transparent"
+                                : feito
+                                  ? "bg-primary"
+                                  : "bg-border",
+                            )}
+                          />
+                        </div>
+                        <span
+                          className={cn(
+                            "mt-1.5 px-1 text-center text-[11.5px] leading-tight",
+                            agora ? "font-semibold text-primary" : "text-muted-foreground",
+                          )}
+                        >
+                          {e.nome}
                         </span>
                       </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <Vazio>Nenhuma tarefa aberta.</Vazio>
-                )}
-              </Secao>
+                    );
+                  })}
+                </ol>
+                {atual && idxAtual < 0 ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Etapa atual: <b className="text-foreground">{atual.nome}</b>
+                  </p>
+                ) : null}
+                {perdida && n.etapa_tipo !== "perdida" ? (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => moverPara(n, perdida.id)}
+                      className="text-xs font-semibold text-destructive hover:underline"
+                    >
+                      Marcar como perdido
+                    </button>
+                  </div>
+                ) : null}
+              </div>
 
-              <Secao titulo="Linha do tempo">
-                <LinhaDoTempo atividades={data.atividades} />
-              </Secao>
+              {/* Abas */}
+              <Tabs defaultValue="atividades" className="px-5 py-4">
+                <TabsList className="mb-4 h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-transparent p-0">
+                  {[
+                    ["atividades", "Atividades"],
+                    ["negocio", "Negócio"],
+                    ["contato", "Contato e empresa"],
+                    ["historico", "Histórico"],
+                  ].map(([v, r]) => (
+                    <TabsTrigger
+                      key={v}
+                      value={v}
+                      className="rounded-none border-b-2 border-transparent px-3 pb-2.5 pt-1 text-[13px] data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                    >
+                      {r}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                <TabsContent value="atividades" className="space-y-4">
+                  <div
+                    className={cn(
+                      "rounded-xl border p-4",
+                      vermelho && "border-destructive/40 bg-destructive/[0.04]",
+                    )}
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Próxima ação
+                    </p>
+                    <p className="mt-1 text-[15px] font-semibold">
+                      {n.proxima_acao ?? "Sem próxima ação definida"}
+                    </p>
+                    <p
+                      className={cn(
+                        "text-[13px]",
+                        vermelho ? "text-destructive" : "text-muted-foreground",
+                      )}
+                    >
+                      {n.proxima_acao_em
+                        ? `${fmtDia(n.proxima_acao_em)} · ${prazoRelativo(n.proxima_acao_em)}`
+                        : "Defina uma data em Editar."}
+                    </p>
+                  </div>
+                  <Secao
+                    titulo="Tarefas abertas"
+                    contagem={tarefasAbertas.length}
+                    acoes={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8"
+                        onClick={() => setTarefa(true)}
+                      >
+                        <Plus className="h-4 w-4" /> Nova tarefa
+                      </Button>
+                    }
+                  >
+                    {tarefasAbertas.length ? (
+                      <ul className="space-y-2">
+                        {tarefasAbertas.map((t) => (
+                          <li key={t.id} className="flex items-start gap-2 text-sm">
+                            <button
+                              type="button"
+                              aria-label="Concluir tarefa"
+                              className="mt-0.5 text-muted-foreground hover:text-primary"
+                              onClick={() =>
+                                executar(
+                                  () => concluir({ data: { id: t.id, feita: true } }),
+                                  "Tarefa concluída.",
+                                )
+                              }
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </button>
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={cn(
+                                  atrasado(t.vence_em) && "font-semibold text-destructive",
+                                )}
+                              >
+                                {t.titulo}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {prazoRelativo(t.vence_em)} · {membro(t.responsavel_id)}
+                                {t.automatica ? " · automática" : ""}
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Vazio>Nenhuma tarefa aberta.</Vazio>
+                    )}
+                  </Secao>
+                </TabsContent>
+
+                <TabsContent value="negocio">
+                  <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                    <Dado rotulo="Valor">{fmtMoeda(n.valor)}</Dado>
+                    <Dado rotulo="Pagamento">{PAGAMENTO_LABEL[n.status_pagamento]}</Dado>
+                    <Dado rotulo="Tipo">{labelDe(TIPOS_NEGOCIO, n.tipo)}</Dado>
+                    <Dado rotulo="Origem">
+                      {labelDe(ORIGENS, n.origem)}
+                      {n.canal_origem ? ` · ${n.canal_origem}` : ""}
+                    </Dado>
+                    <Dado rotulo="Dono">{membro(n.dono_id)}</Dado>
+                    <Dado rotulo="Na etapa desde">{fmtDia(n.etapa_desde)}</Dado>
+                    <Dado rotulo="Etapa">
+                      <Select value={n.etapa_id} onValueChange={(v) => moverPara(n, v)}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {etapas.map((e) => (
+                            <SelectItem key={e.id} value={e.id}>
+                              {e.nome}
+                              {e.acao_padrao ? ` — ${e.acao_padrao}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Dado>
+                    {n.article_slug ? (
+                      <Dado rotulo="Matéria">
+                        <a
+                          href={linkMateria(n.article_slug)!}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {n.article_title}
+                        </a>
+                      </Dado>
+                    ) : null}
+                    {n.motivo_perda ? <Dado rotulo="Motivo da perda">{n.motivo_perda}</Dado> : null}
+                  </dl>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => setEditar(true)}
+                  >
+                    <Pencil className="h-4 w-4" /> Editar dados do negócio
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="contato">
+                  <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                    <Dado rotulo="Empresa">
+                      {n.empresa_id ? (
+                        <Link
+                          to="/empresas/$id"
+                          params={{ id: n.empresa_id }}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          {n.empresa_nome}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </Dado>
+                    <Dado rotulo="Grupo">
+                      {n.empresa_grupo ? <GrupoBadge grupo={n.empresa_grupo} /> : "—"}
+                    </Dado>
+                    <Dado rotulo="Pessoa">
+                      {n.pessoa_id ? (
+                        <Link
+                          to="/pessoas/$id"
+                          params={{ id: n.pessoa_id }}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          {n.pessoa_nome}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </Dado>
+                    <Dado rotulo="WhatsApp">
+                      {wpp ? (
+                        <a
+                          href={wpp}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {n.pessoa_whatsapp}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </Dado>
+                    {n.post_url ? (
+                      <Dado rotulo="Post">
+                        <a
+                          href={n.post_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Abrir post
+                        </a>
+                      </Dado>
+                    ) : null}
+                  </dl>
+                </TabsContent>
+
+                <TabsContent value="historico">
+                  <LinhaDoTempo atividades={data.atividades} />
+                </TabsContent>
+              </Tabs>
             </div>
 
             <NegocioDialog aberto={editar} onClose={() => setEditar(false)} negocio={n} />
@@ -770,5 +1037,36 @@ export function NegocioPainel({ id, onClose }: { id: string | null; onClose: () 
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function Atalho({
+  titulo,
+  onClick,
+  children,
+}: {
+  titulo: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={titulo}
+      aria-label={titulo}
+      onClick={onClick}
+      className="flex h-8 w-8 items-center justify-center rounded-md text-primary transition hover:bg-primary/10"
+    >
+      {children}
+    </button>
+  );
+}
+
+function Dado({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="text-[12px] text-muted-foreground">{rotulo}</dt>
+      <dd className="mt-0.5 font-medium">{children}</dd>
+    </div>
   );
 }
