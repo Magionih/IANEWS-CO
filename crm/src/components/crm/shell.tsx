@@ -4,7 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
-  BadgeCheck,
+  BarChart3,
+  Layers,
+  LineChart,
   Building2,
   CalendarCheck,
   CalendarDays,
@@ -62,67 +64,135 @@ type Item = {
 
 type Grupo = { titulo: string; itens: Item[] };
 
-/* Menu nas 5 camadas do documento de métricas estratégicas:
-   Financeiro · Comercial · Operação · Audiência · Clientes e produtos.
-   Verticais, Publicidade, Relatórios e Painel da operação saíram do menu (as telas continuam
-   abrindo pelo endereço) porque os números delas agora estão nas camadas. */
-const GRUPOS: Grupo[] = [
+/** Uma área do menu lateral e as abas dela (as abas aparecem no topo da tela). */
+type Secao = Item & { abas: Item[] };
+
+/* Menu do zero (protótipo aprovado em 26/11): poucas áreas, cada uma responde uma pergunta.
+   As telas de apoio viram abas dentro da área, no topo da página. */
+const SECOES: Secao[] = [
+  { to: "/", rotulo: "Início", icone: Home, exato: true, abas: [] },
   {
-    titulo: "Geral",
-    itens: [
-      { to: "/", rotulo: "Início", icone: Home, exato: true },
-      { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
-    ],
-  },
-  {
-    titulo: "Financeiro",
-    itens: [{ to: "/financeiro", rotulo: "Caixa e resultado", icone: Wallet, admin: true }],
-  },
-  {
-    titulo: "Comercial",
-    itens: [
-      { to: "/comercial", rotulo: "Funil e metas", icone: TrendingUp },
+    to: "/negocios",
+    rotulo: "Negócios",
+    icone: KanbanSquare,
+    abas: [
       { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
-      { to: "/empresas", rotulo: "Empresas", icone: Building2 },
-      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
       { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
       { to: "/fila", rotulo: "Fila do dia", icone: Send },
-      { to: "/direct", rotulo: "Direct", icone: MessageCircle },
+      { to: "/direct", rotulo: "Conversas", icone: MessageCircle },
     ],
   },
   {
-    titulo: "Operação",
-    itens: [
-      { to: "/operacao", rotulo: "Fila de produção", icone: Gauge },
+    to: "/financeiro",
+    rotulo: "Financeiro",
+    icone: Wallet,
+    admin: true,
+    abas: [],
+  },
+  {
+    to: "/operacao",
+    rotulo: "Produção",
+    icone: Layers,
+    abas: [
+      { to: "/operacao", rotulo: "Fila de produção", icone: Layers },
       { to: "/calendario", rotulo: "Calendário", icone: CalendarDays },
       { to: "/pautas", rotulo: "Pautas e conteúdo", icone: Newspaper },
       { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
     ],
   },
   {
-    titulo: "Audiência",
-    itens: [
-      { to: "/audiencia", rotulo: "Site e newsletter", icone: Users },
+    to: "/audiencia",
+    rotulo: "Audiência",
+    icone: LineChart,
+    abas: [
+      { to: "/audiencia", rotulo: "Site e newsletter", icone: LineChart },
       { to: "/newsletter", rotulo: "Leads da newsletter", icone: Mail },
     ],
   },
   {
-    titulo: "Clientes",
-    itens: [
-      { to: "/clientes", rotulo: "Clientes e produtos", icone: BadgeCheck, admin: true },
-      { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
+    to: "/clientes",
+    rotulo: "Clientes",
+    icone: Users,
+    abas: [
+      { to: "/clientes", rotulo: "Clientes e produtos", icone: Users, admin: true },
+      { to: "/empresas", rotulo: "Empresas", icone: Building2 },
+      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
+    ],
+  },
+  {
+    to: "/indicadores",
+    rotulo: "Indicadores",
+    icone: BarChart3,
+    abas: [
+      { to: "/indicadores", rotulo: "Visão geral", icone: BarChart3 },
+      { to: "/comercial", rotulo: "Funil e vendas", icone: TrendingUp },
     ],
   },
 ];
 
+const ATALHOS: Item[] = [
+  { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
+  { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
+];
+
+/** Monta os grupos (menu do celular e busca) a partir das áreas. */
+const GRUPOS: Grupo[] = [
+  ...SECOES.map((sec) => ({
+    titulo: sec.rotulo,
+    itens: sec.abas.length ? sec.abas : [sec],
+  })),
+  { titulo: "Atalhos", itens: ATALHOS },
+];
+
 /** Abas fixas na base do celular (o resto fica em "Menu"). */
-const ABAS = ["/", "/negocios", "/tarefas", "/calendario"];
+const ABAS = ["/", "/negocios", "/financeiro", "/operacao"];
 
 const PAPEL_NOME: Record<string, string> = {
   admin: "Administrador",
   comercial: "Comercial",
   editorial: "Editorial",
 };
+
+const casa = (path: string, i: Item) =>
+  i.exato ? path === i.to || path === `${i.to}/` : path === i.to || path.startsWith(`${i.to}/`);
+
+/** Área do menu em que a tela atual está (pela própria rota ou por uma das abas). */
+function useSecaoAtual(): Secao | null {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return SECOES.find((sec) => casa(path, sec) || sec.abas.some((a) => casa(path, a))) ?? null;
+}
+
+/** Abas da área atual, no topo da página (some quando a área tem uma tela só). */
+function SubAbas() {
+  const { isAdmin } = useCrm();
+  const sec = useSecaoAtual();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const abas = (sec?.abas ?? []).filter((a) => !a.admin || isAdmin);
+  if (abas.length < 2) return null;
+  return (
+    <nav aria-label={`Telas de ${sec?.rotulo}`} className="-mx-1 mb-6 overflow-x-auto px-1">
+      <ul className="flex min-w-max items-center gap-1 border-b border-border">
+        {abas.map((a) => {
+          const on = casa(path, a);
+          return (
+            <li key={a.to}>
+              <Link
+                to={a.to}
+                aria-current={on ? "page" : undefined}
+                className={cn(
+                  "-mb-px flex h-10 items-center border-b-2 border-transparent px-3 text-[13.5px] font-medium text-muted-foreground transition hover:text-foreground",
+                  on && "border-primary font-semibold text-foreground",
+                )}
+              >
+                {a.rotulo}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
 
 function useAtivo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -166,7 +236,6 @@ function iniciais(nome: string) {
 export function CrmShell({ children }: { children: ReactNode }) {
   const [busca, setBusca] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [recolhido, setRecolhido] = useRecolhido();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   // ⌘K / Ctrl+K abre a busca em qualquer tela.
@@ -177,23 +246,27 @@ export function CrmShell({ children }: { children: ReactNode }) {
         setBusca((v) => !v);
       }
     };
+    const abrir = () => setBusca(true);
     window.addEventListener("keydown", atalho);
-    return () => window.removeEventListener("keydown", atalho);
+    window.addEventListener("crm-abrir-busca", abrir);
+    return () => {
+      window.removeEventListener("keydown", atalho);
+      window.removeEventListener("crm-abrir-busca", abrir);
+    };
   }, []);
 
   // Fecha o menu do celular ao trocar de tela.
   useEffect(() => setMenu(false), [path]);
 
   return (
-    <div className="app-shell bg-background" data-recolhido={recolhido ? "1" : "0"}>
-      <MenuLateral
-        recolhido={recolhido}
-        onRecolher={() => setRecolhido(!recolhido)}
-        onBuscar={() => setBusca(true)}
-      />
+    <div className="app-shell bg-background">
+      <MenuLateral onBuscar={() => setBusca(true)} />
       <TopoCelular onBuscar={() => setBusca(true)} onMenu={() => setMenu(true)} />
-      <main className="crm-main mx-auto w-full max-w-[1600px] px-4 pt-4 sm:px-6 lg:pt-0">
-        {children}
+      <main className="crm-main px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <SubAbas />
+          {children}
+        </div>
       </main>
       <BarraAbas onMenu={() => setMenu(true)} />
       <MenuCelular aberto={menu} onFechar={() => setMenu(false)} />
@@ -201,29 +274,6 @@ export function CrmShell({ children }: { children: ReactNode }) {
       <AvisoInstalar />
     </div>
   );
-}
-
-/** Menu lateral recolhido ou aberto (lembrado neste navegador). */
-function useRecolhido(): [boolean, (v: boolean) => void] {
-  const [v, setV] = useState(false);
-  useEffect(() => {
-    try {
-      setV(window.localStorage.getItem("crm-menu-recolhido") === "1");
-    } catch {
-      /* sem armazenamento */
-    }
-  }, []);
-  return [
-    v,
-    (x: boolean) => {
-      setV(x);
-      try {
-        window.localStorage.setItem("crm-menu-recolhido", x ? "1" : "0");
-      } catch {
-        /* ignora */
-      }
-    },
-  ];
 }
 
 /** Funis abertos recentemente (aparecem embaixo de "Negócios" no menu). */
@@ -238,166 +288,89 @@ export function registrarFunilRecente(id: string) {
     /* ignora */
   }
 }
-function useFunisRecentes() {
-  const [ids, setIds] = useState<string[]>([]);
-  useEffect(() => {
-    const ler = () => {
-      try {
-        setIds(JSON.parse(window.localStorage.getItem(CHAVE_RECENTES) ?? "[]"));
-      } catch {
-        setIds([]);
-      }
-    };
-    ler();
-    window.addEventListener(CHAVE_RECENTES, ler);
-    return () => window.removeEventListener(CHAVE_RECENTES, ler);
-  }, []);
-  return ids;
-}
-
 /* ---------- Computador ---------- */
 
-function MenuLateral({
-  recolhido,
-  onRecolher,
-  onBuscar,
-}: {
-  recolhido: boolean;
-  onRecolher: () => void;
-  onBuscar: () => void;
-}) {
-  const grupos = useGrupos();
-  const ativo = useAtivo();
-  const { funilNome } = useCrm();
-  const recentes = useFunisRecentes();
-  const funilAtual = useRouterState({
-    select: (s) => (s.location.search as { funil?: string }).funil,
-  });
+function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
+  const { isAdmin } = useCrm();
+  const sec = useSecaoAtual();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const secoes = SECOES.filter((x) => !x.admin || isAdmin);
+  const atalhos = ATALHOS.filter((x) => !x.admin || isAdmin);
+  // Sem o painel de clientes (só admin), "Clientes" abre direto em Empresas.
+  const destino = (x: Secao) => (x.to === "/clientes" && !isAdmin ? "/empresas" : x.to);
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sb)] flex-col border-r border-nav-border bg-nav text-nav-foreground transition-[width] duration-200 lg:flex">
-      <div
-        className={cn(
-          "flex h-[60px] shrink-0 items-center gap-2",
-          recolhido ? "justify-center px-2" : "px-4",
-        )}
-      >
-        <Link to="/" className="flex items-center gap-2" aria-label="Início do CRM">
-          <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />
-          {recolhido ? null : <img src={logoEscuro} alt="IA News" className="h-[15px] w-auto" />}
-        </Link>
-        {recolhido ? null : (
-          <button
-            type="button"
-            onClick={onRecolher}
-            title="Recolher menu"
-            aria-label="Recolher menu"
-            className="ml-auto rounded-md p-1.5 text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sb)] flex-col gap-6 border-r border-nav-border bg-nav px-3.5 py-5 text-nav-foreground lg:flex">
+      <Link to="/" className="flex items-center gap-2.5 px-2" aria-label="Início do CRM">
+        <span className="font-display flex h-8 w-8 items-center justify-center rounded-[9px] bg-primary text-[14px] font-bold text-white">
+          IA
+        </span>
+        <span className="font-display text-[18px] font-bold tracking-[-0.02em]">News</span>
+        <span className="ml-auto rounded-md border border-nav-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
+          CRM
+        </span>
+      </Link>
 
-      <div className={cn("pb-2", recolhido ? "px-2" : "px-3")}>
-        <button
-          type="button"
-          onClick={onBuscar}
-          title="Buscar (⌘K)"
-          className={cn(
-            "flex w-full items-center gap-2 rounded-lg border border-nav-border bg-card text-left text-[13px] text-nav-muted shadow-[0_1px_2px_rgb(16_24_40/0.04)] transition hover:border-primary/40 hover:text-nav-foreground",
-            recolhido ? "justify-center px-0 py-2" : "px-3 py-2",
-          )}
-        >
-          <Search className="h-4 w-4" />
-          {recolhido ? null : (
-            <>
-              <span className="flex-1">Buscar…</span>
-              <kbd className="rounded border border-nav-border bg-background px-1.5 text-[10px] font-medium">
-                ⌘K
-              </kbd>
-            </>
-          )}
-        </button>
-      </div>
-
-      <nav
-        className={cn("nav-scroll flex-1 overflow-y-auto pb-4", recolhido ? "px-2" : "px-3")}
-        aria-label="Menu do CRM"
+      <button
+        type="button"
+        onClick={onBuscar}
+        title="Buscar (⌘K)"
+        className="flex h-10 w-full items-center gap-2 rounded-[10px] border border-nav-border bg-card px-3 text-left text-[13.5px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
       >
-        {grupos.map((g, gi) => (
-          <div key={g.titulo} className={cn(gi > 0 && "mt-2 border-t border-nav-border pt-2")}>
-            <ul className="space-y-0.5">
-              {g.itens.map((i) => {
-                const on = ativo(i);
-                const ehNegocios = i.to === "/negocios";
-                return (
-                  <li key={i.to}>
-                    <Link
-                      to={i.to}
-                      title={recolhido ? i.rotulo : undefined}
-                      aria-current={on ? "page" : undefined}
-                      className={cn(
-                        "group relative flex items-center gap-2.5 rounded-lg text-[13.5px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
-                        recolhido ? "justify-center px-0 py-2.5" : "px-3 py-[7px]",
-                        on &&
-                          "bg-primary/[0.08] text-primary hover:bg-primary/[0.1] hover:text-primary",
-                      )}
-                    >
-                      {on ? (
-                        <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-primary" />
-                      ) : null}
-                      <i.icone className="h-[17px] w-[17px] shrink-0" />
-                      {recolhido ? null : (
-                        <>
-                          <span className="flex-1 truncate">{i.rotulo}</span>
-                          {ehNegocios && recentes.length ? (
-                            <ChevronDown
-                              className={cn("h-3.5 w-3.5 transition", !on && "-rotate-90")}
-                            />
-                          ) : null}
-                        </>
-                      )}
-                    </Link>
-                    {ehNegocios && on && !recolhido && recentes.length ? (
-                      <div className="mb-1 ml-[26px] mt-1 border-l border-nav-border pl-3">
-                        <p className="py-1 text-[10.5px] font-semibold uppercase tracking-wide text-nav-muted/80">
-                          Funis recentes
-                        </p>
-                        {recentes.map((id) => (
-                          <Link
-                            key={id}
-                            to="/negocios"
-                            search={{ funil: id }}
-                            className={cn(
-                              "block truncate rounded-md px-2 py-1 text-[12.5px] text-nav-muted hover:bg-nav-hover hover:text-nav-foreground",
-                              funilAtual === id && "font-semibold text-primary",
-                            )}
-                          >
-                            {funilNome(id)}
-                          </Link>
-                        ))}
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+        <Search className="h-4 w-4" />
+        <span className="flex-1">Buscar</span>
+        <kbd className="rounded border border-nav-border bg-background px-1.5 text-[10px] font-medium">
+          ⌘K
+        </kbd>
+      </button>
+
+      <nav aria-label="Menu principal" className="nav-scroll -mx-1 flex-1 overflow-y-auto px-1">
+        <ul className="space-y-0.5">
+          {secoes.map((x) => {
+            const on = sec?.to === x.to;
+            return (
+              <li key={x.to}>
+                <Link
+                  to={destino(x)}
+                  aria-current={on ? "page" : undefined}
+                  className={cn(
+                    "flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
+                    on &&
+                      "bg-[#EEF3FF] font-semibold text-primary hover:bg-[#E6EEFF] hover:text-primary",
+                  )}
+                >
+                  <x.icone className="h-[18px] w-[18px] shrink-0" />
+                  {x.rotulo}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-6 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+          Atalhos
+        </p>
+        <ul className="space-y-0.5">
+          {atalhos.map((x) => {
+            const on = casa(path, x);
+            return (
+              <li key={x.to}>
+                <Link
+                  to={x.to}
+                  aria-current={on ? "page" : undefined}
+                  className={cn(
+                    "flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
+                    on && "bg-[#EEF3FF] font-semibold text-primary",
+                  )}
+                >
+                  <x.icone className="h-[18px] w-[18px] shrink-0" />
+                  {x.rotulo}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
-      {recolhido ? (
-        <button
-          type="button"
-          onClick={onRecolher}
-          title="Abrir menu"
-          aria-label="Abrir menu"
-          className="mx-auto mb-2 rounded-md p-2 text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground"
-        >
-          <ChevronsRight className="h-4 w-4" />
-        </button>
-      ) : null}
-      <ContaLateral recolhido={recolhido} />
+      <ContaLateral />
     </aside>
   );
 }
@@ -409,7 +382,7 @@ function ContaLateral({ recolhido }: { recolhido?: boolean }) {
   const nome = membro(userId) !== "—" ? membro(userId) : (email ?? "Equipe");
   const papel = papeis.filter((p) => p !== "reader").map((p) => PAPEL_NOME[p] ?? p)[0];
   return (
-    <div className="border-t border-nav-border p-3">
+    <div className="-mx-1 border-t border-nav-border pt-3">
       <div
         className={cn(
           "flex items-center gap-3 rounded-lg py-2",
@@ -418,7 +391,7 @@ function ContaLateral({ recolhido }: { recolhido?: boolean }) {
       >
         <span
           title={recolhido ? nome : undefined}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white"
+          className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0F1729] text-xs font-bold text-white"
         >
           {iniciais(nome)}
         </span>
@@ -493,17 +466,24 @@ function TopoCelular({ onBuscar, onMenu }: { onBuscar: () => void; onMenu: () =>
 }
 
 function BarraAbas({ onMenu }: { onMenu: () => void }) {
-  const grupos = useGrupos();
-  const ativo = useAtivo();
-  const todos = grupos.flatMap((g) => g.itens);
-  const abas = ABAS.map((to) => todos.find((i) => i.to === to)).filter(Boolean) as Item[];
+  const { isAdmin } = useCrm();
+  const sec = useSecaoAtual();
+  const abas = ABAS.map((to) => SECOES.find((x) => x.to === to)).filter(
+    (x): x is Secao => !!x && (!x.admin || isAdmin),
+  );
+  const ativo = (i: Item) => sec?.to === i.to;
   const algumaAtiva = abas.some(ativo);
   return (
     <nav
       aria-label="Navegação principal"
       className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur-md lg:hidden"
     >
-      <ul className="mx-auto grid h-[var(--tabbar-h)] max-w-lg grid-cols-5">
+      <ul
+        className={cn(
+          "mx-auto grid h-[var(--tabbar-h)] max-w-lg",
+          abas.length === 4 ? "grid-cols-5" : "grid-cols-4",
+        )}
+      >
         {abas.map((i) => {
           const on = ativo(i);
           return (
@@ -524,7 +504,7 @@ function BarraAbas({ onMenu }: { onMenu: () => void }) {
                 >
                   <i.icone className="h-[19px] w-[19px]" />
                 </span>
-                {i.rotulo === "Lista do dia" ? "Lista" : i.rotulo}
+                {i.rotulo}
               </Link>
             </li>
           );

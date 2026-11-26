@@ -198,6 +198,18 @@ function NegociosPage() {
     navigate({ search: (s) => ({ ...s, modalidade: undefined, tags: undefined }), replace: true });
   };
 
+  const resumoAbertos = useMemo(() => {
+    const r = { qtd: 0, valor: 0, ganhosPendentes: 0 };
+    for (const n of filtrados) {
+      if (n.etapa_tipo === "aberta") {
+        r.qtd += 1;
+        r.valor += Number(n.valor ?? 0);
+      } else if (n.etapa_tipo === "ganha" && n.status_pagamento === "pendente" && n.valor)
+        r.ganhosPendentes += 1;
+    }
+    return r;
+  }, [filtrados]);
+
   const porEtapa = useMemo(() => {
     const m = new Map<string, NegocioCompleto[]>();
     for (const n of ordenados) m.set(n.etapa_id, [...(m.get(n.etapa_id) ?? []), n]);
@@ -218,14 +230,15 @@ function NegociosPage() {
   return (
     <div className="space-y-4">
       <CabecalhoPagina
-        titulo={
-          <SeletorFunil
-            verticais={verticais}
-            funil={funil}
-            onEscolher={(id) =>
-              navigate({ search: { funil: id, modalidade: search.modalidade, tags: search.tags } })
-            }
-          />
+        titulo="Negócios"
+        subtitulo={
+          <>
+            <b>{fmtNum(resumoAbertos.qtd)} em negociação</b> · {fmtMoeda(resumoAbertos.valor)} em
+            jogo
+            {resumoAbertos.ganhosPendentes ? (
+              <> · {fmtNum(resumoAbertos.ganhosPendentes)} fechados a receber</>
+            ) : null}
+          </>
         }
         descricao="Arraste o cartão para mudar de etapa. Borda vermelha: sem próxima ação ou ação vencida."
         acoes={
@@ -266,8 +279,8 @@ function NegociosPage() {
                 { titulo: "Fechado em", valor: (n) => n.fechado_em },
               ]}
             />
-            <Button size="sm" className="h-9" onClick={() => setNovo(true)}>
-              Negócio <Plus className="h-4 w-4" />
+            <Button className="h-[38px]" onClick={() => setNovo(true)}>
+              <Plus className="h-4 w-4" /> Novo negócio
             </Button>
           </>
         }
@@ -316,14 +329,21 @@ function NegociosPage() {
               valor={modo}
               onChange={setModo}
               opcoes={[
-                { valor: "kanban", icone: LayoutGrid, titulo: "Quadro" },
-                { valor: "lista", icone: List, titulo: "Lista" },
+                { valor: "kanban", rotulo: "Quadro", titulo: "Quadro" },
+                { valor: "lista", rotulo: "Lista", titulo: "Lista" },
               ]}
             />
           </>
         }
       >
-        <div className="flex h-9 w-full min-w-0 shrink items-center gap-2 rounded-lg border bg-card px-3 sm:w-56 lg:w-44 xl:w-56 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
+        <SeletorFunil
+          verticais={verticais}
+          funil={funil}
+          onEscolher={(id) =>
+            navigate({ search: { funil: id, modalidade: search.modalidade, tags: search.tags } })
+          }
+        />
+        <div className="flex h-9 w-full min-w-0 shrink items-center gap-2 rounded-full border bg-card px-3.5 sm:w-56 lg:w-44 xl:w-56 focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/15">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -540,39 +560,34 @@ function NegociosPage() {
                   onDragLeave={() => setSobre((s) => (s === e.id ? null : s))}
                   onDrop={(ev) => soltar(e.id, ev)}
                   className={cn(
-                    "flex w-[84vw] max-w-[300px] shrink-0 snap-start flex-col rounded-xl bg-[#eef0f4] sm:w-[288px]",
+                    "flex w-[84vw] max-w-[300px] shrink-0 snap-start flex-col rounded-2xl bg-[#ECEEF2] sm:w-[288px]",
                     sobre === e.id && "bg-primary/[0.07] ring-2 ring-primary/40",
                     e.tipo === "perdida" && "opacity-80",
                   )}
                 >
-                  <div className="px-3 pb-2 pt-3" title={e.criterio_entrada ?? e.acao_padrao ?? ""}>
-                    <div className="flex items-center gap-2">
-                      <p className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">
-                        {e.nome}
-                      </p>
-                      <span
-                        className={cn(
-                          "tabular rounded-md px-1.5 py-0.5 text-[11.5px] font-semibold",
-                          e.tipo === "ganha"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-primary/10 text-primary",
-                        )}
-                      >
-                        {fmtNum(todos.length)}
-                      </span>
-                    </div>
-                    <p className="tabular mt-0.5 text-[12px] text-muted-foreground">
-                      {fmtMoeda(total)}
-                    </p>
-                    {e.tipo === "ganha" ? (
-                      <span className="mt-2 block h-[3px] rounded-full bg-emerald-500" />
-                    ) : e.tipo === "perdida" ? (
-                      <span className="mt-2 block h-[3px] rounded-full bg-slate-300" />
-                    ) : (
-                      <span className="mt-2 block h-[3px] rounded-full bg-primary/60" />
-                    )}
+                  <div
+                    className="flex items-center gap-2 px-4 pb-2.5 pt-4"
+                    title={e.criterio_entrada ?? e.acao_padrao ?? ""}
+                  >
+                    <span
+                      className={cn(
+                        "h-2.5 w-2.5 shrink-0 rounded-[3px]",
+                        e.tipo === "ganha"
+                          ? "bg-[#0E8A5F]"
+                          : e.tipo === "perdida"
+                            ? "bg-slate-400"
+                            : "bg-primary",
+                      )}
+                    />
+                    <p className="min-w-0 truncate text-[14px] font-semibold">{e.nome}</p>
+                    <span className="tabular text-[12px] font-semibold text-muted-foreground">
+                      {fmtNum(todos.length)}
+                    </span>
+                    <span className="tabular ml-auto whitespace-nowrap text-[12.5px] font-semibold">
+                      {total ? fmtMoeda(total).replace(/,00$/, "") : ""}
+                    </span>
                   </div>
-                  <div className="flex max-h-[calc(100dvh-220px)] flex-col gap-2 overflow-y-auto px-2 pb-2">
+                  <div className="flex max-h-[calc(100dvh-240px)] flex-col gap-2.5 overflow-y-auto px-3 pb-3">
                     {lista.length ? (
                       lista.map((n) => (
                         <NegocioCartao key={n.id} n={n} onAbrir={() => abrir(n.id)} arrastavel />

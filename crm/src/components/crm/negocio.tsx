@@ -598,7 +598,7 @@ export function NegocioCartao({
       onClick={onAbrir}
       onKeyDown={(e) => (e.key === "Enter" ? onAbrir() : undefined)}
       className={cn(
-        "group relative w-full shrink-0 rounded-xl border border-transparent bg-card p-3 text-left shadow-[0_1px_2px_rgb(16_24_40/0.06)] outline-none transition hover:border-primary/30 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40",
+        "group relative w-full shrink-0 rounded-xl border bg-card p-3.5 text-left outline-none transition hover:border-[#C9D7FF] hover:shadow-[0_2px_8px_rgb(15_23_41/0.06)] focus-visible:ring-2 focus-visible:ring-primary/40",
         arrastavel && "cursor-grab active:cursor-grabbing",
       )}
     >
@@ -622,9 +622,7 @@ export function NegocioCartao({
       <div
         className={cn(
           "mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px]",
-          vermelho
-            ? "bg-destructive/[0.07] text-destructive"
-            : "bg-[#f3f5f9] text-muted-foreground",
+          vermelho ? "bg-[#FFF1E6] font-medium text-[#A3400A]" : "bg-[#F1F3F7] text-[#3A4456]",
         )}
         title={n.proxima_acao ?? undefined}
       >

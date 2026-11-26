@@ -3,6 +3,7 @@
 @import "tw-animate-css";
 /* Fontes servidas pelo próprio CRM (sem Google Fonts: mais rápido e sem terceiros). */
 @import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/inter-tight/wght.css";
 @import "@fontsource-variable/roboto-mono/wght.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -79,7 +80,7 @@
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display:
-    "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    "Inter Tight Variable", "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-slab: "Roboto Slab", ui-serif, Georgia, serif;
   --font-serif: "Lora", ui-serif, Georgia, "Times New Roman", serif;
   --font-mono:
@@ -98,16 +99,16 @@
   --lime: #1f5eff;
   --nav: #ffffff;
   --nav-foreground: #1b2232;
-  --nav-muted: #5b6476;
-  --nav-hover: #f2f4f8;
-  --nav-border: #eceef3;
-  --canvas: #f6f7f9;
-  --background: #f6f7f9;
-  --foreground: #0e1424;
+  --nav-muted: #3a4456;
+  --nav-hover: #f1f3f7;
+  --nav-border: #e6e8ee;
+  --canvas: #f5f6f8;
+  --background: #f5f6f8;
+  --foreground: #0f1729;
   --ink: #0e1424;
   --surface: #ffffff;
   --card: #ffffff;
-  --card-foreground: #0e1424;
+  --card-foreground: #0f1729;
   --popover: #ffffff;
   --popover-foreground: #0e1424;
   --primary: #1f5eff;
@@ -115,13 +116,13 @@
   --secondary: #eef1f5;
   --secondary-foreground: #0e1424;
   --muted: #eef1f5;
-  --muted-foreground: #5b6476;
+  --muted-foreground: #5b6577;
   --accent: #eef1f5;
   --accent-foreground: #0e1424;
-  --destructive: #d92d20;
+  --destructive: #c2410c;
   --destructive-foreground: #ffffff;
-  --border: #e8eaf0;
-  --input: #d9dee7;
+  --border: #e6e8ee;
+  --input: #e1e4eb;
   --ring: #1f5eff;
   --gold: #c6a15b;
   --success: #12875a;
@@ -450,10 +451,7 @@ body {
 
 /* Largura do menu lateral (aberto ou recolhido), no computador. */
 .app-shell {
-  --sb: 248px;
-}
-.app-shell[data-recolhido="1"] {
-  --sb: 72px;
+  --sb: 240px;
 }
 @media (min-width: 1024px) {
   .app-shell {

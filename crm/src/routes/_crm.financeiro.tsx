@@ -3,12 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  AlertTriangle,
   Check,
   ChevronLeft,
   ChevronRight,
   Loader2,
   Pencil,
   Plus,
+  TrendingUp,
   Settings2,
   Trash2,
 } from "lucide-react";
@@ -133,7 +135,7 @@ function FinanceiroPage() {
 
   if (!isAdmin)
     return (
-      <div className="space-y-5">
+      <div className="space-y-6">
         <CabecalhoPagina titulo="Financeiro" />
         <Vazio>Só administradores veem o financeiro.</Vazio>
       </div>
@@ -142,66 +144,69 @@ function FinanceiroPage() {
   if (error || !data) return <Erro erro={error} />;
 
   return (
-    <div className="space-y-5">
-      <CabecalhoPagina
-        titulo="Financeiro"
-        descricao="Lucro líquido em caixa por mês. Vendido, faturado e recebido são coisas diferentes: aqui conta o que entrou."
-        acoes={
-          <>
-            <Button variant="outline" size="sm" className="h-9" onClick={() => setParams(true)}>
-              <Settings2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Saldo e metas</span>
-            </Button>
-            <Button size="sm" className="h-9" onClick={() => setEditando("novo")}>
-              <Plus className="h-4 w-4" /> Lançamento
-            </Button>
-          </>
-        }
-      />
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => setMes(somarMes(mes, -1))}
-            aria-label="Mês anterior"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h2
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3.5">
+          <h1 className="font-display text-[24px] font-bold leading-tight tracking-[-0.02em] sm:text-[28px]">
+            Financeiro
+          </h1>
+          <div
             className={cn(
-              "min-w-[160px] text-center text-[15px] font-semibold",
-              isFetching && "opacity-60",
+              "inline-flex h-9 items-center rounded-[10px] border border-input bg-card",
+              isFetching && "opacity-70",
             )}
           >
-            {nomeMes(mes)}
-          </h2>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => setMes(somarMes(mes, 1))}
-            aria-label="Próximo mês"
-          >
-            <ChevronRight className="h-4 w-4" />
+            <button
+              type="button"
+              aria-label="Mês anterior"
+              onClick={() => setMes(somarMes(mes, -1))}
+              className="flex h-full w-9 items-center justify-center text-[#3A4456] hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="min-w-[132px] px-1.5 text-center text-[14px] font-semibold">
+              {nomeMes(mes)}
+            </span>
+            <button
+              type="button"
+              aria-label="Próximo mês"
+              onClick={() => setMes(somarMes(mes, 1))}
+              className="flex h-full w-9 items-center justify-center text-[#3A4456] hover:text-foreground"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2.5">
+          <Button variant="outline" className="h-[38px]" onClick={() => setParams(true)}>
+            <Settings2 className="h-4 w-4" /> Saldo e metas
+          </Button>
+          <Button className="h-[38px]" onClick={() => setEditando("novo")}>
+            <Plus className="h-4 w-4" /> Lançar
           </Button>
         </div>
-        <Alternador
-          valor={aba}
-          onChange={setAba}
-          opcoes={[
-            { valor: "resumo", rotulo: "Resumo" },
-            { valor: "receber", rotulo: `A receber (${data.receber.length})` },
-            { valor: "pagar", rotulo: "A pagar" },
-            { valor: "lancamentos", rotulo: "Lançamentos" },
-            { valor: "notas", rotulo: "Notas fiscais" },
-          ]}
-        />
-      </div>
+      </header>
 
-      {aba === "resumo" ? <Resumo d={data} /> : null}
+      <Alternador
+        valor={aba}
+        onChange={setAba}
+        opcoes={[
+          { valor: "resumo", rotulo: "Resumo" },
+          { valor: "receber", rotulo: `Cobranças · ${data.receber.length}` },
+          { valor: "pagar", rotulo: "A pagar" },
+          { valor: "lancamentos", rotulo: "Lançamentos" },
+          { valor: "notas", rotulo: "Notas fiscais" },
+        ]}
+      />
+
+      {aba === "resumo" ? (
+        <Resumo
+          d={data}
+          onParams={() => setParams(true)}
+          onLancar={() => setEditando("novo")}
+          onAba={setAba}
+        />
+      ) : null}
       {aba === "receber" ? <Receber d={data} onAbrir={setNegocio} /> : null}
       {aba === "pagar" ? <Pagar d={data} /> : null}
       {aba === "lancamentos" ? <Lancamentos d={data} onEditar={setEditando} /> : null}
@@ -221,389 +226,435 @@ function FinanceiroPage() {
 
 // ---------- Resumo ----------
 
-function Resumo({ d }: { d: Financeiro }) {
+const brl0 = (n: number | null | undefined) =>
+  n == null ? "—" : `${n < 0 ? "− " : ""}R$ ${Math.abs(Math.round(n)).toLocaleString("pt-BR")}`;
+
+function Resumo({
+  d,
+  onParams,
+  onLancar,
+  onAba,
+}: {
+  d: Financeiro;
+  onParams: () => void;
+  onLancar: () => void;
+  onAba: (a: Aba) => void;
+}) {
   const dre = d.dre;
+  const totalReceber = d.receber.reduce((s, c) => s + c.valor, 0);
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <FaixaNumeros
         itens={[
           {
-            rotulo: "Recebido no mês",
-            valor: fmtMoeda(dre.receitaBruta),
+            rotulo: "Entrou no caixa",
+            valor: brl0(dre.receitaBruta),
             detalhe: <Variacao atual={dre.receitaBruta} anterior={d.dreAnterior.receitaBruta} />,
-            tom: "azul",
           },
           {
-            rotulo: "Lucro líquido",
-            valor: fmtMoeda(dre.lucro),
-            detalhe: `margem ${fmtPct(dre.margemLiquida)} · meta ${d.parametros.margem_meta}%`,
-            tom: dre.lucro < 0 ? "alerta" : undefined,
+            rotulo: "Sobrou (lucro líquido)",
+            valor: brl0(dre.lucro),
+            detalhe: d.custoFixoConfigurado
+              ? `margem ${fmtPct(dre.margemLiquida)} · meta ${d.parametros.margem_meta}%`
+              : "Custos ainda não lançados",
+            tom: d.custoFixoConfigurado ? undefined : "alerta",
           },
           {
-            rotulo: "Saldo de caixa",
-            valor: d.saldo == null ? "Informe" : fmtMoeda(d.saldo),
-            detalhe: d.saldo == null ? "em Saldo e metas" : `fôlego ${meses(d.folegoMeses)}`,
-          },
-          {
-            rotulo: "Ritmo da meta",
-            valor: fmtPct(d.ritmo.pct),
-            detalhe: `${fmtMoeda(d.ritmo.ritmoMes)}/mês de ${fmtMoeda(d.ritmo.necessarioMes)}`,
-            tom: d.ritmo.pct != null && d.ritmo.pct < 0.8 ? "alerta" : undefined,
-          },
-          {
-            rotulo: "Ponto de equilíbrio",
-            valor: d.pontoEquilibrio == null ? "—" : fmtMoeda(d.pontoEquilibrio),
-            detalhe: d.custoFixoConfigurado ? "receita mínima por mês" : "lance os custos fixos",
+            rotulo: "Saldo em conta",
+            valor: d.saldo == null ? "—" : brl0(d.saldo),
+            detalhe:
+              d.saldo == null ? "Informe em Saldo e metas" : `fôlego de ${meses(d.folegoMeses)}`,
+            tom: d.saldo == null ? "azul" : undefined,
           },
           {
             rotulo: "A receber",
-            valor: fmtMoeda(d.receber.reduce((s, c) => s + c.valor, 0)),
-            detalhe: `${d.receber.length} cobranças`,
+            valor: brl0(totalReceber),
+            detalhe: `${d.receber.length} cobranças abertas`,
             tom: d.receberIdade.mais30 ? "alerta" : undefined,
           },
         ]}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_1fr]">
-        <TabelaDre
-          dre={dre}
-          anterior={d.dreAnterior}
-          metaMargem={d.parametros.margem_meta}
-          aliquota={d.parametros.impostos.aliquota}
-        />
-        <Secao titulo="Indicadores">
-          <dl className="grid grid-cols-2 gap-x-5 gap-y-4 text-[13px]">
-            <Indicador
-              rotulo="Meta de 90 dias"
-              valor={fmtMoeda(d.parametros.meta.valor)}
-              detalhe={`${fmtMoeda(d.ritmo.recebido)} recebidos em ${d.ritmo.dias} dias`}
-            />
-            <Indicador
-              rotulo="Custo fixo por mês"
-              valor={d.custoFixoConfigurado ? fmtMoeda(d.custoFixo) : "não lançado"}
-              detalhe={`saída média ${fmtMoeda(d.saidaMensal)}/mês`}
-              alerta={!d.custoFixoConfigurado}
-            />
-            <Indicador
-              rotulo="Margem de contribuição"
-              valor={fmtPct(dre.margemContribuicaoPct)}
-              detalhe="meta acima de 80%"
-              alerta={dre.margemContribuicaoPct != null && dre.margemContribuicaoPct < 0.8}
-            />
-            <Indicador
-              rotulo="Inadimplência"
-              valor={fmtPct(d.inadimplencia, 1)}
-              detalhe="vencido há 30+ dias ÷ vendas de 90 dias"
-            />
-            <Indicador
-              rotulo="A receber há 30+ dias"
-              valor={fmtMoeda(d.receberIdade.mais30)}
-              detalhe={`0–7 dias ${fmtMoeda(d.receberIdade.ate7)} · 8–30 ${fmtMoeda(d.receberIdade.ate30)}`}
-              alerta={d.receberIdade.mais30 > 0}
-            />
-            <Indicador
-              rotulo="Concentração (top 3)"
-              valor={fmtPct(d.concentracao.top3Pct)}
-              detalhe={
-                d.concentracao.clientes
-                  .slice(0, 3)
-                  .map((c) => c.cliente)
-                  .join(", ") || "últimos 90 dias"
-              }
-              alerta={(d.concentracao.top3Pct ?? 0) > 0.4}
-            />
-            <Indicador
-              rotulo="ROI do mês"
-              valor={d.roi == null ? "—" : `${d.roi.toFixed(1).replace(".", ",")}x`}
-              detalhe={
-                d.roi == null
-                  ? "sem investimento lançado"
-                  : "(receita − investimento) ÷ investimento"
-              }
-            />
-            <Indicador
-              rotulo="Fôlego (runway)"
-              valor={meses(d.folegoMeses)}
-              detalhe="saldo ÷ saída média"
-              alerta={d.folegoMeses != null && d.folegoMeses < 1}
-            />
-          </dl>
-        </Secao>
+      <div className="flex flex-wrap gap-4">
+        <Cascata d={d} onLancar={onLancar} />
+        <Projecao d={d} onParams={onParams} />
       </div>
 
-      <Projecao d={d} />
-
-      <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-        <FluxoMes d={d} />
-        <Secao titulo="Resultado por centro de custo" colado>
-          {d.centros.length ? (
-            <table className="w-full text-[13px]">
-              <thead className="text-[11.5px] text-muted-foreground">
-                <tr className="border-b">
-                  <th className="px-4 py-2 text-left font-medium">Centro</th>
-                  <th className="px-2 py-2 text-right font-medium">Receita</th>
-                  <th className="px-2 py-2 text-right font-medium">Custos</th>
-                  <th className="px-4 py-2 text-right font-medium">Resultado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {d.centros.map((c) => (
-                  <tr key={c.centro}>
-                    <td className="px-4 py-2 font-medium">
-                      {labelDe(CENTROS, c.centro) || "Geral"}
-                    </td>
-                    <td className="tabular px-2 py-2 text-right">{fmtMoeda(c.receita)}</td>
-                    <td className="tabular px-2 py-2 text-right">{fmtMoeda(c.custos)}</td>
-                    <td
-                      className={cn(
-                        "tabular px-4 py-2 text-right font-semibold",
-                        c.resultado < 0 && "text-destructive",
-                      )}
-                    >
-                      {fmtMoeda(c.resultado)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="p-4">
-              <Vazio>Nada no mês.</Vazio>
-            </div>
-          )}
-        </Secao>
+      <div className="flex flex-wrap gap-4">
+        <ReceberResumo d={d} onVer={() => onAba("receber")} />
+        <IndicadoresMes d={d} />
       </div>
     </div>
   );
 }
 
-function Indicador({
-  rotulo,
-  valor,
-  detalhe,
-  alerta,
+function Cartao({
+  titulo,
+  sub,
+  extra,
+  className,
+  children,
 }: {
-  rotulo: string;
-  valor: string;
-  detalhe?: string;
-  alerta?: boolean;
+  titulo: string;
+  sub?: string;
+  extra?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="min-w-0">
-      <dt className="text-[11.5px] font-medium text-muted-foreground">{rotulo}</dt>
-      <dd
-        className={cn(
-          "tabular mt-0.5 truncate text-[15px] font-semibold",
-          alerta && "text-destructive",
-        )}
-      >
-        {valor}
-      </dd>
-      {detalhe ? <dd className="truncate text-[11px] text-muted-foreground">{detalhe}</dd> : null}
-    </div>
+    <section className={cn("flex min-w-0 flex-col rounded-2xl border bg-card p-6", className)}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-[16px] font-semibold">{titulo}</h2>
+        {extra}
+      </div>
+      {sub ? <p className="mt-1.5 text-[13px] text-muted-foreground">{sub}</p> : null}
+      <div className="mt-5 flex flex-1 flex-col">{children}</div>
+    </section>
   );
 }
 
-function TabelaDre({
-  dre,
-  anterior,
-  metaMargem,
-  aliquota,
-}: {
-  dre: Dre;
-  anterior: Dre;
-  metaMargem: number;
-  aliquota: number;
-}) {
-  const linhas: {
-    rotulo: string;
-    v: number;
-    a: number;
-    total?: boolean;
-    menos?: boolean;
-    dica?: string;
-  }[] = [
-    {
-      rotulo: "Receita bruta (recebida)",
-      v: dre.receitaBruta,
-      a: anterior.receitaBruta,
-      total: true,
-    },
-    {
-      rotulo: "Impostos",
-      v: dre.impostos,
-      a: anterior.impostos,
-      menos: true,
-      dica: dre.impostosEstimado ? `estimado em ${aliquota}% (Simples)` : undefined,
-    },
-    { rotulo: "Taxas (Asaas, cartão)", v: dre.taxas, a: anterior.taxas, menos: true },
-    { rotulo: "Receita líquida", v: dre.receitaLiquida, a: anterior.receitaLiquida, total: true },
-    { rotulo: "Custos variáveis", v: dre.variaveis, a: anterior.variaveis, menos: true },
+function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
+  const dre = d.dre;
+  const total = Math.max(1, dre.receitaBruta);
+  const linhas: { nome: string; valor: number; texto?: string; tipo: "total" | "menos" | "fim" }[] =
+    [
+      { nome: "Receita recebida", valor: dre.receitaBruta, tipo: "total" },
+      {
+        nome: dre.impostosEstimado
+          ? `Impostos (${d.parametros.impostos.aliquota}% estimado)`
+          : "Impostos",
+        valor: dre.impostos,
+        tipo: "menos",
+      },
+      { nome: "Taxas Asaas e cartão", valor: dre.taxas, tipo: "menos" },
+      { nome: "Custos variáveis", valor: dre.variaveis, tipo: "menos" },
+      {
+        nome: "Custos fixos",
+        valor: dre.fixos,
+        texto: !dre.fixos && !d.custoFixoConfigurado ? "não lançados" : undefined,
+        tipo: "menos",
+      },
+      { nome: "Investimentos", valor: dre.investimentos, tipo: "menos" },
+      { nome: "Lucro em caixa", valor: dre.lucro, tipo: "fim" },
+    ];
+  let corrido = dre.receitaBruta;
+  return (
+    <Cartao
+      titulo="Do que entrou ao que sobrou"
+      sub="Cada linha tira um pedaço da receita. O que fica no fim é o lucro em caixa."
+      extra={
+        <span className="text-[12px] text-muted-foreground">
+          {fmtPct(dre.margemLiquida)} de margem
+        </span>
+      }
+      className="flex-[3_1_460px]"
+    >
+      <div className="flex flex-col gap-3.5">
+        {linhas.map((l) => {
+          let left = 0;
+          let width = 0;
+          if (l.tipo === "total") width = l.valor;
+          else if (l.tipo === "fim") width = Math.max(0, l.valor);
+          else {
+            corrido -= l.valor;
+            left = Math.max(0, corrido);
+            width = l.valor;
+          }
+          return (
+            <div
+              key={l.nome}
+              className="grid grid-cols-[minmax(0,170px)_minmax(0,1fr)_110px] items-center gap-3.5"
+            >
+              <span
+                className={cn(
+                  "truncate text-[14px]",
+                  l.tipo === "menos" ? "text-[#3A4456]" : "font-bold",
+                )}
+              >
+                {l.nome}
+              </span>
+              <div className="relative h-[26px] overflow-hidden rounded-md bg-background">
+                <div
+                  className={cn(
+                    "absolute inset-y-0 rounded-md",
+                    l.tipo === "total" && "bg-primary",
+                    l.tipo === "menos" && "bg-[#F59E5B]",
+                    l.tipo === "fim" && (l.valor < 0 ? "bg-[#C2410C]" : "bg-[#0E8A5F]"),
+                  )}
+                  style={{
+                    left: `${(left / total) * 100}%`,
+                    width: `${width ? Math.max(0.6, (width / total) * 100) : 0}%`,
+                  }}
+                />
+              </div>
+              <span
+                className={cn(
+                  "tabular text-right text-[14px]",
+                  l.tipo === "menos"
+                    ? l.valor
+                      ? "font-semibold text-[#B4530A]"
+                      : "text-[#8A93A5]"
+                    : "font-bold",
+                )}
+              >
+                {l.texto ?? (l.tipo === "menos" && l.valor ? `− ${brl0(l.valor)}` : brl0(l.valor))}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {!d.custoFixoConfigurado ? (
+        <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-xl bg-[#FFF6ED] px-4 py-3.5 text-[13px] text-[#8A3A07]">
+          <AlertTriangle className="h-[18px] w-[18px] shrink-0" />
+          <span className="min-w-0 flex-1">
+            Equipe, ferramentas, contador e pró-labore ainda não foram lançados. Sem eles a margem
+            aparece em {fmtPct(dre.margemLiquida)}.
+          </span>
+          <button type="button" onClick={onLancar} className="font-semibold hover:underline">
+            Lançar custos
+          </button>
+        </div>
+      ) : null}
+    </Cartao>
+  );
+}
+
+function Projecao({ d, onParams }: { d: Financeiro; onParams: () => void }) {
+  const p = d.projecao;
+  if (d.saldo == null)
+    return (
+      <Cartao
+        titulo="Caixa nos próximos 90 dias"
+        sub="Saldo de hoje + o que vai entrar − o que vai sair."
+        className="flex-[2_1_340px]"
+      >
+        <div className="flex min-h-[220px] flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#D5DAE3] bg-[repeating-linear-gradient(0deg,#fff,#fff_43px,#F3F5F8_43px,#F3F5F8_44px)] p-6 text-center">
+          <TrendingUp className="h-7 w-7 text-[#8A93A5]" />
+          <span className="text-[14px] font-semibold">Falta o saldo em conta</span>
+          <span className="max-w-[260px] text-[13px] text-muted-foreground">
+            Informe quanto há hoje na conta e a linha do caixa aparece aqui, semana a semana.
+          </span>
+          <Button variant="outline" size="sm" onClick={onParams}>
+            Informar saldo
+          </Button>
+        </div>
+      </Cartao>
+    );
+  const vals = p.semanas.map((s) => s.saldo);
+  const max = Math.max(1, ...vals, d.custoFixo);
+  const min = Math.min(0, ...vals);
+  const alt = 160;
+  const y = (v: number) => alt - ((v - min) / (max - min || 1)) * alt;
+  const w = 100 / Math.max(1, vals.length - 1);
+  const pontos = vals.map((v, i) => `${i * w},${y(v)}`).join(" ");
+  return (
+    <Cartao
+      titulo="Caixa nos próximos 90 dias"
+      sub={`Menor saldo ${brl0(p.minimo)} · em 90 dias ${brl0(p.final)}`}
+      className="flex-[2_1_340px]"
+    >
+      <svg
+        viewBox={`0 0 100 ${alt}`}
+        preserveAspectRatio="none"
+        className="h-[180px] w-full overflow-visible"
+        role="img"
+        aria-label="Saldo projetado por semana"
+      >
+        {d.custoFixo > 0 ? (
+          <line
+            x1="0"
+            x2="100"
+            y1={y(d.custoFixo)}
+            y2={y(d.custoFixo)}
+            stroke="#F59E5B"
+            strokeDasharray="2 2"
+            strokeWidth="0.6"
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null}
+        <polyline points={`0,${alt} ${pontos} 100,${alt}`} fill="#EEF3FF" stroke="none" />
+        <polyline
+          points={pontos}
+          fill="none"
+          stroke="#1F5EFF"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <div className="mt-2 flex justify-between text-[11.5px] text-muted-foreground">
+        <span>hoje</span>
+        <span>45 dias</span>
+        <span>90 dias</span>
+      </div>
+      {d.custoFixo > 0 ? (
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          Linha laranja: 1 mês de custo fixo ({brl0(d.custoFixo)}).
+        </p>
+      ) : null}
+      {p.semData ? (
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          {brl0(p.semData)} a receber sem data prevista ficam de fora.
+        </p>
+      ) : null}
+    </Cartao>
+  );
+}
+
+function ReceberResumo({ d, onVer }: { d: Financeiro; onVer: () => void }) {
+  const salvarNeg = useServerFn(saveNegocio);
+  const { executar } = useAcao();
+  const total = d.receber.reduce((s, c) => s + c.valor, 0);
+  const faixas = [
+    { nome: "Até 7 dias", v: d.receberIdade.ate7, cor: "bg-primary" },
+    { nome: "8 a 30 dias", v: d.receberIdade.ate30, cor: "bg-[#F59E5B]" },
+    { nome: "Mais de 30 dias", v: d.receberIdade.mais30, cor: "bg-[#C2410C]" },
+  ];
+  const lista = d.receber.filter((c) => c.origem === "negocio").slice(0, 5);
+  return (
+    <Cartao
+      titulo="Cobranças"
+      extra={
+        <button
+          type="button"
+          onClick={onVer}
+          className="text-[13px] font-semibold text-primary hover:underline"
+        >
+          Ver todas ({d.receber.length})
+        </button>
+      }
+      className="flex-[3_1_460px]"
+    >
+      {total ? (
+        <div className="mb-2.5 flex h-3 gap-[3px] overflow-hidden rounded-full">
+          {faixas
+            .filter((f) => f.v)
+            .map((f) => (
+              <div key={f.nome} className={f.cor} style={{ flex: f.v }} />
+            ))}
+        </div>
+      ) : null}
+      <div className="mb-2 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-[#3A4456]">
+        {faixas.map((f) => (
+          <span key={f.nome} className="inline-flex items-center gap-1.5">
+            <i className={cn("h-2 w-2 rounded-sm", f.cor)} />
+            {f.nome} · {brl0(f.v)}
+          </span>
+        ))}
+      </div>
+      {lista.length ? (
+        <ul>
+          {lista.map((c) => (
+            <li key={c.id} className="flex items-center gap-3.5 border-t border-[#EEF0F4] py-3">
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-[14px] font-semibold">{c.cliente}</span>
+                <span className="truncate text-[12.5px] text-muted-foreground">
+                  {ESTADO[c.estado].rotulo} · há {c.idade} dia{c.idade === 1 ? "" : "s"}
+                </span>
+              </span>
+              <span className="font-display tabular text-[14px] font-bold">{brl0(c.valor)}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-[34px]"
+                onClick={() =>
+                  executar(async () => {
+                    await salvarNeg({ data: { id: c.id, status_pagamento: "pago" } });
+                    return true;
+                  }, "Pagamento confirmado.")
+                }
+              >
+                Recebido
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="py-8 text-center text-[13px] text-muted-foreground">Nada a receber.</p>
+      )}
+    </Cartao>
+  );
+}
+
+function IndicadoresMes({ d }: { d: Financeiro }) {
+  const dre = d.dre;
+  const itens: { rotulo: string; valor: string; detalhe?: string; alerta?: boolean }[] = [
     {
       rotulo: "Margem de contribuição",
-      v: dre.margemContribuicao,
-      a: anterior.margemContribuicao,
-      total: true,
-      dica: fmtPct(dre.margemContribuicaoPct),
+      valor: fmtPct(dre.margemContribuicaoPct),
+      detalhe: "meta acima de 80%",
+      alerta: dre.margemContribuicaoPct != null && dre.margemContribuicaoPct < 0.8,
     },
-    { rotulo: "Custos fixos", v: dre.fixos, a: anterior.fixos, menos: true },
-    { rotulo: "EBITDA", v: dre.ebitda, a: anterior.ebitda, total: true },
-    { rotulo: "Investimentos", v: dre.investimentos, a: anterior.investimentos, menos: true },
     {
-      rotulo: "Lucro líquido",
-      v: dre.lucro,
-      a: anterior.lucro,
-      total: true,
-      dica: `${fmtPct(dre.margemLiquida)} · meta ${metaMargem}%`,
+      rotulo: "Ponto de equilíbrio",
+      valor: d.pontoEquilibrio == null ? "—" : brl0(d.pontoEquilibrio),
+      detalhe: d.custoFixoConfigurado ? "receita mínima por mês" : "lance os custos fixos",
+    },
+    {
+      rotulo: "3 maiores clientes",
+      valor: fmtPct(d.concentracao.top3Pct),
+      detalhe: "da receita em 90 dias",
+      alerta: (d.concentracao.top3Pct ?? 0) > 0.4,
+    },
+    {
+      rotulo: "Inadimplência",
+      valor: fmtPct(d.inadimplencia, 1),
+      detalhe: "vencido há mais de 30 dias",
+    },
+    {
+      rotulo: "Fôlego do caixa",
+      valor: meses(d.folegoMeses),
+      detalhe: "saldo ÷ saída média",
+      alerta: d.folegoMeses != null && d.folegoMeses < 1,
+    },
+    {
+      rotulo: "Retorno do investimento",
+      valor: d.roi == null ? "—" : `${d.roi.toFixed(1).replace(".", ",")}x`,
+      detalhe: d.roi == null ? "sem investimento no mês" : "receita ÷ investimento",
     },
   ];
   return (
-    <Secao
-      titulo="DRE do mês"
-      colado
-      acoes={<span className="text-xs text-muted-foreground">mês anterior à direita</span>}
-    >
-      <table className="w-full text-[13px]">
-        <tbody className="divide-y">
-          {linhas.map((l) => (
-            <tr key={l.rotulo} className={cn(l.total && "bg-muted/40")}>
-              <td
+    <Cartao titulo="Indicadores do mês" className="flex-[2_1_340px]">
+      <div className="grid grid-cols-2 gap-3">
+        {itens.map((i) => (
+          <div key={i.rotulo} className="min-w-0 rounded-xl bg-background p-3.5">
+            <span className="block truncate text-[12px] text-muted-foreground">{i.rotulo}</span>
+            <span
+              className={cn(
+                "font-display tabular mt-1 block truncate text-[20px] font-bold",
+                i.valor === "—" && "text-[#8A93A5]",
+              )}
+            >
+              {i.valor}
+            </span>
+            {i.detalhe ? (
+              <span
                 className={cn(
-                  "px-4 py-2",
-                  l.total ? "font-semibold" : "pl-7 text-muted-foreground",
+                  "block truncate text-[11.5px]",
+                  i.alerta ? "font-semibold text-[#B4530A]" : "text-muted-foreground",
                 )}
               >
-                {l.rotulo}
-                {l.dica ? (
-                  <span className="ml-2 text-[11px] font-normal text-muted-foreground">
-                    {l.dica}
-                  </span>
-                ) : null}
-              </td>
-              <td
-                className={cn(
-                  "tabular px-2 py-2 text-right",
-                  l.total && "font-semibold",
-                  l.total && l.v < 0 && "text-destructive",
-                )}
-              >
-                {l.menos && l.v ? "− " : ""}
-                {fmtMoeda(l.v)}
-              </td>
-              <td className="tabular px-4 py-2 text-right text-[12px] text-muted-foreground">
-                {fmtMoeda(l.a)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Secao>
-  );
-}
-
-function Projecao({ d }: { d: Financeiro }) {
-  const p = d.projecao;
-  const maior = Math.max(1, ...p.semanas.map((s) => Math.max(s.entradas, s.saidas)));
-  return (
-    <Secao
-      titulo="Caixa projetado · próximos 90 dias"
-      colado
-      acoes={
-        <span className="text-xs text-muted-foreground">
-          {d.saldo == null
-            ? "Informe o saldo para ver o saldo projetado"
-            : `menor saldo ${fmtMoeda(p.minimo)} · em 90 dias ${fmtMoeda(p.final)}`}
-        </span>
-      }
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-[12.5px]">
-          <thead className="text-[11.5px] text-muted-foreground">
-            <tr className="border-b">
-              <th className="px-4 py-2 text-left font-medium">Semana de</th>
-              <th className="px-2 py-2 text-left font-medium">Entradas previstas</th>
-              <th className="px-2 py-2 text-left font-medium">Saídas previstas</th>
-              <th className="px-4 py-2 text-right font-medium">Saldo</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {p.semanas.map((s) => (
-              <tr key={s.inicio}>
-                <td className="whitespace-nowrap px-4 py-1.5 font-medium">{fmtDia(s.inicio)}</td>
-                <td className="px-2 py-1.5">
-                  <Barra valor={s.entradas} maior={maior} cor="bg-emerald-500" />
-                </td>
-                <td className="px-2 py-1.5">
-                  <Barra valor={s.saidas} maior={maior} cor="bg-destructive/70" />
-                </td>
-                <td
-                  className={cn(
-                    "tabular px-4 py-1.5 text-right font-semibold",
-                    d.saldo != null && s.saldo < d.custoFixo && "text-destructive",
-                  )}
-                >
-                  {d.saldo == null ? "—" : fmtMoeda(s.saldo)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {p.semData ? (
-        <p className="border-t px-4 py-2.5 text-[11.5px] text-muted-foreground">
-          {fmtMoeda(p.semData)} a receber sem data prevista não entram na projeção. Coloque a data
-          em cada negócio.
-        </p>
-      ) : null}
-    </Secao>
-  );
-}
-
-function Barra({ valor, maior, cor }: { valor: number; maior: number; cor: string }) {
-  return (
-    <span className="flex items-center gap-2">
-      <span className="h-2 w-28 overflow-hidden rounded-full bg-muted sm:w-40">
-        <span
-          className={cn("block h-full rounded-full", cor)}
-          style={{ width: `${(valor / maior) * 100}%` }}
-        />
-      </span>
-      <span className="tabular text-muted-foreground">{valor ? fmtMoeda(valor) : "—"}</span>
-    </span>
-  );
-}
-
-function FluxoMes({ d }: { d: Financeiro }) {
-  const maior = Math.max(1, ...d.fluxoMes.map((x) => Math.max(x.entradas, x.saidas)));
-  return (
-    <Secao
-      titulo="Fluxo realizado no mês"
-      acoes={<span className="text-xs text-muted-foreground">verde entra · vermelho sai</span>}
-    >
-      <div className="flex h-36 items-end gap-[3px]">
-        {d.fluxoMes.map((x) => (
-          <div
-            key={x.dia}
-            className="flex h-full min-w-0 flex-1 flex-col justify-end gap-[2px]"
-            title={`${fmtDia(x.dia)}: +${fmtMoeda(x.entradas)} / −${fmtMoeda(x.saidas)}`}
-          >
-            <span
-              className="block rounded-t-sm bg-emerald-500"
-              style={{ height: `${(x.entradas / maior) * 100}%` }}
-            />
-            <span
-              className="block rounded-b-sm bg-destructive/70"
-              style={{ height: `${(x.saidas / maior) * 50}%` }}
-            />
+                {i.detalhe}
+              </span>
+            ) : null}
           </div>
         ))}
       </div>
-      <div className="mt-1.5 flex justify-between text-[10.5px] text-muted-foreground">
-        <span>1</span>
-        <span>15</span>
-        <span>{d.fluxoMes.length}</span>
-      </div>
-    </Secao>
+      {d.centros.length ? (
+        <div className="mt-4 border-t pt-3">
+          <p className="mb-1.5 text-[12px] font-semibold text-muted-foreground">
+            Resultado por área
+          </p>
+          {d.centros.map((c) => (
+            <div key={c.centro} className="flex items-center justify-between py-1 text-[13px]">
+              <span>{labelDe(CENTROS, c.centro) || "Geral"}</span>
+              <span className={cn("tabular font-semibold", c.resultado < 0 && "text-[#C2410C]")}>
+                {brl0(c.resultado)}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </Cartao>
   );
 }
 

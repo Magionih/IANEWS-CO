@@ -9,7 +9,13 @@ import { useAcao } from "@/components/crm/queries";
 import { CabecalhoPagina, Carregando, Erro, Numero, Secao, Vazio } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FLUXOS, liberarRobo, painelDirect, salvarPalavra, type PalavraDirect } from "@/lib/crm/direct.functions";
+import {
+  FLUXOS,
+  liberarRobo,
+  painelDirect,
+  salvarPalavra,
+  type PalavraDirect,
+} from "@/lib/crm/direct.functions";
 import { fmtDataHora } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
@@ -57,16 +63,32 @@ function DirectPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Numero rotulo="Conversas" valor={resumo.conversas} detalhe="pessoas que falaram com o robô" destaque="azul" />
-        <Numero rotulo="Eventos em 7 dias" valor={resumo.semana} detalhe="comentários e mensagens" />
-        <Numero rotulo="Com contato" valor={resumo.com_contato} detalhe="deixaram e-mail ou WhatsApp" />
+        <Numero
+          rotulo="Conversas"
+          valor={resumo.conversas}
+          detalhe="pessoas que falaram com o robô"
+          destaque="azul"
+        />
+        <Numero
+          rotulo="Eventos em 7 dias"
+          valor={resumo.semana}
+          detalhe="comentários e mensagens"
+        />
+        <Numero
+          rotulo="Com contato"
+          valor={resumo.com_contato}
+          detalhe="deixaram e-mail ou WhatsApp"
+        />
         <Numero rotulo="Com a Renata" valor={resumo.humano} detalhe="robô em pausa por 24 h" />
         <Numero rotulo="Erros em 7 dias" valor={resumo.erros} detalhe="envios que falharam" />
       </div>
 
       <Secao titulo="Conversas" contagem={conversas.length}>
         {conversas.length === 0 ? (
-          <Vazio>Nenhuma conversa ainda. Elas aparecem aqui quando alguém comentar uma palavra-chave ou escrever no Direct.</Vazio>
+          <Vazio>
+            Nenhuma conversa ainda. Elas aparecem aqui quando alguém comentar uma palavra-chave ou
+            escrever no Direct.
+          </Vazio>
         ) : (
           <ul className="divide-y">
             {conversas.map((c) => {
@@ -77,31 +99,54 @@ function DirectPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">
                       {c.nome ?? (c.username ? `@${c.username}` : "Contato do Instagram")}
-                      {c.username && c.nome ? <span className="font-normal text-muted-foreground"> · @{c.username}</span> : null}
+                      {c.username && c.nome ? (
+                        <span className="font-normal text-muted-foreground"> · @{c.username}</span>
+                      ) : null}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {humano ? (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-900">com a Renata</span>
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-900">
+                          com a Renata
+                        </span>
                       ) : c.passo ? (
                         <span className="rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
                           {NOME_FLUXO[c.fluxo ?? ""] ?? c.fluxo} · aguardando resposta
                         </span>
                       ) : (
-                        <span className="rounded bg-muted px-1.5 py-0.5">{NOME_FLUXO[c.fluxo ?? ""] ?? "concluída"}</span>
+                        <span className="rounded bg-muted px-1.5 py-0.5">
+                          {NOME_FLUXO[c.fluxo ?? ""] ?? "concluída"}
+                        </span>
                       )}{" "}
-                      {c.pontos} pontos · {[d.email, d.whatsapp, d.setor].filter(Boolean).join(" · ") || "sem contato ainda"}
+                      {c.pontos} pontos ·{" "}
+                      {[d.email, d.whatsapp, d.setor].filter(Boolean).join(" · ") ||
+                        "sem contato ainda"}
                       {c.optout ? " · pediu para sair" : ""}
                       {c.segue === false ? " · não segue" : ""}
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">{fmtDataHora(c.updated_at)}</span>
                   {c.username ? (
-                    <a className="text-xs text-primary underline" href={`https://instagram.com/${c.username}`} target="_blank" rel="noopener noreferrer">
+                    <a
+                      className="text-xs text-primary underline"
+                      href={`https://instagram.com/${c.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       perfil <ExternalLink className="inline h-3 w-3" />
                     </a>
                   ) : null}
                   {humano ? (
-                    <Button variant="outline" size="sm" disabled={ocupado} onClick={() => executar(() => liberar({ data: { igsid: c.igsid } }), "O robô volta a responder essa pessoa.")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={ocupado}
+                      onClick={() =>
+                        executar(
+                          () => liberar({ data: { igsid: c.igsid } }),
+                          "O robô volta a responder essa pessoa.",
+                        )
+                      }
+                    >
                       <UserCheck className="h-4 w-4" /> Atendimento concluído
                     </Button>
                   ) : null}
@@ -123,15 +168,28 @@ function DirectPage() {
                     key={p.palavra}
                     type="button"
                     disabled={!isAdmin || ocupado}
-                    title={isAdmin ? (p.ativo ? "Clique para desligar" : "Clique para ligar") : undefined}
-                    onClick={() => executar(() => salvar({ data: { ...p, ativo: !p.ativo } }), p.ativo ? `${p.palavra} desligada.` : `${p.palavra} ligada.`)}
+                    title={
+                      isAdmin ? (p.ativo ? "Clique para desligar" : "Clique para ligar") : undefined
+                    }
+                    onClick={() =>
+                      executar(
+                        () => salvar({ data: { ...p, ativo: !p.ativo } }),
+                        p.ativo ? `${p.palavra} desligada.` : `${p.palavra} ligada.`,
+                      )
+                    }
                     className={cn(
                       "rounded-full border px-2.5 py-0.5 font-mono text-xs",
-                      p.ativo ? "border-primary/40 bg-primary/10 text-primary" : "text-muted-foreground line-through",
+                      p.ativo
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "text-muted-foreground line-through",
                     )}
                   >
                     {p.palavra}
-                    {p.media_id ? <span className="ml-1 text-[10px] opacity-70">só no post {p.media_id.slice(-6)}</span> : null}
+                    {p.media_id ? (
+                      <span className="ml-1 text-[10px] opacity-70">
+                        só no post {p.media_id.slice(-6)}
+                      </span>
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -140,21 +198,42 @@ function DirectPage() {
         </div>
         {isAdmin ? (
           <div className="mt-4 flex flex-wrap items-end gap-2">
-            <Input className="h-9 w-40" placeholder="Nova palavra" value={nova.palavra} onChange={(e) => setNova({ ...nova, palavra: e.target.value })} />
-            <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.fluxo} onChange={(e) => setNova({ ...nova, fluxo: e.target.value })}>
+            <Input
+              className="h-9 w-40"
+              placeholder="Nova palavra"
+              value={nova.palavra}
+              onChange={(e) => setNova({ ...nova, palavra: e.target.value })}
+            />
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm"
+              value={nova.fluxo}
+              onChange={(e) => setNova({ ...nova, fluxo: e.target.value })}
+            >
               {FLUXOS.map((f) => (
                 <option key={f} value={f}>
                   {NOME_FLUXO[f]}
                 </option>
               ))}
             </select>
-            <Input className="h-9 w-56" placeholder="ID do post (opcional)" value={nova.media_id} onChange={(e) => setNova({ ...nova, media_id: e.target.value })} />
+            <Input
+              className="h-9 w-56"
+              placeholder="ID do post (opcional)"
+              value={nova.media_id}
+              onChange={(e) => setNova({ ...nova, media_id: e.target.value })}
+            />
             <Button
               variant="outline"
               disabled={ocupado || !nova.palavra.trim()}
               onClick={() =>
                 executar(
-                  () => salvar({ data: { palavra: nova.palavra, fluxo: nova.fluxo, media_id: nova.media_id || null } }),
+                  () =>
+                    salvar({
+                      data: {
+                        palavra: nova.palavra,
+                        fluxo: nova.fluxo,
+                        media_id: nova.media_id || null,
+                      },
+                    }),
                   "Palavra salva. Já vale para os próximos comentários e mensagens.",
                 ).then(() => setNova({ palavra: "", fluxo: nova.fluxo, media_id: "" }))
               }
@@ -164,7 +243,8 @@ function DirectPage() {
           </div>
         ) : null}
         <p className="mt-2 text-xs text-muted-foreground">
-          Em comentários, a palavra vale em qualquer posição. No Direct, só quando é a mensagem inteira (ou até 3 palavras). Com o ID do post, a palavra vale só naquele post.
+          Em comentários, a palavra vale em qualquer posição. No Direct, só quando é a mensagem
+          inteira (ou até 3 palavras). Com o ID do post, a palavra vale só naquele post.
         </p>
       </Secao>
 
@@ -174,11 +254,18 @@ function DirectPage() {
         ) : (
           <ul className="divide-y text-sm">
             {eventos.map((e) => (
-              <li key={e.id} className={cn("flex flex-wrap gap-3 py-2", e.erro && "text-destructive")}>
-                <span className="w-32 shrink-0 text-xs text-muted-foreground">{fmtDataHora(e.created_at)}</span>
+              <li
+                key={e.id}
+                className={cn("flex flex-wrap gap-3 py-2", e.erro && "text-destructive")}
+              >
+                <span className="w-32 shrink-0 text-xs text-muted-foreground">
+                  {fmtDataHora(e.created_at)}
+                </span>
                 <span className="w-24 shrink-0 text-xs">{e.tipo}</span>
                 <span className="min-w-0 flex-1 truncate">{e.texto}</span>
-                <span className="text-xs text-muted-foreground">{e.erro ?? `${NOME_FLUXO[e.fluxo ?? ""] ?? e.fluxo ?? ""} ${e.resultado ?? ""}`}</span>
+                <span className="text-xs text-muted-foreground">
+                  {e.erro ?? `${NOME_FLUXO[e.fluxo ?? ""] ?? e.fluxo ?? ""} ${e.resultado ?? ""}`}
+                </span>
               </li>
             ))}
           </ul>

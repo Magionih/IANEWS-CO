@@ -20,6 +20,7 @@ import { Route as CrmConfigRouteImport } from './routes/_crm.config'
 import { Route as CrmDirectRouteImport } from './routes/_crm.direct'
 import { Route as CrmFilaRouteImport } from './routes/_crm.fila'
 import { Route as CrmFinanceiroRouteImport } from './routes/_crm.financeiro'
+import { Route as CrmIndicadoresRouteImport } from './routes/_crm.indicadores'
 import { Route as CrmListaRouteImport } from './routes/_crm.lista'
 import { Route as CrmNegociosRouteImport } from './routes/_crm.negocios'
 import { Route as CrmNewsletterRouteImport } from './routes/_crm.newsletter'
@@ -90,6 +91,11 @@ const CrmFilaRoute = CrmFilaRouteImport.update({
 const CrmFinanceiroRoute = CrmFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmIndicadoresRoute = CrmIndicadoresRouteImport.update({
+  id: '/indicadores',
+  path: '/indicadores',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmListaRoute = CrmListaRouteImport.update({
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/direct': typeof CrmDirectRoute
   '/fila': typeof CrmFilaRoute
   '/financeiro': typeof CrmFinanceiroRoute
+  '/indicadores': typeof CrmIndicadoresRoute
   '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
   '/newsletter': typeof CrmNewsletterRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/direct': typeof CrmDirectRoute
   '/fila': typeof CrmFilaRoute
   '/financeiro': typeof CrmFinanceiroRoute
+  '/indicadores': typeof CrmIndicadoresRoute
   '/lista': typeof CrmListaRoute
   '/negocios': typeof CrmNegociosRoute
   '/newsletter': typeof CrmNewsletterRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/_crm/direct': typeof CrmDirectRoute
   '/_crm/fila': typeof CrmFilaRoute
   '/_crm/financeiro': typeof CrmFinanceiroRoute
+  '/_crm/indicadores': typeof CrmIndicadoresRoute
   '/_crm/lista': typeof CrmListaRoute
   '/_crm/negocios': typeof CrmNegociosRoute
   '/_crm/newsletter': typeof CrmNewsletterRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/direct'
     | '/fila'
     | '/financeiro'
+    | '/indicadores'
     | '/lista'
     | '/negocios'
     | '/newsletter'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/direct'
     | '/fila'
     | '/financeiro'
+    | '/indicadores'
     | '/lista'
     | '/negocios'
     | '/newsletter'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/_crm/direct'
     | '/_crm/fila'
     | '/_crm/financeiro'
+    | '/_crm/indicadores'
     | '/_crm/lista'
     | '/_crm/negocios'
     | '/_crm/newsletter'
@@ -442,6 +454,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof CrmFinanceiroRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/indicadores': {
+      id: '/_crm/indicadores'
+      path: '/indicadores'
+      fullPath: '/indicadores'
+      preLoaderRoute: typeof CrmIndicadoresRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/lista': {
@@ -575,6 +594,7 @@ interface CrmRouteChildren {
   CrmDirectRoute: typeof CrmDirectRoute
   CrmFilaRoute: typeof CrmFilaRoute
   CrmFinanceiroRoute: typeof CrmFinanceiroRoute
+  CrmIndicadoresRoute: typeof CrmIndicadoresRoute
   CrmListaRoute: typeof CrmListaRoute
   CrmNegociosRoute: typeof CrmNegociosRoute
   CrmNewsletterRoute: typeof CrmNewsletterRoute
@@ -602,6 +622,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmDirectRoute: CrmDirectRoute,
   CrmFilaRoute: CrmFilaRoute,
   CrmFinanceiroRoute: CrmFinanceiroRoute,
+  CrmIndicadoresRoute: CrmIndicadoresRoute,
   CrmListaRoute: CrmListaRoute,
   CrmNegociosRoute: CrmNegociosRoute,
   CrmNewsletterRoute: CrmNewsletterRoute,

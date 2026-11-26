@@ -793,6 +793,11 @@ export type PainelDono = {
   producao: ItemLista[];
   followups: ItemLista[];
   comecar: { id: string; texto: string; feito: boolean; detalhe?: string; link: string }[];
+  meta: { valor: number; inicio: string; fim: string; diasRestantes: number };
+  recebidoMesQtd: number | null;
+  semanas: { rotulo: string; valor: number; parcial: boolean }[] | null;
+  funil: { etapa: string; qtd: number }[];
+  agenda: { dia: string; rotulo: string; qtd: number }[];
 };
 
 const RECEBIDO_NOV_INFORMADO = 8015; // valor do documento (pagamentos de novembro até 25/11)
@@ -802,7 +807,8 @@ export const getPainelDono = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<PainelDono> => {
     const { db, isAdmin } = context;
     const hoje = hojeBR();
-    const [p, vendas, precos, artigos] = await Promise.all([
+    const inicioHoje = new Date(`${hoje}T00:00:00-03:00`);
+    const [p, vendas, precos, artigos, proximos] = await Promise.all([
       lerParametros(db),
       lerNegociosVenda(db),
       precosProdutos(db),
@@ -813,6 +819,13 @@ export const getPainelDono = createServerFn({ method: "GET" })
           `and(status.eq.draft,published_at.lt.${new Date().toISOString()}),and(status.eq.published,published_at.gt.${new Date().toISOString()},published_at.lt.${new Date(Date.now() + 86_400_000).toISOString()})`,
         )
         .limit(50),
+      db
+        .from("articles")
+        .select("published_at")
+        .eq("status", "published")
+        .gte("published_at", inicioHoje.toISOString())
+        .lt("published_at", new Date(inicioHoje.getTime() + 4 * 86_400_000).toISOString())
+        .limit(500),
     ]);
     const [pagos, lanc, op, aud] = await Promise.all([
       isAdmin ? lerPagos(db) : Promise.resolve([] as NegocioBase[]),
@@ -870,6 +883,8 @@ export const getPainelDono = createServerFn({ method: "GET" })
     };
     const cobrancas: ItemLista[] = [];
     const comecar: PainelDono["comecar"] = [];
+    let semanasMes: PainelDono["semanas"] = null;
+    let qtdMes: number | null = null;
 
     if (isAdmin) {
       const rec = recebimentos(pagos, lanc, precos.porPreco);
@@ -883,6 +898,33 @@ export const getPainelDono = createServerFn({ method: "GET" })
       );
       const cx = caixa(rec, lanc, p, hoje);
       const rit = ritmoMeta(rec, p, hoje);
+      // Recebido por semana (segunda a domingo) no mês corrente.
+      {
+        const primeiro = `${hoje.slice(0, 7)}-01`;
+        const [ya, ma] = primeiro.split("-").map(Number);
+        const dSem = (new Date(Date.UTC(ya, ma - 1, 1)).getUTCDay() + 6) % 7;
+        let ini = somarDias(primeiro, -dSem);
+        const out: { rotulo: string; valor: number; parcial: boolean }[] = [];
+        while (ini <= hoje) {
+          const fim = somarDias(ini, 6);
+          const de = ini < primeiro ? primeiro : ini;
+          const ate = fim > hoje ? hoje : fim;
+          out.push({
+            rotulo:
+              fim >= hoje
+                ? `${de.slice(8, 10)}/${de.slice(5, 7)} até hoje`
+                : `${Number(de.slice(8, 10))} a ${ate.slice(8, 10)}/${ate.slice(5, 7)}`,
+            valor: soma(
+              rec.filter((r) => r.data >= de && r.data <= ate),
+              (r) => r.valor,
+            ),
+            parcial: fim >= hoje,
+          });
+          ini = somarDias(ini, 7);
+        }
+        semanasMes = out;
+        qtdMes = rec.filter((r) => r.data.startsWith(hoje.slice(0, 7)) && r.data <= hoje).length;
+      }
       const rit7 = ritmoMeta(rec, p, somarDias(hoje, -7));
       const receber = contasReceber(vendas, lanc, hoje);
       const prev = previstos(lanc, hoje, 90);
@@ -1035,10 +1077,18 @@ export const getPainelDono = createServerFn({ method: "GET" })
     }
 
     // Operação
-    const producao: ItemLista[] = op.fila.slice(0, 20).map((f) => ({
+    const producao: ItemLista[] = op.fila.map((f) => ({
       id: f.id,
       titulo: f.cliente,
-      detalhe: `${f.pago ? "Pago" : f.cortesia ? "Cortesia" : "A receber"} · ${f.etapa} há ${f.dias} dia${f.dias === 1 ? "" : "s"}${f.material ? (f.previa ? (f.aprovado ? " · aprovado" : " · prévia enviada") : " · material recebido, sem prévia") : ""}`,
+      detalhe: `${f.pago ? "Pago" : f.cortesia ? "Cortesia" : "A receber"} · ${
+        !f.material
+          ? "aguardando material"
+          : !f.previa
+            ? "material recebido, sem prévia"
+            : f.aprovado
+              ? "aprovado, falta publicar"
+              : "prévia com o cliente"
+      } há ${f.dias} dia${f.dias === 1 ? "" : "s"}`,
       valor: f.pago ? f.valor : undefined,
       alerta: f.atrasado,
     }));
@@ -1108,10 +1158,41 @@ export const getPainelDono = createServerFn({ method: "GET" })
           }
         : null,
       alertas,
-      cobrancas: cobrancas.slice(0, 30),
+      cobrancas,
       producao,
-      followups: followups.slice(0, 30),
+      followups,
       comecar,
+      meta: {
+        valor: p.meta.valor,
+        inicio: p.meta.inicio,
+        fim: p.meta.fim,
+        diasRestantes: Math.max(0, diasEntre(hoje, p.meta.fim)),
+      },
+      recebidoMesQtd: qtdMes,
+      semanas: semanasMes,
+      funil: (() => {
+        const desde = somarDias(hoje, -29);
+        const coorte = vendas.filter(
+          (n) => n.status_pagamento !== "cortesia" && diaBR(n.created_at)! >= desde,
+        );
+        const niveis = coorte.map(nivel);
+        return ["Abordados", "Responderam", "Qualificados", "Proposta", "Fecharam", "Pagaram"].map(
+          (etapa, i) => ({ etapa, qtd: niveis.filter((r) => r >= i + 1).length }),
+        );
+      })(),
+      agenda: (() => {
+        const lista2 = (checar(proximos) ?? []) as { published_at: string }[];
+        const nomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        return [0, 1, 2, 3].map((i) => {
+          const d = somarDias(hoje, i);
+          const [ya, ma, da] = d.split("-").map(Number);
+          return {
+            dia: d,
+            rotulo: i === 0 ? "Hoje" : nomes[new Date(Date.UTC(ya, ma - 1, da)).getUTCDay()],
+            qtd: lista2.filter((a) => diaBR(a.published_at) === d).length,
+          };
+        });
+      })(),
     };
   });
 
@@ -1784,6 +1865,7 @@ export type Operacao = {
   rascunhosVencidos: { slug: string; title: string; published_at: string }[];
   semCapa24h: { slug: string; title: string; published_at: string }[];
   semana: { publicadas: number; agendadas7: number; comPost: number };
+  dias: { dia: string; rotulo: string; hoje: boolean; total: number; comPost: number }[];
 };
 
 export const getOperacao = createServerFn({ method: "GET" })
@@ -1806,7 +1888,7 @@ export const getOperacao = createServerFn({ method: "GET" })
         .from("articles")
         .select("published_at, social_url")
         .eq("status", "published")
-        .gte("published_at", new Date(agora.getTime() - 7 * 86_400_000).toISOString())
+        .gte("published_at", new Date(agora.getTime() - 8 * 86_400_000).toISOString())
         .lte("published_at", new Date(agora.getTime() + 7 * 86_400_000).toISOString())
         .limit(1000),
     ]);
@@ -1835,10 +1917,32 @@ export const getOperacao = createServerFn({ method: "GET" })
       fechadoAtePublicar: tempos.length ? tempos.reduce((s, x) => s + x, 0) / tempos.length : null,
       rascunhosVencidos: lista.filter((a) => a.status === "draft"),
       semCapa24h: lista.filter((a) => a.status === "published" && !a.cover_image_url),
+      dias: (() => {
+        const [ya, ma, da] = hoje.split("-").map(Number);
+        const dSem = (new Date(Date.UTC(ya, ma - 1, da)).getUTCDay() + 6) % 7;
+        const seg = somarDias(hoje, -dSem);
+        const nomes = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+        return nomes.map((n, i) => {
+          const d = somarDias(seg, i);
+          const doDia = pubs.filter((a) => diaBR(a.published_at) === d);
+          return {
+            dia: d,
+            rotulo: `${n} ${d.slice(8, 10)}`,
+            hoje: d === hoje,
+            total: doDia.length,
+            comPost: doDia.filter((a) => a.social_url).length,
+          };
+        });
+      })(),
       semana: {
-        publicadas: passadas.length,
+        publicadas: passadas.filter(
+          (a) => new Date(a.published_at).getTime() >= agora.getTime() - 7 * 86_400_000,
+        ).length,
         agendadas7: pubs.length - passadas.length,
-        comPost: passadas.filter((a) => a.social_url).length,
+        comPost: passadas.filter(
+          (a) =>
+            a.social_url && new Date(a.published_at).getTime() >= agora.getTime() - 7 * 86_400_000,
+        ).length,
       },
     };
   });
@@ -1983,4 +2087,55 @@ export const saveProduto = createServerFn({ method: "POST" })
     const { id, ...row } = data;
     checar(await context.db.from("crm_produtos").update(row).eq("id", id).select("id").single());
     return { ok: true };
+  });
+
+// ---------- Indicadores gerais ----------
+
+export type Indicadores = {
+  pessoas: number;
+  empresas: number;
+  negocios: number;
+  negocios_abertos: number;
+  novos_hoje: number;
+  novos_7: number;
+  novos_30: number;
+  negocios_hoje: number;
+  negocios_7: number;
+  respostas_7: number;
+  enviadas_7: number;
+  por_dia: { dia: string; pessoas: number; negocios: number }[];
+  por_canal: { chave: string; total: number }[];
+  por_funil: { chave: string; total: number }[];
+  por_grupo: { chave: string; total: number }[];
+  audiencia: {
+    assinantes: number;
+    novos: number;
+    descadastros: number;
+    visitas: number;
+    visitasAnt: number | null;
+  } | null;
+};
+
+export const getIndicadores = createServerFn({ method: "GET" })
+  .middleware([requireCrmAccess])
+  .handler(async ({ context }): Promise<Indicadores> => {
+    const { db, isAdmin } = context;
+    const [r, aud] = await Promise.all([
+      db.rpc("crm_indicadores_leads"),
+      isAdmin ? audiencia7(db) : Promise.resolve(null),
+    ]);
+    if (r.error) throw new Error(r.error.message);
+    const base = r.data as Omit<Indicadores, "audiencia">;
+    return {
+      ...base,
+      audiencia: aud
+        ? {
+            assinantes: aud.assinantes,
+            novos: aud.novos,
+            descadastros: aud.descadastros,
+            visitas: aud.visitas,
+            visitasAnt: aud.visitasAnt,
+          }
+        : null,
+    };
   });

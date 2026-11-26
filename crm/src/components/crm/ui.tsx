@@ -15,38 +15,47 @@ import { baixarCsv, GRUPO_DESCRICAO, type CsvColuna } from "@/lib/crm/utils";
 export function CabecalhoPagina({
   titulo,
   descricao,
+  subtitulo,
   acoes,
 }: {
   titulo: ReactNode;
+  /** Explicação longa: fica num "?" discreto (passe o mouse para ler). */
   descricao?: string;
+  /** Linha curta sob o título, com os números que importam. */
+  subtitulo?: ReactNode;
   acoes?: ReactNode;
 }) {
   return (
-    <div className="mb-1 flex items-center justify-between gap-3 lg:sticky lg:top-0 lg:z-20 lg:-mx-6 lg:mb-5 lg:h-[60px] lg:border-b lg:bg-card/95 lg:px-6 lg:backdrop-blur-md">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        {typeof titulo === "string" ? (
-          <h1 className="truncate text-[20px] font-semibold leading-tight tracking-[-0.015em] lg:text-[18px]">
-            {titulo}
-          </h1>
-        ) : (
-          titulo
-        )}
-        {descricao ? (
-          <span
-            title={descricao}
-            aria-label={descricao}
-            className="hidden h-5 w-5 shrink-0 cursor-help items-center justify-center rounded-full border text-[11px] font-semibold text-muted-foreground lg:inline-flex"
-          >
-            ?
-          </span>
+    <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-2">
+          {typeof titulo === "string" ? (
+            <h1 className="font-display truncate text-[24px] font-bold leading-tight tracking-[-0.02em] sm:text-[28px]">
+              {titulo}
+            </h1>
+          ) : (
+            titulo
+          )}
+          {descricao ? (
+            <span
+              title={descricao}
+              aria-label={descricao}
+              className="hidden h-5 w-5 shrink-0 cursor-help items-center justify-center rounded-full border text-[11px] font-semibold text-muted-foreground sm:inline-flex"
+            >
+              ?
+            </span>
+          ) : null}
+        </div>
+        {subtitulo ? (
+          <p className="mt-1 text-[14px] text-muted-foreground [&_b]:font-semibold [&_b]:text-foreground">
+            {subtitulo}
+          </p>
         ) : null}
       </div>
       {acoes ? (
-        <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2 md:max-w-[65%] [&>*]:shrink-0">
-          {acoes}
-        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2 [&>*]:shrink-0">{acoes}</div>
       ) : null}
-    </div>
+    </header>
   );
 }
 
@@ -73,57 +82,28 @@ export function Numero({
   valor,
   detalhe,
   destaque,
-  icone: Icone,
 }: {
   rotulo: string;
   valor: ReactNode;
   detalhe?: ReactNode;
-  destaque?: "alerta" | "azul";
+  destaque?: "alerta" | "azul" | "ok";
   icone?: ComponentType<{ className?: string }>;
 }) {
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-xl border bg-card p-3 shadow-[var(--shadow-card)] sm:p-4",
-        destaque === "alerta" && "border-destructive/30",
-        destaque === "azul" && "border-primary/30",
-      )}
-    >
-      {destaque ? (
-        <span
-          className={cn(
-            "absolute inset-x-0 top-0 h-[3px]",
-            destaque === "alerta" ? "bg-destructive" : "bg-primary",
-          )}
-        />
-      ) : null}
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[11.5px] font-medium leading-snug text-muted-foreground sm:text-[12.5px]">
-          {rotulo}
-        </p>
-        {Icone ? (
-          <span
-            className={cn(
-              "hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:flex",
-              destaque === "alerta"
-                ? "bg-destructive/10 text-destructive"
-                : "bg-primary/[0.08] text-primary",
-            )}
-          >
-            <Icone className="h-4 w-4" />
-          </span>
-        ) : null}
-      </div>
-      <p
-        className={cn(
-          "tabular mt-1 text-[20px] font-semibold leading-none tracking-[-0.02em] sm:mt-1.5 sm:text-[26px]",
-          destaque === "alerta" && "text-destructive",
-        )}
-      >
+    <div className="flex h-full min-w-0 flex-col gap-2 rounded-2xl border bg-card px-5 py-5 sm:px-6">
+      <p className="truncate text-[13px] font-medium text-muted-foreground">{rotulo}</p>
+      <p className="font-display tabular truncate text-[24px] font-bold leading-none tracking-[-0.02em] sm:text-[30px]">
         {valor}
       </p>
       {detalhe ? (
-        <p className="mt-1 text-[11px] leading-snug text-muted-foreground sm:mt-1.5 sm:text-xs">
+        <p
+          className={cn(
+            "truncate text-[13px] text-muted-foreground",
+            destaque === "alerta" && "font-semibold text-[#B4530A]",
+            destaque === "ok" && "font-semibold text-[#0E7A55]",
+            destaque === "azul" && "font-semibold text-primary",
+          )}
+        >
           {detalhe}
         </p>
       ) : null}
@@ -148,21 +128,19 @@ export function Secao({
   colado?: boolean;
 }) {
   return (
-    <section
-      className={cn("min-w-0 rounded-xl border bg-card shadow-[var(--shadow-card)]", className)}
-    >
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-5">
-        <h2 className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.01em]">
+    <section className={cn("min-w-0 rounded-2xl border bg-card", className)}>
+      <header className="flex flex-wrap items-center justify-between gap-2 px-5 pb-3 pt-5 sm:px-6">
+        <h2 className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
           {titulo}
           {contagem != null ? (
-            <span className="tabular rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+            <span className="tabular text-[13px] font-semibold text-muted-foreground">
               {contagem}
             </span>
           ) : null}
         </h2>
         {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
       </header>
-      <div className={colado ? "" : "p-4 sm:p-5"}>{children}</div>
+      <div className={colado ? "pb-2" : "px-5 pb-5 sm:px-6"}>{children}</div>
     </section>
   );
 }
@@ -170,23 +148,16 @@ export function Secao({
 /** Esqueleto de carregamento: mostra a forma da tela enquanto os dados chegam (sem tela "travada"). */
 export function Carregando({ texto = "Carregando..." }: { texto?: string }) {
   return (
-    <div role="status" aria-live="polite" className="space-y-4 py-2">
-      <span className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" /> {texto}
-      </span>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div role="status" aria-live="polite" aria-label={texto} className="space-y-6">
+      <div className="h-9 w-56 animate-pulse rounded-lg bg-[#E9ECF1]" />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-xl border bg-card" />
+          <div key={i} className="h-[118px] animate-pulse rounded-2xl border bg-card" />
         ))}
       </div>
-      <div className="space-y-2">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-9 animate-pulse rounded-md bg-muted/70"
-            style={{ width: `${95 - i * 9}%` }}
-          />
-        ))}
+      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <div className="h-72 animate-pulse rounded-2xl border bg-card" />
+        <div className="h-72 animate-pulse rounded-2xl border bg-card" />
       </div>
     </div>
   );
@@ -203,7 +174,7 @@ export function Erro({ erro }: { erro: unknown }) {
 
 export function Vazio({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-lg border border-dashed bg-muted/40 px-4 py-8 text-center text-sm text-muted-foreground">
+    <p className="rounded-xl border border-dashed border-[#D5DAE3] px-4 py-8 text-center text-[13px] text-muted-foreground">
       {children}
     </p>
   );
@@ -348,7 +319,10 @@ export function Alternador<T extends string>({
   return (
     <div
       role="radiogroup"
-      className={cn("inline-flex h-10 shrink-0 items-center rounded-lg bg-muted p-1", className)}
+      className={cn(
+        "inline-flex h-[38px] max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-[10px] bg-[#ECEEF2] p-[3px]",
+        className,
+      )}
     >
       {opcoes.map((o) => {
         const on = o.valor === valor;
@@ -362,8 +336,8 @@ export function Alternador<T extends string>({
             title={o.titulo}
             onClick={() => onChange(o.valor)}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition",
-              on && "bg-card text-foreground shadow-[0_1px_2px_rgb(16_24_40/0.08)]",
+              "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-[13px] font-medium text-[#3A4456] transition hover:text-foreground",
+              on && "bg-card font-semibold text-foreground shadow-[0_1px_2px_rgb(15_23_41/0.08)]",
             )}
           >
             {o.icone ? <o.icone className="h-4 w-4" /> : null}
@@ -415,36 +389,27 @@ export function FaixaNumeros({
   itens,
   children,
 }: {
-  itens: { rotulo: string; valor: ReactNode; detalhe?: ReactNode; tom?: "alerta" | "azul" }[];
+  itens: {
+    rotulo: string;
+    valor: ReactNode;
+    detalhe?: ReactNode;
+    tom?: "alerta" | "azul" | "ok";
+  }[];
   children?: ReactNode;
 }) {
-  const cols =
-    itens.length >= 6 ? "lg:grid-cols-6" : itens.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
   return (
-    <section className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
-      <dl className={cn("grid grid-cols-3 gap-px bg-border", cols)}>
+    <section className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         {itens.map((x) => (
-          <div key={x.rotulo} className="min-w-0 bg-card px-3 py-3 sm:px-4">
-            <dt className="truncate text-[11.5px] font-medium text-muted-foreground">{x.rotulo}</dt>
-            <dd
-              className={cn(
-                "tabular mt-0.5 truncate text-[15px] font-semibold tracking-[-0.01em] sm:text-xl",
-                x.tom === "alerta" && "text-destructive",
-                x.tom === "azul" && "text-primary",
-              )}
-            >
-              {x.valor}
-            </dd>
-            {x.detalhe ? (
-              <dd className="truncate text-[11px] text-muted-foreground">{x.detalhe}</dd>
-            ) : null}
-          </div>
+          <Numero
+            key={x.rotulo}
+            rotulo={x.rotulo}
+            valor={x.valor}
+            detalhe={x.detalhe}
+            destaque={x.tom}
+          />
         ))}
-        {/* Completa a última linha no celular para a grade não ficar com buraco. */}
-        {Array.from({ length: (3 - (itens.length % 3)) % 3 }, (_, i) => (
-          <div key={`v${i}`} className="bg-card lg:hidden" />
-        ))}
-      </dl>
+      </div>
       {children}
     </section>
   );

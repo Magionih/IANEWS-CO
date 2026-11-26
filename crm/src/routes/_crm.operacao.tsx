@@ -1,35 +1,53 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, Clapperboard } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import { NegocioPainel } from "@/components/crm/negocio";
-import {
-  Alternador,
-  CabecalhoPagina,
-  Carregando,
-  Erro,
-  Etiqueta,
-  FaixaNumeros,
-  Secao,
-  Vazio,
-} from "@/components/crm/ui";
-import { Button } from "@/components/ui/button";
-import { getOperacao } from "@/lib/crm/metricas.functions";
-import { fmtDataHora, fmtMoeda, fmtNum, fmtPct, linkMateria } from "@/lib/crm/utils";
+import { CabecalhoPagina, Carregando, Erro } from "@/components/crm/ui";
+import { getOperacao, type ItemFila, type Operacao } from "@/lib/crm/metricas.functions";
+import { fmtDataHora, linkMateria } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_crm/operacao")({
   component: OperacaoPage,
 });
 
-/* Camada 3 · Operação: fila de produção com os pagos primeiro, prazos (material → prévia em até
-   2 dias, pagos 1; prévia → aprovação em até 3), valor travado, rascunhos vencidos e capacidade. */
+/* Produção: "o que está pago e parado?". A semana no site e a fila em 4 etapas,
+   com os pagos sempre no topo de cada etapa. */
+
+const brl = (n: number) => `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
+
+const ETAPAS: { id: string; nome: string; prazo: string; filtro: (f: ItemFila) => boolean }[] = [
+  {
+    id: "material",
+    nome: "Aguardando material",
+    prazo: "Cobrar o cliente · pagos em 1 dia",
+    filtro: (f) => !f.material,
+  },
+  {
+    id: "producao",
+    nome: "Em produção",
+    prazo: "Material → prévia em até 2 dias",
+    filtro: (f) => f.material && !f.previa,
+  },
+  {
+    id: "previa",
+    nome: "Prévia com o cliente",
+    prazo: "Aprovação em até 3 dias",
+    filtro: (f) => f.previa && !f.aprovado,
+  },
+  {
+    id: "aprovado",
+    nome: "Aprovado · agendar",
+    prazo: "Entra no calendário",
+    filtro: (f) => f.aprovado,
+  },
+];
 
 function OperacaoPage() {
   const fetchOp = useServerFn(getOperacao);
-  const [filtro, setFiltro] = useState<"todos" | "pagos" | "atrasados">("todos");
   const [aberto, setAberto] = useState<string | null>(null);
   const { data, isLoading, error } = useQuery({
     queryKey: ["crm", "operacao"],
@@ -38,200 +56,210 @@ function OperacaoPage() {
   });
   if (isLoading) return <Carregando texto="Montando a fila de produção..." />;
   if (error || !data) return <Erro erro={error} />;
-
-  const fila = data.fila.filter((f) =>
-    filtro === "pagos" ? f.pago : filtro === "atrasados" ? f.atrasado : true,
-  );
   const pagos = data.fila.filter((f) => f.pago);
-  const s = data.semana;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoPagina
-        titulo="Operação"
-        descricao="Produção das matérias vendidas: pagos sempre primeiro. Prazos: material → prévia em até 2 dias (pagos: 1); prévia → aprovação em até 3."
-        acoes={
-          <>
-            <Button asChild variant="outline" size="sm" className="h-9">
-              <Link to="/producoes">
-                <Clapperboard className="h-4 w-4" />{" "}
-                <span className="hidden sm:inline">Produções</span>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="h-9">
-              <Link to="/calendario">
-                <CalendarDays className="h-4 w-4" />{" "}
-                <span className="hidden sm:inline">Calendário</span>
-              </Link>
-            </Button>
-          </>
+        titulo="Produção"
+        subtitulo={
+          pagos.length ? (
+            <>
+              <b className="!text-[#C2410C]">{brl(data.valorTravado)} pagos parados</b> ·{" "}
+              {pagos.length} pagos na fila · pagos sempre no topo
+            </>
+          ) : (
+            <>Nenhum pago parado · {data.fila.length} na fila</>
+          )
         }
       />
 
-      <FaixaNumeros
-        itens={[
-          {
-            rotulo: "Valor travado",
-            valor: fmtMoeda(data.valorTravado),
-            detalhe: `${pagos.length} pagos sem publicar`,
-            tom: data.valorTravado ? "alerta" : undefined,
-          },
-          {
-            rotulo: "Na fila",
-            valor: fmtNum(data.fila.length),
-            detalhe: `${data.fila.filter((f) => f.atrasado).length} fora do prazo`,
-          },
-          {
-            rotulo: "Prévias aguardando",
-            valor: fmtNum(data.previasAguardando),
-            detalhe: "esperando aprovação do cliente",
-          },
-          {
-            rotulo: "Fechado → publicado",
-            valor:
-              data.fechadoAtePublicar == null
-                ? "—"
-                : `${data.fechadoAtePublicar.toFixed(1).replace(".", ",")} dias`,
-            detalhe: "média",
-          },
-          {
-            rotulo: "Publicadas (7 dias)",
-            valor: fmtNum(s.publicadas),
-            detalhe: `${fmtNum(s.agendadas7)} agendadas p/ 7 dias`,
-          },
-          {
-            rotulo: "Com post ligado",
-            valor: fmtPct(s.publicadas ? s.comPost / s.publicadas : null),
-            detalhe: "canais completos",
-          },
-        ]}
-      />
+      <Semana d={data} />
 
-      <Secao
-        titulo="Fila de produção"
-        contagem={fila.length}
-        colado
-        acoes={
-          <Alternador
-            valor={filtro}
-            onChange={setFiltro}
-            opcoes={[
-              { valor: "todos", rotulo: "Todos" },
-              { valor: "pagos", rotulo: "Pagos" },
-              { valor: "atrasados", rotulo: "Fora do prazo" },
-            ]}
-          />
-        }
-      >
-        {fila.length ? (
-          <ul className="divide-y">
-            {fila.map((f) => (
-              <li key={f.id}>
-                <button
-                  type="button"
-                  onClick={() => setAberto(f.id)}
-                  className="flex w-full flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-[#f8faff] sm:px-5"
-                >
-                  <span
-                    className={cn(
-                      "h-2 w-2 shrink-0 rounded-full",
-                      f.atrasado ? "bg-destructive" : f.pago ? "bg-emerald-500" : "bg-primary/40",
-                    )}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-semibold">{f.cliente}</span>
-                    <span className="block truncate text-[11.5px] text-muted-foreground">
-                      {f.etapa} há {f.dias} dia{f.dias === 1 ? "" : "s"}
-                    </span>
-                  </span>
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    {f.pago ? (
-                      <Etiqueta tom="ok">pago</Etiqueta>
-                    ) : f.cortesia ? (
-                      <Etiqueta>cortesia</Etiqueta>
-                    ) : (
-                      <Etiqueta tom="azul">a receber</Etiqueta>
-                    )}
-                    <Etiqueta tom={f.material ? "ok" : "neutro"}>
-                      {f.material ? "material ok" : "sem material"}
-                    </Etiqueta>
-                    {f.previa ? (
-                      <Etiqueta tom={f.aprovado ? "ok" : "azul"}>
-                        {f.aprovado ? "aprovado" : "prévia enviada"}
-                      </Etiqueta>
-                    ) : null}
-                    {f.ajuste ? <Etiqueta tom="alerta">ajuste</Etiqueta> : null}
-                    {f.atrasado ? <Etiqueta tom="alerta">fora do prazo</Etiqueta> : null}
-                  </span>
-                  <span className="tabular w-20 text-right text-[13px] font-semibold">
-                    {f.valor ? fmtMoeda(f.valor) : "—"}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="p-5">
-            <Vazio>Nada na fila.</Vazio>
-          </div>
-        )}
-      </Secao>
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <ListaArtigos
-          titulo="Rascunhos com data vencida"
-          lista={data.rascunhosVencidos}
-          vazio="Nenhum rascunho atrasado."
-        />
-        <ListaArtigos
-          titulo="Próximas 24h sem capa"
-          lista={data.semCapa24h}
-          vazio="Todas as matérias das próximas 24h têm capa."
-        />
+      <div className="-mx-1 overflow-x-auto px-1 pb-2">
+        <div className="grid min-w-[1000px] grid-cols-4 gap-4">
+          {ETAPAS.map((e) => (
+            <Coluna key={e.id} etapa={e} itens={data.fila.filter(e.filtro)} onAbrir={setAberto} />
+          ))}
+        </div>
       </div>
-      <p className="text-[12px] text-muted-foreground">
-        Retrabalho (prévias com ajuste pedido): {fmtPct(data.retrabalhoPct)}. Os tempos de prévia e
-        aprovação passam a ser medidos conforme os briefings recebem material e prévia.
-      </p>
+
+      <Avisos d={data} />
       <NegocioPainel id={aberto} onClose={() => setAberto(null)} />
     </div>
   );
 }
 
-function ListaArtigos({
-  titulo,
-  lista,
-  vazio,
-}: {
-  titulo: string;
-  lista: { slug: string; title: string; published_at: string }[];
-  vazio: string;
-}) {
+function Semana({ d }: { d: Operacao }) {
   return (
-    <Secao titulo={titulo} contagem={lista.length} colado>
-      {lista.length ? (
-        <ul className="divide-y">
-          {lista.map((a) => (
-            <li key={a.slug} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
-              <span className="w-28 shrink-0 text-[12px] font-semibold text-muted-foreground">
-                {fmtDataHora(a.published_at)}
-              </span>
-              <a
-                href={linkMateria(a.slug) ?? undefined}
-                target="_blank"
-                rel="noreferrer"
-                className="line-clamp-2 min-w-0 flex-1 text-[13px] font-medium hover:text-primary"
-              >
-                {a.title}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="p-4">
-          <Vazio>{vazio}</Vazio>
+    <section aria-label="Esta semana" className="rounded-2xl border bg-card px-5 py-[18px]">
+      <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-[15px] font-semibold">Esta semana no site e no Instagram</h2>
+        <span className="flex gap-4 text-[12px] text-[#3A4456]">
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2 w-2 rounded-sm bg-[#C9D7FF]" /> Matérias
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2 w-2 rounded-sm bg-[#0E8A5F]" /> Com post ligado
+          </span>
+        </span>
+      </div>
+      <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-7">
+        {d.dias.map((x) => (
+          <div
+            key={x.dia}
+            className={cn(
+              "flex flex-col gap-2 rounded-xl p-3",
+              x.hoje ? "bg-[#EEF3FF]" : "bg-background",
+            )}
+          >
+            <span
+              className={cn(
+                "text-[12px] font-semibold",
+                x.hoje ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              {x.rotulo}
+              {x.hoje ? " · hoje" : ""}
+            </span>
+            <span className="font-display tabular text-[22px] font-bold">{x.total}</span>
+            <div className="flex h-1.5 gap-[3px]">
+              {x.comPost ? (
+                <div className="rounded-sm bg-[#0E8A5F]" style={{ flex: x.comPost }} />
+              ) : null}
+              {x.total - x.comPost ? (
+                <div className="rounded-sm bg-[#C9D7FF]" style={{ flex: x.total - x.comPost }} />
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Coluna({
+  etapa,
+  itens,
+  onAbrir,
+}: {
+  etapa: (typeof ETAPAS)[number];
+  itens: ItemFila[];
+  onAbrir: (id: string) => void;
+}) {
+  const [todos, setTodos] = useState(false);
+  const visiveis = todos ? itens : itens.slice(0, 6);
+  const resto = itens.slice(6);
+  const restoPagos = resto.filter((i) => i.pago).length;
+  return (
+    <section className="flex min-w-0 flex-col gap-2.5 rounded-2xl bg-[#ECEEF2] p-3">
+      <div className="flex flex-col gap-0.5 px-1 pb-0.5 pt-1">
+        <span className="flex items-center gap-2">
+          <h2 className="text-[14px] font-semibold">{etapa.nome}</h2>
+          <span className="tabular text-[12px] font-semibold text-muted-foreground">
+            {itens.length}
+          </span>
+        </span>
+        <span className="text-[12px] text-muted-foreground">{etapa.prazo}</span>
+      </div>
+      {visiveis.map((j) => (
+        <button
+          key={j.id}
+          type="button"
+          onClick={() => onAbrir(j.id)}
+          className="flex flex-col gap-2 rounded-xl border bg-card p-3.5 text-left transition hover:border-[#C9D7FF]"
+        >
+          <span className="flex justify-between gap-2">
+            <span className="min-w-0 truncate text-[14px] font-semibold">{j.cliente}</span>
+            {j.valor ? (
+              <span className="tabular shrink-0 text-[13px] font-bold">{brl(j.valor)}</span>
+            ) : null}
+          </span>
+          <span className="flex flex-wrap gap-1.5">
+            <Selo tom={j.pago ? "pago" : "neutro"}>
+              {j.pago ? "Pago" : j.cortesia ? "Cortesia" : "A receber"}
+            </Selo>
+            <Selo tom={j.atrasado ? "atraso" : "neutro"}>
+              {j.dias === 0 ? "hoje" : `há ${j.dias} dia${j.dias === 1 ? "" : "s"}`}
+            </Selo>
+            {j.ajuste ? <Selo tom="atraso">ajuste pedido</Selo> : null}
+          </span>
+        </button>
+      ))}
+      {!itens.length ? (
+        <div className="rounded-xl border border-dashed border-[#C7CCD6] p-[18px] text-center text-[13px] text-muted-foreground">
+          Nada nesta etapa
         </div>
+      ) : null}
+      {resto.length ? (
+        <button
+          type="button"
+          onClick={() => setTodos((v) => !v)}
+          className="h-[34px] rounded-[10px] border border-dashed border-[#C7CCD6] text-[13px] font-medium text-muted-foreground transition hover:bg-white/60"
+        >
+          {todos
+            ? "Mostrar menos"
+            : `+ ${resto.length}${restoPagos ? ` (${restoPagos} pago${restoPagos > 1 ? "s" : ""})` : ""}`}
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+function Selo({ tom, children }: { tom: "pago" | "atraso" | "neutro"; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "rounded-md px-2 py-[3px] text-[11.5px] font-semibold",
+        tom === "pago" && "bg-[#E7F6EF] text-[#0B6B49]",
+        tom === "atraso" && "bg-[#FFF1E6] text-[#A3400A]",
+        tom === "neutro" && "bg-[#F1F3F7] text-[#3A4456]",
       )}
-    </Secao>
+    >
+      {children}
+    </span>
+  );
+}
+
+function Avisos({ d }: { d: Operacao }) {
+  const grupos = [
+    { titulo: "passaram da data de publicação", lista: d.rascunhosVencidos, nome: "rascunho" },
+    { titulo: "das próximas 24h estão sem capa", lista: d.semCapa24h, nome: "matéria" },
+  ].filter((g) => g.lista.length);
+  if (!grupos.length) return null;
+  return (
+    <div className="space-y-3">
+      {grupos.map((g) => (
+        <section
+          key={g.titulo}
+          className="flex flex-wrap items-start gap-4 rounded-2xl border bg-card px-6 py-5"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#FFF6ED] text-[#C2410C]">
+            <AlertTriangle className="h-[18px] w-[18px]" />
+          </span>
+          <div className="min-w-0 flex-[1_1_320px]">
+            <p className="text-[14px] font-semibold">
+              {g.lista.length} {g.nome}
+              {g.lista.length > 1 ? "s" : ""} {g.titulo}
+            </p>
+            <ul className="mt-1.5 space-y-1">
+              {g.lista.slice(0, 5).map((a) => (
+                <li key={a.slug} className="flex gap-3 text-[13px] text-muted-foreground">
+                  <span className="w-28 shrink-0">{fmtDataHora(a.published_at)}</span>
+                  <a
+                    href={linkMateria(a.slug) ?? undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="min-w-0 truncate hover:text-primary"
+                  >
+                    {a.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }

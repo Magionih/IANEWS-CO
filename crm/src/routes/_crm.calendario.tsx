@@ -232,10 +232,7 @@ function CalendarioPage() {
               {[...new Set(doMes.map((c) => diaDe(c.published_at)))].map((d) => (
                 <li key={d} className="px-4 py-3 sm:px-5">
                   <p
-                    className={cn(
-                      "mb-1.5 text-[13px] font-semibold",
-                      d === hoje && "text-primary",
-                    )}
+                    className={cn("mb-1.5 text-[13px] font-semibold", d === hoje && "text-primary")}
                   >
                     {maiuscula(DIA_LONGO.format(new Date(`${d}T12:00:00Z`)))}
                   </p>
