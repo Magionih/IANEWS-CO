@@ -237,7 +237,7 @@ function CalendarioPage() {
                       d === hoje && "text-primary",
                     )}
                   >
-                    {DIA_LONGO.format(new Date(`${d}T12:00:00Z`))}
+                    {maiuscula(DIA_LONGO.format(new Date(`${d}T12:00:00Z`)))}
                   </p>
                   <ItensDoDia itens={porDia.get(d) ?? []} />
                 </li>
