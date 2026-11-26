@@ -236,10 +236,10 @@ function Kpi({
   return (
     <Link
       to={link}
-      className="flex min-w-0 flex-[1_1_200px] flex-col gap-2.5 rounded-2xl border bg-card px-6 py-[22px] transition hover:border-[#C9D7FF]"
+      className="flex min-w-0 flex-[1_1_150px] flex-col gap-2.5 rounded-2xl border bg-card px-5 py-5 transition hover:border-[#C9D7FF] sm:flex-[1_1_200px] sm:px-6 sm:py-[22px]"
     >
       <span className="text-[13px] font-medium text-muted-foreground">{rotulo}</span>
-      <span className="font-display tabular text-[30px] font-bold leading-none tracking-[-0.02em]">
+      <span className="font-display tabular text-[24px] font-bold leading-none tracking-[-0.02em] sm:text-[30px]">
         {valor}
       </span>
       {detalhe ? (
@@ -494,7 +494,7 @@ function ListaFoco({
           <button
             type="button"
             onClick={() => onAbrir(i.id)}
-            className="h-[34px] shrink-0 rounded-[9px] border border-input bg-card px-3.5 text-[13px] font-semibold transition hover:bg-background"
+            className="hidden h-[34px] shrink-0 rounded-[9px] border border-input bg-card px-3.5 text-[13px] font-semibold transition hover:bg-background sm:inline-flex sm:items-center"
           >
             {acao}
           </button>

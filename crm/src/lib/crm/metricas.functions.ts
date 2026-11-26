@@ -898,29 +898,25 @@ export const getPainelDono = createServerFn({ method: "GET" })
       );
       const cx = caixa(rec, lanc, p, hoje);
       const rit = ritmoMeta(rec, p, hoje);
-      // Recebido por semana (segunda a domingo) no mês corrente.
+      // Recebido por semana do mês (blocos de 7 dias a partir do dia 1).
       {
         const primeiro = `${hoje.slice(0, 7)}-01`;
-        const [ya, ma] = primeiro.split("-").map(Number);
-        const dSem = (new Date(Date.UTC(ya, ma - 1, 1)).getUTCDay() + 6) % 7;
-        let ini = somarDias(primeiro, -dSem);
         const out: { rotulo: string; valor: number; parcial: boolean }[] = [];
-        while (ini <= hoje) {
+        for (let ini = primeiro; ini <= hoje; ini = somarDias(ini, 7)) {
           const fim = somarDias(ini, 6);
-          const de = ini < primeiro ? primeiro : ini;
-          const ate = fim > hoje ? hoje : fim;
+          const ate = fim >= hoje ? hoje : fim;
+          const mm = ini.slice(5, 7);
           out.push({
             rotulo:
               fim >= hoje
-                ? `${de.slice(8, 10)}/${de.slice(5, 7)} até hoje`
-                : `${Number(de.slice(8, 10))} a ${ate.slice(8, 10)}/${ate.slice(5, 7)}`,
+                ? `${Number(ini.slice(8, 10))}/${mm} até hoje`
+                : `${Number(ini.slice(8, 10))} a ${ate.slice(8, 10)}/${mm}`,
             valor: soma(
-              rec.filter((r) => r.data >= de && r.data <= ate),
+              rec.filter((r) => r.data >= ini && r.data <= ate),
               (r) => r.valor,
             ),
-            parcial: fim >= hoje,
+            parcial: fim > hoje,
           });
-          ini = somarDias(ini, 7);
         }
         semanasMes = out;
         qtdMes = rec.filter((r) => r.data.startsWith(hoje.slice(0, 7)) && r.data <= hoje).length;

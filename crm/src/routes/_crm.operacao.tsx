@@ -222,26 +222,39 @@ function Selo({ tom, children }: { tom: "pago" | "atraso" | "neutro"; children: 
 }
 
 function Avisos({ d }: { d: Operacao }) {
+  const r = d.rascunhosVencidos.length;
+  const c = d.semCapa24h.length;
   const grupos = [
-    { titulo: "passaram da data de publicação", lista: d.rascunhosVencidos, nome: "rascunho" },
-    { titulo: "das próximas 24h estão sem capa", lista: d.semCapa24h, nome: "matéria" },
+    {
+      chave: "rascunhos",
+      texto:
+        r === 1
+          ? "1 rascunho passou da data de publicação"
+          : `${r} rascunhos passaram da data de publicação`,
+      lista: d.rascunhosVencidos,
+    },
+    {
+      chave: "capa",
+      texto:
+        c === 1
+          ? "1 matéria das próximas 24h está sem capa"
+          : `${c} matérias das próximas 24h estão sem capa`,
+      lista: d.semCapa24h,
+    },
   ].filter((g) => g.lista.length);
   if (!grupos.length) return null;
   return (
     <div className="space-y-3">
       {grupos.map((g) => (
         <section
-          key={g.titulo}
+          key={g.chave}
           className="flex flex-wrap items-start gap-4 rounded-2xl border bg-card px-6 py-5"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#FFF6ED] text-[#C2410C]">
             <AlertTriangle className="h-[18px] w-[18px]" />
           </span>
           <div className="min-w-0 flex-[1_1_320px]">
-            <p className="text-[14px] font-semibold">
-              {g.lista.length} {g.nome}
-              {g.lista.length > 1 ? "s" : ""} {g.titulo}
-            </p>
+            <p className="text-[14px] font-semibold">{g.texto}</p>
             <ul className="mt-1.5 space-y-1">
               {g.lista.slice(0, 5).map((a) => (
                 <li key={a.slug} className="flex gap-3 text-[13px] text-muted-foreground">
