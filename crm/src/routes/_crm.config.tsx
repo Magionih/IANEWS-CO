@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Save } from "lucide-react";
 
+import { Seguranca } from "@/components/crm/seguranca";
 import { useCrm } from "@/components/crm/context";
 import { useAcao, useModelos } from "@/components/crm/queries";
 import { COR_TAG, TagChip } from "@/components/crm/tags";
@@ -78,11 +79,12 @@ function ConfigPage() {
         descricao="Funis, etapas e prazos, tags estratégicas, modelos de mensagem, usuários e papéis. Só admin."
       />
       <Tabs defaultValue="etapas">
-        <TabsList className="h-10">
+        <TabsList className="h-10 max-w-full overflow-x-auto">
           <TabsTrigger value="etapas">Funis e etapas</TabsTrigger>
           <TabsTrigger value="tags">Tags</TabsTrigger>
           <TabsTrigger value="modelos">Modelos de mensagem</TabsTrigger>
           <TabsTrigger value="usuarios">Usuários e papéis</TabsTrigger>
+          <TabsTrigger value="seguranca">Segurança</TabsTrigger>
         </TabsList>
         <TabsContent value="etapas" className="mt-4">
           <Etapas />
@@ -95,6 +97,9 @@ function ConfigPage() {
         </TabsContent>
         <TabsContent value="usuarios" className="mt-4">
           <Usuarios />
+        </TabsContent>
+        <TabsContent value="seguranca" className="mt-4">
+          <Seguranca />
         </TabsContent>
       </Tabs>
     </div>
@@ -561,8 +566,8 @@ function Usuarios() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        A pessoa cria a conta na tela de login do CRM e você define o papel aqui. Só admin,
-        comercial e editorial veem o CRM.
+        Convide a pessoa na aba Segurança; depois que ela criar a senha, defina o papel aqui. Só
+        admin, comercial e editorial veem o CRM.
       </p>
       <Input
         value={q}

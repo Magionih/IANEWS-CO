@@ -5,11 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 /* Proteção da sessão no navegador:
-   - sai sozinho depois de 4h sem uso (vale para todas as abas abertas);
+   - sai sozinho depois de 2h sem uso (vale para todas as abas abertas);
    - se a sessão acabar (saiu em outra aba, senha trocada, token revogado), limpa os dados
      do CRM da memória e volta para o login. */
 
-const LIMITE_INATIVO_MS = 4 * 60 * 60_000;
+const LIMITE_INATIVO_MS = 2 * 60 * 60_000;
 const CHAVE = "crm:ultima-atividade";
 
 function lerUltima(): number {

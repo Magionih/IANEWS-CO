@@ -35,19 +35,22 @@ function getVerificador(): CrmDb {
   return verificador;
 }
 
-const PAPEIS_TTL_MS = 30_000;
-const cachePapeis = new Map<string, { papeis: string[]; ate: number }>();
+const PAPEIS_TTL_MS = 15_000;
+type Sessao = { papeis: string[]; mfaAtiva: boolean; mfaOk: boolean };
+const cacheSessao = new Map<string, { s: Sessao; ate: number }>();
 
-async function papeisDo(db: CrmDb, userId: string): Promise<string[]> {
+/** Papéis e situação da verificação em duas etapas (a chave inclui o nível do token). */
+async function sessaoDo(db: CrmDb, chave: string): Promise<Sessao> {
   const agora = Date.now();
-  const guardado = cachePapeis.get(userId);
-  if (guardado && guardado.ate > agora) return guardado.papeis;
-  const { data, error } = await db.from("user_roles").select("role").eq("user_id", userId);
-  if (error) throw new Error(error.message);
-  const papeis = ((data ?? []) as { role: string }[]).map((r) => r.role);
-  if (cachePapeis.size > 500) cachePapeis.clear();
-  cachePapeis.set(userId, { papeis, ate: agora + PAPEIS_TTL_MS });
-  return papeis;
+  const guardado = cacheSessao.get(chave);
+  if (guardado && guardado.ate > agora) return guardado.s;
+  const { data, error } = await db.rpc("crm_minha_sessao");
+  if (error) throw new Error("Não foi possível conferir o acesso. Entre novamente no CRM.");
+  const d = (data ?? {}) as { papeis?: string[]; mfa_ativa?: boolean; mfa_ok?: boolean };
+  const s: Sessao = { papeis: d.papeis ?? [], mfaAtiva: !!d.mfa_ativa, mfaOk: d.mfa_ok !== false };
+  if (cacheSessao.size > 500) cacheSessao.clear();
+  cacheSessao.set(chave, { s, ate: agora + PAPEIS_TTL_MS });
+  return s;
 }
 
 const JWT = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
@@ -69,10 +72,14 @@ export const requireCrmAccess = createMiddleware({ type: "function" }).server(as
     auth: SEM_SESSAO,
   }) as CrmDb;
 
-  const papeis = await papeisDo(db, userId);
+  const aal = String((data?.claims as { aal?: string } | undefined)?.aal ?? "aal1");
+  const { papeis, mfaOk } = await sessaoDo(db, `${userId}:${aal}`);
   if (!papeis.some((p) => (CRM_PAPEIS as readonly string[]).includes(p))) {
     throw new Error("Acesso restrito à equipe do CRM (admin, comercial ou editorial).");
   }
+  // Quem ativou a verificação em duas etapas só entra com a sessão confirmada pelo código.
+  if (!mfaOk)
+    throw new Error("Confirme o código de verificação para continuar. Entre novamente no CRM.");
   return next({
     context: { db, userId, papeis, isAdmin: papeis.includes("admin") },
   });

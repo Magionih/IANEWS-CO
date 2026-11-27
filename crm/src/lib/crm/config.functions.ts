@@ -183,3 +183,61 @@ export const setPapel = createServerFn({ method: "POST" })
     );
     return { ok: true };
   });
+
+// ---------- Segurança: convite de contas e trilha de auditoria ----------
+
+const EMAIL_OK = /^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,}$/;
+
+/** Convida uma pessoa da equipe por e-mail (a conta nasce sem acesso; o papel é dado depois). */
+export const convidarUsuario = createServerFn({ method: "POST" })
+  .middleware([requireCrmAccess])
+  .inputValidator((input: { email?: string; origem?: string }) => {
+    const email = String(input?.email ?? "")
+      .trim()
+      .toLowerCase();
+    if (!EMAIL_OK.test(email)) throw new Error("E-mail inválido.");
+    const origem = String(input?.origem ?? "");
+    if (!/^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(origem)) throw new Error("Origem inválida.");
+    return { email, origem };
+  })
+  .handler(async ({ data, context }) => {
+    exigirAdmin(context.isAdmin);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Só aceita voltar para o próprio CRM.
+    const permitido = process.env.CRM_URL ?? "https://ianews-crm.vercel.app";
+    const destino = data.origem === new URL(permitido).origin ? data.origem : permitido;
+    const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
+      redirectTo: `${destino}/login`,
+    });
+    if (error) {
+      if (/already|registered|exists/i.test(error.message))
+        throw new Error("Esse e-mail já tem conta. Defina o papel na lista abaixo.");
+      throw new Error("Não foi possível enviar o convite agora.");
+    }
+    return { ok: true };
+  });
+
+export type RegistroAuditoria = {
+  id: number;
+  em: string;
+  usuario: string | null;
+  tabela: string;
+  operacao: string;
+  registro: string | null;
+  antes: Record<string, string | number | boolean | null> | null;
+  depois: Record<string, string | number | boolean | null> | null;
+};
+
+/** Últimas alterações em dinheiro, notas, parâmetros, produtos e acessos (só admin). */
+export const getAuditoria = createServerFn({ method: "GET" })
+  .middleware([requireCrmAccess])
+  .handler(async ({ context }): Promise<RegistroAuditoria[]> => {
+    exigirAdmin(context.isAdmin);
+    return (checar(
+      await context.db
+        .from("crm_auditoria")
+        .select("id, em, usuario, tabela, operacao, registro, antes, depois")
+        .order("id", { ascending: false })
+        .limit(200),
+    ) ?? []) as RegistroAuditoria[];
+  });

@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 /* Login do CRM. A conta é a mesma do Supabase da IANews, mas só entra quem tem papel
-   admin, comercial ou editorial (o banco recusa os demais). */
+   admin, comercial ou editorial (o banco recusa os demais). Contas novas são criadas pelo
+   administrador (convite), não aqui. Quem ativou a verificação em duas etapas digita o código
+   do aplicativo autenticador depois da senha. */
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -31,27 +33,35 @@ function destinoSeguro(volta?: string) {
   }
 }
 
+/** A conta tem autenticador ativo e a sessão ainda não foi confirmada pelo código. */
+async function precisaCodigo(): Promise<boolean> {
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  return data?.nextLevel === "aal2" && data.currentLevel !== "aal2";
+}
+
 function LoginPage() {
   const navigate = useNavigate();
   const { volta } = Route.useSearch();
-  const [modo, setModo] = useState<"entrar" | "criar" | "esqueci" | "nova">("entrar");
+  const [modo, setModo] = useState<"entrar" | "codigo" | "esqueci" | "nova">("entrar");
+  const [codigo, setCodigo] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [nome, setNome] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
 
   useEffect(() => {
     // Link de "esqueci a senha": o Supabase abre uma sessão de recuperação; pede a nova senha.
-    const recuperando = window.location.hash.includes("type=recovery");
+    const recuperando = /type=(recovery|invite)/.test(window.location.hash);
     if (recuperando) setModo("nova");
     const { data: sub } = supabase.auth.onAuthStateChange((evento) => {
       if (evento === "PASSWORD_RECOVERY") setModo("nova");
     });
     if (!recuperando) {
-      supabase.auth.getSession().then(({ data }) => {
-        if (data.session) window.location.replace(destinoSeguro(volta));
+      supabase.auth.getSession().then(async ({ data }) => {
+        if (!data.session) return;
+        if (await precisaCodigo()) setModo("codigo");
+        else window.location.replace(destinoSeguro(volta));
       });
     }
     return () => sub.subscription.unsubscribe();
@@ -62,8 +72,27 @@ function LoginPage() {
     setErro("");
     setAviso("");
     const mail = email.trim().toLowerCase();
+    if (modo === "codigo") {
+      const c = codigo.replace(/\D/g, "");
+      if (c.length !== 6) return setErro("Digite os 6 números do aplicativo autenticador.");
+      setOcupado(true);
+      try {
+        const { data: fatores, error: e1 } = await supabase.auth.mfa.listFactors();
+        const fator = fatores?.totp?.find((f) => f.status === "verified");
+        if (e1 || !fator) return setErro("Não encontramos o autenticador desta conta.");
+        const { error } = await supabase.auth.mfa.challengeAndVerify({
+          factorId: fator.id,
+          code: c,
+        });
+        if (error) return setErro("Código incorreto ou expirado. Tente o próximo código.");
+        window.location.replace(destinoSeguro(volta));
+      } finally {
+        setOcupado(false);
+      }
+      return;
+    }
     if (modo === "nova") {
-      if (senha.length < 8) return setErro("A senha precisa ter pelo menos 8 caracteres.");
+      if (senha.length < 12) return setErro("A nova senha precisa ter pelo menos 12 caracteres.");
       setOcupado(true);
       const { error } = await supabase.auth.updateUser({ password: senha });
       setOcupado(false);
@@ -72,8 +101,7 @@ function LoginPage() {
       return;
     }
     if (!EMAIL_RE.test(mail)) return setErro("Informe um e-mail válido.");
-    if (modo !== "esqueci" && senha.length < 8)
-      return setErro("A senha precisa ter pelo menos 8 caracteres.");
+    if (modo === "entrar" && !senha) return setErro("Informe a senha.");
     setOcupado(true);
     try {
       if (modo === "entrar") {
@@ -88,22 +116,12 @@ function LoginPage() {
           );
           return;
         }
+        if (await precisaCodigo()) {
+          setSenha("");
+          setModo("codigo");
+          return;
+        }
         navigate({ to: destinoSeguro(volta), replace: true });
-      } else if (modo === "criar") {
-        const { data, error } = await supabase.auth.signUp({
-          email: mail,
-          password: senha,
-          options: {
-            data: { full_name: nome.trim() },
-            emailRedirectTo: `${window.location.origin}/login`,
-          },
-        });
-        if (error) return setErro(error.message);
-        if (data.session) navigate({ to: "/", replace: true });
-        else
-          setAviso(
-            "Conta criada. Confirme pelo link enviado ao seu e-mail e depois entre aqui. O acesso ao CRM é liberado pelo administrador.",
-          );
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(mail, {
           redirectTo: `${window.location.origin}/login`,
@@ -136,8 +154,8 @@ function LoginPage() {
         <h1 className="text-xl font-semibold tracking-[-0.02em]">
           {modo === "entrar"
             ? "Entrar no CRM"
-            : modo === "criar"
-              ? "Criar conta"
+            : modo === "codigo"
+              ? "Verificação em duas etapas"
               : modo === "nova"
                 ? "Nova senha"
                 : "Recuperar senha"}
@@ -147,18 +165,22 @@ function LoginPage() {
         </p>
 
         <form onSubmit={enviar} className="mt-5 space-y-3">
-          {modo === "criar" ? (
+          {modo === "codigo" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="nome">Nome</Label>
+              <Label htmlFor="codigo">Código do aplicativo autenticador</Label>
               <Input
-                id="nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                autoComplete="name"
+                id="codigo"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                autoFocus
+                className="tabular text-center text-lg tracking-[0.4em]"
               />
             </div>
           ) : null}
-          {modo !== "nova" ? (
+          {modo !== "nova" && modo !== "codigo" ? (
             <div className="space-y-1.5">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -171,7 +193,7 @@ function LoginPage() {
               />
             </div>
           ) : null}
-          {modo !== "esqueci" ? (
+          {modo === "entrar" || modo === "nova" ? (
             <div className="space-y-1.5">
               <Label htmlFor="senha">Senha</Label>
               <Input
@@ -189,8 +211,8 @@ function LoginPage() {
             {ocupado ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {modo === "entrar"
               ? "Entrar"
-              : modo === "criar"
-                ? "Criar conta"
+              : modo === "codigo"
+                ? "Confirmar"
                 : modo === "nova"
                   ? "Salvar senha"
                   : "Enviar link"}
@@ -202,19 +224,16 @@ function LoginPage() {
             <button
               type="button"
               className="text-primary hover:underline"
-              onClick={() => setModo("entrar")}
+              onClick={async () => {
+                if (modo === "codigo") await supabase.auth.signOut();
+                setModo("entrar");
+              }}
             >
-              Já tenho conta
+              {modo === "codigo" ? "Entrar com outra conta" : "Voltar para o login"}
             </button>
           ) : (
             <>
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={() => setModo("criar")}
-              >
-                Criar conta
-              </button>
+              <span className="text-muted-foreground">Conta nova: peça ao administrador.</span>
               <button
                 type="button"
                 className="text-muted-foreground hover:underline"

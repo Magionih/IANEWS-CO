@@ -21,6 +21,11 @@ export const Route = createFileRoute("/_crm")({
     if (!data.session) {
       throw redirect({ to: "/login", search: { volta: location.href } });
     }
+    // Conta com autenticador ativo: só entra depois de confirmar o código (sessão aal2).
+    const { data: nivel } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (nivel?.nextLevel === "aal2" && nivel.currentLevel !== "aal2") {
+      throw redirect({ to: "/login", search: { volta: location.href } });
+    }
     return { user: data.session.user };
   },
   head: () => ({
