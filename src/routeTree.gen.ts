@@ -74,6 +74,7 @@ import { Route as ApiPublicHooksCapiCheckRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksCarrosselNoticiasRouteImport } from './routes/api/public/hooks/carrossel-noticias'
 import { Route as ApiPublicHooksCobrancasRouteImport } from './routes/api/public/hooks/cobrancas'
 import { Route as ApiPublicHooksCoverRouteImport } from './routes/api/public/hooks/cover'
+import { Route as ApiPublicHooksCrmNotificarRouteImport } from './routes/api/public/hooks/crm-notificar'
 import { Route as ApiPublicHooksDailyNewsletterRouteImport } from './routes/api/public/hooks/daily-newsletter'
 import { Route as ApiPublicHooksDailyPushRouteImport } from './routes/api/public/hooks/daily-push'
 import { Route as ApiPublicHooksEmailFrioRouteImport } from './routes/api/public/hooks/email-frio'
@@ -420,6 +421,12 @@ const ApiPublicHooksCoverRoute = ApiPublicHooksCoverRouteImport.update({
   path: '/api/public/hooks/cover',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksCrmNotificarRoute =
+  ApiPublicHooksCrmNotificarRouteImport.update({
+    id: '/api/public/hooks/crm-notificar',
+    path: '/api/public/hooks/crm-notificar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDailyNewsletterRoute =
   ApiPublicHooksDailyNewsletterRouteImport.update({
     id: '/api/public/hooks/daily-newsletter',
@@ -586,6 +593,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
+  '/api/public/hooks/crm-notificar': typeof ApiPublicHooksCrmNotificarRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
@@ -670,6 +678,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
+  '/api/public/hooks/crm-notificar': typeof ApiPublicHooksCrmNotificarRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
@@ -756,6 +765,7 @@ export interface FileRoutesById {
   '/api/public/hooks/carrossel-noticias': typeof ApiPublicHooksCarrosselNoticiasRoute
   '/api/public/hooks/cobrancas': typeof ApiPublicHooksCobrancasRoute
   '/api/public/hooks/cover': typeof ApiPublicHooksCoverRoute
+  '/api/public/hooks/crm-notificar': typeof ApiPublicHooksCrmNotificarRoute
   '/api/public/hooks/daily-newsletter': typeof ApiPublicHooksDailyNewsletterRoute
   '/api/public/hooks/daily-push': typeof ApiPublicHooksDailyPushRoute
   '/api/public/hooks/email-frio': typeof ApiPublicHooksEmailFrioRoute
@@ -842,6 +852,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
+    | '/api/public/hooks/crm-notificar'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
@@ -926,6 +937,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
+    | '/api/public/hooks/crm-notificar'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
@@ -1011,6 +1023,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/carrossel-noticias'
     | '/api/public/hooks/cobrancas'
     | '/api/public/hooks/cover'
+    | '/api/public/hooks/crm-notificar'
     | '/api/public/hooks/daily-newsletter'
     | '/api/public/hooks/daily-push'
     | '/api/public/hooks/email-frio'
@@ -1095,6 +1108,7 @@ export interface RootRouteChildren {
   ApiPublicHooksCarrosselNoticiasRoute: typeof ApiPublicHooksCarrosselNoticiasRoute
   ApiPublicHooksCobrancasRoute: typeof ApiPublicHooksCobrancasRoute
   ApiPublicHooksCoverRoute: typeof ApiPublicHooksCoverRoute
+  ApiPublicHooksCrmNotificarRoute: typeof ApiPublicHooksCrmNotificarRoute
   ApiPublicHooksDailyNewsletterRoute: typeof ApiPublicHooksDailyNewsletterRoute
   ApiPublicHooksDailyPushRoute: typeof ApiPublicHooksDailyPushRoute
   ApiPublicHooksEmailFrioRoute: typeof ApiPublicHooksEmailFrioRoute
@@ -1572,6 +1586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCoverRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/crm-notificar': {
+      id: '/api/public/hooks/crm-notificar'
+      path: '/api/public/hooks/crm-notificar'
+      fullPath: '/api/public/hooks/crm-notificar'
+      preLoaderRoute: typeof ApiPublicHooksCrmNotificarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-newsletter': {
       id: '/api/public/hooks/daily-newsletter'
       path: '/api/public/hooks/daily-newsletter'
@@ -1779,6 +1800,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksCarrosselNoticiasRoute: ApiPublicHooksCarrosselNoticiasRoute,
   ApiPublicHooksCobrancasRoute: ApiPublicHooksCobrancasRoute,
   ApiPublicHooksCoverRoute: ApiPublicHooksCoverRoute,
+  ApiPublicHooksCrmNotificarRoute: ApiPublicHooksCrmNotificarRoute,
   ApiPublicHooksDailyNewsletterRoute: ApiPublicHooksDailyNewsletterRoute,
   ApiPublicHooksDailyPushRoute: ApiPublicHooksDailyPushRoute,
   ApiPublicHooksEmailFrioRoute: ApiPublicHooksEmailFrioRoute,

@@ -3,7 +3,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { CabecalhoPagina, Carregando, Erro, Numero, Secao } from "@/components/crm/ui";
+import {
+  CabecalhoPagina,
+  Carregando,
+  Erro,
+  Numero,
+  PainelNumeros,
+  Secao,
+} from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { painelOperacao, type Metricas } from "@/lib/crm/operacao.functions";
 import { fmtDiaCurto, fmtNum } from "@/lib/crm/utils";
@@ -110,7 +117,7 @@ function PainelPage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+      <PainelNumeros quantidade={6}>
         <Numero
           rotulo="Matérias por dia"
           valor={mediaMaterias.toFixed(1)}
@@ -147,7 +154,7 @@ function PainelPage() {
           valor={fmtNum(t.empresas)}
           detalhe={`empresas · ${fmtNum(t.pessoas)} pessoas · ${fmtNum(t.negocios_abertos)} negócios abertos`}
         />
-      </div>
+      </PainelNumeros>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Secao titulo={`Matérias publicadas por dia (${dias} dias)`}>
@@ -182,7 +189,7 @@ function PainelPage() {
         </Secao>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+      <PainelNumeros quantidade={6}>
         <Numero
           rotulo="Lista do dia"
           valor={fmtNum(soma((d) => d.lista.total))}
@@ -216,7 +223,7 @@ function PainelPage() {
           valor={fmtNum(soma((d) => d.negocios.total))}
           detalhe={`em ${dias} dias`}
         />
-      </div>
+      </PainelNumeros>
 
       <details className="group rounded-xl border bg-card shadow-[var(--shadow-card)]">
         <summary className="cursor-pointer list-none px-5 py-3 text-[14px] font-semibold">

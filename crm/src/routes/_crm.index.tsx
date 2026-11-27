@@ -2,12 +2,13 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarCheck, Plus, Search } from "lucide-react";
+import { CalendarCheck, ChevronRight, Plus } from "lucide-react";
 
+import { CartaoNotificacoes } from "@/components/crm/avisos";
 import { useCrm } from "@/components/crm/context";
 import { TarefaDialog } from "@/components/crm/dialogs";
 import { NegocioDialog, NegocioPainel } from "@/components/crm/negocio";
-import { Carregando, Erro } from "@/components/crm/ui";
+import { Abas, Cartao, Carregando, Erro, FaixaNumeros } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { getPainelDono, type ItemLista, type PainelDono } from "@/lib/crm/metricas.functions";
@@ -18,9 +19,10 @@ export const Route = createFileRoute("/_crm/")({
   component: InicioPage,
 });
 
-/* Início (protótipo aprovado em 26/11): "estou no ritmo da meta?" e "o que faço hoje?".
-   A meta em destaque, 3 números, recebido por semana, o funil, o foco do dia
-   (cobrar, produzir, retomar) e o que falta para os números ficarem completos. */
+/* Início: "estou no ritmo da meta?" e "o que faço hoje?".
+   A meta, um painel de números (padrão banco), o foco do dia (cobrar, produzir, retomar),
+   as próximas publicações, o que falta para os números ficarem completos, o vendido por semana
+   e o funil. Tudo se atualiza sozinho a cada movimentação (tempo real). */
 
 const brl = (n: number | null | undefined) =>
   n == null ? "—" : `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
@@ -66,30 +68,34 @@ function InicioPage() {
   const dataLonga = DIA_LONGO.format(new Date(`${hoje}T12:00:00Z`));
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="mb-1 text-[13px] text-muted-foreground">
+    <div className="space-y-4 sm:space-y-5">
+      <header className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mb-0.5 truncate text-[12.5px] text-muted-foreground sm:text-[13px]">
             {dataLonga.charAt(0).toUpperCase() + dataLonga.slice(1)}
           </p>
-          <h1 className="font-display text-[26px] font-bold leading-tight tracking-[-0.02em] sm:text-[30px]">
+          <h1 className="font-display truncate text-[22px] font-bold leading-tight tracking-[-0.02em] sm:text-[28px]">
             {saudacao()}
             {primeiroNome ? `, ${primeiroNome}` : ""}
           </h1>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new Event("crm-abrir-busca"))}
-            className="hidden h-[38px] w-[300px] items-center gap-2 rounded-[10px] border border-input bg-card px-3 text-left text-[14px] text-muted-foreground transition hover:border-primary/40 md:flex"
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            className="h-9 w-9 px-0 sm:w-auto sm:px-3"
+            onClick={() => setNovaTarefa(true)}
+            aria-label="Nova tarefa"
           >
-            <Search className="h-4 w-4" /> Buscar pessoa, empresa ou negócio
-          </button>
-          <Button variant="outline" className="h-[38px]" onClick={() => setNovaTarefa(true)}>
-            <CalendarCheck className="h-4 w-4" /> Tarefa
+            <CalendarCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Tarefa</span>
           </Button>
-          <Button className="h-[38px]" onClick={() => setNovoNegocio(true)}>
-            <Plus className="h-4 w-4" /> Novo
+          <Button
+            className="h-9 w-9 px-0 sm:w-auto sm:px-3"
+            onClick={() => setNovoNegocio(true)}
+            aria-label="Novo negócio"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Novo negócio</span>
           </Button>
         </div>
       </header>
@@ -114,81 +120,88 @@ function InicioPage() {
 }
 
 function Painel({ d, onAbrir }: { d: PainelDono; onAbrir: (id: string) => void }) {
-  return (
-    <>
-      <section aria-label="Números do negócio" className="flex flex-wrap gap-4">
-        {d.admin && d.ritmo ? <CartaoMeta d={d} /> : null}
-        {d.admin ? (
-          <>
-            <Kpi
-              rotulo="Vendido no mês"
-              valor={brl(d.recebidoMes)}
-              detalhe={
-                d.vendidoCartaoMes
-                  ? `${brl(d.vendidoCaixaMes)} no caixa · ${brl(d.vendidoCartaoMes)} no cartão`
-                  : d.recebidoMesQtd != null
-                    ? `${d.recebidoMesQtd} pagamentos`
-                    : undefined
-              }
-              tom="ok"
-              link="/financeiro"
-            />
-            {d.saldo != null ? (
-              <Kpi
-                rotulo="Caixa hoje"
-                valor={brl(d.saldo)}
-                detalhe={
+  const numeros = d.admin
+    ? [
+        {
+          rotulo: "Vendido no mês",
+          valor: brl(d.recebidoMes),
+          detalhe: d.vendidoCartaoMes
+            ? `inclui ${brl(d.vendidoCartaoMes)} no cartão`
+            : d.recebidoMesQtd != null
+              ? `${d.recebidoMesQtd} pagamentos`
+              : undefined,
+          tom: "ok" as const,
+          link: "/financeiro",
+        },
+        ...(d.saldo != null
+          ? [
+              {
+                rotulo: "Caixa hoje",
+                valor: brl(d.saldo),
+                detalhe:
                   d.folegoMeses != null
                     ? `fôlego de ${d.folegoMeses >= 12 ? "12+" : d.folegoMeses.toFixed(1).replace(".", ",")} meses`
-                    : undefined
-                }
-                link="/financeiro"
-              />
-            ) : null}
-            {d.cartao ? (
-              <Kpi
-                rotulo="Cartão a receber"
-                valor={brl(d.cartao.liquido)}
-                detalhe={`${brl(d.cartao.proximos30)} nos próximos 30 dias`}
-                link="/financeiro"
-              />
-            ) : null}
-            <Kpi
-              rotulo="A receber"
-              valor={brl(d.receber?.valor)}
-              detalhe={d.receber ? `${d.receber.qtd} cobranças abertas` : undefined}
-              tom={d.receber?.qtd ? "alerta" : undefined}
-              link="/financeiro"
-            />
-          </>
-        ) : (
-          <Kpi
-            rotulo="Pagos parados na produção"
-            valor={brl(d.travado.valor)}
-            detalhe={`${d.travado.qtd} aguardando`}
-            tom={d.travado.qtd ? "alerta" : undefined}
-            link="/operacao"
-          />
-        )}
-        <Kpi
-          rotulo="Pipeline provável"
-          valor={brl(d.pipeline.ponderado)}
-          detalhe={`de ${brl(d.pipeline.bruto)} em negociação`}
-          link="/negocios"
-        />
+                    : undefined,
+                link: "/financeiro",
+              },
+            ]
+          : []),
+        ...(d.cartao
+          ? [
+              {
+                rotulo: "Cartão a receber",
+                valor: brl(d.cartao.liquido),
+                detalhe: `${brl(d.cartao.proximos30)} em 30 dias`,
+                link: "/financeiro",
+              },
+            ]
+          : []),
+        {
+          rotulo: "A receber",
+          valor: brl(d.receber?.valor),
+          detalhe: d.receber ? `${d.receber.qtd} cobranças abertas` : undefined,
+          tom: d.receber?.qtd ? ("alerta" as const) : undefined,
+          link: "/financeiro",
+        },
+        {
+          rotulo: "Pipeline provável",
+          valor: brl(d.pipeline.ponderado),
+          detalhe: `de ${brl(d.pipeline.bruto)} em negociação`,
+          link: "/negocios",
+        },
+      ]
+    : [
+        {
+          rotulo: "Pagos parados na produção",
+          valor: brl(d.travado.valor),
+          detalhe: `${d.travado.qtd} aguardando`,
+          tom: d.travado.qtd ? ("alerta" as const) : undefined,
+          link: "/operacao",
+        },
+        {
+          rotulo: "Pipeline provável",
+          valor: brl(d.pipeline.ponderado),
+          detalhe: `de ${brl(d.pipeline.bruto)} em negociação`,
+          link: "/negocios",
+        },
+      ];
+  return (
+    <>
+      {d.admin && d.ritmo ? <CartaoMeta d={d} /> : null}
+      <FaixaNumeros itens={numeros} />
+      <CartaoNotificacoes compacto />
+
+      <section className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <FocoDeHoje d={d} onAbrir={onAbrir} />
+        <div className="flex min-w-0 flex-col gap-4">
+          <Agenda d={d} />
+          <Atencao d={d} />
+        </div>
       </section>
 
-      <section className="flex flex-wrap gap-4">
+      <section className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         {d.semanas ? <RecebidoSemanas semanas={d.semanas} /> : null}
         <Funil funil={d.funil} />
-      </section>
-
-      <section className="flex flex-wrap gap-4">
-        <FocoDeHoje d={d} onAbrir={onAbrir} />
-        <div className="flex min-w-0 flex-[2_1_340px] flex-col gap-4">
-          <Atencao d={d} />
-          <Agenda d={d} />
-        </div>
       </section>
     </>
   );
@@ -201,138 +214,87 @@ function CartaoMeta({ d }: { d: PainelDono }) {
   return (
     <Link
       to="/financeiro"
-      className="flex min-w-0 flex-[2_1_440px] flex-col gap-[18px] rounded-2xl bg-[#0F1729] px-7 py-6 text-white transition hover:bg-[#141e33]"
+      className="grid gap-4 rounded-xl bg-[#0F1729] px-5 py-5 text-white transition hover:bg-[#141e33] sm:px-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-center lg:gap-8"
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[13px] font-medium text-[#B7C0D1]">
-          Meta de 90 dias · {d.meta.inicio.slice(8, 10)}/{d.meta.inicio.slice(5, 7)} a{" "}
-          {d.meta.fim.slice(8, 10)}/{d.meta.fim.slice(5, 7)}
-        </span>
-        {pct != null ? (
-          <span
-            className={cn(
-              "whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold",
-              pct >= 100 ? "bg-emerald-400/15 text-emerald-200" : "bg-[#FF9952]/15 text-[#FFD3B0]",
-            )}
-          >
-            {pct}% do ritmo necessário
+      <div className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span className="text-[12.5px] font-medium text-[#B7C0D1]">
+            Meta de 90 dias · {d.meta.inicio.slice(8, 10)}/{d.meta.inicio.slice(5, 7)} a{" "}
+            {d.meta.fim.slice(8, 10)}/{d.meta.fim.slice(5, 7)}
           </span>
-        ) : null}
+          {pct != null ? (
+            <span
+              className={cn(
+                "whitespace-nowrap rounded-full px-2 py-0.5 text-[11.5px] font-semibold",
+                pct >= 100
+                  ? "bg-emerald-400/15 text-emerald-200"
+                  : "bg-[#FF9952]/15 text-[#FFD3B0]",
+              )}
+            >
+              {pct}% do ritmo necessário
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+          <span className="font-display tabular text-[30px] font-bold leading-none tracking-[-0.03em] sm:text-[36px]">
+            {brl(r.recebido)}
+          </span>
+          <span className="text-[14px] text-[#B7C0D1]">de {brl(d.meta.valor)}</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-white/[0.12]">
+          <div
+            className="h-full rounded-full bg-[#5B8CFF]"
+            style={{ width: `${Math.max(1, progresso)}%` }}
+          />
+        </div>
       </div>
-      <div className="flex flex-wrap items-baseline gap-3">
-        <span className="font-display tabular text-[38px] font-bold leading-none tracking-[-0.03em] sm:text-[44px]">
-          {brl(r.recebido)}
-        </span>
-        <span className="text-[15px] text-[#B7C0D1]">de {brl(d.meta.valor)}</span>
-      </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.12]">
-        <div
-          className="h-full rounded-full bg-[#5B8CFF]"
-          style={{ width: `${Math.max(1, progresso)}%` }}
-        />
-      </div>
-      <div className="flex flex-wrap gap-x-7 gap-y-1 text-[13px] text-[#B7C0D1]">
-        <span>
-          Ritmo atual <b className="font-semibold text-white">{brl(r.ritmoMes)}/mês</b>
-        </span>
-        <span>
-          Necessário <b className="font-semibold text-white">{brl(r.necessarioMes)}/mês</b>
-        </span>
-        <span>
-          Faltam <b className="font-semibold text-white">{d.meta.diasRestantes} dias</b>
-        </span>
-      </div>
+      <dl className="grid grid-cols-3 gap-3 border-t border-white/10 pt-3.5 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+        {[
+          ["Ritmo atual/mês", brl(r.ritmoMes)],
+          ["Precisa/mês", brl(r.necessarioMes)],
+          ["Faltam", `${d.meta.diasRestantes} dias`],
+        ].map(([rotulo, valor]) => (
+          <div key={rotulo} className="min-w-0">
+            <dt className="truncate text-[11.5px] text-[#B7C0D1]">{rotulo}</dt>
+            <dd className="tabular mt-0.5 truncate text-[14px] font-semibold sm:text-[15px]">
+              {valor}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </Link>
-  );
-}
-
-function Kpi({
-  rotulo,
-  valor,
-  detalhe,
-  tom,
-  link,
-}: {
-  rotulo: string;
-  valor: string;
-  detalhe?: string;
-  tom?: "ok" | "alerta";
-  link: string;
-}) {
-  return (
-    <Link
-      to={link}
-      className="flex min-w-0 flex-[1_1_150px] flex-col gap-2.5 rounded-2xl border bg-card px-5 py-5 transition hover:border-[#C9D7FF] sm:flex-[1_1_200px] sm:px-6 sm:py-[22px]"
-    >
-      <span className="text-[13px] font-medium text-muted-foreground">{rotulo}</span>
-      <span className="font-display tabular text-[24px] font-bold leading-none tracking-[-0.02em] sm:text-[30px]">
-        {valor}
-      </span>
-      {detalhe ? (
-        <span
-          className={cn(
-            "text-[13px] text-muted-foreground",
-            tom === "ok" && "font-semibold text-[#0E7A55]",
-            tom === "alerta" && "font-semibold text-[#B4530A]",
-          )}
-        >
-          {detalhe}
-        </span>
-      ) : null}
-    </Link>
-  );
-}
-
-function Cartao({
-  titulo,
-  extra,
-  className,
-  children,
-}: {
-  titulo: string;
-  extra?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={cn("min-w-0 rounded-2xl border bg-card p-6", className)}>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-[16px] font-semibold">{titulo}</h2>
-        {extra}
-      </div>
-      {children}
-    </div>
   );
 }
 
 function RecebidoSemanas({ semanas }: { semanas: NonNullable<PainelDono["semanas"]> }) {
   const maior = Math.max(1, ...semanas.map((s) => s.valor));
+  const total = semanas.reduce((s, x) => s + x.valor, 0);
   return (
     <Cartao
       titulo="Vendido por semana"
+      sub={`${brl(total)} no mês`}
       extra={<span className="text-[12px] text-muted-foreground">este mês</span>}
-      className="flex-[3_1_460px]"
     >
-      <div className="flex h-[200px] items-end gap-5 border-b px-2">
+      <div className="flex h-[168px] items-end gap-3 border-b px-1 sm:gap-5 sm:px-2">
         {semanas.map((s) => (
           <div
             key={s.rotulo}
-            className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+            className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
           >
-            <span className="tabular text-[12px] font-semibold">{brl(s.valor)}</span>
+            <span className="tabular text-[11.5px] font-semibold">{brl(s.valor)}</span>
             <div
               className={cn(
-                "w-full max-w-[72px] rounded-t-lg rounded-b-[3px]",
+                "w-full max-w-[64px] rounded-t-md rounded-b-[2px]",
                 s.parcial ? "bg-[#C9D7FF]" : "bg-primary",
               )}
-              style={{ height: `${Math.max(4, Math.round((s.valor / maior) * 150))}px` }}
+              style={{ height: `${Math.max(4, Math.round((s.valor / maior) * 128))}px` }}
             />
           </div>
         ))}
       </div>
-      <div className="flex gap-5 px-2 pt-2.5">
+      <div className="flex gap-3 px-1 pt-2 sm:gap-5 sm:px-2">
         {semanas.map((s) => (
-          <span key={s.rotulo} className="flex-1 text-center text-[12px] text-muted-foreground">
+          <span key={s.rotulo} className="flex-1 text-center text-[11.5px] text-muted-foreground">
             {s.rotulo}
           </span>
         ))}
@@ -353,7 +315,6 @@ function Funil({ funil }: { funil: PainelDono["funil"] }) {
           Ver detalhes
         </Link>
       }
-      className="flex-[2_1_340px]"
     >
       <div className="flex flex-col gap-3">
         {funil.map((f, i) => (
@@ -420,49 +381,41 @@ function FocoDeHoje({ d, onAbrir }: { d: PainelDono; onAbrir: (id: string) => vo
   const itens = listas[aba];
   const cfg = ABAS[aba];
   return (
-    <div className="min-w-0 flex-[3_1_460px] rounded-2xl border bg-card p-6">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[16px] font-semibold">Foco de hoje</h2>
-        <div role="tablist" aria-label="Listas do dia" className="flex flex-wrap gap-2">
-          {ordem.map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="tab"
-              aria-selected={k === aba}
-              onClick={() => setAba(k)}
-              className={cn(
-                "inline-flex h-9 items-center gap-2 rounded-full border bg-card px-3.5 text-[13px] font-medium text-[#3A4456] transition hover:border-[#C9D7FF]",
-                k === aba && "border-[#0F1729] bg-[#0F1729] text-white hover:border-[#0F1729]",
-              )}
-            >
-              {ABAS[k].nome}
-              <span className="tabular opacity-75">{listas[k].length}</span>
-            </button>
-          ))}
-        </div>
+    <Cartao titulo="Foco de hoje" sub={cfg.dica} colado>
+      <div className="px-4 sm:px-5">
+        <Abas
+          valor={aba}
+          onChange={setAba}
+          rotulo="Lista"
+          opcoes={ordem.map((k) => ({
+            valor: k,
+            rotulo: ABAS[k].nome,
+            contagem: listas[k].length,
+          }))}
+        />
       </div>
-      <p className="mb-1.5 text-[13px] text-muted-foreground">{cfg.dica}</p>
-      <ListaFoco itens={itens.slice(0, 5)} acao={cfg.acao} onAbrir={onAbrir} vazio={cfg.vazio} />
-      {itens.length > 5 ? (
+      <ListaFoco itens={itens.slice(0, 6)} acao={cfg.acao} onAbrir={onAbrir} vazio={cfg.vazio} />
+      {itens.length > 6 ? (
         <button
           type="button"
           onClick={() => setTodos(true)}
-          className="mt-2 h-10 w-full rounded-[10px] border border-dashed border-[#C7CCD6] text-[13px] font-semibold text-primary transition hover:bg-[#F8FAFF]"
+          className="flex h-11 items-center justify-center gap-1 border-t text-[13px] font-semibold text-primary transition hover:bg-[#F8FAFF]"
         >
-          Ver todos ({itens.length})
+          Ver todos ({itens.length}) <ChevronRight className="h-4 w-4" />
         </button>
-      ) : null}
+      ) : (
+        <div className="h-1.5" />
+      )}
 
       <Sheet open={todos} onOpenChange={setTodos}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[560px]">
-          <div className="border-b px-6 py-5 pr-12">
-            <SheetTitle className="text-[18px]">
+          <div className="border-b px-5 py-4 pr-12">
+            <SheetTitle className="text-[17px]">
               {cfg.nome} · {itens.length}
             </SheetTitle>
             <p className="mt-1 text-[13px] text-muted-foreground">{cfg.dica}</p>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+          <div className="min-h-0 flex-1 overflow-y-auto pb-6">
             <ListaFoco
               itens={itens}
               acao={cfg.acao}
@@ -475,7 +428,7 @@ function FocoDeHoje({ d, onAbrir }: { d: PainelDono; onAbrir: (id: string) => vo
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+    </Cartao>
   );
 }
 
@@ -491,38 +444,39 @@ function ListaFoco({
   onAbrir: (id: string) => void;
 }) {
   if (!itens.length)
-    return <p className="py-10 text-center text-[13px] text-muted-foreground">{vazio}</p>;
+    return <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{vazio}</p>;
   return (
-    <ul>
+    <ul className="mt-1">
       {itens.map((i) => (
-        <li key={i.id} className="flex items-center gap-3.5 border-t border-[#EEF0F4] px-1 py-3.5">
-          <span
-            className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[12px] font-bold",
-              i.alerta ? "bg-[#FFF1E6] text-[#A3400A]" : "bg-[#EEF3FF] text-primary",
-            )}
-          >
-            {iniciais(i.titulo)}
-          </span>
+        <li key={i.id} className="border-t border-[#EEF0F4] first:border-t-0">
           <button
             type="button"
             onClick={() => onAbrir(i.id)}
-            className="flex min-w-0 flex-1 flex-col gap-0.5 text-left"
+            className="group flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-[#F8FAFF] sm:px-5"
           >
-            <span className="truncate text-[14px] font-semibold hover:text-primary">
-              {i.titulo}
+            <span
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[12px] font-bold",
+                i.alerta ? "bg-[#FFF1E6] text-[#A3400A]" : "bg-[#EEF3FF] text-primary",
+              )}
+            >
+              {iniciais(i.titulo)}
             </span>
-            <span className="truncate text-[12.5px] text-muted-foreground">{i.detalhe}</span>
-          </button>
-          {i.valor ? (
-            <span className="font-display tabular text-[14px] font-semibold">{brl(i.valor)}</span>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => onAbrir(i.id)}
-            className="hidden h-[34px] shrink-0 rounded-[9px] border border-input bg-card px-3.5 text-[13px] font-semibold transition hover:bg-background sm:inline-flex sm:items-center"
-          >
-            {acao}
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="truncate text-[14px] font-semibold group-hover:text-primary">
+                {i.titulo}
+              </span>
+              <span className="truncate text-[12.5px] text-muted-foreground">{i.detalhe}</span>
+            </span>
+            {i.valor ? (
+              <span className="font-display tabular shrink-0 text-[14px] font-semibold">
+                {brl(i.valor)}
+              </span>
+            ) : null}
+            <span className="hidden h-8 shrink-0 items-center rounded-[9px] border border-input bg-card px-3 text-[12.5px] font-semibold transition group-hover:border-primary/40 sm:inline-flex">
+              {acao}
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground sm:hidden" />
           </button>
         </li>
       ))}
@@ -541,61 +495,79 @@ function Atencao({ d }: { d: PainelDono }) {
   const linhas = [...pendentes, ...outros].slice(0, 6);
   if (!linhas.length) return null;
   return (
-    <div className="rounded-2xl border bg-card p-6">
-      <h2 className="mb-1.5 text-[16px] font-semibold">Para destravar os números</h2>
-      <p className="mb-2 text-[13px] text-muted-foreground">
-        Sem isso, lucro e caixa ficam incompletos.
-      </p>
-      <ul>
+    <Cartao
+      titulo="Para destravar os números"
+      sub="Sem isso, lucro e caixa ficam incompletos."
+      colado
+    >
+      <ul className="pb-1">
         {linhas.map((l) => (
-          <li key={l.id} className="flex items-center gap-3.5 border-t border-[#EEF0F4] py-3">
-            <span
-              className={cn(
-                "h-2 w-2 shrink-0 rounded-full",
-                l.forte ? "bg-[#C2410C]" : "bg-[#D9A400]",
-              )}
-            />
-            <span className="min-w-0 flex-1 text-[14px]">{l.texto}</span>
+          <li key={l.id} className="border-t border-[#EEF0F4] first:border-t-0">
             <Link
               to={l.link}
-              className="shrink-0 text-[13px] font-semibold text-primary hover:underline"
+              className="group flex items-center gap-3 px-4 py-3 transition hover:bg-[#F8FAFF] sm:px-5"
             >
-              Resolver
+              <span
+                className={cn(
+                  "h-2 w-2 shrink-0 rounded-full",
+                  l.forte ? "bg-[#C2410C]" : "bg-[#D9A400]",
+                )}
+              />
+              <span className="min-w-0 flex-1 text-[13.5px] leading-snug">{l.texto}</span>
+              <span className="shrink-0 text-[12.5px] font-semibold text-primary group-hover:underline">
+                Resolver
+              </span>
             </Link>
           </li>
         ))}
       </ul>
-    </div>
+    </Cartao>
   );
 }
 
 function Agenda({ d }: { d: PainelDono }) {
+  const total = d.agenda.reduce((s, a) => s + a.qtd, 0);
   return (
-    <div className="rounded-2xl border bg-card p-6">
-      <div className="mb-3.5 flex items-center justify-between">
-        <h2 className="text-[16px] font-semibold">Próximas publicações</h2>
-        <Link to="/calendario" className="text-[13px] font-semibold text-primary hover:underline">
+    <Cartao
+      titulo="Próximas publicações"
+      sub={`${total} ${total === 1 ? "conteúdo" : "conteúdos"} nos próximos ${d.agenda.length} dias`}
+      extra={
+        <Link to="/calendario" className="text-[12.5px] font-semibold text-primary hover:underline">
           Calendário
         </Link>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
+      }
+    >
+      <ol
+        className="grid overflow-hidden rounded-lg border"
+        style={{ gridTemplateColumns: `repeat(${Math.max(1, d.agenda.length)}, minmax(0, 1fr))` }}
+      >
         {d.agenda.map((a, i) => (
-          <div
+          <li
             key={a.dia}
-            className={cn("rounded-xl p-3 text-center", i === 0 ? "bg-[#EEF3FF]" : "bg-background")}
+            className={cn(
+              "border-l px-2 py-2.5 text-center first:border-l-0",
+              i === 0 && "bg-[#F5F8FF]",
+            )}
           >
             <span
               className={cn(
-                "block text-[12px] font-semibold",
+                "block truncate text-[11.5px] font-medium",
                 i === 0 ? "text-primary" : "text-muted-foreground",
               )}
             >
               {a.rotulo}
             </span>
-            <span className="font-display tabular text-[22px] font-bold">{a.qtd}</span>
-          </div>
+            <span
+              className={cn(
+                "font-display tabular mt-0.5 block text-[18px] font-semibold leading-tight",
+                !a.qtd && "text-[#B5BCC8]",
+              )}
+            >
+              {a.qtd}
+            </span>
+          </li>
         ))}
-      </div>
-    </div>
+      </ol>
+    </Cartao>
   );
 }

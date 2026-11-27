@@ -19,14 +19,17 @@ import { useCrm } from "@/components/crm/context";
 import { NegocioPainel } from "@/components/crm/negocio";
 import { useAcao } from "@/components/crm/queries";
 import {
-  Alternador,
+  Abas,
+  AoVivo,
   BotaoCsv,
   CabecalhoPagina,
   Campo,
+  Cartao,
   Carregando,
   Erro,
   Etiqueta,
   FaixaNumeros,
+  FiltroSelect,
   Secao,
   Vazio,
   Variacao,
@@ -144,61 +147,77 @@ function FinanceiroPage() {
   if (error || !data) return <Erro erro={error} />;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3.5">
-          <h1 className="font-display text-[24px] font-bold leading-tight tracking-[-0.02em] sm:text-[28px]">
+    <div className="space-y-4 sm:space-y-5">
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <h1 className="font-display truncate text-[22px] font-bold leading-tight tracking-[-0.02em] sm:text-[28px]">
             Financeiro
           </h1>
-          <div
-            className={cn(
-              "inline-flex h-9 items-center rounded-[10px] border border-input bg-card",
-              isFetching && "opacity-70",
-            )}
-          >
-            <button
-              type="button"
-              aria-label="Mês anterior"
-              onClick={() => setMes(somarMes(mes, -1))}
-              className="flex h-full w-9 items-center justify-center text-[#3A4456] hover:text-foreground"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="min-w-[132px] px-1.5 text-center text-[14px] font-semibold">
-              {nomeMes(mes)}
-            </span>
-            <button
-              type="button"
-              aria-label="Próximo mês"
-              onClick={() => setMes(somarMes(mes, 1))}
-              className="flex h-full w-9 items-center justify-center text-[#3A4456] hover:text-foreground"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          <AoVivo className="hidden sm:inline-flex" />
         </div>
-        <div className="flex flex-wrap gap-2.5">
-          <Button variant="outline" className="h-[38px]" onClick={() => setParams(true)}>
-            <Settings2 className="h-4 w-4" /> Saldo e metas
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            className="h-9 w-9 px-0 sm:w-auto sm:px-3"
+            onClick={() => setParams(true)}
+            aria-label="Saldo e metas"
+          >
+            <Settings2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Saldo e metas</span>
           </Button>
-          <Button className="h-[38px]" onClick={() => setEditando("novo")}>
+          <Button className="h-9 px-3" onClick={() => setEditando("novo")}>
             <Plus className="h-4 w-4" /> Lançar
           </Button>
         </div>
       </header>
 
-      <Alternador
-        valor={aba}
-        onChange={setAba}
-        opcoes={[
-          { valor: "resumo", rotulo: "Resumo" },
-          { valor: "cartao", rotulo: `Cartão parcelado · ${brl0(data.cartao.liquido)}` },
-          { valor: "receber", rotulo: `Cobranças · ${data.receber.length}` },
-          { valor: "pagar", rotulo: "A pagar" },
-          { valor: "lancamentos", rotulo: "Lançamentos" },
-          { valor: "notas", rotulo: "Notas fiscais" },
-        ]}
-      />
+      <div className="flex flex-col gap-2.5 sm:flex-row-reverse sm:items-end sm:justify-between sm:gap-4">
+        <div
+          className={cn(
+            "flex h-10 shrink-0 items-center justify-between rounded-[10px] border border-input bg-card sm:h-9 sm:justify-start",
+            isFetching && "opacity-70",
+          )}
+        >
+          <button
+            type="button"
+            aria-label="Mês anterior"
+            onClick={() => setMes(somarMes(mes, -1))}
+            className="flex h-full w-10 items-center justify-center text-[#3A4456] hover:text-foreground sm:w-9"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="min-w-[140px] px-1.5 text-center text-[14px] font-semibold sm:text-[13.5px]">
+            {nomeMes(mes)}
+          </span>
+          <button
+            type="button"
+            aria-label="Próximo mês"
+            onClick={() => setMes(somarMes(mes, 1))}
+            className="flex h-full w-10 items-center justify-center text-[#3A4456] hover:text-foreground sm:w-9"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-w-0 sm:flex-1">
+          <Abas
+            valor={aba}
+            onChange={setAba}
+            rotulo="Ver"
+            opcoes={[
+              { valor: "resumo", rotulo: "Resumo" },
+              {
+                valor: "cartao",
+                rotulo: "Cartão parcelado",
+                contagem: data.cartao.qtdParcelas ? brl0(data.cartao.liquido) : undefined,
+              },
+              { valor: "receber", rotulo: "Cobranças", contagem: data.receber.length },
+              { valor: "pagar", rotulo: "A pagar", contagem: data.pagar.length || undefined },
+              { valor: "lancamentos", rotulo: "Lançamentos" },
+              { valor: "notas", rotulo: "Notas fiscais" },
+            ]}
+          />
+        </div>
+      </div>
 
       {aba === "resumo" ? (
         <Resumo
@@ -245,20 +264,18 @@ function Resumo({
   const dre = d.dre;
   const totalReceber = d.receber.reduce((s, c) => s + c.valor, 0);
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <FaixaNumeros
         itens={[
           {
             rotulo: "Vendido no mês",
             valor: brl0(dre.receitaBruta),
             detalhe: (
-              <span className="flex flex-col gap-0.5">
-                <Variacao atual={dre.receitaBruta} anterior={d.dreAnterior.receitaBruta} />
-                <span>
-                  {brl0(d.vendidoCaixa)} no caixa
-                  {d.vendidoCartao ? ` · ${brl0(d.vendidoCartao)} no cartão` : ""}
-                </span>
-              </span>
+              <Variacao
+                atual={dre.receitaBruta}
+                anterior={d.dreAnterior.receitaBruta}
+                rotulo="vs. mês passado"
+              />
             ),
           },
           {
@@ -293,42 +310,19 @@ function Resumo({
         ]}
       />
 
-      <div className="flex flex-wrap gap-4">
+      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <Cascata d={d} onLancar={onLancar} />
-        <Projecao d={d} onParams={onParams} />
-      </div>
-
-      <div className="flex flex-wrap gap-4">
-        <CartaoResumo d={d} onVer={() => onAba("cartao")} />
-        <ReceberResumo d={d} onVer={() => onAba("receber")} />
         <IndicadoresMes d={d} />
       </div>
-    </div>
-  );
-}
 
-function Cartao({
-  titulo,
-  sub,
-  extra,
-  className,
-  children,
-}: {
-  titulo: string;
-  sub?: string;
-  extra?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={cn("flex min-w-0 flex-col rounded-2xl border bg-card p-6", className)}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[16px] font-semibold">{titulo}</h2>
-        {extra}
+      <div className="grid gap-4 lg:grid-cols-[3fr_2fr] lg:items-start">
+        <ReceberResumo d={d} onVer={() => onAba("receber")} />
+        <div className="flex min-w-0 flex-col gap-4">
+          <Projecao d={d} onParams={onParams} />
+          <CartaoResumo d={d} onVer={() => onAba("cartao")} />
+        </div>
       </div>
-      {sub ? <p className="mt-1.5 text-[13px] text-muted-foreground">{sub}</p> : null}
-      <div className="mt-5 flex flex-1 flex-col">{children}</div>
-    </section>
+    </div>
   );
 }
 
@@ -366,9 +360,8 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
           {fmtPct(dre.margemLiquida)} de margem
         </span>
       }
-      className="flex-[3_1_460px]"
     >
-      <div className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-3 sm:gap-3.5">
         {linhas.map((l) => {
           let left = 0;
           let width = 0;
@@ -382,20 +375,23 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
           return (
             <div
               key={l.nome}
-              className="grid grid-cols-[minmax(0,170px)_minmax(0,1fr)_110px] items-center gap-3.5"
+              className={cn(
+                "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 sm:grid-cols-[minmax(0,170px)_minmax(0,1fr)_110px] sm:gap-x-3.5",
+                l.tipo === "fim" && "border-t pt-3 sm:pt-3.5",
+              )}
             >
               <span
                 className={cn(
-                  "truncate text-[14px]",
-                  l.tipo === "menos" ? "text-[#3A4456]" : "font-bold",
+                  "truncate text-[13.5px] sm:text-[14px]",
+                  l.tipo === "menos" ? "text-[#3A4456]" : "font-semibold",
                 )}
               >
                 {l.nome}
               </span>
-              <div className="relative h-[26px] overflow-hidden rounded-md bg-background">
+              <div className="relative col-span-2 h-1.5 overflow-hidden rounded-full bg-[#EEF1F5] sm:order-none sm:col-span-1 sm:h-[22px] sm:rounded-md max-sm:order-last">
                 <div
                   className={cn(
-                    "absolute inset-y-0 rounded-md",
+                    "absolute inset-y-0 rounded-full sm:rounded-md",
                     l.tipo === "total" && "bg-primary",
                     l.tipo === "menos" && "bg-[#F59E5B]",
                     l.tipo === "fim" && (l.valor < 0 ? "bg-[#C2410C]" : "bg-[#0E8A5F]"),
@@ -408,7 +404,7 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
               </div>
               <span
                 className={cn(
-                  "tabular text-right text-[14px]",
+                  "tabular text-right text-[13.5px] sm:text-[14px]",
                   l.tipo === "menos"
                     ? l.valor
                       ? "font-semibold text-[#B4530A]"
@@ -422,8 +418,9 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
           );
         })}
       </div>
+      <ComparaMes d={d} />
       {!d.custoFixoConfigurado ? (
-        <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-xl bg-[#FFF6ED] px-4 py-3.5 text-[13px] text-[#8A3A07]">
+        <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-lg bg-[#FFF6ED] px-3.5 py-3 text-[13px] text-[#8A3A07]">
           <AlertTriangle className="h-[18px] w-[18px] shrink-0" />
           <span className="min-w-0 flex-1">
             Equipe, ferramentas, contador e pró-labore ainda não foram lançados. Sem eles a margem
@@ -438,6 +435,64 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
   );
 }
 
+/** Este mês x mês passado, lado a lado (padrão extrato). */
+function ComparaMes({ d }: { d: Financeiro }) {
+  const a = d.dre;
+  const b = d.dreAnterior;
+  const saidas = (x: Dre) => x.impostos + x.taxas + x.variaveis + x.fixos + x.investimentos;
+  const linhas: { nome: string; atual: string; antes: string; sobe?: boolean | null }[] = [
+    {
+      nome: "Vendido",
+      atual: brl0(a.receitaBruta),
+      antes: brl0(b.receitaBruta),
+      sobe: b.receitaBruta ? a.receitaBruta >= b.receitaBruta : null,
+    },
+    {
+      nome: "Saídas",
+      atual: brl0(saidas(a)),
+      antes: brl0(saidas(b)),
+      sobe: saidas(b) ? saidas(a) <= saidas(b) : null,
+    },
+    {
+      nome: "Lucro",
+      atual: brl0(a.lucro),
+      antes: brl0(b.lucro),
+      sobe: b.lucro ? a.lucro >= b.lucro : null,
+    },
+    { nome: "Margem", atual: fmtPct(a.margemLiquida), antes: fmtPct(b.margemLiquida) },
+  ];
+  return (
+    <div className="mt-5 overflow-hidden rounded-lg border lg:mt-auto">
+      <table className="w-full text-[12.5px]">
+        <thead className="bg-[#F7F8FA] text-[11.5px] text-muted-foreground">
+          <tr>
+            <th className="px-3 py-2 text-left font-medium">Comparação</th>
+            <th className="px-3 py-2 text-right font-medium">{nomeMes(a.mes).split(" ")[0]}</th>
+            <th className="px-3 py-2 text-right font-medium">{nomeMes(b.mes).split(" ")[0]}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {linhas.map((l) => (
+            <tr key={l.nome}>
+              <td className="px-3 py-2 text-[#3A4456]">{l.nome}</td>
+              <td
+                className={cn(
+                  "tabular px-3 py-2 text-right font-semibold",
+                  l.sobe === true && "text-[#0E7A55]",
+                  l.sobe === false && "text-[#B4530A]",
+                )}
+              >
+                {l.atual}
+              </td>
+              <td className="tabular px-3 py-2 text-right text-muted-foreground">{l.antes}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Projecao({ d, onParams }: { d: Financeiro; onParams: () => void }) {
   const p = d.projecao;
   if (d.saldo == null)
@@ -445,7 +500,6 @@ function Projecao({ d, onParams }: { d: Financeiro; onParams: () => void }) {
       <Cartao
         titulo="Caixa nos próximos 90 dias"
         sub="Saldo de hoje + o que vai entrar − o que vai sair."
-        className="flex-[2_1_340px]"
       >
         <div className="flex min-h-[220px] flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#D5DAE3] bg-[repeating-linear-gradient(0deg,#fff,#fff_43px,#F3F5F8_43px,#F3F5F8_44px)] p-6 text-center">
           <TrendingUp className="h-7 w-7 text-[#8A93A5]" />
@@ -470,7 +524,6 @@ function Projecao({ d, onParams }: { d: Financeiro; onParams: () => void }) {
     <Cartao
       titulo="Caixa nos próximos 90 dias"
       sub={`Menor saldo ${brl0(p.minimo)} · em 90 dias ${brl0(p.final)}`}
-      className="flex-[2_1_340px]"
     >
       <svg
         viewBox={`0 0 100 ${alt}`}
@@ -541,7 +594,6 @@ function ReceberResumo({ d, onVer }: { d: Financeiro; onVer: () => void }) {
           Ver todas ({d.receber.length})
         </button>
       }
-      className="flex-[3_1_460px]"
     >
       {total ? (
         <div className="mb-2.5 flex h-3 gap-[3px] overflow-hidden rounded-full">
@@ -632,35 +684,41 @@ function IndicadoresMes({ d }: { d: Financeiro }) {
     },
   ];
   return (
-    <Cartao titulo="Indicadores do mês" className="flex-[2_1_340px]">
-      <div className="grid grid-cols-2 gap-3">
+    <Cartao titulo="Indicadores do mês" sub="Saúde do negócio em números" colado>
+      <dl className="divide-y border-t">
         {itens.map((i) => (
-          <div key={i.rotulo} className="min-w-0 rounded-xl bg-background p-3.5">
-            <span className="block truncate text-[12px] text-muted-foreground">{i.rotulo}</span>
-            <span
+          <div
+            key={i.rotulo}
+            className="flex items-center justify-between gap-4 px-4 py-2.5 sm:px-5"
+          >
+            <div className="min-w-0">
+              <dt className="truncate text-[13.5px] font-medium">{i.rotulo}</dt>
+              {i.detalhe ? (
+                <dd
+                  className={cn(
+                    "truncate text-[12px]",
+                    i.alerta ? "font-semibold text-[#B4530A]" : "text-muted-foreground",
+                  )}
+                >
+                  {i.detalhe}
+                </dd>
+              ) : null}
+            </div>
+            <dd
               className={cn(
-                "font-display tabular mt-1 block truncate text-[20px] font-bold",
+                "font-display tabular shrink-0 text-[16px] font-semibold",
                 i.valor === "—" && "text-[#8A93A5]",
+                i.alerta && "text-[#B4530A]",
               )}
             >
               {i.valor}
-            </span>
-            {i.detalhe ? (
-              <span
-                className={cn(
-                  "block truncate text-[11.5px]",
-                  i.alerta ? "font-semibold text-[#B4530A]" : "text-muted-foreground",
-                )}
-              >
-                {i.detalhe}
-              </span>
-            ) : null}
+            </dd>
           </div>
         ))}
-      </div>
+      </dl>
       {d.centros.length ? (
-        <div className="mt-4 border-t pt-3">
-          <p className="mb-1.5 text-[12px] font-semibold text-muted-foreground">
+        <div className="border-t px-4 pb-3 pt-3 sm:px-5">
+          <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
             Resultado por área
           </p>
           {d.centros.map((c) => (
@@ -711,7 +769,6 @@ function CartaoResumo({ d, onVer }: { d: Financeiro; onVer?: () => void }) {
           </button>
         ) : null
       }
-      className="flex-[2_1_340px]"
     >
       {c.meses.length ? (
         <ul className="flex flex-col gap-2.5">
@@ -747,7 +804,7 @@ function CartaoAba({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => voi
   const c = d.cartao;
   const [aberto, setAberto] = useState<string | null>(null);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       <FaixaNumeros
         itens={[
           {
@@ -769,13 +826,12 @@ function CartaoAba({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => voi
           },
         ]}
       />
-      <div className="flex flex-wrap gap-4">
+      <div className="grid gap-4 lg:grid-cols-[2fr_3fr]">
         <CartaoResumo d={d} />
         <Secao
           titulo="Vendas no cartão"
           contagem={c.vendas.length}
           colado
-          className="flex-[3_1_460px]"
           acoes={
             <BotaoCsv
               nome="cartao-parcelado"
@@ -885,14 +941,16 @@ function Receber({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => void 
       colado
       acoes={
         <div className="flex flex-wrap items-center gap-2">
-          <Alternador
+          <FiltroSelect
             valor={filtro}
             onChange={setFiltro}
+            rotulo="Situação"
             opcoes={[
               { valor: "todos", rotulo: "Todas" },
               { valor: "sem_link", rotulo: "Sem link" },
               { valor: "lembrar", rotulo: "Link enviado" },
               { valor: "vencido", rotulo: "Vencidas" },
+              { valor: "nf_sem_pagamento", rotulo: "NF sem pagamento" },
             ]}
           />
           <BotaoCsv
@@ -912,7 +970,7 @@ function Receber({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => void 
       {lista.length ? (
         <ul className="divide-y">
           {lista.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5 sm:px-5">
+            <li key={c.id} className="flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-2.5">
               <button
                 type="button"
                 onClick={() => c.origem === "negocio" && onAbrir(c.id)}
@@ -922,6 +980,14 @@ function Receber({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => void 
                   {c.cliente}
                 </span>
                 <span className="block truncate text-[11.5px] text-muted-foreground">
+                  <span
+                    className={cn(
+                      "sm:hidden",
+                      ESTADO[c.estado].tom === "alerta" && "font-semibold text-[#B4530A]",
+                    )}
+                  >
+                    {ESTADO[c.estado].rotulo} ·{" "}
+                  </span>
                   {c.origem === "negocio"
                     ? `fechado há ${c.idade} dia${c.idade === 1 ? "" : "s"}`
                     : "lançamento previsto"}
@@ -929,14 +995,16 @@ function Receber({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => void 
                   {c.forma ? ` · ${labelDe(FORMAS_PAGAMENTO, c.forma)}` : ""}
                 </span>
               </button>
-              <Etiqueta tom={ESTADO[c.estado].tom}>{ESTADO[c.estado].rotulo}</Etiqueta>
-              <span className="tabular w-24 text-right text-[13.5px] font-semibold">
+              <span className="hidden sm:inline-flex">
+                <Etiqueta tom={ESTADO[c.estado].tom}>{ESTADO[c.estado].rotulo}</Etiqueta>
+              </span>
+              <span className="tabular shrink-0 text-right text-[13.5px] font-semibold sm:w-24">
                 {fmtMoeda(c.valor)}
               </span>
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8"
+                className="h-8 shrink-0 px-2.5"
                 onClick={() =>
                   executar(async () => {
                     if (c.origem === "negocio")
@@ -946,7 +1014,8 @@ function Receber({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => void 
                   }, "Pagamento confirmado.")
                 }
               >
-                <Check className="h-3.5 w-3.5" /> Recebido
+                <Check className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Recebido</span>
               </Button>
             </li>
           ))}
@@ -1041,19 +1110,15 @@ function Lancamentos({ d, onEditar }: { d: Financeiro; onEditar: (l: Lancamento)
       colado
       acoes={
         <div className="flex items-center gap-2">
-          <Select value={nat} onValueChange={(v) => setNat(v as typeof nat)}>
-            <SelectTrigger className="h-8 w-44 text-[13px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as naturezas</SelectItem>
-              {NATUREZAS.map((n) => (
-                <SelectItem key={n.value} value={n.value}>
-                  {n.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FiltroSelect
+            valor={nat}
+            onChange={setNat}
+            rotulo="Natureza"
+            opcoes={[
+              { valor: "todas" as const, rotulo: "Todas" },
+              ...NATUREZAS.map((n) => ({ valor: n.value as Natureza, rotulo: n.label })),
+            ]}
+          />
           <BotaoCsv
             nome="lancamentos"
             linhas={lista}
@@ -1072,74 +1137,108 @@ function Lancamentos({ d, onEditar }: { d: Financeiro; onEditar: (l: Lancamento)
       }
     >
       {lista.length ? (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-[13px]">
-            <thead className="text-[11.5px] text-muted-foreground">
-              <tr className="border-b">
-                <th className="px-4 py-2 text-left font-medium">Data</th>
-                <th className="px-2 py-2 text-left font-medium">Descrição</th>
-                <th className="px-2 py-2 text-left font-medium">Natureza</th>
-                <th className="px-2 py-2 text-left font-medium">Centro</th>
-                <th className="px-2 py-2 text-right font-medium">Valor</th>
-                <th className="px-4 py-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {lista.map((l) => (
-                <tr key={l.id} className="hover:bg-[#f8faff]">
-                  <td className="tabular whitespace-nowrap px-4 py-2">{fmtDia(l.data)}</td>
-                  <td className="max-w-[260px] px-2 py-2">
-                    <span className="block truncate font-medium">{l.descricao}</span>
-                    <span className="flex gap-1.5 text-[11px] text-muted-foreground">
-                      {l.categoria}
-                      {l.recorrente ? <Etiqueta tom="azul">recorrente</Etiqueta> : null}
-                      {l.status === "previsto" ? <Etiqueta>previsto</Etiqueta> : null}
+        <>
+          <ul className="divide-y border-t sm:hidden">
+            {lista.map((l) => (
+              <li key={l.id}>
+                <button
+                  type="button"
+                  onClick={() => onEditar(l)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[#F8FAFF]"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] font-semibold">
+                      {l.descricao}
                     </span>
-                  </td>
-                  <td className="px-2 py-2 text-muted-foreground">
-                    {labelDe(NATUREZAS, l.natureza)}
-                  </td>
-                  <td className="px-2 py-2 text-muted-foreground">
-                    {labelDe(CENTROS, l.vertical) || "—"}
-                  </td>
-                  <td
+                    <span className="block truncate text-[11.5px] text-muted-foreground">
+                      {fmtDia(l.data)} · {labelDe(NATUREZAS, l.natureza)}
+                      {l.categoria ? ` · ${l.categoria}` : ""}
+                      {l.recorrente ? " · recorrente" : ""}
+                      {l.status === "previsto" ? " · previsto" : ""}
+                    </span>
+                  </span>
+                  <span
                     className={cn(
-                      "tabular whitespace-nowrap px-2 py-2 text-right font-semibold",
+                      "tabular shrink-0 text-[13.5px] font-semibold",
                       l.tipo === "entrada" ? "text-emerald-700" : "",
                     )}
                   >
                     {l.tipo === "entrada" ? "+ " : "− "}
                     {fmtMoeda(l.valor)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      aria-label="Editar"
-                      onClick={() => onEditar(l)}
-                      className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Apagar"
-                      onClick={() => {
-                        if (window.confirm(`Apagar "${l.descricao}"?`))
-                          void executar(
-                            () => apagar({ data: { id: l.id } }),
-                            "Lançamento apagado.",
-                          );
-                      }}
-                      className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </td>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full min-w-[640px] text-[13px]">
+              <thead className="text-[11.5px] text-muted-foreground">
+                <tr className="border-b">
+                  <th className="px-4 py-2 text-left font-medium">Data</th>
+                  <th className="px-2 py-2 text-left font-medium">Descrição</th>
+                  <th className="px-2 py-2 text-left font-medium">Natureza</th>
+                  <th className="px-2 py-2 text-left font-medium">Centro</th>
+                  <th className="px-2 py-2 text-right font-medium">Valor</th>
+                  <th className="px-4 py-2" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y">
+                {lista.map((l) => (
+                  <tr key={l.id} className="hover:bg-[#f8faff]">
+                    <td className="tabular whitespace-nowrap px-4 py-2">{fmtDia(l.data)}</td>
+                    <td className="max-w-[260px] px-2 py-2">
+                      <span className="block truncate font-medium">{l.descricao}</span>
+                      <span className="flex gap-1.5 text-[11px] text-muted-foreground">
+                        {l.categoria}
+                        {l.recorrente ? <Etiqueta tom="azul">recorrente</Etiqueta> : null}
+                        {l.status === "previsto" ? <Etiqueta>previsto</Etiqueta> : null}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 text-muted-foreground">
+                      {labelDe(NATUREZAS, l.natureza)}
+                    </td>
+                    <td className="px-2 py-2 text-muted-foreground">
+                      {labelDe(CENTROS, l.vertical) || "—"}
+                    </td>
+                    <td
+                      className={cn(
+                        "tabular whitespace-nowrap px-2 py-2 text-right font-semibold",
+                        l.tipo === "entrada" ? "text-emerald-700" : "",
+                      )}
+                    >
+                      {l.tipo === "entrada" ? "+ " : "− "}
+                      {fmtMoeda(l.valor)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        aria-label="Editar"
+                        onClick={() => onEditar(l)}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Apagar"
+                        onClick={() => {
+                          if (window.confirm(`Apagar "${l.descricao}"?`))
+                            void executar(
+                              () => apagar({ data: { id: l.id } }),
+                              "Lançamento apagado.",
+                            );
+                        }}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : (
         <div className="p-5">
           <Vazio>

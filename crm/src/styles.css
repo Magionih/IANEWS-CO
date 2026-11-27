@@ -80,7 +80,8 @@
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display:
-    "Inter Tight Variable", "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    "Inter Tight Variable", "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   --font-slab: "Roboto Slab", ui-serif, Georgia, serif;
   --font-serif: "Lora", ui-serif, Georgia, "Times New Roman", serif;
   --font-mono:
@@ -485,6 +486,69 @@ body {
 }
 .crm-main tbody tr:last-child td {
   border-bottom: 0;
+}
+
+/* Painel de números (padrão banco): um cartão só, células separadas por linhas finas.
+   A grade passa 1px da borda à direita e embaixo; o cartão corta as linhas da última
+   coluna e da última linha, então só sobram as divisórias internas. */
+.kpi-painel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+.kpi-grade {
+  /* Celular e tablet: as células se esticam para preencher a linha (sem buraco no fim). */
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -1px -1px 0;
+}
+.kpi-grade > * {
+  flex: 1 1 8.5rem;
+}
+@media (min-width: 1024px) {
+  /* Computador: uma linha só, colunas iguais. */
+  .kpi-grade {
+    display: grid;
+    grid-template-columns: repeat(var(--kpi-n, 4), minmax(0, 1fr));
+  }
+}
+.kpi-celula {
+  display: block;
+  min-width: 0;
+  padding: 0.75rem 0.875rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+@media (min-width: 640px) {
+  .kpi-celula {
+    padding: 0.875rem 1rem;
+  }
+}
+@media (min-width: 1024px) {
+  .kpi-celula {
+    padding: 1rem 1.25rem;
+  }
+}
+.kpi-link {
+  transition: background-color 120ms ease;
+}
+.kpi-link:hover {
+  background: #f8faff;
+}
+.kpi-link:active {
+  background: #f1f5ff;
+}
+
+/* Filtro em lista: no celular o texto fica em 16px (o iPhone não dá zoom ao tocar). */
+.filtro-select select {
+  font-size: 13px;
+}
+@media (max-width: 1023px) {
+  .filtro-select {
+    height: 2.5rem;
+    font-size: 14px;
+  }
 }
 
 /* Rolagem horizontal de tabelas e quadros no celular, com borda que indica "tem mais". */

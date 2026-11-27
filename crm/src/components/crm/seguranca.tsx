@@ -4,7 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, MailPlus, ShieldCheck, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 
+import { CartaoNotificacoes } from "@/components/crm/avisos";
 import { useCrm } from "@/components/crm/context";
+import { CartaoFaceId } from "@/components/crm/faceid";
 import { Carregando, Erro, Secao, Vazio } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,8 @@ type Fator = { id: string; status: string; friendly_name?: string | null; create
 export function Seguranca() {
   return (
     <div className="space-y-5">
+      <CartaoFaceId />
+      <CartaoNotificacoes />
       <DuasEtapas />
       <Convite />
       <Auditoria />

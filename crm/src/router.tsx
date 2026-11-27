@@ -3,14 +3,15 @@ import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
-  // Cache das telas: volta para uma tela já aberta sem esperar o servidor, e só recarrega
-  // depois de 30s ou quando alguém salva algo (useAcao invalida o cache do CRM).
+  // Cache das telas: volta para uma tela já aberta sem esperar o servidor. Os dados se atualizam
+  // sozinhos: pelo tempo real (cada movimentação no banco), ao voltar para o app e ao reconectar.
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 30_000,
         gcTime: 10 * 60_000,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
         retry: 1,
       },
     },

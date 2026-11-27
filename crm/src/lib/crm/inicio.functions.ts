@@ -33,6 +33,7 @@ export type ConteudoAgenda = {
   origin: string | null;
   social_url: string | null;
   category: string | null;
+  cover_image_url?: string | null;
 };
 
 type NegocioMin = {
@@ -155,6 +156,7 @@ export type LeadNewsletter = {
   landing_path: string | null;
   utm_source: string | null;
   utm_campaign: string | null;
+  perfil: string | null;
 };
 
 export const getLeadsNewsletter = createServerFn({ method: "GET" })
@@ -165,7 +167,7 @@ export const getLeadsNewsletter = createServerFn({ method: "GET" })
       context.db
         .from("leads")
         .select(
-          "id, email, full_name, phone, source, is_active, confirmed_at, unsubscribed_at, created_at, cta_placement, article_slug, landing_path, utm_source, utm_campaign",
+          "id, email, full_name, phone, source, is_active, confirmed_at, unsubscribed_at, created_at, cta_placement, article_slug, landing_path, utm_source, utm_campaign, perfil",
         )
         .order("created_at", { ascending: false })
         .range(de, ate),
@@ -189,7 +191,9 @@ export const getCalendario = createServerFn({ method: "GET" })
     return todas<ConteudoAgenda>((a, b) =>
       context.db
         .from("articles")
-        .select("id, slug, title, published_at, status, origin, social_url, category")
+        .select(
+          "id, slug, title, published_at, status, origin, social_url, category, cover_image_url",
+        )
         .in("status", ["published", "draft"])
         .gte("published_at", de)
         .lt("published_at", ate)

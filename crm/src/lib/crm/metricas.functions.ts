@@ -127,13 +127,14 @@ type NegocioBase = {
   proposta_em: string | null;
   pago_em: string | null;
   publicado_em: string | null;
+  tags: string[] | null;
   etapa: { nome: string; tipo: string; ordem: number } | null;
   empresa: { nome: string } | null;
   pessoa: { nome: string } | null;
 };
 
 const CAMPOS_NEGOCIO =
-  "id, titulo, funil_id, etapa_desde, empresa_id, pessoa_id, tipo, valor, valor_proposto, status_pagamento, origem, canal_origem, abordagem, produto, chance, pagamento_previsto_em, forma_pagamento, nf_numero, dono_id, proxima_acao_em, motivo_perda, fechado_em, created_at, updated_at, respondeu_em, proposta_em, pago_em, publicado_em, etapa:crm_etapas(nome, tipo, ordem), empresa:crm_empresas(nome), pessoa:crm_pessoas(nome)";
+  "id, titulo, funil_id, etapa_desde, empresa_id, pessoa_id, tipo, valor, valor_proposto, status_pagamento, origem, canal_origem, abordagem, produto, chance, pagamento_previsto_em, forma_pagamento, nf_numero, dono_id, proxima_acao_em, motivo_perda, fechado_em, created_at, updated_at, respondeu_em, proposta_em, pago_em, publicado_em, tags, etapa:crm_etapas(nome, tipo, ordem), empresa:crm_empresas(nome), pessoa:crm_pessoas(nome)";
 
 function normalizarNegocio(n: NegocioBase): NegocioBase {
   return {
@@ -791,37 +792,78 @@ export type ItemFila = {
   cortesia: boolean;
   valor: number;
   dias: number;
+  /** Fase da produção: 0 material, 1 produzindo, 2 prévia, 3 aprovado, 4 agendada. */
+  fase: 0 | 1 | 2 | 3 | 4;
   material: boolean;
   previa: boolean;
   aprovado: boolean;
+  agendada: boolean;
   ajuste: boolean;
   atrasado: boolean;
 };
 
+/** Etiquetas de status da produção (crm_tags "Status · ...") → fase da fila. */
+function faseDaEtiqueta(nome: string): ItemFila["fase"] | null {
+  const n = nome.toLowerCase();
+  if (!n.startsWith("status")) return null;
+  if (/agendad/.test(n)) return 4;
+  if (/aprovad/.test(n)) return 3;
+  if (/valida|prévia|previa/.test(n)) return 2;
+  if (/produzir|produ[cç][aã]o/.test(n)) return 1;
+  if (/foto|material/.test(n)) return 0;
+  return null;
+}
+
 async function filaProducao(db: CrmDb, vendas: NegocioBase[], hoje: string) {
-  const briefings = (checar(
-    await db
+  const [resBriefings, resTags] = await Promise.all([
+    db
       .from("auto_briefings")
       .select(
         "negocio_id, tipo, status, dados, fotos, previa_url, aprovado_em, ajuste_pedido, created_at, updated_at",
       )
       .limit(1000),
-  ) ?? []) as Briefing[];
+    db.from("crm_tags").select("id, nome").ilike("nome", "Status%"),
+  ]);
+  const briefings = (checar(resBriefings) ?? []) as Briefing[];
+  // Etiquetas de status que a equipe usa no negócio (fonte principal da fase).
+  const faseTag = new Map<string, ItemFila["fase"]>();
+  for (const t of (resTags.data ?? []) as { id: string; nome: string }[]) {
+    const f = faseDaEtiqueta(t.nome);
+    if (f != null) faseTag.set(t.id, f);
+  }
   const porNegocio = new Map(briefings.filter((b) => b.negocio_id).map((b) => [b.negocio_id!, b]));
   const fila: ItemFila[] = [];
   for (const n of vendas) {
     if (n.funil_id !== "materia" || !n.etapa) continue;
     const nome = n.etapa.nome.toLowerCase();
+    const fasesTag = (n.tags ?? [])
+      .map((id) => faseTag.get(id))
+      .filter((f): f is ItemFila["fase"] => f != null);
+    const publicado = /publicado/.test(nome);
     const naFila =
-      (n.etapa.tipo === "ganha" && !/publicado/.test(nome)) ||
-      (n.etapa.tipo === "aberta" && /briefing|aprovado/.test(nome)) ||
-      (n.status_pagamento === "pago" && n.etapa.tipo === "aberta");
+      !publicado &&
+      ((n.etapa.tipo === "ganha" && !publicado) ||
+        (n.etapa.tipo === "aberta" && /briefing|aprovado/.test(nome)) ||
+        (n.status_pagamento === "pago" && n.etapa.tipo === "aberta") ||
+        (fasesTag.length > 0 && n.etapa.tipo !== "perdida"));
     if (!naFila) continue;
     const b = porNegocio.get(n.id);
     const pago = n.status_pagamento === "pago";
     const dias = diasDesde(n.etapa_desde ?? n.updated_at, hoje);
-    const material = temMaterial(b);
-    const previa = !!b?.previa_url;
+    // Fase pelo briefing (material, prévia, aprovação) e pela etiqueta: vale a mais adiantada,
+    // menos "Faltam fotos", que manda voltar para o material.
+    const faseBriefing: ItemFila["fase"] = b?.aprovado_em
+      ? 3
+      : b?.previa_url
+        ? 2
+        : temMaterial(b)
+          ? 1
+          : 0;
+    const faseEtiqueta = fasesTag.length ? (Math.max(...fasesTag) as ItemFila["fase"]) : null;
+    const fase: ItemFila["fase"] =
+      faseEtiqueta === 0 && fasesTag.length === 1
+        ? 0
+        : (Math.max(faseBriefing, faseEtiqueta ?? 0) as ItemFila["fase"]);
     fila.push({
       id: n.id,
       cliente: nomeCliente(n),
@@ -831,12 +873,22 @@ async function filaProducao(db: CrmDb, vendas: NegocioBase[], hoje: string) {
       cortesia: n.status_pagamento === "cortesia",
       valor: n.valor ?? 0,
       dias,
-      material,
-      previa,
-      aprovado: !!b?.aprovado_em,
+      fase,
+      material: fase >= 1,
+      previa: fase >= 2,
+      aprovado: fase >= 3,
+      agendada: fase === 4,
       ajuste: !!b?.ajuste_pedido,
-      // Prazo do documento: material → prévia em até 2 dias (pagos: 1).
-      atrasado: material && !previa ? dias > (pago ? 1 : 2) : pago && dias > 2,
+      // Prazo do documento: material → prévia em até 2 dias (pagos: 1); aprovado sem agendar
+      // em até 2 dias. Agendada não atrasa.
+      atrasado:
+        fase === 4
+          ? false
+          : fase === 1
+            ? dias > (pago ? 1 : 2)
+            : fase === 3
+              ? dias > 2
+              : pago && dias > 2,
     });
   }
   fila.sort(
@@ -847,8 +899,9 @@ async function filaProducao(db: CrmDb, vendas: NegocioBase[], hoje: string) {
   return {
     fila,
     briefings,
+    // Pago e ainda não agendado = dinheiro parado na produção.
     valorTravado: soma(
-      fila.filter((f) => f.pago),
+      fila.filter((f) => f.pago && f.fase < 4),
       (f) => f.valor,
     ),
     previasAguardando: briefings.filter((b) => b.previa_url && !b.aprovado_em).length,
@@ -1234,21 +1287,23 @@ export const getPainelDono = createServerFn({ method: "GET" })
     }
 
     // Operação
-    const producao: ItemLista[] = op.fila.map((f) => ({
-      id: f.id,
-      titulo: f.cliente,
-      detalhe: `${f.pago ? "Pago" : f.cortesia ? "Cortesia" : "A receber"} · ${
-        !f.material
-          ? "aguardando material"
-          : !f.previa
-            ? "material recebido, sem prévia"
-            : f.aprovado
-              ? "aprovado, falta publicar"
-              : "prévia com o cliente"
-      } há ${f.dias} dia${f.dias === 1 ? "" : "s"}`,
-      valor: f.pago ? f.valor : undefined,
-      alerta: f.atrasado,
-    }));
+    const producao: ItemLista[] = op.fila
+      .filter((f) => f.fase < 4)
+      .map((f) => ({
+        id: f.id,
+        titulo: f.cliente,
+        detalhe: `${f.pago ? "Pago" : f.cortesia ? "Cortesia" : "A receber"} · ${
+          [
+            "aguardando material",
+            "em produção",
+            "prévia com o cliente",
+            "aprovado, falta agendar",
+            "agendada no site",
+          ][f.fase]
+        } há ${f.dias} dia${f.dias === 1 ? "" : "s"}`,
+        valor: f.pago ? f.valor : undefined,
+        alerta: f.atrasado,
+      }));
     const atrasadosProd = op.fila.filter((f) => f.pago && f.atrasado);
     if (atrasadosProd.length)
       alertas.push({
@@ -1305,7 +1360,7 @@ export const getPainelDono = createServerFn({ method: "GET" })
       ...painelFin,
       margemMeta: p.margem_meta,
       pipeline: { bruto, ponderado, qtd: qtdPipe },
-      travado: { valor: op.valorTravado, qtd: op.fila.filter((f) => f.pago).length },
+      travado: { valor: op.valorTravado, qtd: op.fila.filter((f) => f.pago && f.fase < 4).length },
       audiencia: aud
         ? {
             assinantes: aud.assinantes,

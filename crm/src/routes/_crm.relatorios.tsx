@@ -11,6 +11,7 @@ import {
   Carregando,
   Erro,
   Numero,
+  PainelNumeros,
   Secao,
   Vazio,
 } from "@/components/crm/ui";
@@ -88,7 +89,7 @@ function RelatoriosPage() {
         <Erro erro={error} />
       ) : (
         <div className={isFetching ? "space-y-5 opacity-70" : "space-y-5"}>
-          <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <PainelNumeros quantidade={6}>
             <Numero rotulo="Novos leads" valor={fmtNum(totalNovos)} />
             <Numero
               rotulo="Fechados"
@@ -113,7 +114,7 @@ function RelatoriosPage() {
               detalhe={`${fmtMoeda(r.abertos.valor)} · ${r.abertos.atrasados} atrasados`}
               destaque={r.abertos.atrasados ? "alerta" : undefined}
             />
-          </section>
+          </PainelNumeros>
 
           <Secao titulo="Passagem entre etapas (negócios que chegaram a cada etapa no período)">
             <div className="grid gap-5 lg:grid-cols-3">

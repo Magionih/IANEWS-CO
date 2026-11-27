@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, ScanFace } from "lucide-react";
 import { z } from "zod";
 
 import logo from "@/assets/ianews-logo-white.png";
+import {
+  confirmarFaceId,
+  erroFaceId,
+  listarFaceId,
+  suportaFaceId,
+  type FatorFaceId,
+} from "@/components/crm/faceid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +56,39 @@ function LoginPage() {
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
+  // Segunda etapa: Face ID (passkey) quando a conta tem um ativo; o código fica como reserva.
+  const [faceId, setFaceId] = useState<FatorFaceId | null>(null);
+  const [usarCodigo, setUsarCodigo] = useState(false);
+
+  async function irParaSegundaEtapa() {
+    const lista = suportaFaceId() ? await listarFaceId().catch(() => []) : [];
+    setFaceId(lista[0] ?? null);
+    setUsarCodigo(!lista.length);
+    setModo("codigo");
+  }
+
+  function entrou() {
+    try {
+      sessionStorage.setItem("crm:faceid-ok", String(Date.now()));
+    } catch {
+      /* sem armazenamento */
+    }
+    window.location.replace(destinoSeguro(volta));
+  }
+
+  async function entrarComFaceId() {
+    if (!faceId) return;
+    setErro("");
+    setOcupado(true);
+    try {
+      await confirmarFaceId(faceId.id);
+      entrou();
+    } catch (e) {
+      setErro(erroFaceId(e));
+    } finally {
+      setOcupado(false);
+    }
+  }
 
   useEffect(() => {
     // Link de "esqueci a senha": o Supabase abre uma sessão de recuperação; pede a nova senha.
@@ -60,11 +100,12 @@ function LoginPage() {
     if (!recuperando) {
       supabase.auth.getSession().then(async ({ data }) => {
         if (!data.session) return;
-        if (await precisaCodigo()) setModo("codigo");
+        if (await precisaCodigo()) await irParaSegundaEtapa();
         else window.location.replace(destinoSeguro(volta));
       });
     }
     return () => sub.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [volta]);
 
   async function enviar(e: React.FormEvent) {
@@ -85,7 +126,7 @@ function LoginPage() {
           code: c,
         });
         if (error) return setErro("Código incorreto ou expirado. Tente o próximo código.");
-        window.location.replace(destinoSeguro(volta));
+        entrou();
       } finally {
         setOcupado(false);
       }
@@ -118,7 +159,7 @@ function LoginPage() {
         }
         if (await precisaCodigo()) {
           setSenha("");
-          setModo("codigo");
+          await irParaSegundaEtapa();
           return;
         }
         navigate({ to: destinoSeguro(volta), replace: true });
@@ -164,7 +205,43 @@ function LoginPage() {
           <Lock className="h-3.5 w-3.5" /> Acesso restrito à equipe da IA News.
         </p>
 
-        <form onSubmit={enviar} className="mt-5 space-y-3">
+        {modo === "codigo" && faceId && !usarCodigo ? (
+          <div className="mt-5 space-y-3">
+            <Button
+              type="button"
+              className="h-12 w-full text-[15px] font-semibold"
+              onClick={entrarComFaceId}
+              disabled={ocupado}
+              autoFocus
+            >
+              {ocupado ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <ScanFace className="mr-2 h-5 w-5" />
+              )}
+              Entrar com Face ID
+            </Button>
+            <p className="text-center text-[12px] text-muted-foreground">
+              Em outro computador, o navegador mostra um QR code: aponte a câmera do celular.
+            </p>
+            {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
+            <button
+              type="button"
+              className="w-full text-center text-[13px] font-medium text-primary hover:underline"
+              onClick={() => {
+                setErro("");
+                setUsarCodigo(true);
+              }}
+            >
+              Usar o código de 6 números
+            </button>
+          </div>
+        ) : null}
+
+        <form
+          onSubmit={enviar}
+          className={modo === "codigo" && faceId && !usarCodigo ? "hidden" : "mt-5 space-y-3"}
+        >
           {modo === "codigo" ? (
             <div className="space-y-1.5">
               <Label htmlFor="codigo">Código do aplicativo autenticador</Label>

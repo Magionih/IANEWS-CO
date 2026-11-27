@@ -1,5 +1,6 @@
-import type { ComponentType, ReactNode } from "react";
-import { AlertTriangle, Download, Flame, Loader2, X } from "lucide-react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, ChevronDown, Download, Flame, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -77,37 +78,122 @@ export function BarraFerramentas({
   );
 }
 
+type Tom = "alerta" | "azul" | "ok";
+
+const COR_TOM: Record<Tom, string> = {
+  alerta: "font-semibold text-[#B4530A]",
+  ok: "font-semibold text-[#0E7A55]",
+  azul: "font-semibold text-primary",
+};
+
+/** Um número dentro do painel de números (padrão banco: rótulo, valor e detalhe numa célula,
+ *  separadas por linhas finas). Use dentro de <PainelNumeros>. */
 export function Numero({
   rotulo,
   valor,
   detalhe,
   destaque,
+  link,
 }: {
   rotulo: string;
   valor: ReactNode;
   detalhe?: ReactNode;
-  destaque?: "alerta" | "azul" | "ok";
+  destaque?: Tom;
   icone?: ComponentType<{ className?: string }>;
+  /** Tela que abre ao tocar no número. */
+  link?: string;
 }) {
-  return (
-    <div className="flex h-full min-w-0 flex-col gap-2 rounded-2xl border bg-card px-5 py-5 sm:px-6">
-      <p className="truncate text-[13px] font-medium text-muted-foreground">{rotulo}</p>
-      <p className="font-display tabular truncate text-[24px] font-bold leading-none tracking-[-0.02em] sm:text-[30px]">
+  const conteudo = (
+    <>
+      <dt className="truncate text-[11.5px] font-medium text-muted-foreground sm:text-[12px]">
+        {rotulo}
+      </dt>
+      <dd className="font-display tabular mt-1 truncate text-[18px] font-semibold leading-tight tracking-[-0.015em] text-foreground sm:text-[20px] lg:text-[22px]">
         {valor}
-      </p>
+      </dd>
       {detalhe ? (
-        <p
+        <dd
           className={cn(
-            "truncate text-[13px] text-muted-foreground",
-            destaque === "alerta" && "font-semibold text-[#B4530A]",
-            destaque === "ok" && "font-semibold text-[#0E7A55]",
-            destaque === "azul" && "font-semibold text-primary",
+            "mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-muted-foreground sm:truncate sm:text-[12px]",
+            destaque && COR_TOM[destaque],
           )}
         >
           {detalhe}
-        </p>
+        </dd>
       ) : null}
+    </>
+  );
+  return link ? (
+    <Link to={link} className="kpi-celula kpi-link">
+      {conteudo}
+    </Link>
+  ) : (
+    <div className="kpi-celula">{conteudo}</div>
+  );
+}
+
+/** Colunas no computador: tudo numa linha até 6 números; acima disso, linhas cheias. */
+function colunasKpi(n: number) {
+  if (n <= 6) return Math.max(2, n);
+  if (n % 4 === 0) return 4;
+  if (n % 3 === 0) return 3;
+  if (n % 5 === 0) return 5;
+  return 4;
+}
+
+/** Painel único de números, com divisórias finas (2 colunas no celular, uma linha no computador). */
+export function PainelNumeros({
+  children,
+  className,
+  quantidade,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** Quantos números (para caber numa linha só no computador). */
+  quantidade?: number;
+}) {
+  return (
+    <div className={cn("kpi-painel", className)}>
+      <dl
+        className="kpi-grade"
+        style={quantidade ? ({ "--kpi-n": colunasKpi(quantidade) } as CSSProperties) : {}}
+      >
+        {children}
+      </dl>
     </div>
+  );
+}
+
+/** Cartão padrão das telas (título, linha de apoio e ação à direita). */
+export function Cartao({
+  titulo,
+  sub,
+  extra,
+  className,
+  children,
+  colado,
+}: {
+  titulo: ReactNode;
+  sub?: ReactNode;
+  extra?: ReactNode;
+  className?: string;
+  children: ReactNode;
+  /** Sem margem interna embaixo (listas de borda a borda). */
+  colado?: boolean;
+}) {
+  return (
+    <section className={cn("flex min-w-0 flex-col rounded-xl border bg-card", className)}>
+      <header className="flex items-start justify-between gap-3 px-4 pt-4 sm:px-5">
+        <div className="min-w-0">
+          <h2 className="text-[14.5px] font-semibold tracking-[-0.01em]">{titulo}</h2>
+          {sub ? <p className="mt-0.5 text-[12.5px] text-muted-foreground">{sub}</p> : null}
+        </div>
+        {extra ? <div className="flex shrink-0 items-center gap-2">{extra}</div> : null}
+      </header>
+      <div className={cn("mt-3 flex flex-1 flex-col", colado ? "" : "px-4 pb-4 sm:px-5 sm:pb-5")}>
+        {children}
+      </div>
+    </section>
   );
 }
 
@@ -128,19 +214,19 @@ export function Secao({
   colado?: boolean;
 }) {
   return (
-    <section className={cn("min-w-0 rounded-2xl border bg-card", className)}>
-      <header className="flex flex-wrap items-center justify-between gap-2 px-5 pb-3 pt-5 sm:px-6">
-        <h2 className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
+    <section className={cn("min-w-0 rounded-xl border bg-card", className)}>
+      <header className="flex flex-wrap items-center justify-between gap-2 px-4 pb-2.5 pt-4 sm:px-5">
+        <h2 className="flex items-center gap-2 text-[14.5px] font-semibold tracking-[-0.01em]">
           {titulo}
           {contagem != null ? (
-            <span className="tabular text-[13px] font-semibold text-muted-foreground">
+            <span className="tabular rounded-full bg-muted px-1.5 py-px text-[11.5px] font-semibold text-muted-foreground">
               {contagem}
             </span>
           ) : null}
         </h2>
         {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
       </header>
-      <div className={colado ? "pb-2" : "px-5 pb-5 sm:px-6"}>{children}</div>
+      <div className={colado ? "pb-1" : "px-4 pb-4 sm:px-5 sm:pb-5"}>{children}</div>
     </section>
   );
 }
@@ -148,18 +234,141 @@ export function Secao({
 /** Esqueleto de carregamento: mostra a forma da tela enquanto os dados chegam (sem tela "travada"). */
 export function Carregando({ texto = "Carregando..." }: { texto?: string }) {
   return (
-    <div role="status" aria-live="polite" aria-label={texto} className="space-y-6">
-      <div className="h-9 w-56 animate-pulse rounded-lg bg-[#E9ECF1]" />
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-[118px] animate-pulse rounded-2xl border bg-card" />
-        ))}
-      </div>
+    <div role="status" aria-live="polite" aria-label={texto} className="space-y-5">
+      <div className="h-8 w-48 animate-pulse rounded-lg bg-[#E9ECF1]" />
+      <div className="h-[84px] animate-pulse rounded-xl border bg-card" />
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
-        <div className="h-72 animate-pulse rounded-2xl border bg-card" />
-        <div className="h-72 animate-pulse rounded-2xl border bg-card" />
+        <div className="h-64 animate-pulse rounded-xl border bg-card" />
+        <div className="h-64 animate-pulse rounded-xl border bg-card" />
       </div>
     </div>
+  );
+}
+
+/** Filtro em lista (no lugar de vários botões): ícone, rótulo curto e a opção escolhida. */
+export function FiltroSelect<T extends string>({
+  valor,
+  onChange,
+  opcoes,
+  rotulo,
+  icone: Icone,
+  className,
+  titulo,
+}: {
+  valor: T;
+  onChange: (v: T) => void;
+  opcoes: { valor: T; rotulo: string }[];
+  /** Prefixo discreto ("Período", "Situação"). */
+  rotulo?: string;
+  icone?: ComponentType<{ className?: string }>;
+  className?: string;
+  /** Nome para leitores de tela, quando não há rótulo visível. */
+  titulo?: string;
+}) {
+  return (
+    <label
+      className={cn(
+        "filtro-select relative inline-flex h-9 min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded-[10px] border border-input bg-card pl-3 text-[13px] font-medium text-foreground shadow-[0_1px_1px_rgb(15_23_41/0.03)] transition hover:border-[#C3CBD9] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15",
+        className,
+      )}
+    >
+      {Icone ? <Icone className="h-4 w-4 shrink-0 text-muted-foreground" /> : null}
+      {rotulo ? <span className="shrink-0 text-muted-foreground">{rotulo}</span> : null}
+      <select
+        value={valor}
+        aria-label={titulo ?? rotulo}
+        onChange={(e) => onChange(e.target.value as T)}
+        className="h-full min-w-0 flex-1 cursor-pointer appearance-none truncate bg-transparent pr-8 font-semibold outline-none"
+      >
+        {opcoes.map((o) => (
+          <option key={o.valor} value={o.valor}>
+            {o.rotulo}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-muted-foreground" />
+    </label>
+  );
+}
+
+/** Abas de uma tela: no computador, sublinhado; no celular viram um filtro em lista. */
+export function Abas<T extends string>({
+  valor,
+  onChange,
+  opcoes,
+  rotulo = "Ver",
+}: {
+  valor: T;
+  onChange: (v: T) => void;
+  opcoes: { valor: T; rotulo: string; contagem?: ReactNode }[];
+  rotulo?: string;
+}) {
+  return (
+    <>
+      <FiltroSelect
+        valor={valor}
+        onChange={onChange}
+        rotulo={rotulo}
+        className="w-full sm:hidden"
+        opcoes={opcoes.map((o) => ({
+          valor: o.valor,
+          rotulo:
+            o.contagem != null && o.contagem !== "" ? `${o.rotulo} · ${o.contagem}` : o.rotulo,
+        }))}
+      />
+      <nav role="tablist" className="-mx-1 hidden overflow-x-auto px-1 sm:block">
+        <ul className="flex min-w-max items-center gap-1 border-b">
+          {opcoes.map((o) => {
+            const on = o.valor === valor;
+            return (
+              <li key={o.valor}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => onChange(o.valor)}
+                  className={cn(
+                    "-mb-px flex h-10 items-center gap-1.5 border-b-2 border-transparent px-3 text-[13.5px] font-medium text-muted-foreground transition hover:text-foreground",
+                    on && "border-primary font-semibold text-foreground",
+                  )}
+                >
+                  {o.rotulo}
+                  {o.contagem != null && o.contagem !== "" ? (
+                    <span
+                      className={cn(
+                        "tabular rounded-full px-1.5 py-px text-[11px] font-semibold",
+                        on ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {o.contagem}
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </>
+  );
+}
+
+/** Indicador de dados ao vivo (pisca quando uma atualização chega). */
+export function AoVivo({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground",
+        className,
+      )}
+      title="As telas se atualizam sozinhas a cada movimentação"
+    >
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+      </span>
+      Ao vivo
+    </span>
   );
 }
 
@@ -385,7 +594,7 @@ export function ChipFiltro({ children, onTirar }: { children: ReactNode; onTirar
   );
 }
 
-/** Faixa de números num painel só (mais compacta que vários cartões, boa no celular). */
+/** Faixa de números num painel só, padrão banco: compacta, com divisórias finas. */
 export function FaixaNumeros({
   itens,
   children,
@@ -394,13 +603,14 @@ export function FaixaNumeros({
     rotulo: string;
     valor: ReactNode;
     detalhe?: ReactNode;
-    tom?: "alerta" | "azul" | "ok";
+    tom?: Tom;
+    link?: string;
   }[];
   children?: ReactNode;
 }) {
   return (
     <section className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+      <PainelNumeros quantidade={itens.length}>
         {itens.map((x) => (
           <Numero
             key={x.rotulo}
@@ -408,9 +618,10 @@ export function FaixaNumeros({
             valor={x.valor}
             detalhe={x.detalhe}
             destaque={x.tom}
+            link={x.link}
           />
         ))}
-      </div>
+      </PainelNumeros>
       {children}
     </section>
   );

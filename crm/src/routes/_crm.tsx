@@ -2,9 +2,14 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
+import { useEffect } from "react";
+
+import { registrarServiceWorker } from "@/components/crm/avisos";
 import { CrmProvider } from "@/components/crm/context";
+import { TravaFaceId } from "@/components/crm/faceid";
 import { useSessaoSegura } from "@/components/crm/sessao";
 import { CrmShell, SemAcesso } from "@/components/crm/shell";
+import { useTempoReal } from "@/components/crm/tempo-real";
 import { Carregando } from "@/components/crm/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { getCrmContexto } from "@/lib/crm/core.functions";
@@ -63,10 +68,20 @@ function CrmLayout() {
     return <SemAcesso mensagem={error instanceof Error ? error.message : undefined} />;
 
   return (
-    <CrmProvider valor={data}>
-      <CrmShell>
-        <Outlet />
-      </CrmShell>
-    </CrmProvider>
+    <TravaFaceId>
+      <CrmProvider valor={data}>
+        <AoVivo />
+        <CrmShell>
+          <Outlet />
+        </CrmShell>
+      </CrmProvider>
+    </TravaFaceId>
   );
+}
+
+/** Liga o tempo real e o service worker das notificações (só com a sessão aberta). */
+function AoVivo() {
+  useTempoReal();
+  useEffect(() => registrarServiceWorker(), []);
+  return null;
 }

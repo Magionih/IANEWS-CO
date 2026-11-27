@@ -7,7 +7,15 @@ import { toast } from "sonner";
 
 import { NegocioPainel } from "@/components/crm/negocio";
 import { useAcao } from "@/components/crm/queries";
-import { CabecalhoPagina, Carregando, Erro, Numero, Secao, Vazio } from "@/components/crm/ui";
+import {
+  CabecalhoPagina,
+  Carregando,
+  Erro,
+  Numero,
+  PainelNumeros,
+  Secao,
+  Vazio,
+} from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -80,7 +88,7 @@ function ProducoesPage() {
         descricao="Cada briefing enviado vira matéria, legenda e telas do post pela IA (a cada 20 minutos). O lead aprova pelo link da prévia; a aprovação marca a publicação na primeira vaga do calendário, a matéria entra no site sozinha e a equipe agenda o post no Instagram (collab + curtidas ocultas) com as telas prontas."
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <PainelNumeros quantidade={5}>
         <Numero
           rotulo="Briefings aguardando"
           valor={(b.data ?? []).filter((x) => x.status !== "aberto").length}
@@ -99,7 +107,7 @@ function ProducoesPage() {
           detalhe="matéria no site + tarefa de IG"
         />
         <Numero rotulo="Publicadas" valor={por("publicado")} detalhe="links enviados ao lead" />
-      </div>
+      </PainelNumeros>
 
       {agendadas.length ? (
         <Secao titulo="Próximas publicações" contagem={agendadas.length}>

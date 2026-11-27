@@ -92,3 +92,126 @@ export function BarrasHorizontais({
     </ul>
   );
 }
+
+/** Agrupa por semana quando o período é longo (mais de 92 dias), para as barras não sumirem. */
+function agrupar<T extends { dia: string; barras: number; linha: number }>(dados: T[]) {
+  if (dados.length <= 92) return dados.map((d) => ({ ...d, ate: d.dia }));
+  const saida: { dia: string; ate: string; barras: number; linha: number }[] = [];
+  for (let i = 0; i < dados.length; i += 7) {
+    const bloco = dados.slice(i, i + 7);
+    saida.push({
+      dia: bloco[0].dia,
+      ate: bloco[bloco.length - 1].dia,
+      barras: bloco.reduce((s, x) => s + x.barras, 0),
+      linha: bloco.reduce((s, x) => s + x.linha, 0),
+    });
+  }
+  return saida;
+}
+
+/** Gráfico combinado: barras (ex.: visitas) e linha (ex.: novos assinantes), cada um na sua
+ *  escala, com a leitura do dia ao passar o mouse ou tocar. */
+export function GraficoCombinado({
+  dados,
+  barras,
+  linha,
+  altura = 192,
+}: {
+  dados: { dia: string; barras: number; linha: number }[];
+  barras: string;
+  linha: string;
+  altura?: number;
+}) {
+  const [foco, setFoco] = useState<number | null>(null);
+  if (!dados.length)
+    return <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>;
+  const serie = agrupar(dados);
+  const semanal = serie.length !== dados.length;
+  const n = serie.length;
+  const maxB = Math.max(1, ...serie.map((d) => d.barras));
+  const maxL = Math.max(1, ...serie.map((d) => d.linha));
+  const yL = (v: number) => 100 - (v / maxL) * 88;
+  const pontos = serie.map((d, i) => `${((i + 0.5) / n) * 100},${yL(d.linha)}`).join(" ");
+  const atual = foco != null ? serie[foco] : null;
+  const gap = n > 60 ? "gap-px" : "gap-[3px]";
+  const rotuloDia = (d: { dia: string; ate: string }) =>
+    semanal ? `${fmtDiaCurto(d.dia)} a ${fmtDiaCurto(d.ate)}` : fmtDiaCurto(d.dia);
+  return (
+    <figure aria-label={`${barras} e ${linha} por ${semanal ? "semana" : "dia"}`}>
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <i className="h-2.5 w-2.5 rounded-[3px] bg-[#BFD0FF]" /> {barras}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="h-[3px] w-3.5 rounded-full bg-[#0F1729]" /> {linha}
+        </span>
+        <span className="tabular ml-auto min-h-[18px] font-medium text-foreground">
+          {atual
+            ? `${rotuloDia(atual)} · ${fmtNum(atual.barras)} · ${fmtNum(atual.linha)}`
+            : semanal
+              ? "por semana"
+              : "por dia"}
+        </span>
+      </div>
+      <div className="relative" style={{ height: altura }} onMouseLeave={() => setFoco(null)}>
+        {[0, 0.5, 1].map((f) => (
+          <div
+            key={f}
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 border-t border-dashed border-[#E6E9EF]"
+            style={{ top: `${f * 100}%` }}
+          />
+        ))}
+        <div className={`absolute inset-0 flex items-end ${gap}`}>
+          {serie.map((d, i) => (
+            <button
+              key={d.dia}
+              type="button"
+              aria-label={`${rotuloDia(d)}: ${d.barras} ${barras.toLowerCase()}, ${d.linha} ${linha.toLowerCase()}`}
+              className="flex h-full min-w-0 flex-1 items-end outline-none"
+              onMouseEnter={() => setFoco(i)}
+              onFocus={() => setFoco(i)}
+              onClick={() => setFoco(foco === i ? null : i)}
+            >
+              <span
+                className={`block w-full rounded-t-[3px] transition-colors ${foco === i ? "bg-primary" : "bg-[#BFD0FF]"}`}
+                style={{ height: `${Math.max(d.barras ? 1.5 : 0, (d.barras / maxB) * 100)}%` }}
+              />
+            </button>
+          ))}
+        </div>
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
+          <polyline
+            points={pontos}
+            fill="none"
+            stroke="#0F1729"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        {atual && foco != null ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white bg-[#0F1729] shadow"
+            style={{
+              left: `${((foco + 0.5) / n) * 100}%`,
+              bottom: `${100 - yL(atual.linha)}%`,
+            }}
+          />
+        ) : null}
+      </div>
+      <div className="mt-1.5 flex justify-between text-[11px] text-muted-foreground">
+        <span>{fmtDiaCurto(serie[0].dia)}</span>
+        {n > 2 ? <span>{fmtDiaCurto(serie[Math.floor(n / 2)].dia)}</span> : null}
+        <span>{fmtDiaCurto(serie[n - 1].ate)}</span>
+      </div>
+    </figure>
+  );
+}

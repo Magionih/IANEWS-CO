@@ -17,6 +17,7 @@ import {
   GrupoBadge,
   LinkExterno,
   Numero,
+  PainelNumeros,
   Secao,
   Vazio,
 } from "@/components/crm/ui";
@@ -140,7 +141,7 @@ function PublicidadePage() {
         }
       />
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <PainelNumeros quantidade={4}>
         <Numero rotulo="Campanhas ativas" valor={fmtNum(ativas.length)} destaque="azul" />
         <Numero rotulo="Peças a entregar" valor={fmtNum(pendentes.length)} />
         <Numero
@@ -152,7 +153,7 @@ function PublicidadePage() {
           rotulo="Negócios abertos"
           valor={fmtNum(data.negocios.filter((n) => n.etapa_tipo === "aberta").length)}
         />
-      </section>
+      </PainelNumeros>
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <Secao titulo="Campanhas" contagem={data.campanhas.length}>

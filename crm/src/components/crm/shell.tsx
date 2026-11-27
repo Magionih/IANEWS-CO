@@ -5,19 +5,15 @@ import { useServerFn } from "@tanstack/react-start";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   BarChart3,
-  Layers,
-  LineChart,
   Building2,
   CalendarCheck,
   CalendarDays,
-  ChevronDown,
-  ChevronsLeft,
-  ChevronsRight,
   ChevronRight,
   Clapperboard,
-  Gauge,
   Home,
   KanbanSquare,
+  Layers,
+  LineChart,
   ListOrdered,
   Loader2,
   LogOut,
@@ -32,6 +28,7 @@ import {
   Shield,
   SquarePlus,
   TrendingUp,
+  UserCog,
   Users,
   UsersRound,
   Wallet,
@@ -39,7 +36,6 @@ import {
 } from "lucide-react";
 
 import logo from "@/assets/ianews-logo-white.png";
-import logoEscuro from "@/assets/ianews-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -53,12 +49,17 @@ import {
 import { fmtDia, hojeBR } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
+import { CartaoNotificacoes, SinoAvisos } from "./avisos";
 import { useCrm } from "./context";
+import { CartaoFaceId } from "./faceid";
+import { useEstadoTempoReal } from "./tempo-real";
 import { AvisoRepeticao, GrupoBadge } from "./ui";
 
-/* Moldura do CRM no formato de plataforma:
-   - computador: menu lateral fixo (navy) por grupos, topo com título da área, busca (⌘K) e conta;
-   - celular/app: topo compacto, barra de abas na base e "Menu" com todas as áreas. */
+/* Moldura do CRM:
+   - computador: menu lateral por blocos (Operação, Gestão, Análise), sino de avisos, busca (⌘K)
+     e a conta no rodapé;
+   - celular/app: topo com o título da tela, sino e busca; barra de abas na base; "Menu" abre a
+     lista completa, organizada como os Ajustes do iPhone. */
 
 type Item = {
   to: string;
@@ -66,26 +67,67 @@ type Item = {
   icone: ComponentType<{ className?: string }>;
   exato?: boolean;
   admin?: boolean;
+  /** Linha de apoio no menu do celular. */
+  dica?: string;
 };
 
-type Grupo = { titulo: string; itens: Item[] };
+/** Uma área do menu e as abas dela (as abas aparecem no topo da tela). */
+type Secao = Item & { abas: Item[]; bloco: "Operação" | "Gestão" | "Análise" };
 
-/** Uma área do menu lateral e as abas dela (as abas aparecem no topo da tela). */
-type Secao = Item & { abas: Item[] };
-
-/* Menu do zero (protótipo aprovado em 26/11): poucas áreas, cada uma responde uma pergunta.
-   As telas de apoio viram abas dentro da área, no topo da página. */
 const SECOES: Secao[] = [
-  { to: "/", rotulo: "Início", icone: Home, exato: true, abas: [] },
+  {
+    to: "/",
+    rotulo: "Início",
+    icone: Home,
+    exato: true,
+    abas: [],
+    bloco: "Operação",
+    dica: "Meta, caixa e o foco do dia",
+  },
   {
     to: "/negocios",
     rotulo: "Negócios",
     icone: KanbanSquare,
+    bloco: "Operação",
+    dica: "Funis, lista e fila do dia, conversas",
     abas: [
-      { to: "/negocios", rotulo: "Negócios", icone: KanbanSquare },
-      { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered },
-      { to: "/fila", rotulo: "Fila do dia", icone: Send },
-      { to: "/direct", rotulo: "Conversas", icone: MessageCircle },
+      {
+        to: "/negocios",
+        rotulo: "Negócios",
+        icone: KanbanSquare,
+        dica: "Quadro e lista por funil",
+      },
+      { to: "/lista", rotulo: "Lista do dia", icone: ListOrdered, dica: "Quem abordar hoje" },
+      { to: "/fila", rotulo: "Fila do dia", icone: Send, dica: "Mensagens prontas para enviar" },
+      { to: "/direct", rotulo: "Conversas", icone: MessageCircle, dica: "Direct do Instagram" },
+    ],
+  },
+  {
+    to: "/operacao",
+    rotulo: "Produção",
+    icone: Layers,
+    bloco: "Operação",
+    dica: "Fila de produção, calendário e pautas",
+    abas: [
+      {
+        to: "/operacao",
+        rotulo: "Fila de produção",
+        icone: Layers,
+        dica: "Do material à publicação",
+      },
+      {
+        to: "/calendario",
+        rotulo: "Calendário",
+        icone: CalendarDays,
+        dica: "O que sai em cada dia",
+      },
+      {
+        to: "/pautas",
+        rotulo: "Pautas e conteúdo",
+        icone: Newspaper,
+        dica: "Pautas recebidas e matérias",
+      },
+      { to: "/producoes", rotulo: "Produções", icone: Clapperboard, dica: "Destaques automáticos" },
     ],
   },
   {
@@ -94,64 +136,87 @@ const SECOES: Secao[] = [
     icone: Wallet,
     admin: true,
     abas: [],
+    bloco: "Gestão",
+    dica: "Vendas, caixa, cobranças e notas",
   },
   {
-    to: "/operacao",
-    rotulo: "Produção",
-    icone: Layers,
+    to: "/clientes",
+    rotulo: "Clientes",
+    icone: Users,
+    bloco: "Gestão",
+    dica: "Clientes, empresas e pessoas",
     abas: [
-      { to: "/operacao", rotulo: "Fila de produção", icone: Layers },
-      { to: "/calendario", rotulo: "Calendário", icone: CalendarDays },
-      { to: "/pautas", rotulo: "Pautas e conteúdo", icone: Newspaper },
-      { to: "/producoes", rotulo: "Produções", icone: Clapperboard },
+      {
+        to: "/clientes",
+        rotulo: "Clientes e produtos",
+        icone: Users,
+        admin: true,
+        dica: "LTV, recompra e margem",
+      },
+      { to: "/empresas", rotulo: "Empresas", icone: Building2, dica: "Base de empresas" },
+      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound, dica: "Base de contatos" },
     ],
   },
   {
     to: "/audiencia",
     rotulo: "Audiência",
     icone: LineChart,
+    bloco: "Análise",
+    dica: "Site, newsletter e leitores",
     abas: [
-      { to: "/audiencia", rotulo: "Site e newsletter", icone: LineChart },
-      { to: "/newsletter", rotulo: "Leads da newsletter", icone: Mail },
-    ],
-  },
-  {
-    to: "/clientes",
-    rotulo: "Clientes",
-    icone: Users,
-    abas: [
-      { to: "/clientes", rotulo: "Clientes e produtos", icone: Users, admin: true },
-      { to: "/empresas", rotulo: "Empresas", icone: Building2 },
-      { to: "/pessoas", rotulo: "Pessoas", icone: UsersRound },
+      {
+        to: "/audiencia",
+        rotulo: "Site e newsletter",
+        icone: LineChart,
+        dica: "Visitas, leituras e assinantes",
+      },
+      {
+        to: "/newsletter",
+        rotulo: "Leads da newsletter",
+        icone: Mail,
+        dica: "Quem assinou e de onde veio",
+      },
     ],
   },
   {
     to: "/indicadores",
     rotulo: "Indicadores",
     icone: BarChart3,
+    bloco: "Análise",
+    dica: "Visão geral, funil e vendas",
     abas: [
-      { to: "/indicadores", rotulo: "Visão geral", icone: BarChart3 },
-      { to: "/comercial", rotulo: "Funil e vendas", icone: TrendingUp },
+      {
+        to: "/indicadores",
+        rotulo: "Visão geral",
+        icone: BarChart3,
+        dica: "Leads, negócios e canais",
+      },
+      {
+        to: "/comercial",
+        rotulo: "Funil e vendas",
+        icone: TrendingUp,
+        dica: "Conversão e receita",
+      },
     ],
   },
 ];
 
 const ATALHOS: Item[] = [
-  { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck },
-  { to: "/config", rotulo: "Configuração", icone: Settings, admin: true },
+  { to: "/tarefas", rotulo: "Tarefas", icone: CalendarCheck, dica: "O que vence hoje e depois" },
+  {
+    to: "/config",
+    rotulo: "Configuração",
+    icone: Settings,
+    admin: true,
+    dica: "Funis, tags, equipe e segurança",
+  },
 ];
 
-/** Monta os grupos (menu do celular e busca) a partir das áreas. */
-const GRUPOS: Grupo[] = [
-  ...SECOES.map((sec) => ({
-    titulo: sec.rotulo,
-    itens: sec.abas.length ? sec.abas : [sec],
-  })),
-  { titulo: "Atalhos", itens: ATALHOS },
-];
+const BLOCOS = ["Operação", "Gestão", "Análise"] as const;
 
 /** Abas fixas na base do celular (o resto fica em "Menu"). */
-const ABAS = ["/", "/negocios", "/financeiro", "/operacao"];
+const ABAS_ADMIN = ["/", "/negocios", "/operacao", "/financeiro"];
+const ABAS_EQUIPE = ["/", "/negocios", "/operacao", "/audiencia"];
 
 const PAPEL_NOME: Record<string, string> = {
   admin: "Administrador",
@@ -176,7 +241,10 @@ function SubAbas() {
   const abas = (sec?.abas ?? []).filter((a) => !a.admin || isAdmin);
   if (abas.length < 2) return null;
   return (
-    <nav aria-label={`Telas de ${sec?.rotulo}`} className="-mx-1 mb-6 overflow-x-auto px-1">
+    <nav
+      aria-label={`Telas de ${sec?.rotulo}`}
+      className="-mx-4 mb-5 overflow-x-auto px-4 sm:-mx-1 sm:px-1"
+    >
       <ul className="flex min-w-max items-center gap-1 border-b border-border">
         {abas.map((a) => {
           const on = casa(path, a);
@@ -200,17 +268,22 @@ function SubAbas() {
   );
 }
 
+/** Todas as telas por bloco (busca global e menu). */
+function useGrupos() {
+  const { isAdmin } = useCrm();
+  return [
+    ...SECOES.filter((s) => !s.admin || isAdmin).map((s) => ({
+      titulo: s.rotulo,
+      itens: (s.abas.length ? s.abas : [s]).filter((i) => !i.admin || isAdmin),
+    })),
+    { titulo: "Atalhos", itens: ATALHOS.filter((i) => !i.admin || isAdmin) },
+  ].filter((g) => g.itens.length);
+}
+
 function useAtivo() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   return (i: Item) =>
     i.exato ? path === i.to || path === `${i.to}/` : path === i.to || path.startsWith(`${i.to}/`);
-}
-
-function useGrupos() {
-  const { isAdmin } = useCrm();
-  return GRUPOS.map((g) => ({ ...g, itens: g.itens.filter((i) => !i.admin || isAdmin) })).filter(
-    (g) => g.itens.length,
-  );
 }
 
 function useEmail() {
@@ -239,9 +312,24 @@ function iniciais(nome: string) {
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "IA";
 }
 
+function useConta() {
+  const { userId, membro, papeis } = useCrm();
+  const email = useEmail();
+  const nome = membro(userId) !== "—" ? membro(userId) : (email ?? "Equipe");
+  const papel =
+    papeis
+      .filter((p) => p !== "reader")
+      .map((p) => PAPEL_NOME[p] ?? p)
+      .join(" · ") ||
+    email ||
+    "";
+  return { nome, papel, email };
+}
+
 export function CrmShell({ children }: { children: ReactNode }) {
   const [busca, setBusca] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [conta, setConta] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   // ⌘K / Ctrl+K abre a busca em qualquer tela.
@@ -266,16 +354,24 @@ export function CrmShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell bg-background">
-      <MenuLateral onBuscar={() => setBusca(true)} />
-      <TopoCelular onBuscar={() => setBusca(true)} onMenu={() => setMenu(true)} />
-      <main className="crm-main px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
+      <MenuLateral onBuscar={() => setBusca(true)} onConta={() => setConta(true)} />
+      <TopoCelular onBuscar={() => setBusca(true)} />
+      <main className="crm-main px-4 pt-4 sm:px-6 sm:pt-5 lg:px-10 lg:pt-7">
         <div className="mx-auto w-full max-w-[1280px]">
           <SubAbas />
           {children}
         </div>
       </main>
       <BarraAbas onMenu={() => setMenu(true)} />
-      <MenuCelular aberto={menu} onFechar={() => setMenu(false)} />
+      <MenuCelular
+        aberto={menu}
+        onFechar={() => setMenu(false)}
+        onConta={() => {
+          setMenu(false);
+          setConta(true);
+        }}
+      />
+      <MinhaConta aberto={conta} onFechar={() => setConta(false)} />
       <BuscaGlobal aberto={busca} onFechar={() => setBusca(false)} />
       <AvisoInstalar />
     </div>
@@ -294,6 +390,35 @@ export function registrarFunilRecente(id: string) {
     /* ignora */
   }
 }
+
+/** Ponto verde "ao vivo" (tempo real conectado). */
+function PontoAoVivo({ comTexto }: { comTexto?: boolean }) {
+  const { conectado } = useEstadoTempoReal();
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"
+      title={
+        conectado
+          ? "Ao vivo: as telas se atualizam sozinhas a cada movimentação"
+          : "Atualiza ao voltar para o app e a cada poucos minutos"
+      }
+    >
+      <span className="relative flex h-2 w-2">
+        {conectado ? (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+        ) : null}
+        <span
+          className={cn(
+            "relative inline-flex h-2 w-2 rounded-full",
+            conectado ? "bg-emerald-500" : "bg-[#C3CBD9]",
+          )}
+        />
+      </span>
+      {comTexto ? (conectado ? "Ao vivo" : "Atualizado") : null}
+    </span>
+  );
+}
+
 /* ---------- Computador ---------- */
 
 /** Ao passar o mouse numa área do menu, já busca os dados dela (a tela abre pronta). */
@@ -322,7 +447,7 @@ function usePrefetchArea() {
   };
 }
 
-function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
+function MenuLateral({ onBuscar, onConta }: { onBuscar: () => void; onConta: () => void }) {
   const { isAdmin } = useCrm();
   const prefetch = usePrefetchArea();
   const sec = useSecaoAtual();
@@ -331,118 +456,136 @@ function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
   const atalhos = ATALHOS.filter((x) => !x.admin || isAdmin);
   // Sem o painel de clientes (só admin), "Clientes" abre direto em Empresas.
   const destino = (x: Secao) => (x.to === "/clientes" && !isAdmin ? "/empresas" : x.to);
+  const linha = (on: boolean) =>
+    cn(
+      "group flex h-9 items-center gap-3 rounded-[9px] px-2.5 text-[13.5px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
+      on && "bg-[#EEF3FF] font-semibold text-primary hover:bg-[#E6EEFF] hover:text-primary",
+    );
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sb)] flex-col gap-6 border-r border-nav-border bg-nav px-3.5 py-5 text-nav-foreground lg:flex">
-      <Link to="/" className="flex items-center gap-2.5 px-2" aria-label="Início do CRM">
-        <span className="font-display flex h-8 w-8 items-center justify-center rounded-[9px] bg-primary text-[14px] font-bold text-white">
-          IA
-        </span>
-        <span className="font-display text-[18px] font-bold tracking-[-0.02em]">News</span>
-        <span className="ml-auto rounded-md border border-nav-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
-          CRM
-        </span>
-      </Link>
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sb)] flex-col border-r border-nav-border bg-nav text-nav-foreground lg:flex">
+      <div className="flex items-center gap-2.5 px-4 pb-3 pt-5">
+        <Link
+          to="/"
+          className="flex min-w-0 flex-1 items-center gap-2.5"
+          aria-label="Início do CRM"
+        >
+          <span className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-primary text-[14px] font-bold text-white">
+            IA
+          </span>
+          <span className="min-w-0">
+            <span className="font-display block text-[16px] font-bold leading-tight tracking-[-0.02em]">
+              IA News
+            </span>
+            <span className="block leading-tight">
+              <PontoAoVivo comTexto />
+            </span>
+          </span>
+        </Link>
+        <SinoAvisos className="-mr-1.5" />
+      </div>
 
-      <button
-        type="button"
-        onClick={onBuscar}
-        title="Buscar (⌘K)"
-        className="flex h-10 w-full items-center gap-2 rounded-[10px] border border-nav-border bg-card px-3 text-left text-[13.5px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+      <div className="px-3.5">
+        <button
+          type="button"
+          onClick={onBuscar}
+          title="Buscar (⌘K)"
+          className="flex h-9 w-full items-center gap-2 rounded-[9px] border border-nav-border bg-card px-3 text-left text-[13px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1">Buscar</span>
+          <kbd className="rounded border border-nav-border bg-background px-1.5 text-[10px] font-medium">
+            ⌘K
+          </kbd>
+        </button>
+      </div>
+
+      <nav
+        aria-label="Menu principal"
+        className="nav-scroll mt-3 flex-1 overflow-y-auto px-3.5 pb-4"
       >
-        <Search className="h-4 w-4" />
-        <span className="flex-1">Buscar</span>
-        <kbd className="rounded border border-nav-border bg-background px-1.5 text-[10px] font-medium">
-          ⌘K
-        </kbd>
-      </button>
-
-      <nav aria-label="Menu principal" className="nav-scroll -mx-1 flex-1 overflow-y-auto px-1">
-        <ul className="space-y-0.5">
-          {secoes.map((x) => {
-            const on = sec?.to === x.to;
-            return (
-              <li key={x.to}>
-                <Link
-                  to={destino(x)}
-                  onMouseEnter={() => prefetch(x.to)}
-                  onFocus={() => prefetch(x.to)}
-                  aria-current={on ? "page" : undefined}
-                  className={cn(
-                    "flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
-                    on &&
-                      "bg-[#EEF3FF] font-semibold text-primary hover:bg-[#E6EEFF] hover:text-primary",
-                  )}
-                >
-                  <x.icone className="h-[18px] w-[18px] shrink-0" />
-                  {x.rotulo}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-6 px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-          Atalhos
-        </p>
-        <ul className="space-y-0.5">
-          {atalhos.map((x) => {
-            const on = casa(path, x);
-            return (
-              <li key={x.to}>
-                <Link
-                  to={x.to}
-                  aria-current={on ? "page" : undefined}
-                  className={cn(
-                    "flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
-                    on && "bg-[#EEF3FF] font-semibold text-primary",
-                  )}
-                >
-                  <x.icone className="h-[18px] w-[18px] shrink-0" />
-                  {x.rotulo}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {BLOCOS.map((bloco) => {
+          const itens = secoes.filter((x) => x.bloco === bloco);
+          if (!itens.length) return null;
+          return (
+            <div key={bloco} className="mt-3 first:mt-0">
+              <p className="px-2.5 pb-1 pt-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80">
+                {bloco}
+              </p>
+              <ul className="space-y-px">
+                {itens.map((x) => {
+                  const on = sec?.to === x.to;
+                  return (
+                    <li key={x.to}>
+                      <Link
+                        to={destino(x)}
+                        onMouseEnter={() => prefetch(x.to)}
+                        onFocus={() => prefetch(x.to)}
+                        aria-current={on ? "page" : undefined}
+                        className={linha(on)}
+                      >
+                        <x.icone className="h-[17px] w-[17px] shrink-0" />
+                        <span className="flex-1">{x.rotulo}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+        <div className="mt-3">
+          <p className="px-2.5 pb-1 pt-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80">
+            Atalhos
+          </p>
+          <ul className="space-y-px">
+            {atalhos.map((x) => {
+              const on = casa(path, x);
+              return (
+                <li key={x.to}>
+                  <Link to={x.to} aria-current={on ? "page" : undefined} className={linha(on)}>
+                    <x.icone className="h-[17px] w-[17px] shrink-0" />
+                    {x.rotulo}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
 
-      <ContaLateral />
+      <ContaLateral onConta={onConta} />
     </aside>
   );
 }
 
-function ContaLateral({ recolhido }: { recolhido?: boolean }) {
-  const { userId, membro, papeis } = useCrm();
-  const email = useEmail();
+function ContaLateral({ onConta }: { onConta: () => void }) {
+  const { nome, papel } = useConta();
   const sair = useSair();
-  const nome = membro(userId) !== "—" ? membro(userId) : (email ?? "Equipe");
-  const papel = papeis.filter((p) => p !== "reader").map((p) => PAPEL_NOME[p] ?? p)[0];
   return (
-    <div className="-mx-1 border-t border-nav-border pt-3">
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-lg py-2",
-          recolhido ? "justify-center px-0" : "px-2",
-        )}
-      >
-        <span
-          title={recolhido ? nome : undefined}
-          className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0F1729] text-xs font-bold text-white"
+    <div className="border-t border-nav-border px-2.5 py-2.5">
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onConta}
+          title="Minha conta: Face ID e notificações"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[10px] px-1.5 py-1.5 text-left transition hover:bg-nav-hover"
         >
-          {iniciais(nome)}
-        </span>
-        <div className={cn("min-w-0 flex-1", recolhido && "hidden")}>
-          <p className="truncate text-[13px] font-semibold text-nav-foreground">{nome}</p>
-          <p className="truncate text-[11px] text-nav-muted">{papel ?? email}</p>
-        </div>
+          <span className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-[#0F1729] text-[11px] font-bold text-white">
+            {iniciais(nome)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-semibold text-nav-foreground">
+              {nome}
+            </span>
+            <span className="block truncate text-[11px] text-nav-muted">{papel}</span>
+          </span>
+        </button>
         <button
           type="button"
           onClick={sair}
           title="Sair"
           aria-label="Sair"
-          className={cn(
-            "rounded-md p-1.5 text-nav-muted transition hover:bg-nav-hover hover:text-destructive",
-            recolhido && "hidden",
-          )}
+          className="rounded-md p-2 text-nav-muted transition hover:bg-nav-hover hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />
         </button>
@@ -452,33 +595,39 @@ function ContaLateral({ recolhido }: { recolhido?: boolean }) {
 }
 
 function useTituloAtual() {
-  const grupos = useGrupos();
+  const { isAdmin } = useCrm();
   const ativo = useAtivo();
-  for (const g of grupos) {
-    const i = g.itens.find(ativo);
-    if (i) return { grupo: g.titulo, item: i };
+  for (const s of SECOES) {
+    const itens = (s.abas.length ? s.abas : [s]).filter((i) => !i.admin || isAdmin);
+    const i = itens.find(ativo);
+    if (i) return { grupo: s.rotulo, item: i };
   }
-  return null;
+  const a = ATALHOS.find(ativo);
+  return a ? { grupo: "Atalhos", item: a } : null;
 }
 
 /* ---------- Celular / app ---------- */
 
-function TopoCelular({ onBuscar, onMenu }: { onBuscar: () => void; onMenu: () => void }) {
+function TopoCelular({ onBuscar }: { onBuscar: () => void }) {
   const atual = useTituloAtual();
   return (
-    <header className="safe-top sticky top-0 z-30 border-b border-nav-border bg-nav text-nav-foreground lg:hidden">
-      <div className="flex h-[var(--topbar-h)] items-center gap-2 px-3">
-        <Link to="/" className="flex items-center gap-2 pl-1" aria-label="Início do CRM">
-          <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />
+    <header className="safe-top sticky top-0 z-30 border-b border-nav-border bg-nav/95 text-nav-foreground backdrop-blur-md lg:hidden">
+      <div className="flex h-[var(--topbar-h)] items-center gap-1.5 pl-4 pr-2">
+        <Link to="/" className="shrink-0" aria-label="Início do CRM">
+          <span className="font-display flex h-8 w-8 items-center justify-center rounded-[9px] bg-primary text-[13px] font-bold text-white">
+            IA
+          </span>
         </Link>
-        <div className="min-w-0 flex-1 pl-1">
+        <div className="min-w-0 flex-1 pl-2">
           <p className="truncate text-[15px] font-semibold leading-tight">
             {atual?.item.rotulo ?? "CRM"}
           </p>
-          <p className="truncate text-[11px] leading-tight text-nav-muted">
-            {atual ? `${atual.grupo} · IA News CRM` : "IA News CRM"}
+          <p className="flex items-center gap-1.5 truncate text-[11px] leading-tight text-nav-muted">
+            <PontoAoVivo />
+            {atual && atual.grupo !== atual.item.rotulo ? atual.grupo : "IA News CRM"}
           </p>
         </div>
+        <SinoAvisos claro />
         <button
           type="button"
           onClick={onBuscar}
@@ -486,14 +635,6 @@ function TopoCelular({ onBuscar, onMenu }: { onBuscar: () => void; onMenu: () =>
           className="flex h-10 w-10 items-center justify-center rounded-full text-nav-foreground transition active:bg-nav-hover"
         >
           <Search className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onMenu}
-          aria-label="Abrir menu"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-nav-foreground transition active:bg-nav-hover"
-        >
-          <Menu className="h-5 w-5" />
         </button>
       </div>
     </header>
@@ -503,34 +644,27 @@ function TopoCelular({ onBuscar, onMenu }: { onBuscar: () => void; onMenu: () =>
 function BarraAbas({ onMenu }: { onMenu: () => void }) {
   const { isAdmin } = useCrm();
   const sec = useSecaoAtual();
-  const abas = ABAS.map((to) => SECOES.find((x) => x.to === to)).filter(
-    (x): x is Secao => !!x && (!x.admin || isAdmin),
-  );
+  const abas = (isAdmin ? ABAS_ADMIN : ABAS_EQUIPE)
+    .map((to) => SECOES.find((x) => x.to === to))
+    .filter((x): x is Secao => !!x && (!x.admin || isAdmin));
   const ativo = (i: Item) => sec?.to === i.to;
   const algumaAtiva = abas.some(ativo);
+  const item = (on: boolean) =>
+    cn(
+      "flex h-full w-full flex-col items-center justify-center gap-[3px] text-[10.5px] font-medium text-muted-foreground transition active:scale-95",
+      on && "font-semibold text-primary",
+    );
   return (
     <nav
       aria-label="Navegação principal"
       className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur-md lg:hidden"
     >
-      <ul
-        className={cn(
-          "mx-auto grid h-[var(--tabbar-h)] max-w-lg",
-          abas.length === 4 ? "grid-cols-5" : "grid-cols-4",
-        )}
-      >
+      <ul className="mx-auto grid h-[var(--tabbar-h)] max-w-lg grid-cols-5 px-1">
         {abas.map((i) => {
           const on = ativo(i);
           return (
             <li key={i.to}>
-              <Link
-                to={i.to}
-                aria-current={on ? "page" : undefined}
-                className={cn(
-                  "flex h-full flex-col items-center justify-center gap-1 text-[10.5px] font-medium text-muted-foreground",
-                  on && "text-primary",
-                )}
-              >
+              <Link to={i.to} aria-current={on ? "page" : undefined} className={item(on)}>
                 <span
                   className={cn(
                     "flex h-7 w-12 items-center justify-center rounded-full transition",
@@ -545,14 +679,7 @@ function BarraAbas({ onMenu }: { onMenu: () => void }) {
           );
         })}
         <li>
-          <button
-            type="button"
-            onClick={onMenu}
-            className={cn(
-              "flex h-full w-full flex-col items-center justify-center gap-1 text-[10.5px] font-medium text-muted-foreground",
-              !algumaAtiva && "text-primary",
-            )}
-          >
+          <button type="button" onClick={onMenu} className={item(!algumaAtiva)}>
             <span
               className={cn(
                 "flex h-7 w-12 items-center justify-center rounded-full",
@@ -569,23 +696,61 @@ function BarraAbas({ onMenu }: { onMenu: () => void }) {
   );
 }
 
-function MenuCelular({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
-  const grupos = useGrupos();
+const COR_BLOCO: Record<string, string> = {
+  Operação: "bg-[#EEF3FF] text-primary",
+  Gestão: "bg-emerald-50 text-emerald-700",
+  Análise: "bg-violet-50 text-violet-700",
+  Atalhos: "bg-amber-50 text-amber-700",
+};
+
+/** Menu completo no celular: lista por blocos (como os Ajustes do iPhone), com a conta no topo. */
+function MenuCelular({
+  aberto,
+  onFechar,
+  onConta,
+}: {
+  aberto: boolean;
+  onFechar: () => void;
+  onConta: () => void;
+}) {
+  const { isAdmin } = useCrm();
   const ativo = useAtivo();
-  const { userId, membro, papeis } = useCrm();
-  const email = useEmail();
+  const { nome, papel } = useConta();
   const sair = useSair();
-  const nome = membro(userId) !== "—" ? membro(userId) : (email ?? "Equipe");
+  const [q, setQ] = useState("");
+  useEffect(() => {
+    if (!aberto) setQ("");
+  }, [aberto]);
+
+  const termo = q.trim().toLowerCase();
+  const grupos = [
+    ...BLOCOS.map((b) => ({
+      titulo: b as string,
+      itens: SECOES.filter((s) => s.bloco === b && (!s.admin || isAdmin)).flatMap((s) =>
+        (s.abas.length ? s.abas : [s]).filter((i) => !i.admin || isAdmin),
+      ),
+    })),
+    { titulo: "Atalhos", itens: ATALHOS.filter((i) => !i.admin || isAdmin) },
+  ]
+    .map((g) => ({
+      ...g,
+      itens: termo
+        ? g.itens.filter((i) => `${i.rotulo} ${i.dica ?? ""}`.toLowerCase().includes(termo))
+        : g.itens,
+    }))
+    .filter((g) => g.itens.length);
+
   return (
     <Sheet open={aberto} onOpenChange={(v) => !v && onFechar()}>
       <SheetContent
         side="bottom"
         semFechar
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="flex max-h-[88dvh] flex-col gap-0 bg-background p-0 lg:hidden"
+        className="flex h-[92dvh] flex-col gap-0 rounded-t-[22px] bg-background p-0 lg:hidden"
       >
-        <div className="flex items-center justify-between border-b bg-card px-4 py-3">
-          <SheetTitle className="text-base font-semibold">Menu</SheetTitle>
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[#D5DAE3]" aria-hidden />
+        <div className="flex items-center justify-between px-4 pb-2 pt-2">
+          <SheetTitle className="text-[20px] font-bold tracking-[-0.02em]">Menu</SheetTitle>
           <SheetClose
             aria-label="Fechar menu"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground transition active:scale-95"
@@ -593,52 +758,136 @@ function MenuCelular({ aberto, onFechar }: { aberto: boolean; onFechar: () => vo
             <X className="h-4 w-4" />
           </SheetClose>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
-          <div className="mb-4 flex items-center gap-3 rounded-xl border bg-card p-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-              {iniciais(nome)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{nome}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {papeis
-                  .filter((p) => p !== "reader")
-                  .map((p) => PAPEL_NOME[p] ?? p)
-                  .join(" · ") || email}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={sair}>
-              <LogOut className="h-4 w-4" /> Sair
-            </Button>
-          </div>
+        <div className="px-4 pb-3">
+          <label className="flex h-10 items-center gap-2 rounded-[11px] bg-[#E9ECF1] px-3 text-muted-foreground">
+            <Search className="h-4 w-4 shrink-0" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ir para…"
+              aria-label="Procurar tela"
+              className="h-full w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+            />
+          </label>
+        </div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          {!termo ? (
+            <button
+              type="button"
+              onClick={onConta}
+              className="mb-4 flex w-full items-center gap-3 rounded-[14px] bg-card p-3 text-left shadow-[0_1px_2px_rgb(15_23_41/0.06)] transition active:scale-[0.99]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0F1729] text-sm font-bold text-white">
+                {iniciais(nome)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold">{nome}</span>
+                <span className="block truncate text-[12.5px] text-muted-foreground">
+                  {papel} · Face ID e notificações
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
+          ) : null}
           <div className="space-y-4">
             {grupos.map((g) => (
               <div key={g.titulo}>
-                <p className="px-1 pb-2 text-xs font-semibold text-muted-foreground">{g.titulo}</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {g.itens.map((i) => {
+                <p className="px-3 pb-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                  {g.titulo}
+                </p>
+                <ul className="overflow-hidden rounded-[14px] bg-card shadow-[0_1px_2px_rgb(15_23_41/0.06)]">
+                  {g.itens.map((i, n) => {
                     const on = ativo(i);
                     return (
-                      <Link
-                        key={i.to}
-                        to={i.to}
-                        onClick={onFechar}
-                        className={cn(
-                          "flex min-h-[68px] flex-col items-center justify-center gap-1.5 rounded-xl border bg-card px-1 py-2.5 text-center text-[11px] font-medium leading-tight transition active:scale-[0.98]",
-                          on && "border-primary/40 bg-primary/[0.06] text-primary",
-                        )}
-                      >
-                        <i.icone
-                          className={cn("h-5 w-5", on ? "text-primary" : "text-foreground/70")}
-                        />
-                        {i.rotulo}
-                      </Link>
+                      <li key={i.to}>
+                        <Link
+                          to={i.to}
+                          onClick={onFechar}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 transition active:bg-muted",
+                            on && "bg-primary/[0.05]",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px]",
+                              COR_BLOCO[g.titulo] ?? "bg-muted text-foreground",
+                            )}
+                          >
+                            <i.icone className="h-[17px] w-[17px]" />
+                          </span>
+                          <span
+                            className={cn(
+                              "flex min-w-0 flex-1 items-center gap-3 py-0.5",
+                              n > 0 && "-mt-2.5 border-t border-[#EEF0F4] pt-3",
+                            )}
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={cn(
+                                  "block truncate text-[15px]",
+                                  on ? "font-semibold text-primary" : "font-medium",
+                                )}
+                              >
+                                {i.rotulo}
+                              </span>
+                              {i.dica ? (
+                                <span className="block truncate text-[12px] text-muted-foreground">
+                                  {i.dica}
+                                </span>
+                              ) : null}
+                            </span>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-[#B4BCCA]" />
+                          </span>
+                        </Link>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               </div>
             ))}
+            {!grupos.length ? (
+              <p className="py-10 text-center text-[13px] text-muted-foreground">
+                Nenhuma tela com esse nome.
+              </p>
+            ) : null}
           </div>
+          {!termo ? (
+            <button
+              type="button"
+              onClick={sair}
+              className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-card text-[15px] font-semibold text-destructive shadow-[0_1px_2px_rgb(15_23_41/0.06)] active:scale-[0.99]"
+            >
+              <LogOut className="h-4 w-4" /> Sair
+            </button>
+          ) : null}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** Minha conta: Face ID e notificações deste aparelho (vale para toda a equipe, não só admin). */
+function MinhaConta({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
+  const { nome, papel, email } = useConta();
+  const sair = useSair();
+  return (
+    <Sheet open={aberto} onOpenChange={(v) => !v && onFechar()}>
+      <SheetContent className="flex w-full flex-col gap-0 bg-background p-0 sm:max-w-[460px]">
+        <div className="border-b bg-card px-5 pb-4 pr-12 pt-[calc(1rem+env(safe-area-inset-top))]">
+          <SheetTitle className="flex items-center gap-2 text-[16px]">
+            <UserCog className="h-4 w-4 text-muted-foreground" /> Minha conta
+          </SheetTitle>
+          <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">
+            {nome} · {papel || email}
+          </p>
+        </div>
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <CartaoFaceId />
+          <CartaoNotificacoes />
+          <Button variant="outline" className="h-10 w-full" onClick={sair}>
+            <LogOut className="h-4 w-4" /> Sair do CRM
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

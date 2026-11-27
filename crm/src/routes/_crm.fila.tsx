@@ -22,7 +22,15 @@ import { toast } from "sonner";
 import { useCrm } from "@/components/crm/context";
 import { NegocioPainel } from "@/components/crm/negocio";
 import { useAcao } from "@/components/crm/queries";
-import { CabecalhoPagina, Carregando, Erro, Numero, Secao, Vazio } from "@/components/crm/ui";
+import {
+  CabecalhoPagina,
+  Carregando,
+  Erro,
+  Numero,
+  PainelNumeros,
+  Secao,
+  Vazio,
+} from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -199,7 +207,7 @@ function FilaPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <PainelNumeros quantidade={CANAIS.length + 4}>
         {CANAIS.map((c) => (
           <Numero
             key={c.id}
@@ -232,7 +240,7 @@ function FilaPage() {
           detalhe={`${p.briefings.enviados} recebidos · ${p.briefings.em_producao} em produção`}
           destaque={p.quentes_sem_resposta > 0 ? "alerta" : undefined}
         />
-      </div>
+      </PainelNumeros>
       {p.quentes_sem_resposta > 0 ? (
         <p className="text-sm text-destructive">
           {p.quentes_sem_resposta} lead(s) responderam e estão sem retorno há mais de 24 horas

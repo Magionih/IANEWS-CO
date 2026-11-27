@@ -2,27 +2,20 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { KanbanSquare } from "lucide-react";
+import { CalendarRange, KanbanSquare } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { NegocioPainel } from "@/components/crm/negocio";
 import {
-  Alternador,
   CabecalhoPagina,
   Carregando,
   Erro,
   FaixaNumeros,
+  FiltroSelect,
   Secao,
   Vazio,
 } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getComercial, type Comercial } from "@/lib/crm/metricas.functions";
 import { CANAIS, fmtMoeda, fmtNum, fmtPct, labelDe, ORIGENS, PRODUTOS } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
@@ -68,31 +61,29 @@ function ComercialPage() {
         }
       />
       <div className="flex flex-wrap items-center gap-2">
-        <Alternador
+        <FiltroSelect
           valor={dias}
           onChange={setDias}
+          icone={CalendarRange}
+          titulo="Período"
           opcoes={[
-            { valor: "7", rotulo: "7 dias" },
-            { valor: "30", rotulo: "30 dias" },
-            { valor: "90", rotulo: "90 dias" },
-            { valor: "365", rotulo: "12 meses" },
+            { valor: "7", rotulo: "Últimos 7 dias" },
+            { valor: "30", rotulo: "Últimos 30 dias" },
+            { valor: "90", rotulo: "Últimos 90 dias" },
+            { valor: "365", rotulo: "Últimos 12 meses" },
           ]}
         />
-        <Select value={funil} onValueChange={setFunil}>
-          <SelectTrigger className="h-9 w-56 text-[13px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os funis de venda</SelectItem>
-            {funis
+        <FiltroSelect
+          valor={funil}
+          onChange={setFunil}
+          rotulo="Funil"
+          opcoes={[
+            { valor: "todos", rotulo: "Todos de venda" },
+            ...funis
               .filter((f) => f.ativo && !FUNIS_FORA.includes(f.id))
-              .map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.nome}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+              .map((f) => ({ valor: f.id, rotulo: f.nome })),
+          ]}
+        />
       </div>
 
       <FaixaNumeros
@@ -263,9 +254,10 @@ function Conversoes({ d }: { d: Comercial }) {
       titulo="Conversão"
       colado
       acoes={
-        <Alternador
+        <FiltroSelect
           valor={por}
           onChange={setPor}
+          rotulo="Por"
           opcoes={[
             { valor: "canal", rotulo: "Canal" },
             { valor: "origem", rotulo: "Origem" },

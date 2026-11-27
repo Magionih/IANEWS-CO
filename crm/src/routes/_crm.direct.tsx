@@ -6,7 +6,15 @@ import { ExternalLink, Plus, UserCheck } from "lucide-react";
 
 import { useCrm } from "@/components/crm/context";
 import { useAcao } from "@/components/crm/queries";
-import { CabecalhoPagina, Carregando, Erro, Numero, Secao, Vazio } from "@/components/crm/ui";
+import {
+  CabecalhoPagina,
+  Carregando,
+  Erro,
+  Numero,
+  PainelNumeros,
+  Secao,
+  Vazio,
+} from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,7 +70,7 @@ function DirectPage() {
         descricao="Quem comenta uma palavra-chave, responde a um story ou escreve no Direct da @ianews.co recebe a conversa automática, deixa um contato e entra no CRM no funil certo. Perguntas soltas e quem já está em negociação vão para a Renata."
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <PainelNumeros quantidade={5}>
         <Numero
           rotulo="Conversas"
           valor={resumo.conversas}
@@ -81,7 +89,7 @@ function DirectPage() {
         />
         <Numero rotulo="Com a Renata" valor={resumo.humano} detalhe="robô em pausa por 24 h" />
         <Numero rotulo="Erros em 7 dias" valor={resumo.erros} detalhe="envios que falharam" />
-      </div>
+      </PainelNumeros>
 
       <Secao titulo="Conversas" contagem={conversas.length}>
         {conversas.length === 0 ? (
