@@ -57,24 +57,24 @@ function CrmLayout() {
     staleTime: 5 * 60_000,
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Carregando texto="Abrindo o CRM..." />
-      </div>
-    );
-  }
-  if (error || !data)
-    return <SemAcesso mensagem={error instanceof Error ? error.message : undefined} />;
-
+  // A trava do Face ID vem antes de tudo: ao abrir o app, o Face ID é pedido na hora,
+  // enquanto os dados carregam por trás.
   return (
     <TravaFaceId>
-      <CrmProvider valor={data}>
-        <AoVivo />
-        <CrmShell>
-          <Outlet />
-        </CrmShell>
-      </CrmProvider>
+      {isLoading ? (
+        <div className="min-h-screen bg-background">
+          <Carregando texto="Abrindo o CRM..." />
+        </div>
+      ) : error || !data ? (
+        <SemAcesso mensagem={error instanceof Error ? error.message : undefined} />
+      ) : (
+        <CrmProvider valor={data}>
+          <AoVivo />
+          <CrmShell>
+            <Outlet />
+          </CrmShell>
+        </CrmProvider>
+      )}
     </TravaFaceId>
   );
 }

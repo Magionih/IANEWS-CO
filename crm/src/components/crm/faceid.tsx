@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Fingerprint, Loader2, Lock, ScanFace, ShieldCheck, X } from "lucide-react";
+import { Fingerprint, Loader2, ScanFace, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -570,71 +570,152 @@ export function CartaoFaceId({ compacto }: { compacto?: boolean }) {
   );
 }
 
-/** Tela de bloqueio: com a trava ligada, o CRM pede o Face ID ao abrir e ao voltar de outro app. */
+/** Chave da sessão do Supabase guardada no aparelho (para saber de quem é, sem ir ao servidor). */
+const CHAVE_SESSAO = (() => {
+  try {
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    return `sb-${url ? new URL(url).hostname.split(".")[0] : "hgydwvuowxxkdgtlqrdy"}-auth-token`;
+  } catch {
+    return "sb-hgydwvuowxxkdgtlqrdy-auth-token";
+  }
+})();
+
+function usuarioSalvo(): string | null {
+  try {
+    const s = JSON.parse(localStorage.getItem(CHAVE_SESSAO) ?? "null") as {
+      user?: { id?: string };
+    } | null;
+    return s?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Decide na hora (sem esperar o servidor) se o app abre travado: assim nenhum dado aparece antes. */
+function precisaTravar(forcar: boolean): RegistroFaceId | null {
+  if (typeof window === "undefined") return null;
+  const r = lerRegistro();
+  if (!r || !travaLigada()) return null;
+  const uid = usuarioSalvo();
+  if (uid && uid !== r.userId) return null;
+  if (!forcar) {
+    try {
+      const ok = Number(sessionStorage.getItem(CHAVE_OK) ?? 0);
+      if (ok && Date.now() - ok < 60_000) return null;
+    } catch {
+      /* sem armazenamento */
+    }
+  }
+  return r;
+}
+
+/** Tela de bloqueio no padrão dos apps de banco: ao abrir o CRM (ou voltar depois de alguns
+ *  minutos), o Face ID é pedido na hora, sem botão. Se for cancelado, um toque tenta de novo.
+ *  Em segundo plano, uma capa esconde os dados (inclusive no seletor de apps do celular). */
 export function TravaFaceId({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
-  const [travado, setTravado] = useState(false);
-  const [reg, setReg] = useState<RegistroFaceId | null>(null);
-  const [ocupado, setOcupado] = useState(false);
+  const [reg, setReg] = useState<RegistroFaceId | null>(() => precisaTravar(false));
+  const [pedindo, setPedindo] = useState(false);
   const [erro, setErro] = useState("");
+  const [coberto, setCoberto] = useState(false);
   const saiuEm = useRef<number | null>(null);
+  const tentou = useRef(false);
+  const repetiu = useRef(false);
+  const travado = !!reg;
 
-  const travarSePreciso = useCallback(async (forcar: boolean) => {
-    const r = lerRegistro();
-    if (!r || !travaLigada()) return;
-    const u = await usuarioAtual();
-    if (!u || u.id !== r.userId) return;
-    if (!forcar) {
-      try {
-        const ok = Number(sessionStorage.getItem(CHAVE_OK) ?? 0);
-        if (ok && Date.now() - ok < 60_000) return;
-      } catch {
-        /* sem armazenamento */
-      }
-    }
-    setReg(r);
+  const travar = useCallback((forcar: boolean) => {
+    const r = precisaTravar(forcar);
+    if (!r) return;
+    tentou.current = false;
+    repetiu.current = false;
     setErro("");
-    setTravado(true);
+    setReg(r);
   }, []);
 
-  // Ao abrir o app.
-  useEffect(() => {
-    void travarSePreciso(false);
-  }, [travarSePreciso]);
+  const desbloquear = useCallback(async () => {
+    const r = lerRegistro();
+    if (!r) {
+      setReg(null);
+      return;
+    }
+    tentou.current = true;
+    setErro("");
+    setPedindo(true);
+    const inicio = Date.now();
+    try {
+      await confirmarFaceId(r);
+      setReg(null);
+      void qc.invalidateQueries({ queryKey: ["crm"], refetchType: "active" });
+    } catch (e) {
+      // Falhou na hora (app ainda ganhando o foco ao abrir): tenta sozinho mais uma vez.
+      if (Date.now() - inicio < 900 && !repetiu.current) {
+        repetiu.current = true;
+        tentou.current = false;
+        window.setTimeout(() => {
+          if (!tentou.current && document.visibilityState === "visible") void desbloquear();
+        }, 500);
+      } else if (Date.now() - inicio >= 900) {
+        // O Face ID abriu e foi cancelado ou não reconheceu: mostra o motivo.
+        setErro(erroFaceId(e));
+      }
+      // Recusado na hora de novo (o celular pede um toque antes): fica só o convite para tocar.
+    } finally {
+      setPedindo(false);
+    }
+  }, [qc]);
 
-  // Ao voltar depois de alguns minutos fora, e quando o CRM pede (falta de uso).
+  // Pede o Face ID sozinho assim que o CRM trava e está na tela.
+  useEffect(() => {
+    if (!travado) return;
+    const tentar = () => {
+      if (tentou.current || document.visibilityState !== "visible") return;
+      void desbloquear();
+    };
+    const t = window.setTimeout(tentar, 200);
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") tentar();
+    };
+    document.addEventListener("visibilitychange", aoVoltar);
+    window.addEventListener("focus", tentar);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("visibilitychange", aoVoltar);
+      window.removeEventListener("focus", tentar);
+    };
+  }, [travado, desbloquear]);
+
+  // Ao abrir o app: confere com a sessão do servidor (troca de conta, sessão encerrada).
+  useEffect(() => {
+    if (!travado) return;
+    void usuarioAtual().then((u) => {
+      const r = lerRegistro();
+      if (!u || !r || u.id !== r.userId) setReg(null);
+    });
+    // Só na abertura.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Segundo plano: capa nos dados; na volta, trava se ficou fora mais de alguns minutos.
   useEffect(() => {
     const aoMudar = () => {
       if (document.visibilityState === "hidden") {
         saiuEm.current = Date.now();
-      } else if (saiuEm.current && Date.now() - saiuEm.current > MINUTOS_PARA_TRAVAR * 60_000) {
+        if (lerRegistro() && travaLigada()) setCoberto(true);
+      } else {
+        const fora = saiuEm.current ? Date.now() - saiuEm.current : 0;
         saiuEm.current = null;
-        void travarSePreciso(true);
+        if (fora > MINUTOS_PARA_TRAVAR * 60_000) travar(true);
+        setCoberto(false);
       }
     };
-    const aoPedir = () => void travarSePreciso(true);
+    const aoPedir = () => travar(true);
     document.addEventListener("visibilitychange", aoMudar);
     window.addEventListener("crm:travar", aoPedir);
     return () => {
       document.removeEventListener("visibilitychange", aoMudar);
       window.removeEventListener("crm:travar", aoPedir);
     };
-  }, [travarSePreciso]);
-
-  async function desbloquear() {
-    if (!reg) return;
-    setErro("");
-    setOcupado(true);
-    try {
-      await confirmarFaceId(reg);
-      setTravado(false);
-      void qc.invalidateQueries({ queryKey: ["crm"], refetchType: "active" });
-    } catch (e) {
-      setErro(erroFaceId(e));
-    } finally {
-      setOcupado(false);
-    }
-  }
+  }, [travar]);
 
   async function sair() {
     qc.clear();
@@ -642,42 +723,79 @@ export function TravaFaceId({ children }: { children: ReactNode }) {
     window.location.replace("/login");
   }
 
+  const mensagem = pedindo ? "Confirmando com Face ID…" : erro || "Toque para entrar com Face ID";
+
   return (
     <>
-      {/* Os dados não aparecem por trás da trava (nem no seletor de apps do celular). */}
-      <div aria-hidden={travado} className={travado ? "hidden" : undefined}>
+      <div aria-hidden={travado || coberto} className={travado ? "hidden" : undefined}>
         {children}
       </div>
-      {travado ? (
-        <div className="safe-top fixed inset-0 z-[100] flex min-h-[100dvh] flex-col items-center justify-center bg-[#0B1220] px-6 text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EEF3FF] text-primary">
-            <Lock className="h-7 w-7" />
-          </span>
-          <h1 className="mt-5 text-[20px] font-semibold text-white">CRM travado</h1>
-          <p className="mt-1 max-w-xs text-[14px] text-white/65">
-            Confirme com o Face ID para ver os dados da IA News.
-          </p>
-          <Button
-            className="mt-6 h-12 w-full max-w-xs text-[15px]"
-            onClick={desbloquear}
-            disabled={ocupado}
-            autoFocus
-          >
-            {ocupado ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <ScanFace className="h-5 w-5" />
-            )}
-            Desbloquear com Face ID
-          </Button>
-          {erro ? <p className="mt-3 max-w-xs text-[13px] text-[#FFB4A8]">{erro}</p> : null}
-          <button
-            type="button"
-            onClick={sair}
-            className="mt-5 text-[13px] font-medium text-white/60 hover:text-white"
-          >
-            Sair e entrar com senha
-          </button>
+      {travado || coberto ? (
+        <div
+          role={travado ? "dialog" : undefined}
+          aria-modal={travado || undefined}
+          aria-label={travado ? "CRM travado" : undefined}
+          onClick={() => {
+            if (travado && !pedindo) void desbloquear();
+          }}
+          className="safe-top fixed inset-0 z-[100] flex min-h-[100dvh] select-none flex-col items-center bg-[#0B1220] px-6 text-center"
+        >
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <img
+              src="/icon-192.png"
+              alt=""
+              className="h-[68px] w-[68px] rounded-[18px] shadow-[0_12px_40px_-12px_rgb(31_94_255/0.7)]"
+            />
+            <p className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-white">
+              IA News CRM
+            </p>
+            {travado ? (
+              <>
+                <span
+                  className={`mt-12 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white transition ${
+                    pedindo ? "border-primary/60 bg-primary/15" : ""
+                  }`}
+                >
+                  <ScanFace
+                    className={`h-9 w-9 ${pedindo ? "animate-pulse text-white" : "text-white/85"}`}
+                  />
+                </span>
+                <p
+                  className={`mt-4 max-w-[260px] text-[14px] leading-snug ${
+                    erro && !pedindo ? "text-[#FFB4A8]" : "text-white/70"
+                  }`}
+                  aria-live="polite"
+                >
+                  {mensagem}
+                </p>
+              </>
+            ) : null}
+          </div>
+          {travado ? (
+            <div className="flex w-full flex-col items-center gap-3 pb-[calc(env(safe-area-inset-bottom)+28px)]">
+              {!pedindo ? (
+                <Button
+                  className="h-12 w-full max-w-xs text-[15px]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void desbloquear();
+                  }}
+                >
+                  <ScanFace className="h-5 w-5" /> Entrar com Face ID
+                </Button>
+              ) : null}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void sair();
+                }}
+                className="text-[13px] font-medium text-white/50 hover:text-white"
+              >
+                Sair e entrar com senha
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>
