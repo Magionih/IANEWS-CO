@@ -1,16 +1,12 @@
 import { coverObjectPosition } from "@/lib/cover-position";
 import { coverImg, isResizable } from "@/lib/img";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ParticipeCards } from "@/components/site/participe";
 import { Link } from "@tanstack/react-router";
 
 import { CATEGORY_MAP, type CategoryKey } from "@/components/site/category-chip";
 import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-subscribe";
-import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
 import { useCtaImpression } from "@/hooks/use-cta-impression";
 import type { ArticleRow } from "@/lib/articles.functions";
-import { RankLogo } from "@/components/portal/rank-shared";
-import type { AiTool } from "@/lib/ai-ranking.functions";
 
 /* Peças da página inicial no padrão do IANews Portal (ver renderHome/card/rankRowHome no protótipo). */
 
@@ -180,7 +176,7 @@ function HeroCarousel({ items }: { items: ArticleRow[] }) {
     <section
       className="hc"
       aria-roledescription="carrossel"
-      aria-label="Destaques"
+      aria-label="Acabou de sair"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -188,7 +184,7 @@ function HeroCarousel({ items }: { items: ArticleRow[] }) {
       onTouchStart={() => setPaused(true)}
     >
       <div className="hc-head">
-        <h2>Destaques</h2>
+        <h2>Acabou de sair</h2>
         {n > 1 ? (
           <div className="hc-nav">
             <button type="button" aria-label="Destaque anterior" onClick={() => go(idx - 1)}>
@@ -252,8 +248,7 @@ function HeroCarousel({ items }: { items: ArticleRow[] }) {
 export function HomeHero({ featured, latest }: { featured: ArticleRow[]; latest: ArticleRow[] }) {
   if (featured.length === 0 && latest.length === 0) return null;
   return (
-    <div className="hero top2">
-      <h1 className="sr-only">IA News: notícias de inteligência artificial para quem decide</h1>
+    <div className="hero top2 v2-latest">
       {latest.length > 0 ? (
         <aside className="latest" aria-label="Últimas notícias">
           <h2>Últimas</h2>
@@ -333,121 +328,6 @@ function HomeNewsItem({ a, withBiz }: { a: ArticleRow; withBiz: boolean }) {
       <HomeCard a={a} />
       {withBiz ? <BizCard /> : null}
     </>
-  );
-}
-
-/* ---------- Ranking IA (top 5) ---------- */
-function LogoTile({ t }: { t: AiTool }) {
-  return <RankLogo m={t} />;
-}
-
-function fmtScore(n: number) {
-  return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-export function HomeRanking({ tools }: { tools: AiTool[] }) {
-  const subscribed = useSubscribed();
-  const top = tools.slice(0, 5);
-  if (top.length === 0) return null;
-  const updated = tools[0]?.last_ranked_at
-    ? new Date(tools[0].last_ranked_at).toLocaleDateString("pt-BR", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "America/Sao_Paulo",
-      })
-    : null;
-  return (
-    <section className="sec">
-      <div className="sec-head">
-        <h2>Ranking IA</h2>
-        <Link className="more" to="/ranking">
-          Ver o ranking completo →
-        </Link>
-      </div>
-      <div className="rk-home">
-        <div>
-          <div className="rk">
-            {top.map((t, idx) => {
-              const pos = t.rank_position || idx + 1;
-              const score = Math.max(0, Math.min(10, t.weekly_score));
-              return (
-                <div key={t.id} className={"rk-item" + (pos <= 3 ? " t3" : "")}>
-                  <Link className="rk-row" to="/ranking">
-                    <span className="rk-pos">{String(pos).padStart(2, "0")}</span>
-                    <LogoTile t={t} />
-                    <span className="rk-name">
-                      <b>{t.name}</b>
-                      <span className="mk">
-                        {t.maker && t.maker !== t.name ? `${t.maker} · ${t.category}` : t.category}
-                      </span>
-                    </span>
-                    <span className="rk-bar">
-                      <i style={{ ["--v" as string]: `${score * 10}%` }} />
-                    </span>
-                    <span className="rk-score">{fmtScore(t.weekly_score)}</span>
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-          <p className="fine" style={{ marginTop: 12 }}>
-            {updated ? `Atualizado em ${updated}. ` : ""}Nota de 0 a 10.
-          </p>
-        </div>
-        <div className="note-box">
-          <p className="kick">Ranking IA semanal</p>
-          <h3>O ranking das plataformas de IA, toda segunda-feira no seu e-mail</h3>
-          <p>
-            A nota combina desempenho técnico, repercussão nas notícias e a avaliação dos leitores.
-          </p>
-          {!subscribed ? (
-            <div>
-              <button
-                className="btn blue"
-                type="button"
-                onClick={() => openSubscribeDialog("ranking-semanal")}
-              >
-                Quero receber
-              </button>
-            </div>
-          ) : null}
-          <Link className="more" to="/ranking">
-            Como a nota é calculada →
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Mais lidas (no lugar de "Séries IANews") ---------- */
-export function HomeMostRead({ items }: { items: ArticleRow[] }) {
-  if (items.length === 0) return null;
-  const [capa, ...rest] = items;
-  return (
-    <section className="sec">
-      <div className="sec-head">
-        <h2>Mais lidas</h2>
-        <Link className="more" to="/gente">
-          Gente: quem faz a IA no Brasil →
-        </Link>
-      </div>
-      <div className="split">
-        <div className="home-capa">
-          <HomeCard a={capa} kind="full" />
-        </div>
-        {rest.length > 0 ? (
-          <div>
-            {rest.slice(0, 4).map((a) => (
-              <HomeCard key={a.id} a={a} kind="row" />
-            ))}
-          </div>
-        ) : null}
-      </div>
-    </section>
   );
 }
 
@@ -588,25 +468,6 @@ export function HomeBizBand() {
         <Link className="btn" to="/empresas">
           Ver soluções
         </Link>
-      </div>
-    </section>
-  );
-}
-
-/* Faixa de participação: pauta, Lista 100 e Palco, logo abaixo do destaque, com fotos. */
-export function HomeParticipe() {
-  return (
-    <section className="hp-part" aria-labelledby="hp-part-h">
-      <div className="wrap">
-        <div className="hp-part-head">
-          <h2 id="hp-part-h" className="hp-part-h">
-            Participe da IA News
-          </h2>
-          <p>
-            Conte a história da sua empresa, indique quem faz a IA acontecer e venha para o Palco.
-          </p>
-        </div>
-        <ParticipeCards placement="home-participe" />
       </div>
     </section>
   );

@@ -223,6 +223,9 @@ export type Database = {
           cover_position: string | null
           created_at: string
           dek: string | null
+          destaque_fixo_ate: string | null
+          destaque_peso: number
+          destaque_pessoa: string | null
           editorial_angle: string | null
           editorial_conclusion: string | null
           id: string
@@ -257,6 +260,9 @@ export type Database = {
           cover_position?: string | null
           created_at?: string
           dek?: string | null
+          destaque_fixo_ate?: string | null
+          destaque_peso?: number
+          destaque_pessoa?: string | null
           editorial_angle?: string | null
           editorial_conclusion?: string | null
           id?: string
@@ -291,6 +297,9 @@ export type Database = {
           cover_position?: string | null
           created_at?: string
           dek?: string | null
+          destaque_fixo_ate?: string | null
+          destaque_peso?: number
+          destaque_pessoa?: string | null
           editorial_angle?: string | null
           editorial_conclusion?: string | null
           id?: string

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 
-import { subscribeLead } from "@/lib/newsletter.functions";
+import { PERFIS_LEAD, saveLeadPerfil, subscribeLead } from "@/lib/newsletter.functions";
 import { getLeadContext, trackCta } from "@/lib/cta-tracking";
 
 /* Formulário de inscrição no padrão visual do IANews Portal.
@@ -63,6 +63,7 @@ export function PortalSubscribeForm({
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
   const [sending, setSending] = useState(false);
+  const [askEmail, setAskEmail] = useState<string | null>(null);
   const loadedAt = useRef<number>(0);
   const hp = useRef<HTMLInputElement>(null);
   const subscribe = useServerFn(subscribeLead);
@@ -110,6 +111,7 @@ export function PortalSubscribeForm({
         ok: true,
       });
       setEmail("");
+      if (!res.alreadySubscribed && !onDone) setAskEmail(value);
       onDone?.({ alreadySubscribed: Boolean(res.alreadySubscribed), email: value });
     } catch (err) {
       setMsg({
@@ -145,6 +147,8 @@ export function PortalSubscribeForm({
     </button>
   );
 
+  if (askEmail) return <PerfilStep email={askEmail} onClose={() => setAskEmail(null)} />;
+
   return (
     <form onSubmit={submit} noValidate>
       <input
@@ -175,5 +179,71 @@ export function PortalSubscribeForm({
         {msg?.t ?? ""}
       </p>
     </form>
+  );
+}
+
+const PERFIL_KEY = "ianews_perfil_lead";
+
+/** Perfil que a pessoa declarou ao assinar (usado para escolher a oferta certa no site). */
+export function readPerfilLead(): string | null {
+  try {
+    return localStorage.getItem(PERFIL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Passo opcional depois de assinar: uma pergunta para qualificar o leitor, sem travar a inscrição. */
+export function PerfilStep({ email, onClose }: { email: string; onClose?: () => void }) {
+  const save = useServerFn(saveLeadPerfil);
+  const [done, setDone] = useState(false);
+  async function pick(perfil: string) {
+    setDone(true);
+    try {
+      localStorage.setItem(PERFIL_KEY, perfil);
+    } catch {
+      /* ignore */
+    }
+    trackCta({ event: "click", placement: "perfil-lead", variant: perfil });
+    try {
+      await save({ data: { email, perfil } });
+    } catch {
+      /* opcional: falha silenciosa */
+    }
+  }
+  if (done) {
+    return (
+      <div className="pf-step" role="status">
+        <p className="pf-ok">
+          <b>Inscrição feita. Obrigado!</b> A primeira edição chega amanhã às 7h. Se não aparecer,
+          confira o spam.
+        </p>
+        {onClose ? (
+          <button type="button" className="linkish" onClick={onClose}>
+            Fechar
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+  return (
+    <div className="pf-step" role="group" aria-labelledby="pf-q">
+      <p className="pf-ok">
+        <b>Pronto, você está na lista.</b> Uma pergunta rápida para a newsletter falar com você:
+      </p>
+      <p className="pf-q" id="pf-q">
+        Você é…
+      </p>
+      <div className="pf-opts">
+        {PERFIS_LEAD.map((p) => (
+          <button key={p.value} type="button" onClick={() => pick(p.value)}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <button type="button" className="linkish" onClick={() => setDone(true)}>
+        Pular
+      </button>
+    </div>
   );
 }

@@ -1,19 +1,42 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { trackCta } from "@/lib/cta-tracking";
-import { PortalSubscribeForm } from "@/components/site/portal-subscribe";
+import { PerfilStep, PortalSubscribeForm } from "@/components/site/portal-subscribe";
 
-/* Pop-up de newsletter no design do IANews Portal (limpo, central no desktop,
-   folha inferior no celular). Mesmas funções públicas de antes. */
+/* Pop-up de newsletter no design do IANews Portal (central no desktop, folha inferior no celular).
+   Fecha de todas as formas: X, "Agora não", Esc, toque fora, arrastar para baixo e troca de página.
+   Quem fecha não vê pop-up automático de novo por 3 dias. */
 
 let open = false;
 let placement = "generico";
 const listeners = new Set<() => void>();
 let goToSubscribePage: ((from: string) => void) | null = null;
 
+const DISMISS_KEY = "ianews_pop_dismissed_at";
+const DISMISS_DAYS = 3;
+
 function emit() {
   listeners.forEach((l) => l());
+}
+
+/** Marca que a pessoa dispensou um pop-up: nenhum pop-up automático aparece por alguns dias. */
+export function markPopupDismissed() {
+  try {
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** true quando um pop-up automático ainda está em "silêncio" depois de ser dispensado. */
+export function popupSnoozed(): boolean {
+  try {
+    const at = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
+    return Date.now() - at < DISMISS_DAYS * 24 * 3600 * 1000;
+  } catch {
+    return true;
+  }
 }
 
 /** CTA que leva à página de assinatura. */
@@ -43,13 +66,96 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
+/** Moldura comum dos pop-ups do site: fundo, X, Esc, toque fora, arrastar para baixo, troca de página. */
+export function PopShell({
+  onClose,
+  labelledBy,
+  wide,
+  children,
+}: {
+  onClose: () => void;
+  labelledBy: string;
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const firstPath = useRef(pathname);
+  const sheet = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ y: number; dy: number } | null>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    if (pathname !== firstPath.current) closeRef.current();
+  }, [pathname]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      html.style.overflow = prev === "hidden" ? "" : prev;
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  return (
+    <div
+      className="pop-bg"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={sheet}
+        className={"pop" + (wide ? " wide" : "")}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        onTouchStart={(e) => {
+          if ((sheet.current?.scrollTop ?? 0) > 0) return;
+          drag.current = { y: e.touches[0].clientY, dy: 0 };
+        }}
+        onTouchMove={(e) => {
+          if (!drag.current || !sheet.current) return;
+          const dy = Math.max(0, e.touches[0].clientY - drag.current.y);
+          drag.current.dy = dy;
+          sheet.current.style.transform = dy ? `translateY(${dy}px)` : "";
+        }}
+        onTouchEnd={() => {
+          const d = drag.current;
+          drag.current = null;
+          if (sheet.current) sheet.current.style.transform = "";
+          if (d && d.dy > 90) onClose();
+        }}
+      >
+        <span className="pop-grab" aria-hidden="true" />
+        <button className="pop-x" type="button" aria-label="Fechar" onClick={onClose}>
+          <svg className="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+        {children}
+        <button type="button" className="pop-later" onClick={onClose}>
+          Agora não
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function SubscribeDialog() {
   const isOpen = useSyncExternalStore(
     subscribe,
     () => open,
     () => false,
   );
-  const [done, setDone] = useState<null | { already: boolean }>(null);
+  const [done, setDone] = useState<null | { already: boolean; email: string }>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,93 +170,70 @@ export function SubscribeDialog() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setDone(null);
-      return;
-    }
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
+    if (!isOpen) setDone(null);
   }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const close = () => {
+    if (!done) {
+      markPopupDismissed();
+      trackCta({ event: "click", placement, variant: "fechar-popup" });
+    }
+    setOpen(false);
+  };
+
   return (
-    <div
-      className="pop-bg"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="pop-title"
-      onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}
-    >
-      <div className="pop">
-        <button className="pop-x" type="button" aria-label="Fechar" onClick={() => setOpen(false)}>
-          <svg className="ico" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6l12 12M18 6 6 18" />
-          </svg>
-        </button>
-        {done ? (
-          <div>
-            <span className="ok-mark">
-              <svg className="ico" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m5 12.5 4.5 4.5L19 7.5" />
-              </svg>
-            </span>
-            <h2 id="pop-title">
-              {done.already ? "Você já está na lista" : "Pronto, inscrição feita!"}
-            </h2>
-            <p className="lead-p">
-              {done.already
-                ? "A próxima edição chega no seu e-mail."
-                : "A primeira edição chega amanhã às 7h. Se não aparecer, confira o spam."}
-            </p>
-            <a
-              className="wa-link"
-              href="https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Quer os destaques no celular? Entre no grupo do WhatsApp →
-            </a>
-            <div className="actions" style={{ marginTop: 18 }}>
-              <button className="btn blue wide" type="button" onClick={() => setOpen(false)}>
-                Voltar à leitura
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <p className="kick">Newsletter IANews</p>
-            <h2 id="pop-title">5 minutos por dia. Zero hype.</h2>
-            <p className="lead-p">
-              A IA muda todo dia. Receba só o que importa para o seu negócio.
-            </p>
-            <ul className="ticks small">
-              <li>Todo dia às 7h da manhã</li>
-              <li>Ranking IA toda segunda</li>
-              <li>Grátis, cancele quando quiser</li>
-            </ul>
-            <PortalSubscribeForm
-              placement={placement || "popup"}
-              layout="stack"
-              wideButton
-              onDone={(r) => setDone({ already: r.alreadySubscribed })}
-            />
-            <p className="fine">
-              Gratuita. Você cancela quando quiser. Ao assinar, você aceita a{" "}
-              <Link to="/termos" onClick={() => setOpen(false)}>
-                política de privacidade
-              </Link>
-              .
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+    <PopShell onClose={close} labelledBy="pop-title">
+      {done ? (
+        <div>
+          <span className="ok-mark">
+            <svg className="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          <h2 id="pop-title">
+            {done.already ? "Você já está na lista" : "Pronto, inscrição feita!"}
+          </h2>
+          {done.already ? (
+            <p className="lead-p">A próxima edição chega no seu e-mail.</p>
+          ) : (
+            <PerfilStep email={done.email} />
+          )}
+          <a
+            className="wa-link"
+            href="https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Quer os destaques no celular? Entre no grupo do WhatsApp →
+          </a>
+        </div>
+      ) : (
+        <div>
+          <p className="kick">Newsletter IANews</p>
+          <h2 id="pop-title">5 minutos por dia. Zero hype.</h2>
+          <p className="lead-p">A IA muda todo dia. Receba só o que importa para o seu negócio.</p>
+          <ul className="ticks small">
+            <li>Todo dia às 7h da manhã</li>
+            <li>Ranking IA toda segunda</li>
+            <li>Grátis, cancele quando quiser</li>
+          </ul>
+          <PortalSubscribeForm
+            placement={placement || "popup"}
+            layout="stack"
+            wideButton
+            onDone={(r) => setDone({ already: r.alreadySubscribed, email: r.email })}
+          />
+          <p className="fine">
+            Ao assinar, você aceita a{" "}
+            <Link to="/termos" onClick={() => setOpen(false)}>
+              política de privacidade
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+    </PopShell>
   );
 }

@@ -1,4 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Briefcase, CalendarDays, Cpu, MapPin, Ticket, Users } from "lucide-react";
+
+import { PortalSubscribeForm } from "@/components/site/portal-subscribe";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -84,7 +88,7 @@ const EVENTOS: Evento[] = [
 const FAQ = [
   {
     q: "Os eventos da IA News são online ou presenciais?",
-    a: "A aula de 25/11 e o Palco de 16/12 são online e ao vivo. O primeiro Palco presencial acontece em Belo Horizonte, em 11 de fevereiro de 2027.",
+    a: "O Palco IA News de 16/12 é online e ao vivo. O primeiro Palco presencial acontece em Belo Horizonte, em 11 de fevereiro de 2027.",
   },
   {
     q: "Para quem são os eventos?",
@@ -171,7 +175,7 @@ export const Route = createFileRoute("/eventos")({
           "@context": "https://schema.org",
           "@type": "ItemList",
           name: "Eventos de inteligência artificial da IA News",
-          itemListElement: EVENTOS.map((e, i) => ({
+          itemListElement: EVENTOS.filter((e) => fimDe(e) > Date.now()).map((e, i) => ({
             "@type": "ListItem",
             position: i + 1,
             item: eventLd(e),
@@ -195,71 +199,295 @@ export const Route = createFileRoute("/eventos")({
   component: EventosPage,
 });
 
+const PALCO_IMG =
+  "https://images.pexels.com/photos/9275222/pexels-photo-9275222.jpeg?auto=compress&cs=tinysrgb&w=1200";
+
+const VER = [
+  "O Raio-X 2026: como as empresas brasileiras estão usando IA, com números e casos reais",
+  "O Playbook IA 2027: o que priorizar no próximo ano, por área da empresa",
+  "A revelação ao vivo da Lista IA News 100: quem faz a IA acontecer no Brasil",
+];
+
+const PUBLICO = [
+  {
+    icon: Briefcase,
+    t: "Empresários e diretores",
+    d: "Para decidir onde a IA dá retorno no seu negócio, a partir de casos de empresas parecidas.",
+  },
+  {
+    icon: Cpu,
+    t: "Quem vende ou implementa IA",
+    d: "Para entender o que o mercado está comprando e encontrar clientes e parceiros.",
+  },
+  {
+    icon: Users,
+    t: "Líderes e equipes",
+    d: "Para levar ideias práticas para dentro da empresa e treinar o time com exemplos reais.",
+  },
+];
+
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+function diaMes(iso: string) {
+  const d = new Date(iso.length === 10 ? iso + "T12:00:00-03:00" : iso);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo",
+  }).formatToParts(d);
+  const g = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  return { dia: g("day"), mes: MESES[g("month") - 1] ?? "", ano: g("year") };
+}
+
+function fimDe(e: Evento) {
+  const iso = e.fim ?? e.inicio;
+  const t = new Date(iso.length === 10 ? iso + "T23:59:00-03:00" : iso).getTime();
+  return e.fim ? t : t + 2 * 3600 * 1000;
+}
+
 function EventosPage() {
+  const [agora, setAgora] = useState<number | null>(null);
+  useEffect(() => setAgora(Date.now()), []);
+  const ref = Date.now();
+  const proximos = EVENTOS.filter((e) => fimDe(e) > (agora ?? ref));
+  const passados = EVENTOS.filter((e) => fimDe(e) <= (agora ?? ref));
+  const destaque = proximos.find((e) => e.status === "aberto") ?? proximos[0];
+  const faltam =
+    agora && destaque
+      ? Math.max(0, Math.ceil((new Date(destaque.inicio).getTime() - agora) / 86400000))
+      : null;
+
   return (
     <>
       <SiteHeader />
-      <main id="main" className="ev">
-        <section className="ev-hero">
-          <div className="wrap">
-            <p className="ev-kick">Agenda IA News</p>
-            <h1>Eventos de inteligência artificial para quem decide</h1>
-            <p className="ev-lead">
-              Workshops e encontros com casos reais de empresas brasileiras que colocaram IA para
-              trabalhar. Online e ao vivo, e o primeiro Palco presencial em Belo Horizonte em
-              fevereiro de 2027.
-            </p>
+      <main id="main" className="page ev2">
+        <section className="ev2-hero">
+          <div className="wrap ev2-hero-grid">
+            <div>
+              <p className="kick">Agenda IA News</p>
+              <h1>Eventos de IA para quem decide</h1>
+              <p className="sub">
+                Casos reais de empresas brasileiras que colocaram IA para trabalhar. Online e ao
+                vivo, e o primeiro Palco presencial em Belo Horizonte, em fevereiro de 2027.
+              </p>
+              <div className="ev2-hero-cta">
+                {destaque ? (
+                  <Link to={destaque.to} className="btn blue">
+                    {destaque.cta}
+                  </Link>
+                ) : null}
+                <a href="#agenda" className="btn ev2-ghost">
+                  Ver a agenda
+                </a>
+              </div>
+              <ul className="ev2-facts">
+                <li>
+                  <b>{EVENTOS.length}</b> encontros em 2026–27
+                </li>
+                <li>
+                  <b>Ao vivo</b> com gravação
+                </li>
+                <li>
+                  <b>BH</b> presencial em fev/27
+                </li>
+              </ul>
+            </div>
+            <figure className="ev2-hero-img">
+              <img
+                src={PALCO_IMG}
+                alt="Plateia assistindo a uma palestra"
+                width={720}
+                height={480}
+              />
+              {destaque ? (
+                <figcaption>
+                  <span className="ev2-date">
+                    <b>{diaMes(destaque.inicio).dia}</b>
+                    <span>{diaMes(destaque.inicio).mes}</span>
+                  </span>
+                  <span>
+                    <small>Próximo evento</small>
+                    <b>{destaque.nome}</b>
+                  </span>
+                </figcaption>
+              ) : null}
+            </figure>
           </div>
         </section>
 
-        <section className="wrap ev-list" aria-label="Próximos eventos">
-          {EVENTOS.map((e) => (
-            <article key={e.id} className={"ev-card" + (e.status === "lista" ? " is-soon" : "")}>
-              <p className="ev-card-k">{e.kick}</p>
-              <h2>{e.nome}</h2>
-              <dl>
-                <div>
-                  <dt>Quando</dt>
-                  <dd>{e.quando}</dd>
+        <div className="wrap">
+          {destaque ? (
+            <section className="ev2-feat" aria-labelledby="ev2-feat-h">
+              <div className="ev2-feat-main">
+                <p className="kick">
+                  {destaque.kick}
+                  {faltam != null ? (
+                    <span className="ev2-count">
+                      {faltam === 0
+                        ? "É hoje"
+                        : faltam === 1
+                          ? "Falta 1 dia"
+                          : `Faltam ${faltam} dias`}
+                    </span>
+                  ) : null}
+                </p>
+                <h2 id="ev2-feat-h">{destaque.nome}</h2>
+                <p className="ev2-feat-res">{destaque.resumo}</p>
+                {destaque.id === "palco-online" ? (
+                  <>
+                    <p className="ev2-lb">O que você vai ver</p>
+                    <ul className="ticks">
+                      {VER.map((v) => (
+                        <li key={v}>{v}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+              </div>
+              <aside className="ev2-feat-side">
+                <dl>
+                  <div>
+                    <dt>
+                      <CalendarDays aria-hidden="true" /> Quando
+                    </dt>
+                    <dd>{destaque.quando}</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <MapPin aria-hidden="true" /> Onde
+                    </dt>
+                    <dd>{destaque.onde}</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <Ticket aria-hidden="true" /> Ingresso
+                    </dt>
+                    <dd>{destaque.preco}</dd>
+                  </div>
+                </dl>
+                <Link to={destaque.to} className="btn blue wide">
+                  {destaque.cta}
+                </Link>
+                {destaque.id === "palco-online" ? (
+                  <p className="fine">Garantia de 7 dias. Gravação disponível por 30 dias.</p>
+                ) : null}
+              </aside>
+            </section>
+          ) : null}
+
+          <section className="pt-sec" id="agenda" aria-labelledby="ev2-ag-h">
+            <div className="sec-head">
+              <h2 id="ev2-ag-h">Agenda</h2>
+            </div>
+            <ol className="ev2-list">
+              {proximos.map((e) => {
+                const d = diaMes(e.inicio);
+                return (
+                  <li key={e.id}>
+                    <span className="ev2-date">
+                      <b>{d.dia}</b>
+                      <span>{d.mes}</span>
+                      <small>{d.ano}</small>
+                    </span>
+                    <span className="ev2-li-txt">
+                      <span className="ev2-li-k">
+                        {e.kick}
+                        <em className={e.status === "aberto" ? "open" : "wait"}>
+                          {e.status === "aberto" ? "Inscrições abertas" : "Lista de prioridade"}
+                        </em>
+                      </span>
+                      <b>{e.nome}</b>
+                      <span className="ev2-li-m">
+                        {e.onde} · {e.preco}
+                      </span>
+                    </span>
+                    <Link
+                      to={e.to}
+                      className={"btn s " + (e.status === "aberto" ? "blue" : "line")}
+                    >
+                      {e.cta}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+
+          <section className="pt-sec" aria-labelledby="ev2-pub-h">
+            <div className="sec-head">
+              <h2 id="ev2-pub-h">Para quem são os eventos</h2>
+            </div>
+            <div className="ev2-pub">
+              {PUBLICO.map((p) => (
+                <div key={p.t}>
+                  <span className="ev2-pub-ic" aria-hidden="true">
+                    <p.icon />
+                  </span>
+                  <b>{p.t}</b>
+                  <p>{p.d}</p>
                 </div>
-                <div>
-                  <dt>Onde</dt>
-                  <dd>{e.onde}</dd>
-                </div>
-                <div>
-                  <dt>Ingresso</dt>
-                  <dd>{e.preco}</dd>
-                </div>
-              </dl>
-              <p className="ev-card-d">{e.resumo}</p>
-              <Link className="btn blue" to={e.to}>
-                {e.cta} →
+              ))}
+            </div>
+          </section>
+
+          {passados.length ? (
+            <section className="pt-sec" aria-labelledby="ev2-past-h">
+              <div className="sec-head">
+                <h2 id="ev2-past-h">Já aconteceu</h2>
+              </div>
+              <div className="ev2-past">
+                {passados.map((e) => {
+                  const d = diaMes(e.inicio);
+                  return (
+                    <div key={e.id}>
+                      <span className="ev2-past-k">
+                        {d.dia} {d.mes} · {e.online ? "Online" : e.onde}
+                      </span>
+                      <b>{e.nome}</b>
+                      <p>{e.resumo}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="ev2-bands">
+            <div className="ev2-band dark">
+              <div>
+                <p className="kick">Patrocínio e exposição</p>
+                <h3>Sua marca no palco de quem decide sobre IA</h3>
+                <p>Espaço para a marca e tempo de fala no Palco presencial de Belo Horizonte.</p>
+              </div>
+              <Link className="btn" to="/anuncie">
+                Ver planos de patrocínio
               </Link>
-            </article>
-          ))}
-        </section>
-
-        <section className="wrap ev-more">
-          <div>
-            <h2>Sua empresa quer patrocinar ou expor?</h2>
-            <p>Espaço para a marca e tempo de fala no Palco presencial de Belo Horizonte.</p>
+            </div>
+            <div className="ev2-band">
+              <div>
+                <p className="kick">Próximos eventos</p>
+                <h3>Receba a agenda no seu e-mail</h3>
+                <p>As datas chegam primeiro para quem assina a newsletter das 7h.</p>
+              </div>
+              <PortalSubscribeForm placement="eventos" button="Quero receber" />
+            </div>
           </div>
-          <Link className="btn" to="/anuncie">
-            Ver planos de patrocínio
-          </Link>
-        </section>
 
-        <section className="wrap ev-faq" aria-labelledby="ev-faq-h">
-          <h2 id="ev-faq-h">Dúvidas sobre os eventos</h2>
-          <div className="faq">
-            {FAQ.map((f) => (
-              <details key={f.q}>
-                <summary>{f.q}</summary>
-                <p>{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
+          <section className="pt-sec" aria-labelledby="ev2-faq-h">
+            <div className="sec-head">
+              <h2 id="ev2-faq-h">Dúvidas sobre os eventos</h2>
+            </div>
+            <div className="faq">
+              {FAQ.map((f) => (
+                <details key={f.q}>
+                  <summary>{f.q}</summary>
+                  <p>{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        </div>
       </main>
       <SiteFooter />
     </>

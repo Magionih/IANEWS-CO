@@ -50,10 +50,12 @@ export const listPautaExamples = createServerFn({ method: "GET" }).handler(
       .from("articles")
       .select("slug, title, category, cover_image_url")
       .in("category", ["startup", "brasil"])
+      .eq("status", "published")
       .not("cover_image_url", "is", null)
       .lte("published_at", new Date().toISOString())
-      .order("published_at", { ascending: false })
-      .limit(6);
+      .gte("published_at", new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString())
+      .order("views_count", { ascending: false })
+      .limit(12);
     if (error) {
       console.error("[pauta] examples error", error.message);
       return [];

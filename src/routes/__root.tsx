@@ -15,7 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { SubscribeDialog } from "@/components/site/subscribe-dialog";
 import { VisitTracker } from "@/components/site/visit-tracker";
-import { ExitIntent } from "@/components/site/exit-intent";
+import { SmartPopup } from "@/components/site/smart-popup";
 import { PwaManager } from "@/components/site/pwa";
 import { ConsentBanner } from "@/components/site/consent-banner";
 import { RouteProgress, ScrollToTop } from "@/components/site/scroll-to-top";
@@ -316,7 +316,7 @@ function RootComponent() {
       <VisitTracker />
       <SubscribeDialog />
       <ConsentBanner />
-      <ExitIntent />
+      <SmartPopup />
       <PwaManager />
 
       <Toaster />

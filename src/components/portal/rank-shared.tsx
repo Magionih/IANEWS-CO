@@ -53,8 +53,27 @@ export function fmtScore(n: number) {
   return NF.format(Number.isFinite(n) ? n : 0);
 }
 
+/** Logos oficiais servidos pelo próprio site (nítidos e sem depender de terceiros). */
+function localLogo(m: AiTool): string | null {
+  const name = m.name.toLowerCase();
+  const maker = m.maker.toLowerCase();
+  if (maker === "anthropic" || name.startsWith("claude")) return "/logos/claude.svg";
+  if (maker === "openai" || name.includes("chatgpt")) return "/logos/openai.svg";
+  if (name.startsWith("gemini") || m.icon === "googlegemini") return "/logos/gemini.svg";
+  if (maker === "xai" || name.startsWith("grok")) return "/logos/x.svg";
+  if (maker === "meta") return "/logos/meta.svg";
+  if (name.startsWith("perplexity")) return "/logos/perplexity.svg";
+  if (name.startsWith("elevenlabs")) return "/logos/elevenlabs.svg";
+  if (name.includes("copilot") && maker === "github") return "/logos/githubcopilot.svg";
+  if (name.startsWith("notion")) return "/logos/notion.svg";
+  if (name === "n8n") return "/logos/n8n.svg";
+  return null;
+}
+
 function logoSources(m: AiTool) {
   const sources: string[] = [];
+  const local = localLogo(m);
+  if (local) sources.push(local);
   if (m.icon) sources.push(`https://cdn.simpleicons.org/${m.icon}`);
   let host = "";
   try {
@@ -71,7 +90,7 @@ function logoSources(m: AiTool) {
 
 /** Logomarca dentro do quadrado .logo-tile do protótipo, com fallback para a inicial. */
 export function RankLogo({ m, className }: { m: AiTool; className?: string }) {
-  const sources = useMemo(() => logoSources(m), [m.icon, m.website]);
+  const sources = useMemo(() => logoSources(m), [m.icon, m.website, m.name, m.maker]);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {

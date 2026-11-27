@@ -24,6 +24,10 @@ export type AdminArticle = {
   cover_position: string | null;
   /** Crédito da foto, lido da fonte do tipo "foto" (é o que vai na legenda da capa). */
   cover_credit: string;
+  /** Peso editorial do destaque na home (0 a 100): quão conhecida é a pessoa/empresa. */
+  destaque_peso: number;
+  /** Fixada no carrossel de destaques até esta data. */
+  destaque_fixo_ate: string | null;
 };
 
 type PhotoSource = { name?: string; url?: string; kind?: string };
@@ -83,7 +87,7 @@ export const getAdminData = createServerFn({ method: "GET" })
       supabase
         .from("articles")
         .select(
-          "id, slug, title, dek, category, author, cover_image_url, cover_position, sources, source_name, source_url, read_minutes, views_count, quality_score, published_at, status, origin, social_url",
+          "id, slug, title, dek, category, author, cover_image_url, cover_position, sources, source_name, source_url, read_minutes, views_count, quality_score, published_at, status, origin, social_url, destaque_peso, destaque_fixo_ate",
         )
         .order("published_at", { ascending: false })
         .limit(300),
@@ -213,6 +217,10 @@ export const saveArticle = createServerFn({ method: "POST" })
       cover_position?: "top" | "center" | "bottom" | null;
       /** Crédito da foto. undefined = não mexe; "" = remove o crédito. */
       cover_credit?: string;
+      /** Peso do destaque na home (0 a 100). undefined = não mexe. */
+      destaque_peso?: number;
+      /** Fixar no carrossel por N dias (0 = desafixar). undefined = não mexe. */
+      destaque_fixar_dias?: number;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -238,6 +246,13 @@ export const saveArticle = createServerFn({ method: "POST" })
     }
     if (data.origin !== undefined) payload.origin = data.origin?.trim().slice(0, 40) || null;
     if (data.social_url !== undefined) payload.social_url = data.social_url?.trim().slice(0, 500) || null;
+    if (data.destaque_peso !== undefined) {
+      payload.destaque_peso = Math.max(0, Math.min(100, Math.round(Number(data.destaque_peso) || 0)));
+    }
+    if (data.destaque_fixar_dias !== undefined) {
+      const dias = Math.max(0, Math.min(60, Math.round(Number(data.destaque_fixar_dias) || 0)));
+      payload.destaque_fixo_ate = dias ? new Date(Date.now() + dias * 86400000).toISOString() : null;
+    }
     if (data.cover_position !== undefined) {
       const pos = data.cover_position;
       if (pos !== null && !["top", "center", "bottom"].includes(pos)) throw new Error("Enquadramento inválido.");

@@ -171,3 +171,43 @@ export const listArticlesForHub = createServerFn({ method: "GET" })
     });
     return matched.slice(0, limit) as ArticleRow[];
   });
+
+const HOME_COLS =
+  "id, slug, title, dek, why_it_matters, category, cover_image_url, cover_position, source_name, source_url, author, read_minutes, published_at";
+
+export type DestaqueRow = ArticleRow & {
+  leitores_7d?: number;
+  fixado?: boolean;
+  destaque_pessoa?: string | null;
+};
+
+/** Destaques da home: pessoas e empresas mais relevantes (peso editorial + leitores + novidade). */
+export const listHomeDestaques = createServerFn({ method: "GET" }).handler(
+  async (): Promise<DestaqueRow[]> => {
+    const supabase = await serverClient();
+    const { data, error } = await supabase.rpc("home_destaques" as never, { p_limit: 7 } as never);
+    if (error) {
+      console.error("[articles] destaques error", error);
+      return [];
+    }
+    return ((data ?? []) as DestaqueRow[]).map((a) => ({ ...a }));
+  },
+);
+
+/** Em alta: matérias com mais leitores únicos nos últimos 7 dias (com reserva das mais lidas). */
+export const listEmAlta = createServerFn({ method: "GET" }).handler(
+  async (): Promise<DestaqueRow[]> => {
+    const supabase = await serverClient();
+    const { data, error } = await supabase.rpc("home_em_alta" as never, { p_limit: 10 } as never);
+    if (error || !data || (data as unknown[]).length < 3) {
+      if (error) console.error("[articles] em alta error", error);
+      const { data: most } = await supabase
+        .from("articles")
+        .select(HOME_COLS)
+        .order("views_count", { ascending: false })
+        .limit(10);
+      return (most ?? []) as DestaqueRow[];
+    }
+    return data as DestaqueRow[];
+  },
+);

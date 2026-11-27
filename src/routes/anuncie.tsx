@@ -7,6 +7,9 @@ import { SiteFooter } from "@/components/site/footer";
 import { submitContactMessage } from "@/lib/contact.functions";
 import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 import { metaCtx, novoEventId, pixel } from "@/lib/pixel";
+import { markConverted } from "@/components/site/smart-popup";
+import { trackCta } from "@/lib/cta-tracking";
+import { LayoutGrid, Newspaper, ShieldCheck, UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/anuncie")({
   head: () => ({
@@ -34,77 +37,111 @@ export const Route = createFileRoute("/anuncie")({
 
 const FORMATS = [
   {
-    title: "Destaque · R$ 350",
-    text: "Matéria exclusiva de destaque no portal, capa em collab no Instagram e link nos stories. Bom para começar.",
+    nome: "Destaque",
+    preco: "R$ 350",
+    periodo: "avulso",
+    text: "Matéria exclusiva de destaque no portal, capa em collab no Instagram e link nos stories.",
+    nota: "Bom para começar",
   },
   {
-    title: "Presença · R$ 1.050 por 1 mês",
+    nome: "Presença",
+    preco: "R$ 1.050",
+    periodo: "por 1 mês",
     text: "Matéria de destaque com carrossel em collab, 1 Reels e 1 sequência de stories com link.",
   },
   {
-    title: "Autoridade · R$ 2.490 por mês",
-    text: "Matéria com carrossel em collab, 3 Reels, 2 posts no feed e 4 sequências de stories, nos 7 canais, nos horários de maior audiência.",
+    nome: "Autoridade",
+    preco: "R$ 2.490",
+    periodo: "por mês",
+    text: "Carrossel em collab, 3 Reels, 2 posts no feed e 4 sequências de stories, nos 7 canais.",
   },
   {
-    title: "Patrocínio · R$ 5.900 por mês",
-    text: "Série \u201capresentada por\u201d a sua marca, exclusividade de categoria e edição dedicada da newsletter.",
+    nome: "Patrocínio",
+    preco: "R$ 5.900",
+    periodo: "por mês",
+    text: "Série “apresentada por” a sua marca, exclusividade de categoria e edição dedicada da newsletter.",
   },
 ];
 
 const AUDIENCE = [
-  { value: "1 mi+", label: "Visualizações em 30 dias" },
-  { value: "340 mil", label: "Contas alcançadas em 30 dias" },
-  { value: "108,8 mil", label: "Seguidores no Instagram" },
+  { value: "1 mi+", label: "visualizações em 30 dias" },
+  { value: "340 mil", label: "contas alcançadas em 30 dias" },
+  { value: "108,8 mil", label: "seguidores no Instagram" },
 ];
 
 const REASONS = [
   {
-    title: "Conteúdo, não banner.",
-    text: "Sua marca entra numa matéria da redação, que o público lê como notícia.",
+    icon: Newspaper,
+    title: "Conteúdo, não banner",
+    text: "Sua marca entra numa matéria da redação, lida como notícia.",
   },
   {
-    title: "Gente nova a cada post.",
-    text: "55% das visualizações da IA News vêm de quem ainda não segue o perfil.",
+    icon: UserPlus,
+    title: "Gente nova a cada post",
+    text: "55% das visualizações vêm de quem ainda não segue o perfil.",
   },
   {
-    title: "Você aprova antes.",
-    text: "Nada vai ao ar sem a sua aprovação, sempre sinalizado como parceria paga.",
+    icon: ShieldCheck,
+    title: "Você aprova antes",
+    text: "Nada vai ao ar sem a sua aprovação, sinalizado como parceria.",
   },
   {
-    title: "Sete canais.",
-    text: "Instagram, Facebook, LinkedIn, Threads, portal, newsletter e canal no WhatsApp.",
+    icon: LayoutGrid,
+    title: "Sete canais",
+    text: "Instagram, Facebook, LinkedIn, Threads, portal, newsletter e WhatsApp.",
   },
 ];
 
-const BUDGETS = [
-  "Até R$ 1 mil",
-  "R$ 1 mil a R$ 3 mil",
-  "R$ 3 mil a R$ 6 mil",
-  "Acima de R$ 6 mil",
-  "Ainda definindo",
+const FATURAMENTO = [
+  "Até R$ 500 mil",
+  "R$ 500 mil a R$ 2 milhões",
+  "R$ 2 a R$ 10 milhões",
+  "Mais de R$ 10 milhões",
 ];
+
+const OBJETIVOS = [
+  "Gerar leads e vendas",
+  "Fortalecer a marca",
+  "Lançar produto ou serviço",
+  "Patrocinar eventos",
+];
+
+const EMPTY = { name: "", email: "", phone: "", company: "", fat: "", message: "" };
 
 function AnunciePage() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    budget: "",
-    message: "",
-  });
+  const [form, setForm] = useState(EMPTY);
+  const [goals, setGoals] = useState<string[]>([]);
+  const [formato, setFormato] = useState("");
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
   function set(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function escolherFormato(nome: string) {
+    setFormato(nome);
+    trackCta({ event: "click", placement: "anuncie-formatos", variant: nome });
+    document.getElementById("midia-kit")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("name")?.focus({ preventScroll: true }), 450);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const newsletter = wantsNewsletter(e);
+    if (form.name.trim().length < 2) return toast.error("Informe seu nome.");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim()))
+      return toast.error("Informe um e-mail válido.");
     setLoading(true);
     try {
       const eventId = novoEventId("anuncie");
+      const message = [
+        `Objetivo: ${goals.length ? goals.join(", ") : "Não informado"}`,
+        `Formato de interesse: ${formato || "Não definido"}`,
+        `Faturamento anual: ${form.fat || "Não informado"}`,
+        "",
+        form.message.trim() || "Sem mensagem adicional.",
+      ].join("\n");
       await submitContactMessage({
         data: {
           meta: metaCtx(eventId),
@@ -114,14 +151,21 @@ function AnunciePage() {
           email: form.email,
           phone: form.phone,
           company: form.company,
-          budget: form.budget,
-          subject: "Solicitação de mídia kit",
-          message: form.message,
+          budget: form.fat ? `Faturamento: ${form.fat}` : "",
+          subject: `Mídia kit${formato ? ` · ${formato}` : ""}`,
+          message,
         },
       });
-      pixel("Lead", { content_name: "Publicidade IA News", content_category: "publicidade" }, eventId);
-      toast.success("Recebemos seu contato! Enviaremos o mídia kit em breve.");
-      setForm({ name: "", email: "", phone: "", company: "", budget: "", message: "" });
+      pixel(
+        "Lead",
+        { content_name: "Publicidade IA News", content_category: "publicidade" },
+        eventId,
+      );
+      markConverted("anuncie");
+      trackCta({ event: "convert", placement: "anuncie-form", variant: formato || "sem-formato" });
+      setDone(true);
+      setForm(EMPTY);
+      setGoals([]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível enviar agora.");
     } finally {
@@ -132,181 +176,246 @@ function AnunciePage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="page">
-        <div className="wrap">
-          <div className="biz">
-            <div className="biz-head">
+      <main id="main" className="page an2">
+        <section className="an2-hero">
+          <div className="wrap an2-grid">
+            <div className="an2-copy">
               <p className="kick">Mídia IA News</p>
-              <h1>Anuncie para quem decide a agenda de IA das empresas</h1>
+              <h1>Anuncie para quem decide sobre IA nas empresas</h1>
               <p className="sub">
-                A IA News conta quem está fazendo IA de verdade nos negócios brasileiros. Sua marca entra
-                nessa conversa com conteúdo editorial em collab, aprovado por você antes de ir ao ar.
+                Sua marca entra na conversa com conteúdo editorial em collab, aprovado por você
+                antes de ir ao ar.
               </p>
-            </div>
-
-            <div className="biz-card">
-              <form className="biz-form" onSubmit={onSubmit}>
-                <div>
-                  <h2 className="h-big">Solicite o mídia kit</h2>
-                  <p className="fine" style={{ marginTop: 8, fontSize: 15 }}>
-                    Preencha os dados e o Henrique Magioni, da IA News, retorna com as vagas do mês e o
-                    plano que faz sentido para a sua marca.
-                  </p>
-                </div>
-
-                <fieldset>
-                  <legend className="step-l">
-                    <i>Passo 1</i>Seus dados
-                  </legend>
-                  <div className="biz-fields">
-                    <label className="f" htmlFor="name">
-                      Nome completo
-                      <input
-                        className="field"
-                        id="name"
-                        required
-                        maxLength={160}
-                        autoComplete="name"
-                        value={form.name}
-                        onChange={(e) => set("name", e.target.value)}
-                        placeholder="Maria Silva"
-                      />
-                    </label>
-                    <label className="f" htmlFor="company">
-                      Empresa
-                      <input
-                        className="field"
-                        id="company"
-                        maxLength={160}
-                        autoComplete="organization"
-                        value={form.company}
-                        onChange={(e) => set("company", e.target.value)}
-                        placeholder="Sua empresa ou agência"
-                      />
-                    </label>
-                    <label className="f" htmlFor="email">
-                      E-mail corporativo
-                      <input
-                        className="field"
-                        id="email"
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        required
-                        maxLength={255}
-                        value={form.email}
-                        onChange={(e) => set("email", e.target.value)}
-                        placeholder="voce@empresa.com"
-                      />
-                    </label>
-                    <label className="f" htmlFor="phone">
-                      Telefone (WhatsApp)
-                      <input
-                        className="field"
-                        id="phone"
-                        type="tel"
-                        autoComplete="tel"
-                        maxLength={30}
-                        value={form.phone}
-                        onChange={(e) => set("phone", e.target.value)}
-                        placeholder="(11) 99999-0000"
-                      />
-                    </label>
-                  </div>
-                </fieldset>
-
-                <fieldset>
-                  <legend className="step-l">
-                    <i>Passo 2</i>Investimento previsto <small>Selecione uma faixa</small>
-                  </legend>
-                  <div className="opts">
-                    {BUDGETS.map((b) => (
-                      <label className="opt" key={b}>
-                        <input
-                          type="radio"
-                          name="budget"
-                          value={b}
-                          checked={form.budget === b}
-                          onChange={() => set("budget", b)}
-                        />
-                        <span>{b}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <fieldset>
-                  <legend className="step-l">
-                    <i>Passo 3</i>Sobre a campanha
-                  </legend>
-                  <label className="f" htmlFor="message">
-                    <span className="hp">Sobre a campanha</span>
-                    <textarea
-                      className="field"
-                      id="message"
-                      required
-                      maxLength={4000}
-                      rows={6}
-                      value={form.message}
-                      onChange={(e) => set("message", e.target.value)}
-                      placeholder="Objetivo, público-alvo, período e formatos de interesse."
-                    />
-                  </label>
-                </fieldset>
-
-                <NewsletterOptIn />
-                <div className="biz-submit">
-                  <button className="btn blue" type="submit" disabled={loading}>
-                    {loading ? "Enviando..." : "Quero o mídia kit"}
-                  </button>
-                  <span className="fine">
-                    Mensagens para a redação vão pela página de <Link to="/contato">Contato</Link>.
-                  </span>
-                </div>
-              </form>
-            </div>
-
-            <div className="biz-info">
-              <div
-                className="stats mini"
-                style={{ gridTemplateColumns: "repeat(3,minmax(0,1fr))" }}
-              >
+              <div className="an2-stats">
                 {AUDIENCE.map((a) => (
                   <div key={a.label}>
-                    <b>{a.value}</b>
+                    <b className="num">{a.value}</b>
                     <span>{a.label}</span>
                   </div>
                 ))}
               </div>
-              <div>
-                <p className="kick" style={{ marginBottom: 12 }}>
-                  Formatos disponíveis
-                </p>
-                <ol className="biz-steps">
-                  {FORMATS.map((f) => (
-                    <li key={f.title}>
-                      <b>{f.title}</b>
-                      <span>{f.text}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              <div>
-                <p className="kick" style={{ marginBottom: 4 }}>
-                  Por que anunciar aqui
-                </p>
-                <ul className="plain">
-                  {REASONS.map((r) => (
-                    <li key={r.title}>
+              <ul className="an2-why">
+                {REASONS.map((r) => (
+                  <li key={r.title}>
+                    <span aria-hidden="true">
+                      <r.icon />
+                    </span>
+                    <p>
+                      <b>{r.title}.</b> {r.text}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="biz-card an2-card" id="midia-kit">
+              {done ? (
+                <div className="biz-done" role="status">
+                  <span className="ok-mark" aria-hidden="true">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m5 12.5 4.5 4.5L19 7.5" />
+                    </svg>
+                  </span>
+                  <h2>Pedido recebido</h2>
+                  <p>
+                    O Henrique Magioni, da IA News, retorna com o mídia kit, as vagas do mês e o
+                    plano que faz sentido para a sua marca.
+                  </p>
+                  <div className="actions">
+                    <Link className="btn line" to="/noticias" search={{}}>
+                      Ver o conteúdo da IA News
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <form className="biz-form an2-form" onSubmit={onSubmit} noValidate>
+                  <div>
+                    <h2 className="an2-ft">Receba o mídia kit</h2>
+                    <p className="fine">
+                      Resposta com as vagas do mês e o plano certo para a marca.
+                    </p>
+                  </div>
+
+                  <fieldset>
+                    <legend className="step-l">
+                      <i>1</i>Seus dados
+                    </legend>
+                    <div className="biz-fields">
+                      <label className="f" htmlFor="name">
+                        Nome
+                        <input
+                          className="field"
+                          id="name"
+                          required
+                          maxLength={160}
+                          autoComplete="name"
+                          value={form.name}
+                          onChange={(e) => set("name", e.target.value)}
+                          placeholder="Seu nome"
+                        />
+                      </label>
+                      <label className="f" htmlFor="company">
+                        Empresa
+                        <input
+                          className="field"
+                          id="company"
+                          maxLength={160}
+                          autoComplete="organization"
+                          value={form.company}
+                          onChange={(e) => set("company", e.target.value)}
+                          placeholder="Empresa ou agência"
+                        />
+                      </label>
+                      <label className="f" htmlFor="email">
+                        E-mail
+                        <input
+                          className="field"
+                          id="email"
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          required
+                          maxLength={255}
+                          value={form.email}
+                          onChange={(e) => set("email", e.target.value)}
+                          placeholder="voce@empresa.com"
+                        />
+                      </label>
+                      <label className="f" htmlFor="phone">
+                        WhatsApp
+                        <input
+                          className="field"
+                          id="phone"
+                          type="tel"
+                          autoComplete="tel"
+                          maxLength={30}
+                          value={form.phone}
+                          onChange={(e) => set("phone", e.target.value)}
+                          placeholder="(11) 99999-0000"
+                        />
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend className="step-l">
+                      <i>2</i>Faturamento anual da empresa
+                    </legend>
+                    <div className="an2-seg">
+                      {FATURAMENTO.map((f) => (
+                        <label key={f}>
+                          <input
+                            type="radio"
+                            name="faturamento"
+                            value={f}
+                            checked={form.fat === f}
+                            onChange={() => set("fat", f)}
+                          />
+                          <span>{f}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend className="step-l">
+                      <i>3</i>Objetivo <small>Marque um ou mais</small>
+                    </legend>
+                    <div className="an2-goals">
+                      {OBJETIVOS.map((g) => (
+                        <label key={g}>
+                          <input
+                            type="checkbox"
+                            checked={goals.includes(g)}
+                            onChange={(e) =>
+                              setGoals((prev) =>
+                                e.target.checked ? [...prev, g] : prev.filter((x) => x !== g),
+                              )
+                            }
+                          />
+                          <span>{g}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="an2-fmt">
+                      <span>Formato:</span>
+                      {["Ainda não sei", ...FORMATS.map((f) => f.nome)].map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          className={(formato || "Ainda não sei") === f ? "on" : undefined}
+                          onClick={() => setFormato(f === "Ainda não sei" ? "" : f)}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                    <label className="f" htmlFor="message" style={{ marginTop: 12 }}>
                       <span>
-                        <b style={{ color: "var(--p-ink)" }}>{r.title}</b> {r.text}
+                        Algo mais? <small className="pt-opt">opcional</small>
                       </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                      <textarea
+                        className="field"
+                        id="message"
+                        maxLength={4000}
+                        rows={3}
+                        value={form.message}
+                        onChange={(e) => set("message", e.target.value)}
+                        placeholder="Público, período ou produto que quer divulgar."
+                      />
+                    </label>
+                  </fieldset>
+
+                  <NewsletterOptIn />
+                  <div className="biz-submit">
+                    <button className="btn blue" type="submit" disabled={loading}>
+                      {loading ? "Enviando..." : "Quero o mídia kit"}
+                    </button>
+                    <span className="fine">
+                      Mensagens para a redação vão pela página de <Link to="/contato">Contato</Link>
+                      .
+                    </span>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
+        </section>
+
+        <div className="wrap">
+          <section className="pt-sec" aria-labelledby="an2-fm">
+            <div className="sec-head">
+              <h2 id="an2-fm">Formatos</h2>
+              <p className="lede">Conteúdo em collab nos canais da IA News</p>
+            </div>
+            <div className="an2-plans">
+              {FORMATS.map((f) => (
+                <div key={f.nome} className={"an2-plan" + (formato === f.nome ? " on" : "")}>
+                  <span className="an2-pn">{f.nome}</span>
+                  <b className="num">{f.preco}</b>
+                  <span className="an2-pp">{f.periodo}</span>
+                  <p>{f.text}</p>
+                  {f.nota ? <em>{f.nota}</em> : null}
+                  <button
+                    type="button"
+                    className="btn line s"
+                    onClick={() => escolherFormato(f.nome)}
+                  >
+                    Quero este
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </main>
       <SiteFooter />

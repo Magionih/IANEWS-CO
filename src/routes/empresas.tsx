@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { useSubscribed } from "@/components/site/portal-subscribe";
 import { openSubscribeDialog } from "@/components/site/subscribe-dialog";
 import { submitContactMessage } from "@/lib/contact.functions";
+import { markConverted } from "@/components/site/smart-popup";
 import { NewsletterOptIn, wantsNewsletter } from "@/components/site/newsletter-opt-in";
 
 const PAGE_URL = "https://ianewsbr.com/empresas";
@@ -144,6 +145,7 @@ function EmpresasPage() {
       setSize("");
       setForm(EMPTY);
       setDoneEmail(email);
+      markConverted("empresas");
     } catch (err) {
       fail(
         err instanceof Error && err.message

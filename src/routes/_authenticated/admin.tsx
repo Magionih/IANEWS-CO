@@ -134,6 +134,10 @@ const emptyForm = {
   social_url: "",
   cover_position: "" as CoverPosition | "",
   cover_credit: "",
+  destaque_peso: 0,
+  destaque_fixar: "" as "" | "0" | "3" | "7" | "15" | "30",
+  destaque_fixo_ate: "",
+  orig_destaque_peso: 0,
   // Valores carregados, para só enviar enquadramento e crédito quando mudarem.
   orig_cover_position: "" as CoverPosition | "",
   orig_cover_credit: "",
@@ -219,6 +223,10 @@ function AdminPage() {
       social_url: a.social_url ?? "",
       cover_position: (a.cover_position ?? "") as CoverPosition | "",
       cover_credit: a.cover_credit ?? "",
+      destaque_peso: a.destaque_peso ?? 0,
+      destaque_fixar: "",
+      destaque_fixo_ate: a.destaque_fixo_ate ?? "",
+      orig_destaque_peso: a.destaque_peso ?? 0,
       orig_cover_position: (a.cover_position ?? "") as CoverPosition | "",
       orig_cover_credit: a.cover_credit ?? "",
     });
@@ -232,13 +240,27 @@ function AdminPage() {
       return toast.error("Slug inválido — use apenas letras minúsculas, números e hífens.");
     setSaving(true);
     try {
-      const { publish_at, cover_position, cover_credit, orig_cover_position, orig_cover_credit, ...rest } = form;
+      const {
+        publish_at,
+        cover_position,
+        cover_credit,
+        orig_cover_position,
+        orig_cover_credit,
+        destaque_peso,
+        destaque_fixar,
+        destaque_fixo_ate: _fixoAte,
+        orig_destaque_peso,
+        ...rest
+      } = form;
+      void _fixoAte;
       const publishedAt = fromLocalInput(publish_at);
       await saveArticle({
         data: {
           ...rest,
           cover_position: cover_position !== orig_cover_position ? cover_position || null : undefined,
           cover_credit: cover_credit.trim() !== orig_cover_credit.trim() ? cover_credit : undefined,
+          destaque_peso: destaque_peso !== orig_destaque_peso ? destaque_peso : undefined,
+          destaque_fixar_dias: destaque_fixar === "" ? undefined : Number(destaque_fixar),
           published_at: publishedAt,
           origin: form.origin || null,
           social_url: form.social_url || null,
@@ -966,6 +988,57 @@ function AdminPage() {
               onPosition={(p) => setForm((f) => ({ ...f, cover_position: p }))}
               onCredit={(c) => setForm((f) => ({ ...f, cover_credit: c }))}
             />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Destaque na home (quão conhecida é a pessoa)" id="destaque_peso">
+                <select
+                  id="destaque_peso"
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  value={String(form.destaque_peso)}
+                  onChange={(e) => setForm({ ...form, destaque_peso: Number(e.target.value) })}
+                >
+                  {(
+                    [
+                      [0, "Normal (só leituras e novidade)"],
+                      [55, "Conhecida no nicho"],
+                      [75, "Conhecida no mercado"],
+                      [90, "Muito conhecida"],
+                      [100, "Prioridade máxima"],
+                    ] as [number, string][]
+                  )
+                    .concat(
+                      [0, 55, 75, 90, 100].includes(form.destaque_peso)
+                        ? []
+                        : [[form.destaque_peso, `Peso atual: ${form.destaque_peso}`]],
+                    )
+                    .map(([v, l]) => (
+                      <option key={v} value={String(v)}>
+                        {l}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+              <Field label="Fixar no carrossel de destaques" id="destaque_fixar">
+                <select
+                  id="destaque_fixar"
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  value={form.destaque_fixar}
+                  onChange={(e) =>
+                    setForm({ ...form, destaque_fixar: e.target.value as typeof form.destaque_fixar })
+                  }
+                >
+                  <option value="">
+                    {form.destaque_fixo_ate && new Date(form.destaque_fixo_ate).getTime() > Date.now()
+                      ? `Fixada até ${fmtDateTime(form.destaque_fixo_ate)} (manter)`
+                      : "Não fixar (automático)"}
+                  </option>
+                  <option value="3">Fixar por 3 dias</option>
+                  <option value="7">Fixar por 7 dias</option>
+                  <option value="15">Fixar por 15 dias</option>
+                  <option value="30">Fixar por 30 dias</option>
+                  <option value="0">Desafixar</option>
+                </select>
+              </Field>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Fonte" id="source_name">
                 <Input

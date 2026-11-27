@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Globe, Mail, Share2 } from "lucide-react";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -17,6 +18,8 @@ import {
   type PautaInput,
 } from "@/lib/pauta-validate";
 import { jsonLd } from "@/lib/json-ld";
+import { markConverted } from "@/components/site/smart-popup";
+import { trackCta } from "@/lib/cta-tracking";
 
 /* Envie sua pauta: porta de entrada para empresas e fundadores que usam IA.
    Sem preço: o valor aparece só na conversa comercial. */
@@ -81,16 +84,19 @@ export const Route = createFileRoute("/pauta")({
 
 const WHY = [
   {
-    title: "Site e Google",
-    text: "Matéria permanente em ianewsbr.com, indexada no Google e com link para a sua empresa.",
+    icon: Globe,
+    title: "Portal e Google",
+    text: "Matéria permanente em ianewsbr.com, indexada e com link para a sua empresa.",
   },
   {
+    icon: Share2,
     title: "Redes sociais",
-    text: "Conteúdo no Instagram, Facebook, LinkedIn e Threads da IA News, em colaboração com o perfil da empresa e do fundador.",
+    text: "Post em collab com o perfil da empresa e do fundador no Instagram, LinkedIn e Threads.",
   },
   {
-    title: "Newsletter",
-    text: "As matérias entram na newsletter diária da IA News, que chega às 7h para quem acompanha IA no Brasil.",
+    icon: Mail,
+    title: "Newsletter das 7h",
+    text: "A matéria chega a quem acompanha IA no Brasil todas as manhãs.",
   },
 ];
 
@@ -138,9 +144,16 @@ const ORDER: (keyof PautaInput)[] = [
   "consentimento",
 ];
 
+const STEP_KEYS: Record<number, (keyof PautaInput)[]> = {
+  1: ["empresa", "descricao", "site", "instagram"],
+  2: ["nome", "cargo", "whatsapp", "email"],
+  3: ["linkedin", "link_noticia", "consentimento"],
+};
+const STEP_NAMES = ["Sua empresa", "Seus dados", "Enviar"];
+
 function scrollToForm() {
   document.getElementById("enviar")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  setTimeout(() => document.getElementById("pt-nome")?.focus({ preventScroll: true }), 450);
+  setTimeout(() => document.getElementById("pt-empresa")?.focus({ preventScroll: true }), 450);
 }
 
 function PautaPage() {
@@ -151,7 +164,9 @@ function PautaPage() {
   const [failMsg, setFailMsg] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [doneName, setDoneName] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
   const hp = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const origem = useRef<string | null>(null);
   const doneRef = useRef<HTMLDivElement>(null);
 
@@ -176,15 +191,48 @@ function PautaPage() {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
+  function goStep(n: number) {
+    setStep(n);
+    trackCta({ event: "click", placement: "pauta-form", variant: `passo-${n}` });
+    window.setTimeout(() => {
+      const card = cardRef.current;
+      if (card && card.getBoundingClientRect().top < 60)
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+      const first = STEP_KEYS[n]?.[0];
+      if (first) document.getElementById(`pt-${first}`)?.focus({ preventScroll: true });
+    }, 60);
+  }
+
+  function next() {
+    const { errors: found } = validatePauta(form);
+    const keys = STEP_KEYS[step] ?? [];
+    const stepErrors: PautaErrors = {};
+    for (const k of keys) if (found[k]) stepErrors[k] = found[k];
+    if (Object.keys(stepErrors).length) {
+      setErrors((prev) => ({ ...prev, ...stepErrors }));
+      const first = keys.find((k) => stepErrors[k]);
+      if (first) document.getElementById(`pt-${first}`)?.focus();
+      return;
+    }
+    goStep(step + 1);
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (sending) return;
+    if (step < 3) return next();
     setFailMsg(null);
     const { errors: found } = validatePauta(form);
     if (Object.keys(found).length) {
       setErrors(found);
       const first = ORDER.find((k) => found[k]);
-      if (first) document.getElementById(`pt-${first}`)?.focus();
+      if (first) {
+        const target = Number(
+          Object.keys(STEP_KEYS).find((n) => STEP_KEYS[Number(n)].includes(first)),
+        );
+        if (target && target !== step) setStep(target);
+        window.setTimeout(() => document.getElementById(`pt-${first}`)?.focus(), 60);
+      }
       return;
     }
     setSending(true);
@@ -210,6 +258,9 @@ function PautaPage() {
       if (res.ok && json.ok) {
         setDoneName(form.nome.trim().split(/\s+/)[0] ?? "");
         setForm(EMPTY);
+        setStep(1);
+        markConverted("pauta");
+        trackCta({ event: "convert", placement: "pauta-form", variant: "enviada" });
         return;
       }
       if (json.errors) setErrors(json.errors);
@@ -257,103 +308,49 @@ function PautaPage() {
   };
 
   const descLen = form.descricao.trim().length;
+  const faces = examples.slice(0, 5);
 
   return (
     <>
       <SiteHeader />
-      <main id="main" className="page pt">
-        {/* 1. Topo */}
-        <section className="pt-hero">
-          <div className="wrap">
-            <p className="kick">Envie sua pauta</p>
-            <h1>Sua empresa usa IA? Conte sua história para a IA News.</h1>
-            <p className="sub">
-              A IA News mostra quem está construindo com inteligência artificial no Brasil e no
-              mundo. Envie sua pauta e nossa redação avalia.
-            </p>
-            <button className="btn blue" type="button" onClick={scrollToForm}>
-              Enviar minha pauta
-            </button>
-          </div>
-        </section>
-
-        <div className="wrap">
-          {/* 2. Por que aparecer */}
-          <section className="pt-sec" aria-labelledby="pt-why">
-            <div className="sec-head">
-              <h2 id="pt-why">Por que aparecer na IA News</h2>
-            </div>
-            <div className="pt-cards">
-              {WHY.map((w) => (
-                <div className="pt-card" key={w.title}>
-                  <h3>{w.title}</h3>
-                  <p>{w.text}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 3. Como funciona */}
-          <section className="pt-sec" aria-labelledby="pt-how">
-            <div className="sec-head">
-              <h2 id="pt-how">Como funciona</h2>
-            </div>
-            <ol className="pt-steps">
-              <li>
-                <b>Você envia a pauta</b>
-                <span>Pelo formulário desta página, em poucos minutos.</span>
-              </li>
-              <li>
-                <b>A redação avalia</b>
-                <span>E entra em contato em até 2 dias úteis, pelo WhatsApp ou por e-mail.</span>
-              </li>
-              <li>
-                <b>A matéria vai ao ar</b>
-                <span>No site e nas redes da IA News.</span>
-              </li>
-            </ol>
-          </section>
-
-          {/* 4. Exemplos */}
-          {examples.length ? (
-            <section className="pt-sec" aria-labelledby="pt-ex">
-              <div className="sec-head">
-                <h2 id="pt-ex">Histórias que publicamos</h2>
-                <Link to="/noticias" search={{}} className="more">
-                  Ver todas →
-                </Link>
-              </div>
-              <div className="pt-grid">
-                {examples.map((a) => (
-                  <Link
-                    key={a.slug}
-                    to="/materia/$slug"
-                    params={{ slug: a.slug }}
-                    className="pt-ex"
-                  >
-                    <ArticleThumb
-                      src={a.cover_image_url}
-                      alt=""
-                      label={CATEGORY_SEO[a.category]?.label ?? "IA News"}
-                      className="r32"
-                    />
-                    <small>{CATEGORY_SEO[a.category]?.label ?? a.category}</small>
-                    <b>{a.title}</b>
-                  </Link>
+      <main id="main" className="page pt pt2">
+        <section className="pt2-hero">
+          <div className="wrap pt2-grid">
+            <div className="pt2-copy">
+              <p className="kick">Envie sua pauta · gratuito</p>
+              <h1>Sua empresa usa IA? Vire notícia na IA News.</h1>
+              <p className="sub">
+                A IA News conta quem está construindo com inteligência artificial no Brasil. Conte a
+                sua história: a redação lê todas as pautas e responde em até 2 dias úteis.
+              </p>
+              <ul className="pt2-ben">
+                {WHY.map((w) => (
+                  <li key={w.title}>
+                    <span className="pt2-ic" aria-hidden="true">
+                      <w.icon />
+                    </span>
+                    <span>
+                      <b>{w.title}</b>
+                      {w.text}
+                    </span>
+                  </li>
                 ))}
-              </div>
-            </section>
-          ) : null}
-
-          {/* 5. Formulário */}
-          <section className="pt-sec pt-form-sec" id="enviar" aria-labelledby="pt-form-t">
-            <div className="pt-form-head">
-              <p className="kick">Formulário</p>
-              <h2 id="pt-form-t">Envie sua pauta</h2>
-              <p>Conte quem você é e o que sua empresa faz com IA. A redação lê todas as pautas.</p>
+              </ul>
+              {faces.length ? (
+                <div className="pt2-proof">
+                  <span className="pt2-faces" aria-hidden="true">
+                    {faces.map((a) => (
+                      <img key={a.slug} src={a.cover_image_url ?? ""} alt="" loading="lazy" />
+                    ))}
+                  </span>
+                  <span>
+                    <b>1 milhão+</b> de visualizações em 30 dias nos canais da IA News
+                  </span>
+                </div>
+              ) : null}
             </div>
 
-            <div className="biz-card pt-card-form">
+            <div className="biz-card pt2-card" id="enviar" ref={cardRef}>
               {doneName !== null ? (
                 <div className="biz-done" ref={doneRef} role="status">
                   <span className="ok-mark" aria-hidden="true">
@@ -373,8 +370,7 @@ function PautaPage() {
                   <h2>Pauta recebida!</h2>
                   <p>
                     Obrigado{doneName ? `, ${doneName}` : ""}. Nossa redação vai avaliar e responder
-                    em até 2 dias úteis pelo WhatsApp ou e-mail. Enquanto isso, veja as últimas
-                    matérias da IA News.
+                    em até 2 dias úteis pelo WhatsApp ou e-mail.
                   </p>
                   <div className="actions">
                     <Link className="btn blue" to="/noticias" search={{}}>
@@ -391,7 +387,7 @@ function PautaPage() {
                   </div>
                 </div>
               ) : (
-                <form className="biz-form" onSubmit={onSubmit} noValidate>
+                <form className="biz-form pt2-form" onSubmit={onSubmit} noValidate>
                   <input
                     ref={hp}
                     className="hp"
@@ -401,147 +397,240 @@ function PautaPage() {
                     autoComplete="off"
                     aria-hidden="true"
                   />
-                  <fieldset>
-                    <legend className="step-l">
-                      <i>1</i>Quem é você
-                    </legend>
-                    <div className="biz-fields">
-                      {field("nome", "Nome completo", {
-                        autoComplete: "name",
-                        maxLength: 160,
-                        placeholder: "Seu nome",
-                        full: true,
-                      })}
-                      {field("cargo", "Cargo", {
-                        autoComplete: "organization-title",
-                        maxLength: 120,
-                        placeholder: "CEO, fundador, marketing...",
-                      })}
-                      {field("empresa", "Empresa", {
-                        autoComplete: "organization",
-                        maxLength: 160,
-                        placeholder: "Nome da empresa",
-                      })}
-                      {field("whatsapp", "WhatsApp", {
-                        type: "tel",
-                        inputMode: "tel",
-                        autoComplete: "tel-national",
-                        maxLength: 16,
-                        placeholder: "(00) 00000-0000",
-                      })}
-                      {field("email", "E-mail", {
-                        type: "email",
-                        inputMode: "email",
-                        autoComplete: "email",
-                        maxLength: 254,
-                        placeholder: "voce@empresa.com.br",
-                      })}
-                    </div>
-                  </fieldset>
+                  <div className="pt2-steps" aria-label={`Passo ${step} de 3`}>
+                    {STEP_NAMES.map((n, i) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={step === i + 1 ? "on" : step > i + 1 ? "done" : undefined}
+                        disabled={i + 1 > step}
+                        onClick={() => i + 1 < step && goStep(i + 1)}
+                      >
+                        <i>{step > i + 1 ? "✓" : i + 1}</i>
+                        <span>{n}</span>
+                      </button>
+                    ))}
+                  </div>
 
-                  <fieldset>
-                    <legend className="step-l">
-                      <i>2</i>Onde encontrar a empresa
-                    </legend>
-                    <div className="biz-fields">
-                      {field("site", "Site da empresa", {
-                        inputMode: "url",
-                        maxLength: 300,
-                        placeholder: "empresa.com.br",
-                        optional: true,
-                      })}
-                      {field("instagram", "Instagram", {
-                        maxLength: 300,
-                        placeholder: "@perfil",
-                        optional: true,
-                      })}
-                      {field("linkedin", "LinkedIn", {
-                        inputMode: "url",
-                        maxLength: 300,
-                        placeholder: "linkedin.com/in/... ou /company/...",
-                        optional: true,
-                        full: true,
-                      })}
-                    </div>
-                  </fieldset>
-
-                  <fieldset>
-                    <legend className="step-l">
-                      <i>3</i>A história
-                    </legend>
-                    <div className="biz-fields">
-                      <label className="f full" htmlFor="pt-descricao">
-                        <span>O que sua empresa faz com IA?</span>
-                        <textarea
-                          className={"field" + (errors.descricao ? " pt-bad" : "")}
-                          id="pt-descricao"
-                          rows={5}
-                          maxLength={DESC_MAX}
-                          value={form.descricao}
-                          aria-invalid={errors.descricao ? true : undefined}
-                          aria-describedby="pt-descricao-count"
-                          placeholder="O produto, o resultado, o problema que a IA resolve, números que você pode mostrar."
-                          onChange={(e) => set("descricao", e.target.value)}
-                        />
-                        <span className="pt-count" id="pt-descricao-count">
-                          {errors.descricao ? (
-                            <span className="pt-err">{errors.descricao}</span>
-                          ) : (
-                            <span />
-                          )}
-                          <span
-                            className={descLen > 0 && descLen < DESC_MIN ? "pt-low" : undefined}
-                          >
-                            {descLen}/{DESC_MAX}
+                  {step === 1 ? (
+                    <fieldset>
+                      <legend className="step-l">Conte sobre a empresa</legend>
+                      <div className="biz-fields">
+                        {field("empresa", "Empresa", {
+                          autoComplete: "organization",
+                          maxLength: 160,
+                          placeholder: "Nome da empresa",
+                          full: true,
+                        })}
+                        <label className="f full" htmlFor="pt-descricao">
+                          <span>O que sua empresa faz com IA?</span>
+                          <textarea
+                            className={"field" + (errors.descricao ? " pt-bad" : "")}
+                            id="pt-descricao"
+                            rows={5}
+                            maxLength={DESC_MAX}
+                            value={form.descricao}
+                            aria-invalid={errors.descricao ? true : undefined}
+                            aria-describedby="pt-descricao-count"
+                            placeholder="O produto, o resultado, o problema que a IA resolve e números que você pode mostrar."
+                            onChange={(e) => set("descricao", e.target.value)}
+                          />
+                          <span className="pt-count" id="pt-descricao-count">
+                            {errors.descricao ? (
+                              <span className="pt-err">{errors.descricao}</span>
+                            ) : (
+                              <span className="pt-tip">
+                                Ex.: “Nosso agente atende 3 mil clientes por mês”
+                              </span>
+                            )}
+                            <span
+                              className={descLen > 0 && descLen < DESC_MIN ? "pt-low" : undefined}
+                            >
+                              {descLen}/{DESC_MAX}
+                            </span>
                           </span>
+                        </label>
+                        {field("site", "Site", {
+                          inputMode: "url",
+                          maxLength: 300,
+                          placeholder: "empresa.com.br",
+                          optional: true,
+                        })}
+                        {field("instagram", "Instagram", {
+                          maxLength: 300,
+                          placeholder: "@perfil",
+                          optional: true,
+                        })}
+                      </div>
+                    </fieldset>
+                  ) : null}
+
+                  {step === 2 ? (
+                    <fieldset>
+                      <legend className="step-l">Como a redação fala com você</legend>
+                      <div className="biz-fields">
+                        {field("nome", "Nome completo", {
+                          autoComplete: "name",
+                          maxLength: 160,
+                          placeholder: "Seu nome",
+                          full: true,
+                        })}
+                        {field("cargo", "Cargo", {
+                          autoComplete: "organization-title",
+                          maxLength: 120,
+                          placeholder: "CEO, fundador, marketing...",
+                        })}
+                        {field("whatsapp", "WhatsApp", {
+                          type: "tel",
+                          inputMode: "tel",
+                          autoComplete: "tel-national",
+                          maxLength: 16,
+                          placeholder: "(00) 00000-0000",
+                        })}
+                        {field("email", "E-mail", {
+                          type: "email",
+                          inputMode: "email",
+                          autoComplete: "email",
+                          maxLength: 254,
+                          placeholder: "voce@empresa.com.br",
+                          full: true,
+                        })}
+                      </div>
+                    </fieldset>
+                  ) : null}
+
+                  {step === 3 ? (
+                    <fieldset>
+                      <legend className="step-l">
+                        Quase lá <small>Os links ajudam a redação, mas são opcionais</small>
+                      </legend>
+                      <div className="biz-fields">
+                        {field("linkedin", "LinkedIn", {
+                          inputMode: "url",
+                          maxLength: 300,
+                          placeholder: "linkedin.com/in/... ou /company/...",
+                          optional: true,
+                          full: true,
+                        })}
+                        {field("link_noticia", "Notícia ou press release", {
+                          inputMode: "url",
+                          maxLength: 300,
+                          placeholder: "https://...",
+                          optional: true,
+                          full: true,
+                        })}
+                      </div>
+                      <label className="pt-consent" htmlFor="pt-consentimento">
+                        <input
+                          id="pt-consentimento"
+                          type="checkbox"
+                          checked={form.consentimento}
+                          onChange={(e) => set("consentimento", e.target.checked)}
+                          aria-invalid={errors.consentimento ? true : undefined}
+                        />
+                        <span>
+                          Concordo que a IA News use estes dados para avaliar minha pauta e entrar
+                          em contato. Nada é compartilhado com terceiros.{" "}
+                          <Link to="/termos" hash="pauta">
+                            Política de privacidade
+                          </Link>
+                          .
+                          {errors.consentimento ? (
+                            <span className="pt-err">{errors.consentimento}</span>
+                          ) : null}
                         </span>
                       </label>
-                      {field("link_noticia", "Link de notícia ou press release", {
-                        inputMode: "url",
-                        maxLength: 300,
-                        placeholder: "https://...",
-                        optional: true,
-                        full: true,
-                      })}
-                    </div>
-                  </fieldset>
+                    </fieldset>
+                  ) : null}
 
-                  <label className="pt-consent" htmlFor="pt-consentimento">
-                    <input
-                      id="pt-consentimento"
-                      type="checkbox"
-                      checked={form.consentimento}
-                      onChange={(e) => set("consentimento", e.target.checked)}
-                      aria-invalid={errors.consentimento ? true : undefined}
-                    />
-                    <span>
-                      Concordo que a IA News use estes dados para avaliar minha pauta e entrar em
-                      contato. Nada é compartilhado com terceiros.{" "}
-                      <Link to="/termos" hash="pauta">
-                        Política de privacidade
-                      </Link>
-                      .
-                      {errors.consentimento ? (
-                        <span className="pt-err">{errors.consentimento}</span>
-                      ) : null}
-                    </span>
-                  </label>
-
-                  <div className="biz-submit">
-                    <button className="btn blue" type="submit" disabled={sending}>
-                      {sending ? "Enviando…" : "Enviar pauta"}
-                    </button>
-                    <span className="fine">A redação responde em até 2 dias úteis.</span>
-                    <p className="msg err" role="status" aria-live="polite">
-                      {failMsg ?? ""}
-                    </p>
+                  <div className="pt2-nav">
+                    {step > 1 ? (
+                      <button type="button" className="btn line" onClick={() => goStep(step - 1)}>
+                        Voltar
+                      </button>
+                    ) : (
+                      <span className="fine">Leva cerca de 3 minutos.</span>
+                    )}
+                    {step < 3 ? (
+                      <button type="button" className="btn blue" onClick={next}>
+                        Continuar
+                      </button>
+                    ) : (
+                      <button className="btn blue" type="submit" disabled={sending}>
+                        {sending ? "Enviando…" : "Enviar pauta"}
+                      </button>
+                    )}
                   </div>
+                  <p className="msg err" role="status" aria-live="polite">
+                    {failMsg ?? ""}
+                  </p>
                 </form>
               )}
             </div>
+          </div>
+        </section>
+
+        <div className="wrap">
+          <section className="pt-sec" aria-labelledby="pt-how">
+            <div className="sec-head">
+              <h2 id="pt-how">Como funciona</h2>
+            </div>
+            <ol className="pt2-how">
+              <li>
+                <i>1</i>
+                <b>Você envia a pauta</b>
+                <span>Pelo formulário acima, em cerca de 3 minutos.</span>
+              </li>
+              <li>
+                <i>2</i>
+                <b>A redação avalia</b>
+                <span>E responde em até 2 dias úteis, pelo WhatsApp ou e-mail.</span>
+              </li>
+              <li>
+                <i>3</i>
+                <b>A matéria vai ao ar</b>
+                <span>No portal, no Google, nas redes e na newsletter das 7h.</span>
+              </li>
+            </ol>
           </section>
 
-          {/* 6. Perguntas frequentes */}
+          {examples.length ? (
+            <section className="pt-sec" aria-labelledby="pt-ex">
+              <div className="sec-head">
+                <h2 id="pt-ex">Histórias que publicamos</h2>
+                <Link to="/noticias" search={{}} className="more">
+                  Ver todas →
+                </Link>
+              </div>
+              <div className="pt2-ex">
+                {examples.map((a) => (
+                  <Link
+                    key={a.slug}
+                    to="/materia/$slug"
+                    params={{ slug: a.slug }}
+                    className="pt2-ex-it"
+                  >
+                    <ArticleThumb
+                      src={a.cover_image_url}
+                      alt=""
+                      label={CATEGORY_SEO[a.category]?.label ?? "IA News"}
+                      className="r43"
+                    />
+                    <b>{a.title}</b>
+                  </Link>
+                ))}
+              </div>
+              <div className="pt2-again">
+                <p>
+                  <b>A próxima pode ser a da sua empresa.</b> A redação lê todas as pautas.
+                </p>
+                <button className="btn blue" type="button" onClick={scrollToForm}>
+                  Enviar minha pauta
+                </button>
+              </div>
+            </section>
+          ) : null}
+
           <section className="pt-sec" aria-labelledby="pt-faq">
             <div className="sec-head">
               <h2 id="pt-faq">Perguntas frequentes</h2>

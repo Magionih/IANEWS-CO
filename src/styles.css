@@ -378,5 +378,6 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 @import "./styles/portal.css";
+@import "./styles/v2.css";
 @import "./styles/fgia.css";
 @import "./styles/fgia-checkout.css";

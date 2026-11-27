@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { NewsletterForm } from "@/components/site/newsletter-form";
+import { PortalSubscribeForm } from "@/components/site/portal-subscribe";
+import { BadgeCheck, Clock, Lightbulb, Newspaper, Timer, Trophy } from "lucide-react";
 import { listRecentArticles } from "@/lib/articles.functions";
 import { CATEGORY_SEO } from "@/lib/categories";
 import logoWhite from "@/assets/ianews-logo-white.png";
@@ -57,12 +57,18 @@ function editionDate(iso: string | undefined) {
   }).format(time);
 }
 
+const SEMANA = [
+  { d: "Seg", extra: "Ranking IA" },
+  { d: "Ter" },
+  { d: "Qua" },
+  { d: "Qui" },
+  { d: "Sex" },
+  { d: "Sáb" },
+  { d: "Dom" },
+];
+
 function NewsletterPage() {
   const { data: articles } = useSuspenseQuery(articlesOptions);
-  const loadedAt = useRef<number | null>(null);
-  useEffect(() => {
-    loadedAt.current = Date.now();
-  }, []);
   const latest = articles
     .filter((article) => {
       const published = Date.parse(article.published_at);
@@ -76,29 +82,28 @@ function NewsletterPage() {
       <SiteHeader />
       <main id="main">
         <div className="wrap">
-          <section className="nlh">
+          <section className="nlh nl2">
             <div className="nlh-txt">
-              <p className="kick">Newsletter gratuita · todo dia, 7h</p>
+              <p className="kick">Newsletter gratuita</p>
               <h1>5 minutos por dia. Zero hype.</h1>
-              <p className="sub">
-                A curadoria da IANews com as notícias de inteligência artificial que importam para
-                negócios. Contexto para decidir melhor, sem hype.
-              </p>
-              <NewsletterForm placement="newsletter-hero" loadedAt={loadedAt} />
-              <ul className="ticks">
-                <li>Edição diária às 7h, em 5 minutos de leitura</li>
-                <li>Ranking IA semanal</li>
-                <li>Análise de impacto para quem decide</li>
-              </ul>
-              <div className="proof">
-                <span>
-                  <b>Grátis</b>
-                </span>
-                <span>Cancele com 1 clique</span>
-                <span>Sem spam</span>
+              <p className="sub">As notícias de IA que importam para negócios, todo dia às 7h.</p>
+              <div className="nl2-form">
+                <PortalSubscribeForm placement="newsletter-hero" button="Assinar grátis" />
               </div>
+              <ul className="nl2-chips" aria-label="Como funciona">
+                <li>
+                  <Clock aria-hidden="true" /> Chega às 7h
+                </li>
+                <li>
+                  <Timer aria-hidden="true" /> 5 min de leitura
+                </li>
+                <li>
+                  <BadgeCheck aria-hidden="true" /> Grátis, sem spam
+                </li>
+              </ul>
               <p className="fine">
-                Ao assinar, você aceita a <Link to="/termos">política de privacidade</Link>.
+                Cancele com 1 clique. Ao assinar, você aceita a{" "}
+                <Link to="/termos">política de privacidade</Link>.
               </p>
             </div>
 
@@ -125,68 +130,65 @@ function NewsletterPage() {
                           >
                             {article.title}
                           </Link>
-                          <span
-                            style={{
-                              display: "block",
-                              fontSize: 12,
-                              color: "var(--p-ink-3)",
-                              marginTop: 2,
-                            }}
-                          >
+                          <span className="nl2-cat">
                             {CATEGORY_SEO[article.category]?.label ?? article.category}
                           </span>
                         </span>
                       </li>
                     ))}
                   </ol>
-                ) : (
-                  <p className="edicao-foot">
-                    As matérias da edição aparecerão aqui assim que estiverem disponíveis.
-                  </p>
-                )}
-                <p className="edicao-foot">
-                  Uma amostra com as matérias mais recentes da redação. Assim chega a sua edição,
-                  todo dia às 7h.
-                </p>
+                ) : null}
               </article>
             </div>
           </section>
 
-          <section className="wa-band">
+          <section className="nl2-sec" aria-labelledby="nl2-wk">
+            <div className="sec-head">
+              <h2 id="nl2-wk">Sua semana com a IA News</h2>
+            </div>
+            <ol className="nl2-week">
+              {SEMANA.map((d) => (
+                <li key={d.d} className={d.extra ? "x" : undefined}>
+                  <b>{d.d}</b>
+                  <span>7h</span>
+                  <em>{d.extra ?? "Edição do dia"}</em>
+                </li>
+              ))}
+            </ol>
+            <div className="nl2-get">
+              {RECEIVE.map(({ heading, text }, i) => {
+                const Icon = [Newspaper, Trophy, Lightbulb][i] ?? Newspaper;
+                return (
+                  <div key={heading}>
+                    <span aria-hidden="true">
+                      <Icon />
+                    </span>
+                    <b>{heading}</b>
+                    <p>{text}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="wa-band nl2-wa">
             <div>
               <p className="kick">Prefere o WhatsApp?</p>
-              <h3>Entre na comunidade IANews</h3>
-              <p>Os destaques do dia, direto no celular.</p>
+              <h3>Os destaques do dia no celular</h3>
+              <p>Entre na comunidade IA News no WhatsApp.</p>
             </div>
             <a className="btn line" href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
               Entrar na comunidade
             </a>
           </section>
 
-          <div className="sec-head" style={{ marginTop: 56 }}>
-            <h2>O que você recebe</h2>
-            <p className="lede">Três coisas em toda edição</p>
-          </div>
-          <div className="cols3">
-            {RECEIVE.map(({ heading, text }) => (
-              <div key={heading}>
-                <h3>{heading}</h3>
-                <p>{text}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="sec-head" style={{ marginTop: 56 }}>
+          <div className="sec-head" style={{ marginTop: 48 }}>
             <h2>Perguntas frequentes</h2>
           </div>
           <div className="faq">
-            <details open>
+            <details>
               <summary>É gratuito?</summary>
               <p>Sim. A newsletter IANews é gratuita.</p>
-            </details>
-            <details>
-              <summary>Com que frequência?</summary>
-              <p>Todo dia, às 7h, mais o Ranking IA semanal.</p>
             </details>
             <details>
               <summary>Posso cancelar?</summary>
@@ -201,24 +203,10 @@ function NewsletterPage() {
             </details>
           </div>
 
-          <section
-            className="biz-band"
-            style={{ marginBlock: "56px 64px" }}
-            aria-labelledby="final-title"
-          >
+          <section className="nl2-final" aria-labelledby="final-title">
+            <h3 id="final-title">Comece amanhã às 7h</h3>
             <div>
-              <p className="kick" style={{ marginBottom: 8 }}>
-                Newsletter IANews
-              </p>
-              <h3 id="final-title">Comece amanhã às 7h</h3>
-              <p>Seu próximo dia começa com as notícias que ajudam a decidir.</p>
-            </div>
-            <div style={{ width: "min(440px, 100%)" }}>
-              <NewsletterForm
-                placement="newsletter-footer"
-                loadedAt={loadedAt}
-                button="Quero receber"
-              />
+              <PortalSubscribeForm placement="newsletter-footer" button="Quero receber" />
             </div>
           </section>
         </div>

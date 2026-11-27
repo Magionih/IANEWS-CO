@@ -270,3 +270,32 @@ export const unsubscribeLead = createServerFn({ method: "POST" })
     const { unsubscribeByToken } = await import("@/lib/newsletter.server");
     return unsubscribeByToken(String(data.token ?? "").trim());
   });
+
+export const PERFIS_LEAD = [
+  { value: "empresario", label: "Dono(a) de empresa" },
+  { value: "executivo", label: "Executivo(a) ou gestor(a)" },
+  { value: "profissional", label: "Profissional que usa IA" },
+  { value: "fornecedor", label: "Vendo ou implemento IA" },
+  { value: "investidor", label: "Investidor(a)" },
+  { value: "estudante", label: "Estudante" },
+] as const;
+
+/** Qualificação opcional logo depois de assinar (vale 1 vez, na primeira hora do cadastro). */
+export const saveLeadPerfil = createServerFn({ method: "POST" })
+  .inputValidator((input: { email: string; perfil: string }) => ({
+    email: String(input?.email ?? "")
+      .trim()
+      .toLowerCase()
+      .slice(0, 255),
+    perfil: String(input?.perfil ?? "").slice(0, 20),
+  }))
+  .handler(async ({ data }) => {
+    if (!EMAIL_RE.test(data.email)) return { ok: false };
+    if (!PERFIS_LEAD.some((p) => p.value === data.perfil)) return { ok: false };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ok } = await supabaseAdmin.rpc(
+      "lead_definir_perfil" as never,
+      { p_email: data.email, p_perfil: data.perfil } as never,
+    );
+    return { ok: ok === true };
+  });
