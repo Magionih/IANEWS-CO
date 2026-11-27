@@ -7,7 +7,7 @@ import {
   Brain,
   Calculator,
   Check,
-  ChevronRight,
+  Building2,
   GitCompare,
   Scale,
   Search,
@@ -68,7 +68,7 @@ const str = (v: unknown, def: string) =>
   typeof v === "string" && v !== "" && v !== def ? v : undefined;
 
 /** Quantas plataformas aparecem antes do botão "Ver todas". */
-const FIRST_ROWS = 20;
+const FIRST_ROWS = 10;
 /** Teto da lista completa (mantido do comportamento anterior). */
 const MAX_ROWS = 50;
 
@@ -238,8 +238,12 @@ function RankingPage() {
       .sort((a, b) => scoreFor(b, activeArea) - scoreFor(a, activeArea));
   }, [tools, activeArea, activeCat, activeMaker, q]);
 
-  const allCount = Math.min(filtered.length, MAX_ROWS);
-  const visible = all ? filtered.slice(0, MAX_ROWS) : filtered.slice(0, FIRST_ROWS);
+  // Começa com 10; "Ver mais" mostra de 10 em 10.
+  const [shown, setShown] = useState(FIRST_ROWS);
+  useEffect(() => setShown(FIRST_ROWS), [activeArea, activeCat, activeMaker, q]);
+  const limit = all ? MAX_ROWS : Math.min(shown, MAX_ROWS);
+  const visible = filtered.slice(0, limit);
+  const restantes = Math.min(filtered.length, MAX_ROWS) - visible.length;
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -439,13 +443,14 @@ function RankingPage() {
                   <h2 id="rkx-lead-h">Os melhores por categoria</h2>
                   <p className="lede">{activeLabel}</p>
                 </div>
-                <div className="rkx-best">
-                  {leaders.map(({ key, label, tool, count, next }) => (
+                <div className="rkx-best2">
+                  {leaders.map(({ key, label, tool, count }) => (
                     <button
                       key={key}
                       type="button"
-                      className={"rkx-bcard" + (activeCat === key ? " on" : "")}
+                      className={"rkx-bc" + (activeCat === key ? " on" : "")}
                       aria-pressed={activeCat === key}
+                      title={`Ver as ${count} plataformas de ${label}`}
                       onClick={() => {
                         setSearch({ cat: activeCat === key ? "todas" : key });
                         document
@@ -453,30 +458,13 @@ function RankingPage() {
                           ?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }}
                     >
-                      <span className="rkx-bcat">
-                        {label}
-                        <i>{count}</i>
-                      </span>
-                      <span className="rkx-bwho">
-                        <RankLogo m={tool} className="rkx-blogo" />
-                        <span>
-                          <b>{tool.name}</b>
-                          <small>{tool.maker}</small>
+                      <span className="rkx-bc-cat">{label}</span>
+                      <span className="rkx-bc-row">
+                        <RankLogo m={tool} />
+                        <b>{tool.name}</b>
+                        <span className="rkx-bc-sc num">
+                          {fmtScore(scoreFor(tool, activeArea))}
                         </span>
-                      </span>
-                      <span className="rkx-bsc num">
-                        {fmtScore(scoreFor(tool, activeArea))}
-                        <small>/10</small>
-                      </span>
-                      <span className="rkx-bnext">
-                        {next.map((n, i) => (
-                          <span key={n.id} title={`${i + 2}º ${n.name}`}>
-                            <RankLogo m={n} />
-                          </span>
-                        ))}
-                        <em>
-                          Ver {count} <ChevronRight aria-hidden="true" />
-                        </em>
                       </span>
                     </button>
                   ))}
@@ -485,15 +473,19 @@ function RankingPage() {
             ) : null}
 
             {movers.length ? (
-              <section className="rkx-movers" aria-label="Quem mais subiu desde ontem">
-                <span className="rkx-mv-t">▲ Subiram desde ontem</span>
-                {movers.map(({ tool, delta }) => (
-                  <button key={tool.id} type="button" onClick={() => setSelected(tool)}>
-                    <RankLogo m={tool} />
-                    <b>{tool.name}</b>
-                    <i>+{delta}</i>
-                  </button>
-                ))}
+              <section className="rkx-mv2" aria-label="Quem mais subiu desde ontem">
+                <span className="rkx-mv2-t">Subiram desde ontem</span>
+                <ul>
+                  {movers.map(({ tool, delta }) => (
+                    <li key={tool.id}>
+                      <button type="button" onClick={() => setSelected(tool)}>
+                        <RankLogo m={tool} />
+                        <span>{tool.name}</span>
+                        <i className="num">▲ {delta}</i>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </section>
             ) : null}
 
@@ -522,26 +514,26 @@ function RankingPage() {
                   </button>
                 ))}
               </div>
-              <div className="rkx-tools">
-                <label className="filter-q rkx-q">
-                  <Search className="ico" aria-hidden="true" />
+              <div className="rkx-bar2">
+                <label className="rkx-q2">
+                  <Search aria-hidden="true" />
                   <input
                     type="search"
                     value={q}
                     onChange={(e) => setSearch({ q: e.target.value })}
-                    placeholder="Buscar plataforma ou fabricante"
-                    aria-label="Buscar plataforma ou fabricante"
+                    placeholder="Buscar plataforma"
+                    aria-label="Buscar plataforma ou empresa"
                     autoComplete="off"
                   />
                 </label>
-                <label className="rkx-sel">
-                  <span>Fabricante</span>
+                <label className="rkx-sel2">
+                  <Building2 aria-hidden="true" />
                   <select
-                    aria-label="Fabricante"
+                    aria-label="Empresa que criou a plataforma"
                     value={activeMaker}
                     onChange={(e) => setSearch({ maker: e.target.value })}
                   >
-                    <option value="todos">Todos</option>
+                    <option value="todos">Todas as empresas</option>
                     {makers.map((m) => (
                       <option key={m} value={m}>
                         {m}
@@ -648,12 +640,31 @@ function RankingPage() {
               </p>
             ) : null}
 
-            {filtered.length > FIRST_ROWS ? (
+            {restantes > 0 ? (
               <div className="load-more">
-                <button className="btn line" type="button" onClick={() => setSearch({ all: !all })}>
-                  {all
-                    ? `Mostrar só as ${FIRST_ROWS} primeiras`
-                    : `Ver todas as ${allCount} plataformas`}
+                <button
+                  className="btn line"
+                  type="button"
+                  onClick={() => setShown((n) => n + FIRST_ROWS)}
+                >
+                  Ver mais {Math.min(FIRST_ROWS, restantes)} plataformas
+                  <span className="rkx-rest"> · faltam {restantes}</span>
+                </button>
+              </div>
+            ) : visible.length > FIRST_ROWS ? (
+              <div className="load-more">
+                <button
+                  className="btn line"
+                  type="button"
+                  onClick={() => {
+                    setShown(FIRST_ROWS);
+                    if (all) setSearch({ all: undefined });
+                    document
+                      .getElementById("classificacao")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  Mostrar só as {FIRST_ROWS} primeiras
                 </button>
               </div>
             ) : null}

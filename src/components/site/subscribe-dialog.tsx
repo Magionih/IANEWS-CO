@@ -6,34 +6,55 @@ import { PerfilStep, PortalSubscribeForm } from "@/components/site/portal-subscr
 
 /* Pop-up de newsletter no design do IANews Portal (central no desktop, folha inferior no celular).
    Fecha de todas as formas: X, "Agora não", Esc, toque fora, arrastar para baixo e troca de página.
-   Quem fecha não vê pop-up automático de novo por 3 dias. */
+   Depois de fechar, o próximo pop-up automático só aparece depois de um intervalo; quem fecha
+   muitos seguidos fica um tempo sem pop-ups automáticos. */
 
 let open = false;
 let placement = "generico";
 const listeners = new Set<() => void>();
 let goToSubscribePage: ((from: string) => void) | null = null;
 
-const DISMISS_KEY = "ianews_pop_dismissed_at";
-const DISMISS_DAYS = 3;
+const DISMISS_KEY = "ianews_pop_dispensas";
+/** Intervalo mínimo depois de fechar um pop-up. */
+const COOLDOWN_MS = 90_000;
+/** Quem fecha 4 pop-ups em 24 horas fica 12 horas sem pop-up automático. */
+const CANSADO_QTD = 4;
+const CANSADO_MS = 12 * 3600 * 1000;
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
-/** Marca que a pessoa dispensou um pop-up: nenhum pop-up automático aparece por alguns dias. */
+function lerDispensas(): number[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(DISMISS_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((n) => typeof n === "number") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Marca que a pessoa dispensou um pop-up. */
 export function markPopupDismissed() {
   try {
-    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    const dia = Date.now() - 24 * 3600 * 1000;
+    const lista = [...lerDispensas().filter((t) => t > dia), Date.now()].slice(-10);
+    localStorage.setItem(DISMISS_KEY, JSON.stringify(lista));
   } catch {
     /* ignore */
   }
 }
 
-/** true quando um pop-up automático ainda está em "silêncio" depois de ser dispensado. */
+/** true quando um pop-up automático deve esperar: logo depois de fechar, ou após muitas recusas. */
 export function popupSnoozed(): boolean {
   try {
-    const at = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
-    return Date.now() - at < DISMISS_DAYS * 24 * 3600 * 1000;
+    const agora = Date.now();
+    const lista = lerDispensas();
+    const ultima = lista[lista.length - 1] ?? 0;
+    if (agora - ultima < COOLDOWN_MS) return true;
+    const recentes = lista.filter((t) => agora - t < 24 * 3600 * 1000);
+    if (recentes.length >= CANSADO_QTD && agora - ultima < CANSADO_MS) return true;
+    return false;
   } catch {
     return true;
   }

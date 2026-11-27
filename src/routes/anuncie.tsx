@@ -35,30 +35,26 @@ export const Route = createFileRoute("/anuncie")({
   component: AnunciePage,
 });
 
+/* Os valores não ficam públicos: vão no mídia kit, depois do contato. */
 const FORMATS = [
   {
     nome: "Destaque",
-    preco: "R$ 350",
-    periodo: "avulso",
+    tipo: "Ação pontual",
     text: "Matéria exclusiva de destaque no portal, capa em collab no Instagram e link nos stories.",
-    nota: "Bom para começar",
   },
   {
     nome: "Presença",
-    preco: "R$ 1.050",
-    periodo: "por 1 mês",
+    tipo: "1 mês",
     text: "Matéria de destaque com carrossel em collab, 1 Reels e 1 sequência de stories com link.",
   },
   {
     nome: "Autoridade",
-    preco: "R$ 2.490",
-    periodo: "por mês",
+    tipo: "Mensal",
     text: "Carrossel em collab, 3 Reels, 2 posts no feed e 4 sequências de stories, nos 7 canais.",
   },
   {
     nome: "Patrocínio",
-    preco: "R$ 5.900",
-    periodo: "por mês",
+    tipo: "Mensal",
     text: "Série “apresentada por” a sua marca, exclusividade de categoria e edição dedicada da newsletter.",
   },
 ];
@@ -110,7 +106,7 @@ const EMPTY = { name: "", email: "", phone: "", company: "", fat: "", message: "
 
 function AnunciePage() {
   const [form, setForm] = useState(EMPTY);
-  const [goals, setGoals] = useState<string[]>([]);
+  const [goal, setGoal] = useState("");
   const [formato, setFormato] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -136,7 +132,7 @@ function AnunciePage() {
     try {
       const eventId = novoEventId("anuncie");
       const message = [
-        `Objetivo: ${goals.length ? goals.join(", ") : "Não informado"}`,
+        `Objetivo: ${goal || "Não informado"}`,
         `Formato de interesse: ${formato || "Não definido"}`,
         `Faturamento anual: ${form.fat || "Não informado"}`,
         "",
@@ -165,7 +161,7 @@ function AnunciePage() {
       trackCta({ event: "convert", placement: "anuncie-form", variant: formato || "sem-formato" });
       setDone(true);
       setForm(EMPTY);
-      setGoals([]);
+      setGoal("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível enviar agora.");
     } finally {
@@ -308,56 +304,57 @@ function AnunciePage() {
 
                   <fieldset>
                     <legend className="step-l">
-                      <i>2</i>Faturamento anual da empresa
+                      <i>2</i>Sobre a campanha
                     </legend>
-                    <div className="an2-seg">
-                      {FATURAMENTO.map((f) => (
-                        <label key={f}>
-                          <input
-                            type="radio"
-                            name="faturamento"
-                            value={f}
-                            checked={form.fat === f}
-                            onChange={() => set("fat", f)}
-                          />
-                          <span>{f}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-
-                  <fieldset>
-                    <legend className="step-l">
-                      <i>3</i>Objetivo <small>Marque um ou mais</small>
-                    </legend>
-                    <div className="an2-goals">
-                      {OBJETIVOS.map((g) => (
-                        <label key={g}>
-                          <input
-                            type="checkbox"
-                            checked={goals.includes(g)}
-                            onChange={(e) =>
-                              setGoals((prev) =>
-                                e.target.checked ? [...prev, g] : prev.filter((x) => x !== g),
-                              )
-                            }
-                          />
-                          <span>{g}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <div className="an2-fmt">
-                      <span>Formato:</span>
-                      {["Ainda não sei", ...FORMATS.map((f) => f.nome)].map((f) => (
-                        <button
-                          key={f}
-                          type="button"
-                          className={(formato || "Ainda não sei") === f ? "on" : undefined}
-                          onClick={() => setFormato(f === "Ainda não sei" ? "" : f)}
+                    <div className="an2-sels">
+                      <label className="f" htmlFor="an-fat">
+                        Faturamento anual da empresa
+                        <select
+                          id="an-fat"
+                          className="field an2-select"
+                          value={form.fat}
+                          onChange={(e) => set("fat", e.target.value)}
                         >
-                          {f}
-                        </button>
-                      ))}
+                          <option value="">Selecione a faixa</option>
+                          {FATURAMENTO.map((f) => (
+                            <option key={f} value={f}>
+                              {f}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="f" htmlFor="an-goal">
+                        Objetivo principal
+                        <select
+                          id="an-goal"
+                          className="field an2-select"
+                          value={goal}
+                          onChange={(e) => setGoal(e.target.value)}
+                        >
+                          <option value="">Selecione o objetivo</option>
+                          {OBJETIVOS.map((g) => (
+                            <option key={g} value={g}>
+                              {g}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="f full" htmlFor="an-fmt">
+                        Formato de interesse
+                        <select
+                          id="an-fmt"
+                          className="field an2-select"
+                          value={formato}
+                          onChange={(e) => setFormato(e.target.value)}
+                        >
+                          <option value="">Ainda não sei, quero uma recomendação</option>
+                          {FORMATS.map((f) => (
+                            <option key={f.nome} value={f.nome}>
+                              {f.nome} · {f.tipo}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
                     <label className="f" htmlFor="message" style={{ marginTop: 12 }}>
                       <span>
@@ -395,22 +392,20 @@ function AnunciePage() {
           <section className="pt-sec" aria-labelledby="an2-fm">
             <div className="sec-head">
               <h2 id="an2-fm">Formatos</h2>
-              <p className="lede">Conteúdo em collab nos canais da IA News</p>
+              <p className="lede">Valores e vagas do mês vão no mídia kit</p>
             </div>
             <div className="an2-plans">
               {FORMATS.map((f) => (
                 <div key={f.nome} className={"an2-plan" + (formato === f.nome ? " on" : "")}>
-                  <span className="an2-pn">{f.nome}</span>
-                  <b className="num">{f.preco}</b>
-                  <span className="an2-pp">{f.periodo}</span>
+                  <span className="an2-pn">{f.tipo}</span>
+                  <b>{f.nome}</b>
                   <p>{f.text}</p>
-                  {f.nota ? <em>{f.nota}</em> : null}
                   <button
                     type="button"
                     className="btn line s"
                     onClick={() => escolherFormato(f.nome)}
                   >
-                    Quero este
+                    Solicitar proposta
                   </button>
                 </div>
               ))}

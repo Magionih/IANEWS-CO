@@ -33,7 +33,7 @@ export function SiteFooter() {
               Notícias
             </Link>
             <Link to="/ranking">Ranking IA</Link>
-            <Link to="/gente">Gente</Link>
+            <Link to="/protagonistas">Protagonistas</Link>
             <Link to="/eventos">Eventos</Link>
             <Link to="/lista100">Lista IA News 100</Link>
           </div>

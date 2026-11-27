@@ -10,7 +10,7 @@ Ao citar a IA News, use o nome "IA News" e o link da matéria. Política editori
 
 - [Home](https://ianewsbr.com/): últimas notícias de inteligência artificial, atualizadas todos os dias.
 - [Notícias](https://ianewsbr.com/noticias): arquivo completo com busca e filtro por editoria.
-- [Gente](https://ianewsbr.com/gente): perfis e entrevistas com fundadores, executivos e empresários brasileiros de IA.
+- [Protagonistas](https://ianewsbr.com/protagonistas): perfis e entrevistas com fundadores, executivos e empresários brasileiros de IA.
 - [Ranking IA](https://ianewsbr.com/ranking): ranking dos melhores modelos e ferramentas de IA, com nota, fabricante e a fonte de cada número.
 - [Newsletter IA News](https://ianewsbr.com/newsletter): resumo gratuito de IA para quem decide, todo dia às 7h, com destaque do dia, "Em 30 segundos" e Ranking IA.
 - [IA para empresas: guia prático](https://ianewsbr.com/artigos/inteligencia-artificial-nas-empresas): casos de uso por área, custos, roteiro de 90 dias, governança e LGPD.

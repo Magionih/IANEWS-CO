@@ -49,7 +49,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/selo", changefreq: "yearly", priority: "0.4" },
           { path: "/autor/henrique-magioni", changefreq: "weekly", priority: "0.6" },
           { path: "/pauta", changefreq: "monthly", priority: "0.7" },
-          { path: "/gente", changefreq: "daily", priority: "0.8" },
+          { path: "/protagonistas", changefreq: "daily", priority: "0.8" },
           { path: "/empresas", changefreq: "monthly", priority: "0.6" },
           { path: "/lista100", changefreq: "weekly", priority: "0.7" },
           { path: "/lista100/criterios", changefreq: "monthly", priority: "0.5" },

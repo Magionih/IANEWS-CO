@@ -23,7 +23,16 @@ export type ArticleRow = {
   author: string | null;
   read_minutes: number | null;
   published_at: string;
+  cover_w?: number | null;
+  cover_h?: number | null;
 };
+
+/** Capa boa para espaços grandes: horizontal e com resolução suficiente (ou ainda não medida). */
+export function capaBoa(a: Pick<ArticleRow, "cover_image_url" | "cover_w" | "cover_h">): boolean {
+  if (!a.cover_image_url) return false;
+  if (!a.cover_w || !a.cover_h) return true;
+  return a.cover_w >= 800 && a.cover_w >= a.cover_h * 1.15;
+}
 
 export type ArticleFull = ArticleRow & {
   body_top_html?: string;
@@ -209,5 +218,22 @@ export const listEmAlta = createServerFn({ method: "GET" }).handler(
       return (most ?? []) as DestaqueRow[];
     }
     return data as DestaqueRow[];
+  },
+);
+
+/** Matérias recentes para a home (mais itens e com as medidas da capa). */
+export const listHomeArticles = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ArticleRow[]> => {
+    const supabase = await serverClient();
+    const { data, error } = await supabase
+      .from("articles")
+      .select(`${HOME_COLS}, cover_w, cover_h`)
+      .order("published_at", { ascending: false })
+      .limit(60);
+    if (error) {
+      console.error("[articles] home list error", error);
+      return [];
+    }
+    return (data ?? []) as ArticleRow[];
   },
 );

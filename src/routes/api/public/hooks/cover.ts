@@ -9,9 +9,15 @@ async function handle(request: Request) {
   const denied = await cronUnauthorized(request);
   if (denied) return denied;
   const body = await readJson<
-    { items: CoverRequest[]; rehost_all: boolean; fill_missing: boolean } & CoverRequest
+    { items: CoverRequest[]; rehost_all: boolean; fill_missing: boolean; measure_all: boolean } & CoverRequest
   >(request);
-  const { saveCover, isOwnCover } = await import("@/lib/covers.server");
+  const { saveCover, isOwnCover, measureCovers } = await import("@/lib/covers.server");
+
+  // Mede largura e altura das capas já gravadas (usado para só destacar fotos boas na home).
+  if (body.measure_all === true) {
+    const r = await measureCovers(600);
+    return Response.json({ ok: true, ...r });
+  }
 
   let items: CoverRequest[] = [];
   if (Array.isArray(body.items)) items = body.items;

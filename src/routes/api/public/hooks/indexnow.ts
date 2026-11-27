@@ -15,7 +15,7 @@ const PAGES = [
   "/",
   "/noticias",
   "/ranking",
-  "/gente",
+  "/protagonistas",
   "/eventos",
   "/palco",
   "/aula",

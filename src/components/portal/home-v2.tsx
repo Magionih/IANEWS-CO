@@ -6,8 +6,7 @@ import { coverObjectPosition } from "@/lib/cover-position";
 import { coverImg, isResizable } from "@/lib/img";
 import { useCtaImpression } from "@/hooks/use-cta-impression";
 import { trackCta } from "@/lib/cta-tracking";
-import { PortalSubscribeForm, useSubscribed } from "@/components/site/portal-subscribe";
-import { RankLogo, TrendBadge, fmtScore } from "@/components/portal/rank-shared";
+import { RankLogo, fmtScore } from "@/components/portal/rank-shared";
 import type { AiTool } from "@/lib/ai-ranking.functions";
 import type { DestaqueRow } from "@/lib/articles.functions";
 
@@ -75,13 +74,13 @@ function Img({
 }
 
 /* ---------- Destaques: carrossel das pessoas/empresas em evidência + Em alta ---------- */
-const ROTATE_MS = 7000;
+/** O carrossel de destaques troca sozinho, sempre, a cada 3 segundos. */
+const ROTATE_MS = 3000;
 
 export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta: DestaqueRow[] }) {
   const track = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
-  const [paused, setPaused] = useState(false);
   const n = items.length;
 
   const go = useCallback(
@@ -89,7 +88,8 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
       const el = track.current;
       if (!el || n === 0) return;
       const next = ((i % n) + n) % n;
-      el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+      const calmo = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      el.scrollTo({ left: next * el.clientWidth, behavior: calmo ? "auto" : "smooth" });
       setIdx(next);
     },
     [n],
@@ -119,14 +119,14 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
     r.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [idx]);
 
+  // Passa sozinho o tempo inteiro: cada destaque fica 3 segundos (também depois de um clique).
   useEffect(() => {
-    if (paused || n < 2) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => {
+    if (n < 2) return;
+    const id = setTimeout(() => {
       if (document.visibilityState === "visible") go(idx + 1);
     }, ROTATE_MS);
-    return () => clearInterval(id);
-  }, [paused, n, idx, go]);
+    return () => clearTimeout(id);
+  }, [n, idx, go]);
 
   if (n === 0 && emAlta.length === 0) return null;
   const alta = emAlta.slice(0, 5);
@@ -136,15 +136,7 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
       <h1 className="sr-only">IA News: notícias de inteligência artificial para quem decide</h1>
       <div className="v2-top-grid">
         {n > 0 ? (
-          <div
-            className="v2-dq"
-            aria-roledescription="carrossel"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onFocusCapture={() => setPaused(true)}
-            onBlurCapture={() => setPaused(false)}
-            onTouchStart={() => setPaused(true)}
-          >
+          <div className="v2-dq" aria-roledescription="carrossel">
             <div className="v2-head">
               <h2 id="v2-top-h">
                 <span className="v2-live" aria-hidden="true" />
@@ -307,7 +299,6 @@ const ATALHOS = [
 ] as const;
 
 export function HomeRankingV2({ tools }: { tools: AiTool[] }) {
-  const subscribed = useSubscribed();
   const ref = useCtaImpression("home-ranking", "assistentes");
   const chat = [...tools]
     .filter((t) => t.category === "chat")
@@ -329,34 +320,21 @@ export function HomeRankingV2({ tools }: { tools: AiTool[] }) {
           Ver as {tools.length} plataformas →
         </Link>
       </div>
-      <div className="v2-rk">
-        <div className="v2-rk-intro">
-          <h3>Qual assistente de IA está melhor hoje?</h3>
-          <p>
-            Gemini, ChatGPT, Claude, Grok e cia. com nota de 0 a 10, recalculada todo dia com
-            desempenho técnico, repercussão e a avaliação dos leitores.
-          </p>
-        </div>
-        <ol className="v2-rk-grid">
+      <div className="v2-rk2">
+        <p className="v2-rk2-t">
+          <b>Os assistentes de IA mais bem avaliados hoje.</b> Nota de 0 a 10, atualizada todo dia.
+        </p>
+        <ol className="v2-rk2-list">
           {chat.map((t, i) => (
             <li key={t.id}>
-              <Link
-                to="/ranking"
-                search={{ cat: "chat" }}
-                className={"v2-rk-card" + (i === 0 ? " top" : "")}
-              >
-                <span className="v2-rk-pos num">{i + 1}º</span>
-                <RankLogo m={t} className="v2-rk-logo" />
-                <b className="v2-rk-nm">{t.name}</b>
-                <span className="v2-rk-mk">{t.maker}</span>
-                <span className="v2-rk-sc num">
-                  {fmtScore(t.weekly_score)}
-                  <small>/10</small>
+              <Link to="/ranking" search={{ cat: "chat" }} className="v2-rk2-row">
+                <span className="v2-rk2-pos num">{i + 1}</span>
+                <RankLogo m={t} className="v2-rk2-logo" />
+                <span className="v2-rk2-nm">
+                  <b>{t.name}</b>
+                  <small>{t.maker}</small>
                 </span>
-                <span className="v2-rk-bar" aria-hidden="true">
-                  <i style={{ width: `${Math.max(0, Math.min(100, t.weekly_score * 10))}%` }} />
-                </span>
-                <TrendBadge tool={t} />
+                <span className="v2-rk2-sc num">{fmtScore(t.weekly_score)}</span>
               </Link>
             </li>
           ))}
@@ -373,14 +351,6 @@ export function HomeRankingV2({ tools }: { tools: AiTool[] }) {
                 </span>
               </Link>
             ))}
-          </div>
-        ) : null}
-        {!subscribed ? (
-          <div className="v2-rk-nl">
-            <p>
-              <b>Ranking IA toda segunda no seu e-mail.</b> Quem subiu, quem caiu e o que mudou.
-            </p>
-            <PortalSubscribeForm placement="home-ranking" button="Quero receber" />
           </div>
         ) : null}
       </div>
@@ -415,7 +385,14 @@ export function HomeParticipeV2() {
       <div className="v2-pq-grid">
         <Link to="/pauta" className="v2-pq-card" onClick={click("pauta")}>
           <span className="v2-pq-img">
-            <img src={AMANDA} alt="" loading="lazy" width={480} height={300} />
+            <img
+              src={AMANDA}
+              alt=""
+              loading="lazy"
+              width={480}
+              height={300}
+              style={{ objectPosition: "50% 14%" }}
+            />
             <em>Gratuito</em>
           </span>
           <span className="v2-pq-body">
@@ -463,7 +440,7 @@ export function HomeParticipeV2() {
 }
 
 /* ---------- Chamadas entre as seções ---------- */
-export function HomeCta({ kind }: { kind: "pauta" | "eventos" | "gente" | "anuncie" }) {
+export function HomeCta({ kind }: { kind: "pauta" | "eventos" | "protagonistas" | "anuncie" }) {
   const ref = useCtaImpression("home-cta", kind);
   const onClick = () => trackCta({ event: "click", placement: "home-cta", variant: kind });
   if (kind === "pauta")
@@ -481,7 +458,7 @@ export function HomeCta({ kind }: { kind: "pauta" | "eventos" | "gente" | "anunc
         </Link>
       </div>
     );
-  if (kind === "gente")
+  if (kind === "protagonistas")
     return (
       <div className="v2-cta soft" ref={ref}>
         <span className="v2-cta-faces" aria-hidden="true">
@@ -490,10 +467,10 @@ export function HomeCta({ kind }: { kind: "pauta" | "eventos" | "gente" | "anunc
           ))}
         </span>
         <p>
-          <b>Gente: quem faz a IA no Brasil.</b> Perfis de fundadores, executivos e criadores que
-          estão colocando IA para rodar.
+          <b>Protagonistas: quem faz a IA acontecer no Brasil.</b> Perfis de fundadores, executivos
+          e criadores que estão colocando IA para rodar.
         </p>
-        <Link to="/gente" className="btn line s" onClick={onClick}>
+        <Link to="/protagonistas" className="btn line s" onClick={onClick}>
           Conhecer
         </Link>
       </div>

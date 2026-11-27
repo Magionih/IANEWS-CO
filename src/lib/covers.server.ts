@@ -27,6 +27,95 @@ export type CoverRequest = {
 
 export type CoverResult = { slug: string; ok: boolean; url?: string; error?: string; from?: string };
 
+/** Largura mínima aceita para capa: abaixo disso a imagem fica borrada no site. */
+const MIN_WIDTH = 600;
+
+/** Largura e altura lidas do cabeçalho do arquivo (JPEG, PNG, WebP, GIF), sem decodificar a imagem. */
+export function imageSize(buf: Buffer): { w: number; h: number } | null {
+  try {
+    if (buf.length >= 24 && buf.readUInt32BE(0) === 0x89504e47) {
+      return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+    }
+    if (buf.length >= 10 && buf.toString("ascii", 0, 4) === "GIF8") {
+      return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) };
+    }
+    if (buf.length >= 30 && buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP") {
+      const chunk = buf.toString("ascii", 12, 16);
+      if (chunk === "VP8 ") return { w: buf.readUInt16LE(26) & 0x3fff, h: buf.readUInt16LE(28) & 0x3fff };
+      if (chunk === "VP8L") {
+        const b0 = buf[21]!, b1 = buf[22]!, b2 = buf[23]!, b3 = buf[24]!;
+        return { w: 1 + (((b1 & 0x3f) << 8) | b0), h: 1 + (((b3 & 0xf) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6)) };
+      }
+      if (chunk === "VP8X") return { w: 1 + buf.readUIntLE(24, 3), h: 1 + buf.readUIntLE(27, 3) };
+      return null;
+    }
+    if (buf.length >= 4 && buf[0] === 0xff && buf[1] === 0xd8) {
+      let i = 2;
+      while (i + 9 < buf.length) {
+        if (buf[i] !== 0xff) {
+          i++;
+          continue;
+        }
+        const m = buf[i + 1]!;
+        if (m === 0xff) {
+          i++;
+          continue;
+        }
+        if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) {
+          i += 2;
+          continue;
+        }
+        const len = buf.readUInt16BE(i + 2);
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+          return { w: buf.readUInt16BE(i + 7), h: buf.readUInt16BE(i + 5) };
+        }
+        i += 2 + len;
+      }
+    }
+  } catch {
+    /* arquivo truncado ou formato desconhecido */
+  }
+  return null;
+}
+
+/** Mede as capas que ainda não têm largura e altura gravadas (lê só o começo de cada arquivo). */
+export async function measureCovers(limit = 500): Promise<{ medidas: number; falhas: number }> {
+  const { data } = await supabaseAdmin
+    .from("articles")
+    .select("id, cover_image_url")
+    .not("cover_image_url", "is", null)
+    .is("cover_w" as never, null)
+    .limit(limit);
+  const rows = (data ?? []) as { id: string; cover_image_url: string }[];
+  let medidas = 0;
+  let falhas = 0;
+  const fila = [...rows];
+  async function worker() {
+    for (let r = fila.shift(); r; r = fila.shift()) {
+      try {
+        let res = await fetch(r.cover_image_url, { headers: { Range: "bytes=0-196607", "User-Agent": UA } });
+        let buf = Buffer.from(await res.arrayBuffer());
+        let size = imageSize(buf);
+        if (!size && buf.length >= 196000) {
+          res = await fetch(r.cover_image_url, { headers: { "User-Agent": UA } });
+          buf = Buffer.from(await res.arrayBuffer());
+          size = imageSize(buf);
+        }
+        if (!size) throw new Error("sem medida");
+        await supabaseAdmin
+          .from("articles")
+          .update({ cover_w: size.w, cover_h: size.h } as never)
+          .eq("id", r.id);
+        medidas++;
+      } catch {
+        falhas++;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: 8 }, worker));
+  return { medidas, falhas };
+}
+
 function isHttps(u: string | null | undefined): u is string {
   return !!u && /^https:\/\//i.test(u);
 }
@@ -147,13 +236,19 @@ export async function saveCover(req: CoverRequest): Promise<CoverResult> {
     try {
       const pre = c as { buf?: Buffer; type?: string };
       const { buf, type } = pre.buf ? { buf: pre.buf, type: pre.type! } : await download(c.url, c.referer);
+      const size = imageSize(buf);
+      if (size && size.w < MIN_WIDTH) throw new Error(`imagem pequena demais (${size.w}x${size.h})`);
       const hash = createHash("sha1").update(buf).digest("hex").slice(0, 12);
       const path = `${slug}/${hash}.${EXT[type] ?? "jpg"}`;
       const up = await supabaseAdmin.storage.from(BUCKET).upload(path, buf, { contentType: type, upsert: true, cacheControl: "31536000" });
       if (up.error) throw new Error(`storage: ${up.error.message}`);
       const publicUrl = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
-      const patch: Record<string, unknown> = { cover_image_url: publicUrl };
+      const patch: Record<string, unknown> = {
+        cover_image_url: publicUrl,
+        cover_w: size?.w ?? null,
+        cover_h: size?.h ?? null,
+      };
       if (req.credit) {
         const sources = Array.isArray(row.sources) ? (row.sources as Record<string, unknown>[]) : [];
         const others = sources.filter((s) => s?.kind !== "foto");

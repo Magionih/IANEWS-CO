@@ -35,6 +35,7 @@ import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as PalcoRouteImport } from './routes/palco'
 import { Route as PautaRouteImport } from './routes/pauta'
 import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as ProtagonistasRouteImport } from './routes/protagonistas'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as SeloRouteImport } from './routes/selo'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -219,6 +220,11 @@ const PautaRoute = PautaRouteImport.update({
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtagonistasRoute = ProtagonistasRouteImport.update({
+  id: '/protagonistas',
+  path: '/protagonistas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RankingRoute = RankingRouteImport.update({
@@ -541,6 +547,7 @@ export interface FileRoutesByFullPath {
   '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
   '/projetos': typeof ProjetosRoute
+  '/protagonistas': typeof ProtagonistasRoute
   '/ranking': typeof RankingRoute
   '/selo': typeof SeloRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -624,6 +631,7 @@ export interface FileRoutesByTo {
   '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
   '/projetos': typeof ProjetosRoute
+  '/protagonistas': typeof ProtagonistasRoute
   '/ranking': typeof RankingRoute
   '/selo': typeof SeloRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -709,6 +717,7 @@ export interface FileRoutesById {
   '/palco': typeof PalcoRoute
   '/pauta': typeof PautaRoute
   '/projetos': typeof ProjetosRoute
+  '/protagonistas': typeof ProtagonistasRoute
   '/ranking': typeof RankingRoute
   '/selo': typeof SeloRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -794,6 +803,7 @@ export interface FileRouteTypes {
     | '/palco'
     | '/pauta'
     | '/projetos'
+    | '/protagonistas'
     | '/ranking'
     | '/selo'
     | '/sitemap.xml'
@@ -877,6 +887,7 @@ export interface FileRouteTypes {
     | '/palco'
     | '/pauta'
     | '/projetos'
+    | '/protagonistas'
     | '/ranking'
     | '/selo'
     | '/sitemap.xml'
@@ -961,6 +972,7 @@ export interface FileRouteTypes {
     | '/palco'
     | '/pauta'
     | '/projetos'
+    | '/protagonistas'
     | '/ranking'
     | '/selo'
     | '/sitemap.xml'
@@ -1046,6 +1058,7 @@ export interface RootRouteChildren {
   PalcoRoute: typeof PalcoRoute
   PautaRoute: typeof PautaRoute
   ProjetosRoute: typeof ProjetosRoute
+  ProtagonistasRoute: typeof ProtagonistasRoute
   RankingRoute: typeof RankingRoute
   SeloRoute: typeof SeloRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -1284,6 +1297,13 @@ declare module '@tanstack/react-router' {
       path: '/projetos'
       fullPath: '/projetos'
       preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protagonistas': {
+      id: '/protagonistas'
+      path: '/protagonistas'
+      fullPath: '/protagonistas'
+      preLoaderRoute: typeof ProtagonistasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ranking': {
@@ -1721,6 +1741,7 @@ const rootRouteChildren: RootRouteChildren = {
   PalcoRoute: PalcoRoute,
   PautaRoute: PautaRoute,
   ProjetosRoute: ProjetosRoute,
+  ProtagonistasRoute: ProtagonistasRoute,
   RankingRoute: RankingRoute,
   SeloRoute: SeloRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

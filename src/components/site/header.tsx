@@ -185,8 +185,8 @@ export function SiteHeader() {
             <Link to="/ranking" aria-current={cur("/ranking")}>
               Ranking IA
             </Link>
-            <Link to="/gente" aria-current={cur("/gente")}>
-              Gente
+            <Link to="/protagonistas" aria-current={cur("/protagonistas")}>
+              Protagonistas
             </Link>
             <Link to="/eventos" aria-current={cur("/eventos")}>
               Eventos
@@ -251,8 +251,8 @@ export function SiteHeader() {
               <Link className="m" to="/ranking" aria-current={cur("/ranking")}>
                 Ranking IA
               </Link>
-              <Link className="m" to="/gente" aria-current={cur("/gente")}>
-                Gente
+              <Link className="m" to="/protagonistas" aria-current={cur("/protagonistas")}>
+                Protagonistas
               </Link>
               <Link className="m" to="/eventos" aria-current={cur("/eventos")}>
                 Eventos

@@ -283,22 +283,7 @@ export function HomeSlimBand() {
   );
 }
 
-/* ---------- notícias (grade com card "Para empresas") ---------- */
-function BizCard() {
-  return (
-    <div className="ad-card home-biz">
-      <span className="ad-lb">IANews</span>
-      <Link className="ad-in no-img" to="/empresas">
-        <span className="ad-txt">
-          <b>Coloque IA para rodar na sua operação</b>
-          <span>Implementação, conteúdo e formação de equipes com o time da IANews.</span>
-          <i>Ver soluções →</i>
-        </span>
-      </Link>
-    </div>
-  );
-}
-
+/* ---------- notícias (grade só de matérias) ---------- */
 export function HomeNews({ items }: { items: ArticleRow[] }) {
   if (items.length === 0) return null;
   return (
@@ -310,24 +295,31 @@ export function HomeNews({ items }: { items: ArticleRow[] }) {
         </Link>
       </div>
       <div className="grid-3 compact-m">
-        {items.map((a, i) => (
-          <HomeNewsItem
-            key={a.id}
-            a={a}
-            withBiz={i === 1 || (i === items.length - 1 && items.length < 2)}
-          />
+        {items.map((a) => (
+          <HomeCard key={a.id} a={a} />
         ))}
       </div>
     </section>
   );
 }
 
-function HomeNewsItem({ a, withBiz }: { a: ArticleRow; withBiz: boolean }) {
+/* ---------- mais notícias (lista compacta no fim da página) ---------- */
+export function HomeMaisNoticias({ items }: { items: ArticleRow[] }) {
+  if (items.length === 0) return null;
   return (
-    <>
-      <HomeCard a={a} />
-      {withBiz ? <BizCard /> : null}
-    </>
+    <section className="sec">
+      <div className="sec-head">
+        <h2>Mais notícias</h2>
+        <Link className="more" to="/noticias" search={{}}>
+          Todas as notícias →
+        </Link>
+      </div>
+      <div className="v2-mais">
+        {items.map((a) => (
+          <HomeCard key={a.id} a={a} kind="row" />
+        ))}
+      </div>
+    </section>
   );
 }
 

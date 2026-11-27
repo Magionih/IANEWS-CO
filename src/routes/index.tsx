@@ -7,6 +7,7 @@ import {
   HomeBizBand,
   HomeBrasil,
   HomeHero,
+  HomeMaisNoticias,
   HomeNews,
   HomeNewsletter,
   HomeSlimBand,
@@ -18,10 +19,11 @@ import {
   HomeRankingV2,
 } from "@/components/portal/home-v2";
 import {
+  capaBoa,
   listArticlesFiltered,
   listEmAlta,
+  listHomeArticles,
   listHomeDestaques,
-  listRecentArticles,
   type ArticleRow,
   type DestaqueRow,
 } from "@/lib/articles.functions";
@@ -51,7 +53,7 @@ export const Route = createFileRoute("/")({
       };
     }
     const [articles, destaques, emAlta, tools, brasil] = await Promise.all([
-      listRecentArticles().catch((err) => {
+      listHomeArticles().catch((err) => {
         console.error("[home] loader failed", err);
         return [] as ArticleRow[];
       }),
@@ -144,14 +146,15 @@ function PortalHome() {
   const alta = altaFresh.length >= 5 ? altaFresh : emAlta;
   alta.slice(0, 5).forEach((a) => used.add(a.id));
 
-  // Últimas: 5 mais recentes e, ao lado, as que acabaram de sair com foto.
+  // Últimas: 5 mais recentes e, ao lado, as que acabaram de sair com foto boa (horizontal e nítida).
   const latest = take(articles, 5);
-  const featured = take(articles, 5, (a) => !!a.cover_image_url);
-  const news = take(articles, 5);
+  const featured = take(articles, 5, capaBoa);
+  const news = take(articles, 9, capaBoa);
 
-  const brasilItems = take(brasil, 10);
+  const brasilItems = take(brasil, 10, capaBoa);
   const isBrasil = brasilItems.length > 0;
-  const brItems = isBrasil ? brasilItems : take(articles, 10);
+  const brItems = isBrasil ? brasilItems : take(articles, 10, capaBoa);
+  const mais = take(articles, 8, capaBoa);
 
   const now = Date.now();
   const thisWeek = articles.filter((a) => now - new Date(a.published_at).getTime() <= WEEK_MS);
@@ -172,8 +175,9 @@ function PortalHome() {
           <HomeRankingV2 tools={tools} />
           <HomeCta kind="eventos" />
           <HomeBrasil items={brItems} isBrasil={isBrasil} />
-          <HomeCta kind="gente" />
+          <HomeCta kind="protagonistas" />
           <HomeNewsletter week={week} />
+          <HomeMaisNoticias items={mais} />
           <HomeCta kind="anuncie" />
           <HomeBizBand />
         </div>

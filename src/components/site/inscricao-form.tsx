@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { markConverted } from "@/components/site/smart-popup";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { maskPhone } from "@/lib/pauta-validate";
@@ -192,6 +193,7 @@ export function useInscricao(tipo: Tipo, inicial: Partial<Inscricao> = {}) {
             eventId,
           );
         else pixel("CompleteRegistration", { content_name: tipo, content_category: tipo }, eventId);
+        if (tipo === "lista100") markConverted("lista");
         setFeito({
           nome: form.nome.trim().split(/\s+/)[0] ?? "",
           already: json.already === true,

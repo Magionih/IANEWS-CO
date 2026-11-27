@@ -220,7 +220,9 @@ export type Database = {
           business_impacts: string[]
           category: string
           cover_image_url: string | null
+          cover_h: number | null
           cover_position: string | null
+          cover_w: number | null
           created_at: string
           dek: string | null
           destaque_fixo_ate: string | null
@@ -257,7 +259,9 @@ export type Database = {
           business_impacts?: string[]
           category?: string
           cover_image_url?: string | null
+          cover_h?: number | null
           cover_position?: string | null
+          cover_w?: number | null
           created_at?: string
           dek?: string | null
           destaque_fixo_ate?: string | null
@@ -294,7 +298,9 @@ export type Database = {
           business_impacts?: string[]
           category?: string
           cover_image_url?: string | null
+          cover_h?: number | null
           cover_position?: string | null
+          cover_w?: number | null
           created_at?: string
           dek?: string | null
           destaque_fixo_ate?: string | null

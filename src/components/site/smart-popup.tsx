@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { X } from "lucide-react";
 
 import { trackCta } from "@/lib/cta-tracking";
-import { readPerfilLead, useSubscribed } from "@/components/site/portal-subscribe";
+import { LISTA } from "@/lib/inscricao";
+import {
+  PortalSubscribeForm,
+  readPerfilLead,
+  useSubscribed,
+} from "@/components/site/portal-subscribe";
 import {
   PopShell,
   markPopupDismissed,
@@ -10,19 +16,35 @@ import {
   popupSnoozed,
 } from "@/components/site/subscribe-dialog";
 
-/* Pop-up estratégico: entende o interesse do visitante pelas páginas que ele visitou
-   (pauta, anúncio, soluções para empresas, eventos, ranking, leitura) e oferece a próxima
-   ação certa, uma vez por sessão, no momento de saída ou depois de um tempo de leitura.
-   Nas páginas de formulário, oferece ajuda para concluir quando a pessoa ameaça sair. */
+/* Pop-ups estratégicos ao longo da navegação.
+   1. Entende o interesse do visitante pelas páginas que ele visitou (pauta, anúncio, soluções,
+      eventos, Lista 100, ranking, leitura) e pelo perfil que declarou ao assinar a newsletter.
+   2. Monta uma fila de ofertas e mostra uma de cada vez, sem repetir na mesma visita.
+   3. A primeira oferta da visita (ou na saída da página) aparece como pop-up central;
+      as seguintes entram como cartão no canto, que não bloqueia a leitura.
+   Ritmo: até 4 ofertas por visita, com pelo menos 75 segundos entre uma e outra. */
 
 type Interesse = "pauta" | "anuncie" | "empresas" | "eventos" | "ranking" | "leitura" | "lista";
-type Oferta = "pauta" | "anuncie" | "empresas" | "eventos" | "newsletter" | "newsletter-ranking";
+type Oferta =
+  | "pauta"
+  | "anuncie"
+  | "empresas"
+  | "eventos"
+  | "lista"
+  | "whatsapp"
+  | "newsletter"
+  | "newsletter-ranking";
 
 const INT_KEY = "ianews_interesse";
 const CONV_PREFIX = "ianews_conv_";
-const SHOWN_KEY = "ianews_smart_shown";
+const SESSAO_KEY = "ianews_sp_sessao";
 const VIEWS_KEY = "ianews_session_views";
 const PALCO_FIM = new Date("2026-12-16T20:30:00-03:00").getTime();
+const LISTA_FIM = new Date(LISTA.fechaIso).getTime();
+const WHATSAPP_URL = "https://chat.whatsapp.com/Is5edILjICj0D2MMHUmGbL";
+
+const MAX_POR_VISITA = 4;
+const INTERVALO_MS = 75_000;
 
 const HIDDEN = [
   "/admin",
@@ -60,8 +82,28 @@ function lerInteresses(): Partial<Record<Interesse, number>> {
   }
 }
 
+type Sessao = { n: number; last: number; vistos: Oferta[] };
+
+function lerSessao(): Sessao {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSAO_KEY) ?? "null") as Sessao | null;
+    if (s && typeof s.n === "number") return s;
+  } catch {
+    /* ignore */
+  }
+  return { n: 0, last: 0, vistos: [] };
+}
+
+function gravarSessao(s: Sessao) {
+  try {
+    sessionStorage.setItem(SESSAO_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Registra que o visitante concluiu uma ação (pauta, mídia kit, pedido): a oferta some. */
-export function markConverted(kind: "pauta" | "anuncie" | "empresas" | "eventos") {
+export function markConverted(kind: "pauta" | "anuncie" | "empresas" | "eventos" | "lista") {
   try {
     localStorage.setItem(CONV_PREFIX + kind, String(Date.now()));
   } catch {
@@ -77,49 +119,72 @@ function converteu(kind: string) {
   }
 }
 
-/** Escolhe a oferta pelo comportamento: página atual, páginas visitadas e perfil declarado. */
-function escolher(path: string, subscribed: boolean): Oferta | null {
+/** Fila de ofertas pelo comportamento: página atual, páginas visitadas e perfil declarado. */
+function fila(path: string, subscribed: boolean): Oferta[] {
   const atual = interesseDe(path);
   const ints = lerInteresses();
-  const palcoAberto = Date.now() < PALCO_FIM;
+  const agora = Date.now();
+  const palco = agora < PALCO_FIM && !converteu("eventos");
+  const lista = agora < LISTA_FIM && !converteu("lista");
+  const out: Oferta[] = [];
+  const add = (o: Oferta | false) => {
+    if (o && !out.includes(o)) out.push(o);
+  };
 
-  // Na própria página do formulário: ajuda a concluir.
-  if (atual === "pauta" || atual === "anuncie" || atual === "empresas")
-    return converteu(atual) ? (subscribed ? null : "newsletter") : atual;
+  // 1. Na página do formulário: ajuda a concluir.
+  if ((atual === "pauta" || atual === "anuncie" || atual === "empresas") && !converteu(atual))
+    add(atual);
 
-  // Quem já demonstrou interesse comercial em outra visita recebe a oferta certa.
-  const fila: Oferta[] = [];
-  if ((ints.anuncie ?? 0) > 0 && !converteu("anuncie")) fila.push("anuncie");
-  if ((ints.pauta ?? 0) > 0 && !converteu("pauta")) fila.push("pauta");
-  if ((ints.empresas ?? 0) > 0 && !converteu("empresas")) fila.push("empresas");
-  if (palcoAberto && ((ints.eventos ?? 0) > 0 || atual === "eventos") && !converteu("eventos"))
-    fila.push("eventos");
-  if (fila.length) return fila[0];
+  // 2. Interesse comercial demonstrado em outra página e ainda não concluído.
+  if ((ints.anuncie ?? 0) > 0 && !converteu("anuncie")) add("anuncie");
+  if ((ints.pauta ?? 0) > 0 && !converteu("pauta")) add("pauta");
+  if ((ints.empresas ?? 0) > 0 && !converteu("empresas")) add("empresas");
+  if (((ints.eventos ?? 0) > 0 || atual === "eventos") && palco) add("eventos");
+  if (((ints.lista ?? 0) > 0 || atual === "lista") && lista) add("lista");
 
-  // Perfil declarado na newsletter.
+  // 3. Quem ainda não assina: a newsletter é a base de tudo.
+  if (!subscribed) add(atual === "ranking" ? "newsletter-ranking" : "newsletter");
+
+  // 4. Perfil declarado na newsletter.
   const perfil = readPerfilLead();
-  if (perfil === "fornecedor" && !converteu("anuncie")) return "anuncie";
-  if ((perfil === "empresario" || perfil === "executivo") && !converteu("pauta")) return "pauta";
+  if (perfil === "fornecedor") {
+    add(!converteu("anuncie") && "anuncie");
+    add(palco && "eventos");
+  }
+  if (perfil === "empresario" || perfil === "executivo") {
+    add(!converteu("pauta") && "pauta");
+    add(!converteu("empresas") && "empresas");
+    add(palco && "eventos");
+  }
+  if (perfil === "profissional" || perfil === "investidor" || perfil === "estudante") {
+    add(palco && "eventos");
+    add(lista && "lista");
+  }
 
-  if (!subscribed) return atual === "ranking" ? "newsletter-ranking" : "newsletter";
-  // Leitor fiel e já assinante: convida a contar a própria história.
-  if ((ints.leitura ?? 0) >= 3 && !converteu("pauta")) return "pauta";
-  return null;
+  // 5. Leitor que já navegou bastante: participação e comunidade.
+  if ((ints.leitura ?? 0) >= 2 && !converteu("pauta")) add("pauta");
+  add(palco && "eventos");
+  add(lista && "lista");
+  add("whatsapp");
+  return out;
 }
 
-const CONTEUDO: Record<
-  Exclude<Oferta, "newsletter" | "newsletter-ranking">,
-  {
-    kick: string;
-    titulo: string;
-    texto: string;
-    itens: string[];
-    cta: string;
-    to: "/pauta" | "/anuncie" | "/empresas" | "/palco";
-    hash?: string;
-    faces?: boolean;
-  }
-> = {
+type Conteudo = {
+  kick: string;
+  titulo: string;
+  texto: string;
+  itens: string[];
+  cta: string;
+  to?: "/pauta" | "/anuncie" | "/empresas" | "/palco" | "/lista100";
+  hash?: string;
+  href?: string;
+  faces?: boolean;
+  form?: boolean;
+};
+
+const CONTEUDO: Record<Exclude<Oferta, "newsletter" | "newsletter-ranking">, Conteudo> & {
+  "newsletter-card": Conteudo;
+} = {
   pauta: {
     kick: "Sua empresa na IA News",
     titulo: "Sua empresa usa IA? A próxima história pode ser a sua",
@@ -143,7 +208,7 @@ const CONTEUDO: Record<
     itens: [
       "Conteúdo em collab, aprovado por você",
       "7 canais, do Instagram à newsletter",
-      "Planos a partir de R$ 350",
+      "Proposta sob medida para a sua marca",
     ],
     cta: "Receber o mídia kit",
     to: "/anuncie",
@@ -163,13 +228,35 @@ const CONTEUDO: Record<
     titulo: "Palco IA News Online: o Raio-X 2026 da IA nas empresas",
     texto:
       "Casos reais, o Playbook IA 2027 e a revelação ao vivo da Lista IA News 100. Gravação por 30 dias.",
-    itens: [
-      "R$ 97, vira crédito no presencial de BH",
-      "Garantia de 7 dias",
-      "Online, de qualquer lugar",
-    ],
+    itens: ["Vira crédito no presencial de BH", "Garantia de 7 dias", "Online, de qualquer lugar"],
     cta: "Garantir minha vaga",
     to: "/palco",
+  },
+  lista: {
+    kick: `Lista IA News 100 · até ${LISTA.fecha}`,
+    titulo: "Quem faz a IA acontecer no Brasil? Indique um nome",
+    texto: "Os 100 nomes da Lista IA News 100 serão revelados ao vivo no Palco de 16/12.",
+    itens: ["Indicação gratuita", "Vale indicar a si mesmo", "Avaliação pela redação"],
+    cta: "Indicar um nome",
+    to: "/lista100",
+    hash: "candidatura",
+    faces: true,
+  },
+  whatsapp: {
+    kick: "Comunidade IA News",
+    titulo: "Os destaques de IA do dia no seu WhatsApp",
+    texto: "Entre no grupo da IA News e receba as principais notícias direto no celular.",
+    itens: ["Gratuito", "Só o que importa", "Saia quando quiser"],
+    cta: "Entrar no grupo",
+    href: WHATSAPP_URL,
+  },
+  "newsletter-card": {
+    kick: "Newsletter IA News",
+    titulo: "Receba as notícias de IA às 7h",
+    texto: "5 minutos por dia, grátis. O que importa para o seu negócio, sem hype.",
+    itens: [],
+    cta: "Assinar grátis",
+    form: true,
   },
 };
 
@@ -180,11 +267,14 @@ const FACES = [
   "/gente/luis.jpg",
 ];
 
+type Ativa = { oferta: Oferta; formato: "modal" | "cartao" };
+
 export function SmartPopup() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const subscribed = useSubscribed();
-  const [oferta, setOferta] = useState<Oferta | null>(null);
-  const fired = useRef(false);
+  const [ativa, setAtiva] = useState<Ativa | null>(null);
+  const ativaRef = useRef<Ativa | null>(null);
+  ativaRef.current = ativa;
 
   // Memória de interesse: conta as páginas que a pessoa visitou.
   useEffect(() => {
@@ -202,19 +292,19 @@ export function SmartPopup() {
     }
   }, [pathname]);
 
+  // O cartão do canto fecha sozinho ao trocar de página (conta como visto).
+  useEffect(() => {
+    if (ativaRef.current?.formato === "cartao") setAtiva(null);
+  }, [pathname]);
+
   useEffect(() => {
     if (HIDDEN.some((p) => pathname.startsWith(p))) return;
     if (typeof window === "undefined" || window.location.hostname.includes("fgiaeducacao")) return;
-    try {
-      if (sessionStorage.getItem(SHOWN_KEY)) return;
-    } catch {
-      return;
-    }
-    if (popupSnoozed()) return;
 
     const atual = interesseDe(pathname);
     const naPaginaDeForm = atual === "pauta" || atual === "anuncie" || atual === "empresas";
     const mobile = window.matchMedia("(max-width: 820px)").matches;
+    const entrouEm = Date.now();
     let interagiu = false;
     let scrolled = 0;
 
@@ -225,27 +315,27 @@ export function SmartPopup() {
       );
     };
 
-    const fire = (gatilho: string) => {
-      if (fired.current || digitando()) return;
+    const fire = (gatilho: "tempo" | "saida" | "rolagem") => {
+      if (ativaRef.current || digitando() || popupSnoozed()) return;
+      if (document.querySelector(".pop-bg, .rkd-bg, [role='dialog'][data-state='open']")) return;
       if (naPaginaDeForm && interagiu) return; // está preenchendo: não atrapalha
-      const escolhida = escolher(pathname, subscribed);
-      if (!escolhida) return;
-      fired.current = true;
-      try {
-        sessionStorage.setItem(SHOWN_KEY, escolhida);
-      } catch {
-        /* ignore */
-      }
+      const sessao = lerSessao();
+      if (sessao.n >= MAX_POR_VISITA) return;
+      if (sessao.last && Date.now() - sessao.last < INTERVALO_MS) return;
+      const oferta = fila(pathname, subscribed).find((o) => !sessao.vistos.includes(o));
+      if (!oferta) return;
+      const formato: Ativa["formato"] = sessao.n === 0 || gatilho === "saida" ? "modal" : "cartao";
+      gravarSessao({ n: sessao.n + 1, last: Date.now(), vistos: [...sessao.vistos, oferta] });
       trackCta({
         event: "impression",
         placement: "smart-popup",
-        variant: `${escolhida}-${gatilho}`,
+        variant: `${oferta}-${formato}-${gatilho}`,
       });
-      if (escolhida === "newsletter" || escolhida === "newsletter-ranking") {
-        openSubscribeDialog(`smart-${escolhida}-${gatilho}`);
+      if (formato === "modal" && (oferta === "newsletter" || oferta === "newsletter-ranking")) {
+        openSubscribeDialog(`smart-${oferta}-${gatilho}`);
         return;
       }
-      setOferta(escolhida);
+      setAtiva({ oferta, formato });
     };
 
     const onLeave = (e: MouseEvent) => {
@@ -253,26 +343,31 @@ export function SmartPopup() {
     };
     const onFocusIn = (e: FocusEvent) => {
       const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) interagiu = true;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT"))
+        interagiu = true;
     };
     const onScroll = () => {
       const doc = document.documentElement;
       const total = Math.max(1, doc.scrollHeight - window.innerHeight);
       scrolled = Math.max(scrolled, window.scrollY / total);
+      // Quem leu boa parte da página recebe a próxima oferta (respeitando o intervalo).
+      if (scrolled > 0.6 && Date.now() - entrouEm > 15_000) fire("rolagem");
     };
 
-    // Tempo de leitura antes da oferta: menor em quem já navegou por mais páginas.
+    // Tempo na página antes da oferta: menor para quem já navegou por mais páginas.
     let views = 1;
     try {
       views = Number(sessionStorage.getItem(VIEWS_KEY) ?? 1);
     } catch {
       /* ignore */
     }
-    const espera = naPaginaDeForm ? 40000 : views >= 3 ? 20000 : mobile ? 45000 : 60000;
+    const primeira = lerSessao().n === 0;
+    const espera = naPaginaDeForm ? 35_000 : primeira ? (views >= 3 ? 15_000 : 25_000) : 20_000;
     const timer = window.setInterval(() => {
-      if (!naPaginaDeForm && mobile && scrolled < 0.35) return;
+      if (Date.now() - entrouEm < espera) return;
+      if (!naPaginaDeForm && mobile && scrolled < 0.25) return;
       fire("tempo");
-    }, espera);
+    }, 5_000);
 
     document.addEventListener("mouseout", onLeave);
     document.addEventListener("focusin", onFocusIn);
@@ -285,19 +380,29 @@ export function SmartPopup() {
     };
   }, [pathname, subscribed]);
 
-  if (!oferta || oferta === "newsletter" || oferta === "newsletter-ranking") return null;
-  const c = CONTEUDO[oferta];
-  const aqui = pathname.startsWith(c.to);
+  if (!ativa) return null;
+  const chave =
+    ativa.oferta === "newsletter" || ativa.oferta === "newsletter-ranking"
+      ? "newsletter-card"
+      : ativa.oferta;
+  const c = CONTEUDO[chave];
+  const aqui = !!c.to && pathname.startsWith(c.to);
 
   const fechar = () => {
     markPopupDismissed();
-    trackCta({ event: "click", placement: "smart-popup", variant: `${oferta}-fechar` });
-    setOferta(null);
+    const s = lerSessao();
+    gravarSessao({ ...s, last: Date.now() });
+    trackCta({ event: "click", placement: "smart-popup", variant: `${ativa.oferta}-fechar` });
+    setAtiva(null);
+  };
+
+  const clicou = () => {
+    trackCta({ event: "click", placement: "smart-popup", variant: `${ativa.oferta}-cta` });
+    setAtiva(null);
   };
 
   const irParaForm = () => {
-    trackCta({ event: "click", placement: "smart-popup", variant: `${oferta}-cta` });
-    setOferta(null);
+    clicou();
     const alvo = document.getElementById(c.hash ?? "") ?? document.querySelector("form");
     alvo?.scrollIntoView({ behavior: "smooth", block: "start" });
     window.setTimeout(() => {
@@ -305,6 +410,56 @@ export function SmartPopup() {
       campo?.focus({ preventScroll: true });
     }, 500);
   };
+
+  const botao = c.form ? (
+    <PortalSubscribeForm
+      placement={`smart-${ativa.formato}`}
+      button={c.cta}
+      layout={ativa.formato === "modal" ? "stack" : "row"}
+      wideButton={ativa.formato === "modal"}
+    />
+  ) : c.href ? (
+    <a
+      className="btn blue wide"
+      href={c.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={clicou}
+    >
+      {c.cta}
+    </a>
+  ) : aqui ? (
+    <button className="btn blue wide" type="button" onClick={irParaForm}>
+      {c.cta}
+    </button>
+  ) : (
+    <Link className="btn blue wide" to={c.to!} hash={c.hash} onClick={clicou}>
+      {c.cta}
+    </Link>
+  );
+
+  if (ativa.formato === "cartao") {
+    return (
+      <aside className="sp-card" role="complementary" aria-labelledby="sp-card-t">
+        <button className="sp-card-x" type="button" aria-label="Fechar" onClick={fechar}>
+          <X aria-hidden="true" />
+        </button>
+        {c.faces ? (
+          <div className="sp-faces sm" aria-hidden="true">
+            {FACES.map((f) => (
+              <img key={f} src={f} alt="" width={32} height={32} loading="lazy" />
+            ))}
+          </div>
+        ) : null}
+        <p className="kick">{aqui ? "Falta pouco" : c.kick}</p>
+        <p className="sp-card-t" id="sp-card-t">
+          {c.titulo}
+        </p>
+        <p className="sp-card-d">{c.texto}</p>
+        {botao}
+      </aside>
+    );
+  }
 
   return (
     <PopShell onClose={fechar} labelledBy="smart-title">
@@ -319,28 +474,14 @@ export function SmartPopup() {
         <p className="kick">{aqui ? "Falta pouco" : c.kick}</p>
         <h2 id="smart-title">{c.titulo}</h2>
         <p className="lead-p">{c.texto}</p>
-        <ul className="ticks small">
-          {c.itens.map((i) => (
-            <li key={i}>{i}</li>
-          ))}
-        </ul>
-        {aqui ? (
-          <button className="btn blue wide" type="button" onClick={irParaForm}>
-            {c.cta}
-          </button>
-        ) : (
-          <Link
-            className="btn blue wide"
-            to={c.to}
-            hash={c.hash}
-            onClick={() => {
-              trackCta({ event: "click", placement: "smart-popup", variant: `${oferta}-cta` });
-              setOferta(null);
-            }}
-          >
-            {c.cta}
-          </Link>
-        )}
+        {c.itens.length ? (
+          <ul className="ticks small">
+            {c.itens.map((i) => (
+              <li key={i}>{i}</li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="sp-cta">{botao}</div>
       </div>
     </PopShell>
   );
