@@ -416,9 +416,8 @@ export function HomeNewsletter({ week }: { week: ArticleRow[] }) {
           <h2>Saiu na IANews esta semana</h2>
           {week.length > 0 ? (
             <ol>
-              {week.map((a, i) => (
+              {week.map((a) => (
                 <li key={a.id}>
-                  <b>{i + 1}</b>
                   <Link to="/materia/$slug" params={{ slug: a.slug }}>
                     {a.title}
                   </Link>

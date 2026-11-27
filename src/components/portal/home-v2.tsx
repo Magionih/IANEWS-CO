@@ -31,13 +31,6 @@ function catLabel(cat: string): string {
   return CATEGORY_MAP[cat as CategoryKey]?.label ?? "IA News";
 }
 
-/** Nome curto da pessoa/empresa do destaque: o cadastrado ou o começo do título. */
-function quem(a: DestaqueRow): string {
-  if (a.destaque_pessoa) return a.destaque_pessoa;
-  const head = a.title.split(/[,:"“]| - | – /)[0]?.trim() ?? a.title;
-  return head.length > 28 ? head.slice(0, 26).trimEnd() + "…" : head;
-}
-
 function Img({
   src,
   position,
@@ -79,7 +72,6 @@ const ROTATE_MS = 3000;
 
 export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta: DestaqueRow[] }) {
   const track = useRef<HTMLDivElement>(null);
-  const rail = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
   const n = items.length;
 
@@ -110,16 +102,7 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
     };
   }, []);
 
-  // Mantém o nome ativo visível na faixa de pessoas, sem rolar a página.
-  useEffect(() => {
-    const r = rail.current;
-    const chip = r?.children[idx] as HTMLElement | undefined;
-    if (!r || !chip) return;
-    const left = chip.offsetLeft - r.clientWidth / 2 + chip.clientWidth / 2;
-    r.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
-  }, [idx]);
-
-  // Passa sozinho o tempo inteiro: cada destaque fica 3 segundos (também depois de um clique).
+  // Passa sozinho o tempo inteiro: cada destaque fica 3 segundos (no celular, também dá para arrastar).
   useEffect(() => {
     if (n < 2) return;
     const id = setTimeout(() => {
@@ -176,12 +159,7 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
                         />
                       </span>
                       <span className="v2-dq-txt">
-                        <span className="kick">
-                          <span>{catLabel(a.category)}</span>
-                          {a.destaque_pessoa ? (
-                            <span className="v2-who">{a.destaque_pessoa}</span>
-                          ) : null}
-                        </span>
+                        <span className="kick">{catLabel(a.category)}</span>
                         <b className="v2-dq-title">{a.title}</b>
                         {a.dek ? <span className="v2-dq-dek">{a.dek}</span> : null}
                         <span className="when">
@@ -193,51 +171,7 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
                   </div>
                 ))}
               </div>
-              {n > 1 ? (
-                <>
-                  <button
-                    type="button"
-                    className="v2-arrow prev"
-                    aria-label="Destaque anterior"
-                    onClick={() => go(idx - 1)}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m15 6-6 6 6 6" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="v2-arrow next"
-                    aria-label="Próximo destaque"
-                    onClick={() => go(idx + 1)}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m9 6 6 6-6 6" />
-                    </svg>
-                  </button>
-                </>
-              ) : null}
             </div>
-            {n > 1 ? (
-              <div className="v2-rail" ref={rail} role="tablist" aria-label="Escolher destaque">
-                {items.map((a, i) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={i === idx}
-                    className={i === idx ? "on" : undefined}
-                    onClick={() => go(i)}
-                  >
-                    <span className="v2-rail-av">
-                      <Img src={a.cover_image_url} position={a.cover_position} width={160} />
-                    </span>
-                    <span className="v2-rail-nm">{quem(a)}</span>
-                    <i className="v2-rail-bar" aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
         ) : null}
 
@@ -247,7 +181,7 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
               <h2 id="v2-alta-h">Em alta esta semana</h2>
             </div>
             <ol>
-              {alta.map((a, i) => (
+              {alta.map((a) => (
                 <li key={a.id}>
                   <Link
                     to="/materia/$slug"
@@ -256,7 +190,6 @@ export function HomeDestaques({ items, emAlta }: { items: DestaqueRow[]; emAlta:
                       trackCta({ event: "click", placement: "home-em-alta", variant: a.slug })
                     }
                   >
-                    <span className="v2-n num">{i + 1}</span>
                     <span className="v2-alta-txt">
                       <span className="v2-alta-k">{catLabel(a.category)}</span>
                       <b>{a.title}</b>

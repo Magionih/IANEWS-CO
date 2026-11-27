@@ -190,8 +190,7 @@ td.n{font-variant-numeric:tabular-nums;font-weight:700}
 .nl-story .kick{color:#DCE9FF}
 .nl-story h2{font-size:clamp(23px,2.8vw,32px);font-weight:900;letter-spacing:-.02em;line-height:1.12;color:#fff}
 .nl-story ol{list-style:none;margin:0;padding:0;border-top:1px solid rgba(255,255,255,.45)}
-.nl-story li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.45);font-size:16px;line-height:1.3}
-.nl-story li b{font-weight:900;font-variant-numeric:tabular-nums}
+.nl-story li{display:block;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.45);font-size:16px;line-height:1.3}
 .nl-story li a{color:#fff;text-decoration:none}
 .nl-story li a:hover{text-decoration:underline}
 .nl-form{padding:32px 30px;display:grid;gap:14px;align-content:center;background:#fff;min-width:0}
@@ -1871,6 +1870,8 @@ button.tile p{font-size:14px;color:var(--p-ink-2);line-height:1.45}
   .hc-nav button{width:32px;height:32px}
 }
 @media (prefers-reduced-motion:reduce){ .hc-track{scroll-behavior:auto} }
+/* No celular a gente arrasta para o lado: as setas dos carrosséis da home ficam só no computador. */
+@media (hover:none) and (pointer:coarse){ .hc-nav,.car-nav .car-btn{display:none} }
 
 /* barra de carregamento entre páginas */
 .route-progress{position:fixed;top:0;left:0;height:3px;width:0;background:#1f5cff;z-index:9999;opacity:0;pointer-events:none}
