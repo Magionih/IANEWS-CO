@@ -72,6 +72,18 @@ export function imageSize(buf: Buffer): { w: number; h: number } | null {
         i += 2 + len;
       }
     }
+    // AVIF/HEIF: caixa "ftyp" no início e tamanho na caixa "ispe" (a maior é a imagem principal).
+    if (buf.length >= 16 && buf.toString("ascii", 4, 8) === "ftyp") {
+      let best: { w: number; h: number } | null = null;
+      let at = buf.indexOf("ispe");
+      while (at > 0 && at + 16 <= buf.length) {
+        const w = buf.readUInt32BE(at + 8);
+        const h = buf.readUInt32BE(at + 12);
+        if (w > 0 && h > 0 && (!best || w * h > best.w * best.h)) best = { w, h };
+        at = buf.indexOf("ispe", at + 4);
+      }
+      return best;
+    }
   } catch {
     /* arquivo truncado ou formato desconhecido */
   }

@@ -103,7 +103,7 @@ export const Route = createFileRoute("/ranking")({
       : "";
     const description = top.length
       ? `Ranking das melhores IAs, atualizado todo dia: ${top.join(", ")} lideram.${benchTxt} Compare ${total} IAs.`
-      : "Ranking atualizado das melhores ferramentas de inteligência artificial, por categoria, fabricante e nota dos leitores brasileiros.";
+      : "Ranking atualizado das melhores ferramentas de inteligência artificial, por categoria, empresa e nota dos leitores brasileiros.";
     return {
       meta: [
         { title },
@@ -724,10 +724,10 @@ function RankingPage() {
             </div>
             <p className="fine rk-method-note">
               A nota vai de 0 a 10 e é recalculada automaticamente todos os dias, às 6h. Dá para
-              filtrar por categoria, por fabricante e por área de uso (conhecimento geral,
-              contabilidade, jurídico, literatura brasileira, medicina ou nota dos leitores). Clique
-              em uma plataforma para ver a avaliação completa, ou marque de 2 a 3 para comparar lado
-              a lado.
+              filtrar por categoria, pela empresa que criou a plataforma e por área de uso
+              (conhecimento geral, contabilidade, jurídico, literatura brasileira, medicina ou nota
+              dos leitores). Clique em uma plataforma para ver a avaliação completa, ou marque de 2
+              a 3 para comparar lado a lado.
             </p>
 
             <div className="sec-head" style={{ marginTop: 56 }}>
