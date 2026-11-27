@@ -121,12 +121,38 @@ function Painel({ d, onAbrir }: { d: PainelDono; onAbrir: (id: string) => void }
         {d.admin ? (
           <>
             <Kpi
-              rotulo="Recebido no mês"
+              rotulo="Vendido no mês"
               valor={brl(d.recebidoMes)}
-              detalhe={d.recebidoMesQtd != null ? `${d.recebidoMesQtd} pagamentos` : undefined}
+              detalhe={
+                d.vendidoCartaoMes
+                  ? `${brl(d.vendidoCaixaMes)} no caixa · ${brl(d.vendidoCartaoMes)} no cartão`
+                  : d.recebidoMesQtd != null
+                    ? `${d.recebidoMesQtd} pagamentos`
+                    : undefined
+              }
               tom="ok"
               link="/financeiro"
             />
+            {d.saldo != null ? (
+              <Kpi
+                rotulo="Caixa hoje"
+                valor={brl(d.saldo)}
+                detalhe={
+                  d.folegoMeses != null
+                    ? `fôlego de ${d.folegoMeses >= 12 ? "12+" : d.folegoMeses.toFixed(1).replace(".", ",")} meses`
+                    : undefined
+                }
+                link="/financeiro"
+              />
+            ) : null}
+            {d.cartao ? (
+              <Kpi
+                rotulo="Cartão a receber"
+                valor={brl(d.cartao.liquido)}
+                detalhe={`${brl(d.cartao.proximos30)} nos próximos 30 dias`}
+                link="/financeiro"
+              />
+            ) : null}
             <Kpi
               rotulo="A receber"
               valor={brl(d.receber?.valor)}
@@ -283,7 +309,7 @@ function RecebidoSemanas({ semanas }: { semanas: NonNullable<PainelDono["semanas
   const maior = Math.max(1, ...semanas.map((s) => s.valor));
   return (
     <Cartao
-      titulo="Recebido por semana"
+      titulo="Vendido por semana"
       extra={<span className="text-[12px] text-muted-foreground">este mês</span>}
       className="flex-[3_1_460px]"
     >

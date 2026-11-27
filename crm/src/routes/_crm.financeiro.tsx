@@ -85,7 +85,7 @@ export const Route = createFileRoute("/_crm/financeiro")({
 /* Camada 1 · Financeiro: vendido ≠ faturado ≠ recebido. DRE do mês, caixa (realizado e projetado
    em 90 dias), contas a receber e a pagar, lançamentos e notas fiscais (só com pagamento). */
 
-type Aba = "resumo" | "receber" | "pagar" | "lancamentos" | "notas";
+type Aba = "resumo" | "cartao" | "receber" | "pagar" | "lancamentos" | "notas";
 
 const MES_NOME = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
@@ -192,6 +192,7 @@ function FinanceiroPage() {
         onChange={setAba}
         opcoes={[
           { valor: "resumo", rotulo: "Resumo" },
+          { valor: "cartao", rotulo: `Cartão parcelado · ${brl0(data.cartao.liquido)}` },
           { valor: "receber", rotulo: `Cobranças · ${data.receber.length}` },
           { valor: "pagar", rotulo: "A pagar" },
           { valor: "lancamentos", rotulo: "Lançamentos" },
@@ -207,6 +208,7 @@ function FinanceiroPage() {
           onAba={setAba}
         />
       ) : null}
+      {aba === "cartao" ? <CartaoAba d={data} onAbrir={setNegocio} /> : null}
       {aba === "receber" ? <Receber d={data} onAbrir={setNegocio} /> : null}
       {aba === "pagar" ? <Pagar d={data} /> : null}
       {aba === "lancamentos" ? <Lancamentos d={data} onEditar={setEditando} /> : null}
@@ -247,9 +249,17 @@ function Resumo({
       <FaixaNumeros
         itens={[
           {
-            rotulo: "Entrou no caixa",
+            rotulo: "Vendido no mês",
             valor: brl0(dre.receitaBruta),
-            detalhe: <Variacao atual={dre.receitaBruta} anterior={d.dreAnterior.receitaBruta} />,
+            detalhe: (
+              <span className="flex flex-col gap-0.5">
+                <Variacao atual={dre.receitaBruta} anterior={d.dreAnterior.receitaBruta} />
+                <span>
+                  {brl0(d.vendidoCaixa)} no caixa
+                  {d.vendidoCartao ? ` · ${brl0(d.vendidoCartao)} no cartão` : ""}
+                </span>
+              </span>
+            ),
           },
           {
             rotulo: "Sobrou (lucro líquido)",
@@ -267,9 +277,17 @@ function Resumo({
             tom: d.saldo == null ? "azul" : undefined,
           },
           {
-            rotulo: "A receber",
+            rotulo: "Cartão a receber",
+            valor: brl0(d.cartao.liquido),
+            detalhe: d.cartao.qtdParcelas
+              ? `${brl0(d.cartao.proximos30)} nos próximos 30 dias`
+              : "Nenhuma parcela",
+            tom: d.cartao.qtdParcelas ? "azul" : undefined,
+          },
+          {
+            rotulo: "Cobranças",
             valor: brl0(totalReceber),
-            detalhe: `${d.receber.length} cobranças abertas`,
+            detalhe: `${d.receber.length} abertas`,
             tom: d.receberIdade.mais30 ? "alerta" : undefined,
           },
         ]}
@@ -281,6 +299,7 @@ function Resumo({
       </div>
 
       <div className="flex flex-wrap gap-4">
+        <CartaoResumo d={d} onVer={() => onAba("cartao")} />
         <ReceberResumo d={d} onVer={() => onAba("receber")} />
         <IndicadoresMes d={d} />
       </div>
@@ -318,7 +337,7 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
   const total = Math.max(1, dre.receitaBruta);
   const linhas: { nome: string; valor: number; texto?: string; tipo: "total" | "menos" | "fim" }[] =
     [
-      { nome: "Receita recebida", valor: dre.receitaBruta, tipo: "total" },
+      { nome: "Vendido no mês", valor: dre.receitaBruta, tipo: "total" },
       {
         nome: dre.impostosEstimado
           ? `Impostos (${d.parametros.impostos.aliquota}% estimado)`
@@ -335,13 +354,13 @@ function Cascata({ d, onLancar }: { d: Financeiro; onLancar: () => void }) {
         tipo: "menos",
       },
       { nome: "Investimentos", valor: dre.investimentos, tipo: "menos" },
-      { nome: "Lucro em caixa", valor: dre.lucro, tipo: "fim" },
+      { nome: "Lucro do mês", valor: dre.lucro, tipo: "fim" },
     ];
   let corrido = dre.receitaBruta;
   return (
     <Cartao
-      titulo="Do que entrou ao que sobrou"
-      sub="Cada linha tira um pedaço da receita. O que fica no fim é o lucro em caixa."
+      titulo="Do que vendeu ao que sobrou"
+      sub="Vendas do mês (Pix e cartão, mesmo o parcelado). Cada linha tira um pedaço; a taxa do cartão já entra em Taxas."
       extra={
         <span className="text-[12px] text-muted-foreground">
           {fmtPct(dre.margemLiquida)} de margem
@@ -655,6 +674,194 @@ function IndicadoresMes({ d }: { d: Financeiro }) {
         </div>
       ) : null}
     </Cartao>
+  );
+}
+
+// ---------- Cartão parcelado ----------
+
+const MES_CURTO = new Intl.DateTimeFormat("pt-BR", {
+  month: "short",
+  year: "2-digit",
+  timeZone: "UTC",
+});
+const mesCurto = (m: string) =>
+  MES_CURTO.format(new Date(`${m}-15T12:00:00Z`))
+    .replace(". de ", "/")
+    .replace(".", "");
+
+function CartaoResumo({ d, onVer }: { d: Financeiro; onVer?: () => void }) {
+  const c = d.cartao;
+  const maior = Math.max(1, ...c.meses.map((m) => m.valor));
+  return (
+    <Cartao
+      titulo="Cartão parcelado a receber"
+      sub={
+        c.qtdParcelas
+          ? `Já vendido e pago pelo cliente. ${brl0(c.liquido)} líquidos vão cair na conta em ${c.qtdParcelas} parcelas (bruto ${brl0(c.bruto)}).`
+          : "Nenhuma venda no cartão aguardando repasse."
+      }
+      extra={
+        c.qtdParcelas && onVer ? (
+          <button
+            type="button"
+            onClick={onVer}
+            className="text-[13px] font-semibold text-primary hover:underline"
+          >
+            Ver parcelas
+          </button>
+        ) : null
+      }
+      className="flex-[2_1_340px]"
+    >
+      {c.meses.length ? (
+        <ul className="flex flex-col gap-2.5">
+          {c.meses.map((m) => (
+            <li
+              key={m.mes}
+              className="grid grid-cols-[64px_minmax(0,1fr)_92px] items-center gap-3 text-[13px]"
+            >
+              <span className="font-semibold capitalize text-[#3A4456]">{mesCurto(m.mes)}</span>
+              <div className="h-[18px] overflow-hidden rounded-md bg-background">
+                <div
+                  className="h-full rounded-md bg-primary"
+                  style={{ width: `${Math.max(2, (m.valor / maior) * 100)}%` }}
+                />
+              </div>
+              <span className="tabular text-right font-semibold">
+                {brl0(m.valor)}
+                <span className="ml-1 text-[11px] font-normal text-muted-foreground">·{m.qtd}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="py-8 text-center text-[13px] text-muted-foreground">Nada no cartão.</p>
+      )}
+    </Cartao>
+  );
+}
+
+function CartaoAba({ d, onAbrir }: { d: Financeiro; onAbrir: (id: string) => void }) {
+  const confirmar = useServerFn(confirmarLancamento);
+  const { executar } = useAcao();
+  const c = d.cartao;
+  const [aberto, setAberto] = useState<string | null>(null);
+  return (
+    <div className="space-y-4">
+      <FaixaNumeros
+        itens={[
+          {
+            rotulo: "Líquido a receber",
+            valor: brl0(c.liquido),
+            detalhe: `${c.qtdParcelas} parcelas`,
+            tom: "azul",
+          },
+          {
+            rotulo: "Bruto dessas vendas",
+            valor: brl0(c.bruto),
+            detalhe: `taxas ${brl0(c.bruto - c.liquido)}`,
+          },
+          { rotulo: "Próximos 30 dias", valor: brl0(c.proximos30) },
+          {
+            rotulo: "Última parcela",
+            valor: c.meses.length ? mesCurto(c.meses[c.meses.length - 1].mes) : "—",
+            detalhe: `${c.vendas.length} vendas`,
+          },
+        ]}
+      />
+      <div className="flex flex-wrap gap-4">
+        <CartaoResumo d={d} />
+        <Secao
+          titulo="Vendas no cartão"
+          contagem={c.vendas.length}
+          colado
+          className="flex-[3_1_460px]"
+          acoes={
+            <BotaoCsv
+              nome="cartao-parcelado"
+              linhas={c.vendas.flatMap((v) => v.parcelas.map((p) => ({ v, p })))}
+              colunas={[
+                { titulo: "Cliente", valor: (x) => x.v.cliente },
+                { titulo: "Parcela", valor: (x) => x.p.rotulo },
+                { titulo: "Cai em", valor: (x) => x.p.data },
+                { titulo: "Líquido", valor: (x) => x.p.valor },
+              ]}
+            />
+          }
+        >
+          {c.vendas.length ? (
+            <ul className="divide-y">
+              {c.vendas.map((v) => (
+                <li key={v.chave} className="px-4 py-2.5 sm:px-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAberto(aberto === v.chave ? null : v.chave)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <span className="block truncate text-[13.5px] font-semibold hover:text-primary">
+                        {v.cliente}
+                      </span>
+                      <span className="block truncate text-[11.5px] text-muted-foreground">
+                        {v.vendido_em ? `vendido ${fmtDia(v.vendido_em)} · ` : ""}
+                        {v.restantes} de {v.total} parcela{v.total === 1 ? "" : "s"} a cair ·
+                        próxima {fmtDia(v.proxima)} · última {fmtDia(v.ultima)}
+                      </span>
+                    </button>
+                    <span className="tabular text-right text-[12px] text-muted-foreground">
+                      bruto {brl0(v.bruto)}
+                    </span>
+                    <span className="tabular w-24 text-right text-[13.5px] font-semibold">
+                      {fmtMoeda(v.liquido)}
+                    </span>
+                    {v.negocio_id ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8"
+                        onClick={() => onAbrir(v.negocio_id!)}
+                      >
+                        Negócio
+                      </Button>
+                    ) : null}
+                  </div>
+                  {aberto === v.chave ? (
+                    <ul className="mt-2 space-y-1 rounded-lg bg-background p-2">
+                      {v.parcelas.map((p) => (
+                        <li key={p.id} className="flex items-center gap-3 text-[12.5px]">
+                          <span className="w-10 font-semibold">{p.rotulo || "—"}</span>
+                          <span className="flex-1 text-muted-foreground">
+                            cai em {fmtDia(p.data)}
+                          </span>
+                          <span className="tabular w-20 text-right">{fmtMoeda(p.valor)}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7"
+                            onClick={() =>
+                              executar(async () => {
+                                await confirmar({ data: { id: p.id } });
+                                return true;
+                              }, "Parcela marcada como recebida.")
+                            }
+                          >
+                            <Check className="h-3.5 w-3.5" /> Caiu na conta
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="p-5">
+              <Vazio>Nenhuma venda no cartão aguardando repasse.</Vazio>
+            </div>
+          )}
+        </Secao>
+      </div>
+    </div>
   );
 }
 

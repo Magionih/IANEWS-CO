@@ -269,7 +269,15 @@ type Recebimento = {
   centro: string;
   produto: string | null;
   negocio_id: string | null;
+  /** Venda no cartão ainda não repassada (conta como vendido, não como caixa). */
+  cartao?: boolean;
+  /** Taxa do cartão já descontada nas parcelas (bruto − líquido). */
+  taxa?: number;
 };
+
+/** Parcela de cartão a receber: entrada prevista paga no cartão. */
+const ehParcelaCartao = (l: Lancamento) =>
+  l.tipo === "entrada" && l.status === "previsto" && l.forma_pagamento === "cartao";
 
 /** Tudo que entrou no caixa: lançamentos de entrada + negócios pagos sem lançamento ligado. */
 function recebimentos(
@@ -308,6 +316,125 @@ function recebimentos(
     });
   }
   return r;
+}
+
+/** Vendas pagas no cartão cujo repasse ainda não caiu: entram no vendido pelo valor bruto. */
+function vendasCartao(
+  pagos: NegocioBase[],
+  lanc: Lancamento[],
+  precos: Map<number, string>,
+): Recebimento[] {
+  const parcelas = new Map<string, Lancamento[]>();
+  const jaCaiu = new Map<string, number>();
+  for (const l of lanc) {
+    if (!l.negocio_id || l.tipo !== "entrada") continue;
+    if (ehParcelaCartao(l)) parcelas.set(l.negocio_id, [...(parcelas.get(l.negocio_id) ?? []), l]);
+    else if (l.status === "realizado")
+      jaCaiu.set(l.negocio_id, (jaCaiu.get(l.negocio_id) ?? 0) + l.valor);
+  }
+  const out: Recebimento[] = [];
+  for (const n of pagos) {
+    const ps = parcelas.get(n.id);
+    if (!ps || !n.valor) continue;
+    // O que já caiu na conta entra pelo caixa; aqui fica só o restante da venda.
+    const restante = arred(n.valor - (jaCaiu.get(n.id) ?? 0));
+    if (restante <= 0) continue;
+    const liquido = soma(ps, (l) => l.valor);
+    out.push({
+      data: diaBR(n.pago_em ?? n.fechado_em ?? n.updated_at)!,
+      valor: restante,
+      cliente: nomeCliente(n),
+      chave: chaveCliente(n),
+      centro: centroDoFunil(n.funil_id),
+      produto: produtoDe(n, precos),
+      negocio_id: n.id,
+      cartao: true,
+      taxa: Math.max(0, arred(restante - liquido)),
+    });
+  }
+  return out;
+}
+
+export type CartaoParcelado = {
+  /** Líquido que ainda vai cair na conta. */
+  liquido: number;
+  /** Bruto vendido nessas vendas. */
+  bruto: number;
+  proximos30: number;
+  qtdParcelas: number;
+  meses: { mes: string; valor: number; qtd: number }[];
+  vendas: {
+    chave: string;
+    negocio_id: string | null;
+    cliente: string;
+    vendido_em: string | null;
+    bruto: number;
+    liquido: number;
+    restantes: number;
+    total: number;
+    proxima: string;
+    ultima: string;
+    parcelas: { id: string; data: string; valor: number; rotulo: string }[];
+  }[];
+};
+
+/** Recebíveis de cartão parcelado: parcelas previstas, por mês e por venda. */
+function cartaoParcelado(pagos: NegocioBase[], lanc: Lancamento[], hoje: string): CartaoParcelado {
+  const ps = lanc.filter(ehParcelaCartao).sort((a, b) => a.data.localeCompare(b.data));
+  const porNegocio = new Map(pagos.map((n) => [n.id, n]));
+  const meses = new Map<string, { mes: string; valor: number; qtd: number }>();
+  const vendas = new Map<string, CartaoParcelado["vendas"][number]>();
+  for (const l of ps) {
+    const m = meses.get(mesDe(l.data)) ?? { mes: mesDe(l.data), valor: 0, qtd: 0 };
+    m.valor += l.valor;
+    m.qtd += 1;
+    meses.set(m.mes, m);
+    const n = l.negocio_id ? porNegocio.get(l.negocio_id) : undefined;
+    const k = l.negocio_id ?? `f:${(l.fornecedor ?? l.descricao).toLowerCase().trim()}`;
+    const parc = /(\d+)\s*\/\s*(\d+)/.exec(l.descricao);
+    const v = vendas.get(k) ?? {
+      chave: k,
+      negocio_id: l.negocio_id,
+      cliente: n ? nomeCliente(n) : (l.fornecedor ?? l.descricao),
+      vendido_em: n ? diaBR(n.pago_em ?? n.fechado_em) : null,
+      bruto: n?.valor ?? 0,
+      liquido: 0,
+      restantes: 0,
+      total: parc ? Number(parc[2]) : 0,
+      proxima: l.data,
+      ultima: l.data,
+      parcelas: [],
+    };
+    v.liquido += l.valor;
+    v.restantes += 1;
+    v.ultima = l.data;
+    v.parcelas.push({
+      id: l.id,
+      data: l.data,
+      valor: l.valor,
+      rotulo: parc ? `${parc[1]}/${parc[2]}` : "",
+    });
+    vendas.set(k, v);
+  }
+  const lista = [...vendas.values()].map((v) => ({
+    ...v,
+    liquido: arred(v.liquido),
+    bruto: v.bruto || arred(v.liquido),
+    total: Math.max(v.total, v.restantes),
+  }));
+  return {
+    liquido: arred(soma(ps, (l) => l.valor)),
+    bruto: soma(lista, (v) => v.bruto),
+    proximos30: arred(
+      soma(
+        ps.filter((l) => l.data <= somarDias(hoje, 30)),
+        (l) => l.valor,
+      ),
+    ),
+    qtdParcelas: ps.length,
+    meses: [...meses.values()].map((m) => ({ ...m, valor: arred(m.valor) })),
+    vendas: lista.sort((a, b) => b.liquido - a.liquido),
+  };
 }
 
 type Ocorrencia = {
@@ -412,7 +539,12 @@ function dre(mes: string, rec: Recebimento[], lanc: Lancamento[], p: Parametros)
   const impLanc = por("imposto");
   const impostosEstimado = impLanc === 0 && receitaBruta > 0;
   const impostos = impostosEstimado ? arred((receitaBruta * p.impostos.aliquota) / 100) : impLanc;
-  const taxas = por("taxa");
+  const taxas =
+    por("taxa") +
+    soma(
+      rec.filter((r) => mesDe(r.data) === mes && r.taxa),
+      (r) => r.taxa ?? 0,
+    );
   const receitaLiquida = receitaBruta - impostos - taxas;
   const variaveis = por("variavel");
   const margemContribuicao = receitaLiquida - variaveis;
@@ -488,7 +620,7 @@ function contasReceber(vendas: NegocioBase[], lanc: Lancamento[], hoje: string):
     });
   }
   for (const l of lanc) {
-    if (l.tipo !== "entrada" || l.status !== "previsto") continue;
+    if (l.tipo !== "entrada" || l.status !== "previsto" || ehParcelaCartao(l)) continue;
     out.push({
       id: l.id,
       origem: "lancamento",
@@ -780,6 +912,10 @@ export type PainelDono = {
   folegoMeses: number | null;
   ritmo: { pct: number | null; ritmoMes: number; necessarioMes: number; recebido: number } | null;
   receber: { valor: number; qtd: number; vencido: number } | null;
+  /** Do vendido no mês: quanto já caiu no caixa e quanto está no cartão. */
+  vendidoCaixaMes: number | null;
+  vendidoCartaoMes: number | null;
+  cartao: { liquido: number; proximos30: number; qtdVendas: number; ate: string | null } | null;
   pipeline: { bruto: number; ponderado: number; qtd: number };
   travado: { valor: number; qtd: number };
   audiencia: {
@@ -871,6 +1007,9 @@ export const getPainelDono = createServerFn({ method: "GET" })
       | "folegoMeses"
       | "ritmo"
       | "receber"
+      | "vendidoCaixaMes"
+      | "vendidoCartaoMes"
+      | "cartao"
     > = {
       recebidoMes: null,
       recebidoMesAnterior: null,
@@ -880,6 +1019,9 @@ export const getPainelDono = createServerFn({ method: "GET" })
       folegoMeses: null,
       ritmo: null,
       receber: null,
+      vendidoCaixaMes: null,
+      vendidoCartaoMes: null,
+      cartao: null,
     };
     const cobrancas: ItemLista[] = [];
     const comecar: PainelDono["comecar"] = [];
@@ -887,7 +1029,10 @@ export const getPainelDono = createServerFn({ method: "GET" })
     let qtdMes: number | null = null;
 
     if (isAdmin) {
-      const rec = recebimentos(pagos, lanc, precos.porPreco);
+      const caixaRec = recebimentos(pagos, lanc, precos.porPreco);
+      // Vendido = o que caiu no caixa + vendas no cartão ainda não repassadas.
+      const rec = [...caixaRec, ...vendasCartao(pagos, lanc, precos.porPreco)];
+      const cart = cartaoParcelado(pagos, lanc, hoje);
       const mes = hoje.slice(0, 7);
       const d = dre(mes, rec, lanc, p);
       const ant = somarMeses(`${mes}-01`, -1);
@@ -896,7 +1041,7 @@ export const getPainelDono = createServerFn({ method: "GET" })
         rec.filter((r) => r.data >= ant && r.data <= mesmoDiaAnt),
         (r) => r.valor,
       );
-      const cx = caixa(rec, lanc, p, hoje);
+      const cx = caixa(caixaRec, lanc, p, hoje);
       const rit = ritmoMeta(rec, p, hoje);
       // Recebido por semana do mês (blocos de 7 dias a partir do dia 1).
       {
@@ -944,6 +1089,22 @@ export const getPainelDono = createServerFn({ method: "GET" })
           recebido: rit.recebido,
         },
         receber: { valor: soma(receber, (c) => c.valor), qtd: receber.length, vencido },
+        vendidoCaixaMes: soma(
+          caixaRec.filter((r) => mesDe(r.data) === mes && r.data <= hoje),
+          (r) => r.valor,
+        ),
+        vendidoCartaoMes: soma(
+          rec.filter((r) => r.cartao && mesDe(r.data) === mes && r.data <= hoje),
+          (r) => r.valor,
+        ),
+        cartao: cart.qtdParcelas
+          ? {
+              liquido: cart.liquido,
+              proximos30: cart.proximos30,
+              qtdVendas: cart.vendas.length,
+              ate: cart.meses.at(-1)?.mes ?? null,
+            }
+          : null,
       };
 
       for (const c of receber.filter((c) => c.origem === "negocio")) {
@@ -1211,6 +1372,11 @@ export type Financeiro = {
   pontoEquilibrio: number | null;
   ritmo: ReturnType<typeof ritmoMeta>;
   receber: ContaReceber[];
+  cartao: CartaoParcelado;
+  /** Do vendido no mês: o que já caiu no caixa e o que está no cartão (bruto). */
+  vendidoCaixa: number;
+  vendidoCartao: number;
+  vendidoCartaoAnterior: number;
   receberIdade: { ate7: number; ate30: number; mais30: number };
   inadimplencia: number | null;
   pagar: Ocorrencia[];
@@ -1256,10 +1422,18 @@ export const getFinanceiro = createServerFn({ method: "GET" })
         .order("data", { ascending: false })
         .limit(500),
     ]);
-    const rec = recebimentos(pagos, lanc, precos.porPreco);
+    const caixaRec = recebimentos(pagos, lanc, precos.porPreco);
+    const rec = [...caixaRec, ...vendasCartao(pagos, lanc, precos.porPreco)];
+    const mesAnt = somarMeses(`${data.mes}-01`, -1).slice(0, 7);
     const d = dre(data.mes, rec, lanc, p);
-    const dAnt = dre(somarMeses(`${data.mes}-01`, -1).slice(0, 7), rec, lanc, p);
-    const cx = caixa(rec, lanc, p, hoje);
+    const dAnt = dre(mesAnt, rec, lanc, p);
+    const cx = caixa(caixaRec, lanc, p, hoje);
+    const cart = cartaoParcelado(pagos, lanc, hoje);
+    const noMes = (l: Recebimento[], m: string) =>
+      soma(
+        l.filter((r) => mesDe(r.data) === m),
+        (r) => r.valor,
+      );
     const receber = contasReceber(vendas, lanc, hoje);
     const prev = previstos(lanc, hoje, 90);
     const proj = projecao(cx.saldo, receber, prev, hoje);
@@ -1289,7 +1463,7 @@ export const getFinanceiro = createServerFn({ method: "GET" })
       return {
         dia: diaIso,
         entradas: soma(
-          rec.filter((r) => r.data === diaIso),
+          caixaRec.filter((r) => r.data === diaIso),
           (r) => r.valor,
         ),
         saidas: soma(
@@ -1336,6 +1510,16 @@ export const getFinanceiro = createServerFn({ method: "GET" })
       pontoEquilibrio: cx.custoFixo > 0 && mcPct > 0 ? cx.custoFixo / mcPct : null,
       ritmo: ritmoMeta(rec, p, hoje),
       receber,
+      cartao: cart,
+      vendidoCaixa: noMes(caixaRec, data.mes),
+      vendidoCartao: noMes(
+        rec.filter((r) => r.cartao),
+        data.mes,
+      ),
+      vendidoCartaoAnterior: noMes(
+        rec.filter((r) => r.cartao),
+        mesAnt,
+      ),
       receberIdade: {
         ate7: soma(
           receber.filter((c) => c.idade <= 7),
@@ -1467,6 +1651,14 @@ export const confirmarLancamento = createServerFn({ method: "POST" })
         .eq("id", data.id)
         .select("id")
         .single(),
+    );
+    // Parcela antecipada: o dinheiro caiu hoje, não na data prevista.
+    checar(
+      await context.db
+        .from("crm_lancamentos")
+        .update({ data: hojeBR() })
+        .eq("id", data.id)
+        .gt("data", hojeBR()),
     );
     return { ok: true };
   });
@@ -1981,7 +2173,10 @@ export const getClientes = createServerFn({ method: "GET" })
       precosProdutos(db),
       lerNegociosVenda(db),
     ]);
-    const rec = recebimentos(pagos, lanc, precos.porPreco);
+    const rec = [
+      ...recebimentos(pagos, lanc, precos.porPreco),
+      ...vendasCartao(pagos, lanc, precos.porPreco),
+    ];
     const g = new Map<string, Clientes["clientes"][number] & { valores: number[] }>();
     for (const r of [...rec].sort((a, b) => a.data.localeCompare(b.data))) {
       const x = g.get(r.chave) ?? {
