@@ -25,7 +25,7 @@ set search_path to 'public'
 as $$
 begin
   if coalesce(p_publica, '') !~ '^[A-Za-z0-9_-]{80,100}$'
-     or coalesce(p_privada, '') !~ '^[A-Za-z0-9_-]{150,260}$' then
+     or coalesce(p_privada, '') !~ '^[A-Za-z0-9_-]{150,250}$' then
     raise exception 'Chaves inválidas.';
   end if;
   -- Duas entregas ao mesmo tempo: só a primeira grava; a outra recebe o par já guardado.
