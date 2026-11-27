@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { getCalendario, type ConteudoAgenda } from "@/lib/crm/inicio.functions";
-import { hojeBR, linkMateria } from "@/lib/crm/utils";
+import { urlSegura, hojeBR, linkMateria } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_crm/calendario")({
@@ -290,7 +290,7 @@ function ItensDoDia({ itens }: { itens: ConteudoAgenda[] }) {
                 </Etiqueta>
                 {c.social_url ? (
                   <a
-                    href={c.social_url}
+                    href={urlSegura(c.social_url)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"

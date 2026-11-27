@@ -458,3 +458,15 @@ export function centroDoFunil(funil?: string | null): string {
 
 export const fmtPct = (n?: number | null, casas = 0) =>
   n == null || !Number.isFinite(n) ? "—" : `${(n * 100).toFixed(casas).replace(".", ",")}%`;
+
+/** Só deixa passar links http(s): bloqueia "javascript:", "data:" e afins vindos do banco. */
+export function urlSegura(u?: string | null): string | undefined {
+  if (!u) return undefined;
+  const t = u.trim();
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(t) ? t : `https://${t}`);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}

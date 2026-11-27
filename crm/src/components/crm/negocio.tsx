@@ -50,6 +50,7 @@ import {
 import { concluirTarefa } from "@/lib/crm/tarefas.functions";
 import type { CrmFunilId, CrmStatusPagamento } from "@/lib/crm/types";
 import {
+  urlSegura,
   atrasado,
   CANAIS,
   fmtDia,
@@ -1070,7 +1071,7 @@ export function NegocioPainel({ id, onClose }: { id: string | null; onClose: () 
                     {n.post_url ? (
                       <Dado rotulo="Post">
                         <a
-                          href={n.post_url}
+                          href={urlSegura(n.post_url)}
                           target="_blank"
                           rel="noreferrer"
                           className="text-primary hover:underline"

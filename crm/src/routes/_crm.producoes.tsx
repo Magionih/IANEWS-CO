@@ -20,7 +20,7 @@ import {
   type Producao,
 } from "@/lib/crm/operacao.functions";
 import { useCrm } from "@/components/crm/context";
-import { fmtDataHora } from "@/lib/crm/utils";
+import { urlSegura, fmtDataHora } from "@/lib/crm/utils";
 
 export const Route = createFileRoute("/_crm/producoes")({
   component: ProducoesPage,
@@ -154,7 +154,7 @@ function ProducoesPage() {
                       {p.telas.map((t, i) => (
                         <a
                           key={t}
-                          href={t}
+                          href={urlSegura(t)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="shrink-0"
@@ -236,7 +236,7 @@ function ProducoesPage() {
                     <p className="mt-2 text-xs">
                       <a
                         className="text-primary underline"
-                        href={p.social_url}
+                        href={urlSegura(p.social_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -306,7 +306,7 @@ function ProducoesPage() {
                     {c.telas.map((t, i) => (
                       <a
                         key={t}
-                        href={t}
+                        href={urlSegura(t)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0"
@@ -341,7 +341,7 @@ function ProducoesPage() {
                   {c.social_url ? (
                     <a
                       className="text-xs text-primary underline"
-                      href={c.social_url}
+                      href={urlSegura(c.social_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

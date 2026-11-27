@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { CrmGrupo } from "@/lib/crm/types";
-import { baixarCsv, GRUPO_DESCRICAO, type CsvColuna } from "@/lib/crm/utils";
+import { urlSegura, baixarCsv, GRUPO_DESCRICAO, type CsvColuna } from "@/lib/crm/utils";
 
 /* Peças visuais comuns das telas do CRM (identidade do painel, azul nos destaques). */
 
@@ -286,10 +286,11 @@ export function Campo({
 
 /** Lista de links externos (site, Instagram, LinkedIn, WhatsApp) com ícones simples. */
 export function LinkExterno({ href, children }: { href: string | null; children: ReactNode }) {
-  if (!href) return null;
+  const seguro = urlSegura(href);
+  if (!seguro) return null;
   return (
     <a
-      href={href}
+      href={seguro}
       target="_blank"
       rel="noreferrer noopener"
       className="text-primary underline-offset-2 hover:underline"

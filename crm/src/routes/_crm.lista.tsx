@@ -18,7 +18,7 @@ import {
   salvarConfigLista,
   type ListaItem,
 } from "@/lib/crm/operacao.functions";
-import { fmtDia } from "@/lib/crm/utils";
+import { urlSegura, fmtDia } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_crm/lista")({
@@ -275,7 +275,7 @@ function ListaPage() {
                     ) : i.linkedin ? (
                       <a
                         className="font-medium text-primary hover:underline"
-                        href={i.linkedin}
+                        href={urlSegura(i.linkedin)}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

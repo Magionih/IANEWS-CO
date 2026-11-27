@@ -85,9 +85,17 @@ export function exigirAdmin(isAdmin: boolean) {
 /** Lança a mensagem do banco (gatilhos do CRM devolvem mensagens em português). */
 export function checar<T>(res: { data: T; error: { message: string; code?: string } | null }): T {
   if (res.error) {
-    if (res.error.code === "23505")
-      throw new Error("Já existe um cadastro com esse nome ou e-mail.");
-    throw new Error(res.error.message);
+    const { code = "", message } = res.error;
+    if (code === "23505") throw new Error("Já existe um cadastro com esse nome ou e-mail.");
+    // Sem permissão: não expõe nomes de tabelas nem detalhes do banco.
+    if (code === "42501" || /row-level security|permission denied/i.test(message))
+      throw new Error("Sem permissão para esta ação.");
+    // Erros de estrutura do banco (coluna/tabela/função): mensagem genérica, detalhe só no log.
+    if (/^(42|XX|58|53)/.test(code)) {
+      console.error("[crm] erro do banco", code, message);
+      throw new Error("Não foi possível concluir agora. Tente de novo em instantes.");
+    }
+    throw new Error(message);
   }
   return res.data;
 }

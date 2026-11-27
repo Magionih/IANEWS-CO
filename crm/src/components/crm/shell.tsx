@@ -44,7 +44,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { buscarCrm } from "@/lib/crm/core.functions";
-import { fmtDia } from "@/lib/crm/utils";
+import {
+  getFinanceiro,
+  getIndicadores,
+  getOperacao,
+  getPainelDono,
+} from "@/lib/crm/metricas.functions";
+import { fmtDia, hojeBR } from "@/lib/crm/utils";
 import { cn } from "@/lib/utils";
 
 import { useCrm } from "./context";
@@ -290,8 +296,35 @@ export function registrarFunilRecente(id: string) {
 }
 /* ---------- Computador ---------- */
 
+/** Ao passar o mouse numa área do menu, já busca os dados dela (a tela abre pronta). */
+function usePrefetchArea() {
+  const qc = useQueryClient();
+  const { isAdmin } = useCrm();
+  const painel = useServerFn(getPainelDono);
+  const fin = useServerFn(getFinanceiro);
+  const op = useServerFn(getOperacao);
+  const ind = useServerFn(getIndicadores);
+  return (to: string) => {
+    const mes = hojeBR().slice(0, 7);
+    const alvo: Record<string, () => void> = {
+      "/": () => qc.prefetchQuery({ queryKey: ["crm", "painel-dono"], queryFn: () => painel() }),
+      "/financeiro": () =>
+        isAdmin &&
+        qc.prefetchQuery({
+          queryKey: ["crm", "financeiro", mes],
+          queryFn: () => fin({ data: { mes } }),
+        }),
+      "/operacao": () => qc.prefetchQuery({ queryKey: ["crm", "operacao"], queryFn: () => op() }),
+      "/indicadores": () =>
+        qc.prefetchQuery({ queryKey: ["crm", "indicadores"], queryFn: () => ind() }),
+    };
+    alvo[to]?.();
+  };
+}
+
 function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
   const { isAdmin } = useCrm();
+  const prefetch = usePrefetchArea();
   const sec = useSecaoAtual();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const secoes = SECOES.filter((x) => !x.admin || isAdmin);
@@ -331,6 +364,8 @@ function MenuLateral({ onBuscar }: { onBuscar: () => void }) {
               <li key={x.to}>
                 <Link
                   to={destino(x)}
+                  onMouseEnter={() => prefetch(x.to)}
+                  onFocus={() => prefetch(x.to)}
                   aria-current={on ? "page" : undefined}
                   className={cn(
                     "flex h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium text-nav-muted transition hover:bg-nav-hover hover:text-nav-foreground",
