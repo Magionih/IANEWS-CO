@@ -1,8 +1,8 @@
 import { ApplicationServerKeys, generatePushHTTPRequest } from "webpush-webcrypto";
 
 /* Entrega dos avisos do CRM interno (vendas, pautas, material, resumos do dia) como push no
-   celular da equipe. O banco cria os avisos e chama este gancho; as chaves VAPID são as mesmas
-   do push do site (ficam só no servidor). O CRM é outro domínio: o clique abre a tela certa lá. */
+   celular da equipe. O banco cria os avisos e chama este gancho; as chaves VAPID ficam no cofre
+   do banco (só o servidor lê). O CRM é outro domínio: o clique abre a tela certa lá. */
 
 const CRM_URL = "https://ianews-crm.vercel.app";
 const PAPEIS_EQUIPE = ["admin", "comercial", "editorial", "editor"];
@@ -46,11 +46,26 @@ function servicoDePushConhecido(endpoint: string) {
   }
 }
 
-async function chaves() {
-  const publicKey = process.env["VAPID_PUBLIC_KEY"];
-  const privateKey = process.env["VAPID_PRIVATE_KEY"];
-  if (!publicKey || !privateKey) throw new Error("Chaves VAPID não configuradas.");
-  return { publicKey, keys: await ApplicationServerKeys.fromJSON({ publicKey, privateKey }) };
+/** Chaves do push do CRM: guardadas no cofre do banco (Vault). Na primeira entrega o servidor
+ *  cria o par e guarda; depois reaproveita (trocar a chave invalidaria os aparelhos inscritos). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function chaves(db: any) {
+  let { data, error } = await db.rpc("crm_push_chaves");
+  if (error) throw new Error(error.message);
+  if (!data) {
+    const novo = await (await ApplicationServerKeys.generate()).toJSON();
+    ({ data, error } = await db.rpc("crm_push_chaves_guardar", {
+      p_publica: novo.publicKey,
+      p_privada: novo.privateKey,
+    }));
+    if (error) throw new Error(error.message);
+  }
+  const par = data as { publica?: string; privada?: string } | null;
+  if (!par?.publica || !par.privada) throw new Error("Chaves do push indisponíveis.");
+  return {
+    publicKey: par.publica,
+    keys: await ApplicationServerKeys.fromJSON({ publicKey: par.publica, privateKey: par.privada }),
+  };
 }
 
 /** Vários avisos do mesmo tipo no mesmo minuto viram um só (ex.: 5 vendas de uma vez). */
@@ -92,7 +107,7 @@ export async function entregarAvisosCrm() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabaseAdmin as any;
-  const { publicKey, keys } = await chaves();
+  const { publicKey, keys } = await chaves(db);
 
   // O CRM lê a chave pública daqui para inscrever os aparelhos.
   await db.from("crm_config_publica").upsert({
