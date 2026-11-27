@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CalendarCheck, ChevronRight, Plus } from "lucide-react";
 
 import { CartaoNotificacoes } from "@/components/crm/avisos";
+import { CartaoFaceId } from "@/components/crm/faceid";
 import { useCrm } from "@/components/crm/context";
 import { TarefaDialog } from "@/components/crm/dialogs";
 import { NegocioDialog, NegocioPainel } from "@/components/crm/negocio";
@@ -189,6 +190,7 @@ function Painel({ d, onAbrir }: { d: PainelDono; onAbrir: (id: string) => void }
     <>
       {d.admin && d.ritmo ? <CartaoMeta d={d} /> : null}
       <FaixaNumeros itens={numeros} />
+      <CartaoFaceId compacto />
       <CartaoNotificacoes compacto />
 
       <section className="grid gap-4 lg:grid-cols-[3fr_2fr]">

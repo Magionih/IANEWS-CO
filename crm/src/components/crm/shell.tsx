@@ -953,7 +953,7 @@ export function TopoCrm() {
   const email = useEmail();
   const sair = useSair();
   return (
-    <header className="safe-top sticky top-0 z-30 bg-nav text-white">
+    <header className="safe-top sticky top-0 z-30 bg-[#0B1220] text-white">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2.5">
           <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-md" />

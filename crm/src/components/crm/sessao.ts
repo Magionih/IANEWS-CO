@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { faceIdLigadoNoAparelho } from "@/components/crm/faceid";
 import { supabase } from "@/integrations/supabase/client";
 
 /* Proteção da sessão no navegador:
-   - sai sozinho depois de 2h sem uso (vale para todas as abas abertas);
+   - sai sozinho depois de 2h sem uso (vale para todas as abas abertas). Com o Face ID ativo
+     neste aparelho, em vez de sair o CRM trava e pede o Face ID (sem senha e código de novo);
    - se a sessão acabar (saiu em outra aba, senha trocada, token revogado), limpa os dados
      do CRM da memória e volta para o login. */
 
@@ -50,7 +52,11 @@ export function useSessaoSegura() {
     };
 
     const verificar = () => {
-      if (Date.now() - lerUltima() > LIMITE_INATIVO_MS) void sair();
+      if (Date.now() - lerUltima() <= LIMITE_INATIVO_MS) return;
+      if (faceIdLigadoNoAparelho()) {
+        marcar();
+        window.dispatchEvent(new Event("crm:travar"));
+      } else void sair();
     };
 
     const eventos = ["pointerdown", "keydown", "scroll", "touchstart"] as const;

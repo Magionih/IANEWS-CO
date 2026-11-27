@@ -1,16 +1,10 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2, Lock, ScanFace } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { z } from "zod";
 
 import logo from "@/assets/ianews-logo-white.png";
-import {
-  confirmarFaceId,
-  erroFaceId,
-  listarFaceId,
-  suportaFaceId,
-  type FatorFaceId,
-} from "@/components/crm/faceid";
+import { marcarDesbloqueado } from "@/components/crm/faceid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 /* Login do CRM. A conta é a mesma do Supabase da IANews, mas só entra quem tem papel
    admin, comercial ou editorial (o banco recusa os demais). Contas novas são criadas pelo
    administrador (convite), não aqui. Quem ativou a verificação em duas etapas digita o código
-   do aplicativo autenticador depois da senha. */
+   do aplicativo autenticador depois da senha. Depois do primeiro acesso no aparelho, o Face ID
+   (Minha conta) abre o CRM sem senha e código. */
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -56,38 +51,14 @@ function LoginPage() {
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
-  // Segunda etapa: Face ID (passkey) quando a conta tem um ativo; o código fica como reserva.
-  const [faceId, setFaceId] = useState<FatorFaceId | null>(null);
-  const [usarCodigo, setUsarCodigo] = useState(false);
-
-  async function irParaSegundaEtapa() {
-    const lista = suportaFaceId() ? await listarFaceId().catch(() => []) : [];
-    setFaceId(lista[0] ?? null);
-    setUsarCodigo(!lista.length);
+  function irParaSegundaEtapa() {
     setModo("codigo");
   }
 
+  /** Acabou de entrar com senha e código: o Face ID não pede de novo agora. */
   function entrou() {
-    try {
-      sessionStorage.setItem("crm:faceid-ok", String(Date.now()));
-    } catch {
-      /* sem armazenamento */
-    }
+    marcarDesbloqueado();
     window.location.replace(destinoSeguro(volta));
-  }
-
-  async function entrarComFaceId() {
-    if (!faceId) return;
-    setErro("");
-    setOcupado(true);
-    try {
-      await confirmarFaceId(faceId.id);
-      entrou();
-    } catch (e) {
-      setErro(erroFaceId(e));
-    } finally {
-      setOcupado(false);
-    }
   }
 
   useEffect(() => {
@@ -100,7 +71,7 @@ function LoginPage() {
     if (!recuperando) {
       supabase.auth.getSession().then(async ({ data }) => {
         if (!data.session) return;
-        if (await precisaCodigo()) await irParaSegundaEtapa();
+        if (await precisaCodigo()) irParaSegundaEtapa();
         else window.location.replace(destinoSeguro(volta));
       });
     }
@@ -159,9 +130,10 @@ function LoginPage() {
         }
         if (await precisaCodigo()) {
           setSenha("");
-          await irParaSegundaEtapa();
+          irParaSegundaEtapa();
           return;
         }
+        marcarDesbloqueado();
         navigate({ to: destinoSeguro(volta), replace: true });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(mail, {
@@ -176,7 +148,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="safe-top relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-nav px-4 py-10">
+    <div className="safe-top relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-[#0B1220] px-4 py-10">
       {/* Grade discreta de fundo, só decorativa. */}
       <div
         aria-hidden
@@ -205,43 +177,7 @@ function LoginPage() {
           <Lock className="h-3.5 w-3.5" /> Acesso restrito à equipe da IA News.
         </p>
 
-        {modo === "codigo" && faceId && !usarCodigo ? (
-          <div className="mt-5 space-y-3">
-            <Button
-              type="button"
-              className="h-12 w-full text-[15px] font-semibold"
-              onClick={entrarComFaceId}
-              disabled={ocupado}
-              autoFocus
-            >
-              {ocupado ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <ScanFace className="mr-2 h-5 w-5" />
-              )}
-              Entrar com Face ID
-            </Button>
-            <p className="text-center text-[12px] text-muted-foreground">
-              Em outro computador, o navegador mostra um QR code: aponte a câmera do celular.
-            </p>
-            {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
-            <button
-              type="button"
-              className="w-full text-center text-[13px] font-medium text-primary hover:underline"
-              onClick={() => {
-                setErro("");
-                setUsarCodigo(true);
-              }}
-            >
-              Usar o código de 6 números
-            </button>
-          </div>
-        ) : null}
-
-        <form
-          onSubmit={enviar}
-          className={modo === "codigo" && faceId && !usarCodigo ? "hidden" : "mt-5 space-y-3"}
-        >
+        <form onSubmit={enviar} className="mt-5 space-y-3">
           {modo === "codigo" ? (
             <div className="space-y-1.5">
               <Label htmlFor="codigo">Código do aplicativo autenticador</Label>

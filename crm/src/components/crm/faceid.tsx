@@ -1,120 +1,425 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Fingerprint, Loader2, Lock, ScanFace, Smartphone, Trash2 } from "lucide-react";
+import { Fingerprint, Loader2, Lock, ScanFace, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtDataHora } from "@/lib/crm/utils";
 
-/* Face ID no CRM (passkey, padrão WebAuthn):
-   - Ativar: cria a chave de acesso no aparelho (Face ID, Touch ID ou a digital).
-   - Entrar: depois da senha, o CRM pede o Face ID no lugar do código de 6 números.
-     Em outro computador, o navegador mostra um QR code: aponte a câmera do celular e use o Face ID.
-   - Trava ao abrir: com a opção ligada, o app pede o Face ID ao abrir e ao voltar depois de
-     alguns minutos em segundo plano (os dados ficam escondidos até confirmar). */
+/* Face ID no CRM (chave de acesso do próprio aparelho, padrão WebAuthn).
+   - Ativar: no celular, o CRM cria uma chave de acesso protegida pelo Face ID (ou Touch ID,
+     digital, Windows Hello). Ela fica no aparelho; a parte pública fica guardada neste navegador.
+   - Entrar: com a trava ligada, o CRM pede o Face ID sempre que é aberto e quando volta depois
+     de alguns minutos fora. Os dados ficam escondidos até confirmar. A assinatura do Face ID é
+     conferida aqui (desafio novo a cada vez, origem, site, verificação biométrica e assinatura).
+   - Com o Face ID ativo, o CRM não desconecta depois de 2 horas sem uso: ele trava e pede o
+     Face ID de novo (assim não é preciso digitar senha e código toda vez).
+   - Em outro aparelho, o primeiro acesso continua sendo senha + código de 6 números. */
 
-export type FatorFaceId = {
-  id: string;
-  friendly_name?: string;
-  created_at: string;
-  status: string;
-};
-
-const CHAVE_TRAVA = "crm:trava-faceid";
+const CHAVE = "crm:faceid:v2";
+const CHAVE_TRAVA = "crm:faceid:trava";
+const CHAVE_OK = "crm:faceid-ok";
+const CHAVE_DISPENSA = "crm:faceid:dispensado";
 const MINUTOS_PARA_TRAVAR = 5;
 
-export function suportaFaceId() {
-  return typeof window !== "undefined" && "PublicKeyCredential" in window;
-}
+type JwkPublica = {
+  kty: "EC" | "RSA";
+  crv?: string;
+  x?: string;
+  y?: string;
+  n?: string;
+  e?: string;
+};
+export type RegistroFaceId = {
+  userId: string;
+  credId: string;
+  alg: -7 | -257;
+  jwk: JwkPublica;
+  criadoEm: string;
+  aparelho: string;
+};
 
-export async function listarFaceId(): Promise<FatorFaceId[]> {
-  const { data } = await supabase.auth.mfa.listFactors();
-  const lista = ((data as unknown as { webauthn?: FatorFaceId[] } | null)?.webauthn ?? []).filter(
-    (f) => f.status === "verified",
+// ---------- utilidades ----------
+
+const b64url = (buf: ArrayBuffer | Uint8Array) => {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+const deB64url = (s: string) => {
+  const b = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+  return Uint8Array.from(b, (c) => c.charCodeAt(0));
+};
+const iguais = (a: Uint8Array, b: Uint8Array) =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
+const sha256 = async (dados: Uint8Array | string) =>
+  new Uint8Array(
+    await crypto.subtle.digest(
+      "SHA-256",
+      typeof dados === "string" ? new TextEncoder().encode(dados) : new Uint8Array(dados),
+    ),
   );
-  return lista;
+const aleatorio = (n = 32) => crypto.getRandomValues(new Uint8Array(n));
+
+/** CBOR mínimo (o que o WebAuthn usa: números, bytes, textos, listas, mapas). */
+function lerCbor(buf: Uint8Array, pos = 0): [unknown, number] {
+  const ini = buf[pos]!;
+  const tipo = ini >> 5;
+  const info = ini & 31;
+  pos += 1;
+  let val: number;
+  if (info < 24) val = info;
+  else if (info === 24) {
+    val = buf[pos]!;
+    pos += 1;
+  } else if (info === 25) {
+    val = (buf[pos]! << 8) | buf[pos + 1]!;
+    pos += 2;
+  } else if (info === 26) {
+    val = buf[pos]! * 2 ** 24 + (buf[pos + 1]! << 16) + (buf[pos + 2]! << 8) + buf[pos + 3]!;
+    pos += 4;
+  } else throw new Error("Formato da chave não suportado.");
+  switch (tipo) {
+    case 0:
+      return [val, pos];
+    case 1:
+      return [-1 - val, pos];
+    case 2:
+      return [buf.slice(pos, pos + val), pos + val];
+    case 3:
+      return [new TextDecoder().decode(buf.slice(pos, pos + val)), pos + val];
+    case 4: {
+      const lista: unknown[] = [];
+      for (let i = 0; i < val; i++) {
+        const [v, p] = lerCbor(buf, pos);
+        lista.push(v);
+        pos = p;
+      }
+      return [lista, pos];
+    }
+    case 5: {
+      const mapa = new Map<unknown, unknown>();
+      for (let i = 0; i < val; i++) {
+        const [k, p1] = lerCbor(buf, pos);
+        const [v, p2] = lerCbor(buf, p1);
+        mapa.set(k, v);
+        pos = p2;
+      }
+      return [mapa, pos];
+    }
+    case 7:
+      return [info === 21 ? true : info === 20 ? false : null, pos];
+    default:
+      throw new Error("Formato da chave não suportado.");
+  }
 }
 
-/** Mensagem clara para os erros do WebAuthn e do servidor. */
-export function erroFaceId(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e);
-  if (/NotAllowed|cancel|abort|timed out/i.test(msg))
-    return "Face ID cancelado. Toque em tentar de novo.";
-  if (/disabled|not enabled|webauthn.*(enroll|verify)|mfa_webauthn/i.test(msg))
-    return "O Face ID ainda não foi liberado no servidor de login. Use o código de 6 números por enquanto.";
-  if (/InvalidState|already registered|excludeCredentials/i.test(msg))
-    return "Este aparelho já tem Face ID ativo no CRM.";
-  if (/aal2|AAL2|insufficient/i.test(msg))
-    return "Entre de novo com o código de 6 números para ativar o Face ID.";
-  return msg || "Não foi possível usar o Face ID agora.";
+/** Assinatura ECDSA do WebAuthn vem em DER; o WebCrypto quer r||s (64 bytes). */
+function derParaBruto(der: Uint8Array): Uint8Array<ArrayBuffer> {
+  let p = 2;
+  if (der[1]! & 0x80) p = 2 + (der[1]! & 0x7f);
+  const ler = () => {
+    if (der[p] !== 0x02) throw new Error("Assinatura inválida.");
+    const len = der[p + 1]!;
+    let v = der.slice(p + 2, p + 2 + len);
+    p += 2 + len;
+    while (v.length > 32 && v[0] === 0) v = v.slice(1);
+    const saida = new Uint8Array(32);
+    saida.set(v, 32 - v.length);
+    return saida;
+  };
+  const r = ler();
+  const s = ler();
+  const bruto = new Uint8Array(64);
+  bruto.set(r, 0);
+  bruto.set(s, 32);
+  return bruto;
 }
 
-/** Confirma o Face ID (sobe a sessão para o nível de duas etapas). */
-export async function confirmarFaceId(factorId: string) {
-  // As opções extras completam as do servidor (o desafio vem de lá).
-  const extras = { userVerification: "required", timeout: 60_000 } as unknown as Parameters<
-    typeof supabase.auth.mfa.webauthn.authenticate
-  >[1];
-  const { error } = await supabase.auth.mfa.webauthn.authenticate(
-    { factorId, webauthn: {} },
-    extras,
-  );
-  if (error) throw error;
+function nomeAparelho() {
+  const ua = navigator.userAgent;
+  const base = /iPhone/.test(ua)
+    ? "iPhone"
+    : /iPad/.test(ua)
+      ? "iPad"
+      : /Android/.test(ua)
+        ? "Android"
+        : /Mac/.test(ua)
+          ? "Mac"
+          : /Windows/.test(ua)
+            ? "Windows"
+            : "Aparelho";
+  return `${base} · ${new Date().toLocaleDateString("pt-BR")}`;
+}
+
+// ---------- estado no aparelho ----------
+
+function lerRegistro(): RegistroFaceId | null {
+  try {
+    const r = JSON.parse(localStorage.getItem(CHAVE) ?? "null") as RegistroFaceId | null;
+    return r && r.credId && r.jwk && r.userId ? r : null;
+  } catch {
+    return null;
+  }
 }
 
 export function travaLigada() {
   try {
-    return window.localStorage.getItem(CHAVE_TRAVA) === "1";
+    return localStorage.getItem(CHAVE_TRAVA) !== "0";
   } catch {
-    return false;
+    return true;
   }
 }
 
 function setTrava(v: boolean) {
   try {
-    if (v) window.localStorage.setItem(CHAVE_TRAVA, "1");
-    else window.localStorage.removeItem(CHAVE_TRAVA);
+    localStorage.setItem(CHAVE_TRAVA, v ? "1" : "0");
   } catch {
     /* sem armazenamento */
   }
 }
 
-/** Configuração › Segurança: ativar o Face ID, ver os aparelhos e ligar a trava ao abrir o app. */
-export function CartaoFaceId() {
-  const [fatores, setFatores] = useState<FatorFaceId[] | null>(null);
-  const [ocupado, setOcupado] = useState(false);
-  const [trava, setTravaEstado] = useState(false);
-  const [erro, setErro] = useState("");
+/** Face ID ativo neste aparelho para quem está logado e com a trava ligada. */
+export function faceIdLigadoNoAparelho(userId?: string | null) {
+  const r = lerRegistro();
+  return !!r && (!userId || r.userId === userId) && travaLigada();
+}
 
+export function marcarDesbloqueado() {
+  try {
+    sessionStorage.setItem(CHAVE_OK, String(Date.now()));
+  } catch {
+    /* sem armazenamento */
+  }
+}
+
+async function suportaFaceId(): Promise<boolean> {
+  try {
+    if (typeof window === "undefined" || !("PublicKeyCredential" in window)) return false;
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch {
+    return false;
+  }
+}
+
+/** Mensagem clara para os erros do WebAuthn. */
+export function erroFaceId(e: unknown): string {
+  const nome = (e as { name?: string })?.name ?? "";
+  const msg = e instanceof Error ? e.message : String(e ?? "");
+  if (nome === "NotAllowedError" || /cancel|abort|timed out|not allowed/i.test(msg))
+    return "Face ID cancelado ou não reconhecido. Toque para tentar de novo.";
+  if (nome === "InvalidStateError") return "Este aparelho já tem o Face ID ativo no CRM.";
+  if (nome === "SecurityError") return "O Face ID só funciona no endereço oficial do CRM.";
+  if (nome === "NotSupportedError") return "Este aparelho não oferece Face ID para o navegador.";
+  return msg || "Não foi possível usar o Face ID agora.";
+}
+
+// ---------- cerimônias ----------
+
+async function ativarFaceId(user: { id: string; email: string; nome: string }) {
+  const desafio = aleatorio();
+  const cred = (await navigator.credentials.create({
+    publicKey: {
+      challenge: desafio,
+      rp: { name: "IA News CRM", id: location.hostname },
+      user: {
+        id: new TextEncoder().encode(user.id),
+        name: user.email,
+        displayName: user.nome || user.email,
+      },
+      pubKeyCredParams: [
+        { type: "public-key", alg: -7 },
+        { type: "public-key", alg: -257 },
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        userVerification: "required",
+        residentKey: "preferred",
+      },
+      timeout: 60_000,
+      attestation: "none",
+    },
+  })) as PublicKeyCredential | null;
+  if (!cred) throw new Error("Face ID cancelado.");
+  const resp = cred.response as AuthenticatorAttestationResponse;
+
+  // Confere o que o aparelho devolveu.
+  const cliente = JSON.parse(new TextDecoder().decode(resp.clientDataJSON)) as {
+    type: string;
+    challenge: string;
+    origin: string;
+  };
+  if (cliente.type !== "webauthn.create" || cliente.challenge !== b64url(desafio))
+    throw new Error("Resposta do Face ID inválida.");
+  if (cliente.origin !== location.origin) throw new Error("Origem inválida.");
+  const [att] = lerCbor(new Uint8Array(resp.attestationObject)) as [Map<string, unknown>, number];
+  const auth = att.get("authData") as Uint8Array;
+  if (!iguais(auth.slice(0, 32), await sha256(location.hostname)))
+    throw new Error("Site inválido.");
+  const flags = auth[32]!;
+  if (!(flags & 0x01) || !(flags & 0x04) || !(flags & 0x40))
+    throw new Error("O aparelho não confirmou a biometria.");
+  const lenId = (auth[53]! << 8) | auth[54]!;
+  const credId = auth.slice(55, 55 + lenId);
+  if (!iguais(credId, new Uint8Array(cred.rawId))) throw new Error("Chave inválida.");
+  const [cose] = lerCbor(auth, 55 + lenId) as [Map<number, unknown>, number];
+  const kty = cose.get(1);
+  const alg = cose.get(3) as number;
+  let jwk: JwkPublica;
+  if (kty === 2 && alg === -7) {
+    jwk = {
+      kty: "EC",
+      crv: "P-256",
+      x: b64url(cose.get(-2) as Uint8Array),
+      y: b64url(cose.get(-3) as Uint8Array),
+    };
+  } else if (kty === 3 && alg === -257) {
+    jwk = {
+      kty: "RSA",
+      n: b64url(cose.get(-1) as Uint8Array),
+      e: b64url(cose.get(-2) as Uint8Array),
+    };
+  } else throw new Error("Tipo de chave não suportado neste aparelho.");
+
+  const reg: RegistroFaceId = {
+    userId: user.id,
+    credId: b64url(credId),
+    alg: alg as -7 | -257,
+    jwk,
+    criadoEm: new Date().toISOString(),
+    aparelho: nomeAparelho(),
+  };
+  localStorage.setItem(CHAVE, JSON.stringify(reg));
+  setTrava(true);
+  marcarDesbloqueado();
+  return reg;
+}
+
+/** Pede o Face ID e confere a assinatura com a chave guardada. */
+export async function confirmarFaceId(reg: RegistroFaceId) {
+  const desafio = aleatorio();
+  const cred = (await navigator.credentials.get({
+    publicKey: {
+      challenge: desafio,
+      rpId: location.hostname,
+      allowCredentials: [
+        { type: "public-key", id: deB64url(reg.credId), transports: ["internal"] },
+      ],
+      userVerification: "required",
+      timeout: 60_000,
+    },
+  })) as PublicKeyCredential | null;
+  if (!cred) throw new Error("Face ID cancelado.");
+  const resp = cred.response as AuthenticatorAssertionResponse;
+  const clienteBytes = new Uint8Array(resp.clientDataJSON);
+  const cliente = JSON.parse(new TextDecoder().decode(clienteBytes)) as {
+    type: string;
+    challenge: string;
+    origin: string;
+  };
+  if (cliente.type !== "webauthn.get" || cliente.challenge !== b64url(desafio))
+    throw new Error("Resposta do Face ID inválida.");
+  if (cliente.origin !== location.origin) throw new Error("Origem inválida.");
+  if (b64url(cred.rawId) !== reg.credId) throw new Error("Chave diferente da ativada.");
+  const auth = new Uint8Array(resp.authenticatorData);
+  if (!iguais(auth.slice(0, 32), await sha256(location.hostname)))
+    throw new Error("Site inválido.");
+  const flags = auth[32]!;
+  if (!(flags & 0x01) || !(flags & 0x04)) throw new Error("O aparelho não confirmou a biometria.");
+  const hashCliente = await sha256(clienteBytes);
+  const assinado = new Uint8Array(auth.length + hashCliente.length);
+  assinado.set(auth, 0);
+  assinado.set(hashCliente, auth.length);
+  const assinatura = new Uint8Array(resp.signature);
+  let ok = false;
+  if (reg.alg === -7) {
+    const chave = await crypto.subtle.importKey(
+      "jwk",
+      { ...reg.jwk, ext: true },
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["verify"],
+    );
+    ok = await crypto.subtle.verify(
+      { name: "ECDSA", hash: "SHA-256" },
+      chave,
+      derParaBruto(assinatura),
+      assinado,
+    );
+  } else {
+    const chave = await crypto.subtle.importKey(
+      "jwk",
+      { ...reg.jwk, alg: "RS256", ext: true },
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"],
+    );
+    ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", chave, assinatura, assinado);
+  }
+  if (!ok) throw new Error("A assinatura do Face ID não confere.");
+  marcarDesbloqueado();
+}
+
+function desativarFaceId() {
+  try {
+    localStorage.removeItem(CHAVE);
+    localStorage.removeItem(CHAVE_TRAVA);
+  } catch {
+    /* sem armazenamento */
+  }
+}
+
+async function usuarioAtual() {
+  const { data } = await supabase.auth.getSession();
+  const u = data.session?.user;
+  if (!u) return null;
+  const meta = (u.user_metadata ?? {}) as { full_name?: string; name?: string };
+  return { id: u.id, email: u.email ?? "", nome: meta.full_name ?? meta.name ?? "" };
+}
+
+// ---------- telas ----------
+
+function useFaceId() {
+  const [suporta, setSuporta] = useState<boolean | null>(null);
+  const [reg, setReg] = useState<RegistroFaceId | null>(null);
+  const [trava, setTravaEstado] = useState(true);
   const carregar = useCallback(async () => {
-    setFatores(await listarFaceId());
+    const [s, u] = await Promise.all([suportaFaceId(), usuarioAtual()]);
+    const r = lerRegistro();
+    setSuporta(s);
+    setReg(r && u && r.userId === u.id ? r : null);
     setTravaEstado(travaLigada());
   }, []);
   useEffect(() => {
     void carregar();
   }, [carregar]);
+  return { suporta, reg, trava, setTravaEstado, carregar };
+}
+
+/** Minha conta: ativar o Face ID neste aparelho e ligar a trava ao abrir o app. */
+export function CartaoFaceId({ compacto }: { compacto?: boolean }) {
+  const { suporta, reg, trava, setTravaEstado, carregar } = useFaceId();
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState("");
+  const [dispensado, setDispensado] = useState(() => {
+    if (!compacto) return false;
+    try {
+      return Date.now() - Number(localStorage.getItem(CHAVE_DISPENSA) ?? 0) < 14 * 86_400_000;
+    } catch {
+      return false;
+    }
+  });
 
   async function ativar() {
     setErro("");
     setOcupado(true);
     try {
-      const nome = `${/iPhone/.test(navigator.userAgent) ? "iPhone" : /Mac/.test(navigator.userAgent) ? "Mac" : "Aparelho"} · ${new Date().toLocaleDateString("pt-BR")}`;
-      const { error } = await supabase.auth.mfa.webauthn.register(
-        { friendlyName: nome, webauthn: {} },
-        {
-          authenticatorSelection: {
-            userVerification: "required",
-            residentKey: "preferred",
-            requireResidentKey: false,
-          },
-          timeout: 60_000,
-        },
-      );
-      if (error) throw error;
-      setTrava(true);
-      toast.success("Face ID ativado. No próximo login ele substitui o código.");
+      const u = await usuarioAtual();
+      if (!u) throw new Error("Entre de novo para ativar o Face ID.");
+      await ativarFaceId(u);
+      toast.success("Face ID ativado. O CRM vai pedir o Face ID sempre que for aberto.");
       await carregar();
     } catch (e) {
       setErro(erroFaceId(e));
@@ -123,14 +428,69 @@ export function CartaoFaceId() {
     }
   }
 
-  async function remover(f: FatorFaceId) {
-    if (!window.confirm(`Remover o Face ID "${f.friendly_name ?? "aparelho"}" do CRM?`)) return;
+  async function testar() {
+    if (!reg) return;
+    setErro("");
     setOcupado(true);
-    const { error } = await supabase.auth.mfa.unenroll({ factorId: f.id });
-    setOcupado(false);
-    if (error) return setErro("Não foi possível remover agora.");
-    toast.success("Face ID removido.");
-    await carregar();
+    try {
+      await confirmarFaceId(reg);
+      toast.success("Face ID conferido.");
+    } catch (e) {
+      setErro(erroFaceId(e));
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  function desativar() {
+    if (!window.confirm("Desativar o Face ID neste aparelho?")) return;
+    desativarFaceId();
+    toast.success("Face ID desativado neste aparelho.");
+    void carregar();
+  }
+
+  if (suporta == null) return null;
+
+  if (compacto) {
+    if (!suporta || reg || dispensado) return null;
+    return (
+      <section className="flex flex-wrap items-center gap-3 rounded-xl border bg-card px-4 py-3.5 sm:px-5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#EEF3FF] text-primary">
+          <ScanFace className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13.5px] font-semibold">Entrar com Face ID neste aparelho</p>
+          <p className="text-[12.5px] text-muted-foreground">
+            O CRM pede o Face ID ao abrir, sem senha e código toda vez.
+          </p>
+          {erro ? <p className="mt-1 text-[12.5px] text-destructive">{erro}</p> : null}
+        </div>
+        <Button className="h-9" onClick={ativar} disabled={ocupado}>
+          {ocupado ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Fingerprint className="h-4 w-4" />
+          )}
+          Ativar
+        </Button>
+        <button
+          type="button"
+          aria-label="Agora não"
+          title="Agora não (lembra de novo em 14 dias)"
+          onClick={() => {
+            try {
+              localStorage.setItem(CHAVE_DISPENSA, String(Date.now()));
+            } catch {
+              /* sem armazenamento */
+            }
+            setDispensado(true);
+          }}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </section>
+    );
   }
 
   return (
@@ -140,73 +500,71 @@ export function CartaoFaceId() {
           <ScanFace className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-[14.5px] font-semibold">Entrar com Face ID</h2>
+          <h2 className="text-[14.5px] font-semibold">Face ID</h2>
           <p className="text-[12.5px] text-muted-foreground">
-            Depois da senha, o CRM pede o Face ID do celular no lugar do código de 6 números.
+            {reg
+              ? `Ativo neste aparelho (${reg.aparelho}).`
+              : "Ative no celular: o CRM passa a pedir o Face ID sempre que for aberto."}
           </p>
         </div>
-        {suportaFaceId() ? (
-          <Button onClick={ativar} disabled={ocupado || fatores == null} className="h-9">
+        {suporta && !reg ? (
+          <Button onClick={ativar} disabled={ocupado} className="h-9">
             {ocupado ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Fingerprint className="h-4 w-4" />
             )}
-            {fatores?.length ? "Ativar em outro aparelho" : "Ativar neste aparelho"}
+            Ativar neste aparelho
           </Button>
         ) : null}
       </header>
       <div className="space-y-3 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
         {erro ? <p className="text-[13px] text-destructive">{erro}</p> : null}
-        {fatores?.length ? (
-          <ul className="divide-y rounded-lg border">
-            {fatores.map((f) => (
-              <li key={f.id} className="flex items-center gap-3 px-3.5 py-2.5">
-                <Smartphone className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13.5px] font-semibold">
-                    {f.friendly_name || "Aparelho"}
-                  </span>
-                  <span className="block text-[12px] text-muted-foreground">
-                    ativado em {fmtDataHora(f.created_at)}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => remover(f)}
-                  aria-label="Remover este Face ID"
-                  className="rounded-md p-1.5 text-muted-foreground transition hover:bg-muted hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : fatores ? (
+        {!suporta ? (
           <p className="text-[12.5px] text-muted-foreground">
-            Ative no celular (no app instalado ou no Safari). Em outros computadores, o navegador
-            mostra um QR code: aponte a câmera do celular e confirme com o Face ID.
+            Este navegador não oferece Face ID ou biometria. No iPhone, abra o CRM pelo ícone na
+            Tela de Início (ou no Safari) e ative por aqui.
           </p>
-        ) : null}
-        {fatores?.length ? (
-          <label className="flex items-center justify-between gap-4 rounded-lg bg-background px-3.5 py-3">
-            <span className="min-w-0">
-              <span className="block text-[13.5px] font-semibold">
-                Pedir Face ID ao abrir o app
+        ) : reg ? (
+          <>
+            <label className="flex items-center justify-between gap-4 rounded-lg bg-background px-3.5 py-3">
+              <span className="min-w-0">
+                <span className="block text-[13.5px] font-semibold">
+                  Pedir Face ID ao abrir o app
+                </span>
+                <span className="block text-[12px] text-muted-foreground">
+                  Trava ao abrir, depois de {MINUTOS_PARA_TRAVAR} minutos fora e no lugar de
+                  desconectar por falta de uso.
+                </span>
               </span>
-              <span className="block text-[12px] text-muted-foreground">
-                Neste aparelho, o CRM trava ao abrir e depois de {MINUTOS_PARA_TRAVAR} minutos fora.
-              </span>
-            </span>
-            <Switch
-              checked={trava}
-              onCheckedChange={(v) => {
-                setTrava(v);
-                setTravaEstado(v);
-              }}
-            />
-          </label>
-        ) : null}
+              <Switch
+                checked={trava}
+                onCheckedChange={(v) => {
+                  setTrava(v);
+                  setTravaEstado(v);
+                }}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="h-9" onClick={testar} disabled={ocupado}>
+                {ocupado ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4" />
+                )}
+                Testar Face ID
+              </Button>
+              <Button variant="ghost" className="h-9" onClick={desativar} disabled={ocupado}>
+                Desativar neste aparelho
+              </Button>
+            </div>
+          </>
+        ) : (
+          <p className="text-[12.5px] text-muted-foreground">
+            O primeiro acesso em cada aparelho continua com senha e código. Depois disso, o Face ID
+            abre o CRM.
+          </p>
+        )}
       </div>
     </section>
   );
@@ -216,53 +574,60 @@ export function CartaoFaceId() {
 export function TravaFaceId({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [travado, setTravado] = useState(false);
-  const [fator, setFator] = useState<FatorFaceId | null>(null);
+  const [reg, setReg] = useState<RegistroFaceId | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const saiuEm = useRef<number | null>(null);
-  const conferido = useRef(false);
 
-  // Ao abrir o app: trava se a opção estiver ligada neste aparelho e houver Face ID ativo.
-  useEffect(() => {
-    if (conferido.current || !travaLigada() || !suportaFaceId()) return;
-    conferido.current = true;
-    void listarFaceId().then((l) => {
-      if (!l.length) return;
-      setFator(l[0]);
-      // Acabou de entrar com o Face ID ou o código: não pede de novo.
-      const recente = sessionStorage.getItem("crm:faceid-ok");
-      if (recente && Date.now() - Number(recente) < 60_000) return;
-      setTravado(true);
-    });
+  const travarSePreciso = useCallback(async (forcar: boolean) => {
+    const r = lerRegistro();
+    if (!r || !travaLigada()) return;
+    const u = await usuarioAtual();
+    if (!u || u.id !== r.userId) return;
+    if (!forcar) {
+      try {
+        const ok = Number(sessionStorage.getItem(CHAVE_OK) ?? 0);
+        if (ok && Date.now() - ok < 60_000) return;
+      } catch {
+        /* sem armazenamento */
+      }
+    }
+    setReg(r);
+    setErro("");
+    setTravado(true);
   }, []);
 
-  // Ao voltar depois de alguns minutos fora: trava de novo.
+  // Ao abrir o app.
+  useEffect(() => {
+    void travarSePreciso(false);
+  }, [travarSePreciso]);
+
+  // Ao voltar depois de alguns minutos fora, e quando o CRM pede (falta de uso).
   useEffect(() => {
     const aoMudar = () => {
-      if (!travaLigada()) return;
       if (document.visibilityState === "hidden") {
         saiuEm.current = Date.now();
       } else if (saiuEm.current && Date.now() - saiuEm.current > MINUTOS_PARA_TRAVAR * 60_000) {
-        void listarFaceId().then((l) => {
-          if (!l.length) return;
-          setFator(l[0]);
-          setTravado(true);
-        });
+        saiuEm.current = null;
+        void travarSePreciso(true);
       }
     };
+    const aoPedir = () => void travarSePreciso(true);
     document.addEventListener("visibilitychange", aoMudar);
-    return () => document.removeEventListener("visibilitychange", aoMudar);
-  }, []);
+    window.addEventListener("crm:travar", aoPedir);
+    return () => {
+      document.removeEventListener("visibilitychange", aoMudar);
+      window.removeEventListener("crm:travar", aoPedir);
+    };
+  }, [travarSePreciso]);
 
   async function desbloquear() {
-    if (!fator) return;
+    if (!reg) return;
     setErro("");
     setOcupado(true);
     try {
-      await confirmarFaceId(fator.id);
-      sessionStorage.setItem("crm:faceid-ok", String(Date.now()));
+      await confirmarFaceId(reg);
       setTravado(false);
-      saiuEm.current = null;
       void qc.invalidateQueries({ queryKey: ["crm"], refetchType: "active" });
     } catch (e) {
       setErro(erroFaceId(e));
@@ -277,32 +642,44 @@ export function TravaFaceId({ children }: { children: ReactNode }) {
     window.location.replace("/login");
   }
 
-  if (!travado) return <>{children}</>;
   return (
-    <div className="safe-top flex min-h-[100dvh] flex-col items-center justify-center bg-nav px-6 text-center">
-      <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EEF3FF] text-primary">
-        <Lock className="h-7 w-7" />
-      </span>
-      <h1 className="mt-5 text-[20px] font-semibold">CRM travado</h1>
-      <p className="mt-1 max-w-xs text-[14px] text-muted-foreground">
-        Confirme com o Face ID para ver os dados da IA News.
-      </p>
-      <Button
-        className="mt-6 h-12 w-full max-w-xs text-[15px]"
-        onClick={desbloquear}
-        disabled={ocupado}
-      >
-        {ocupado ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
-        Desbloquear com Face ID
-      </Button>
-      {erro ? <p className="mt-3 max-w-xs text-[13px] text-destructive">{erro}</p> : null}
-      <button
-        type="button"
-        onClick={sair}
-        className="mt-5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-      >
-        Sair e entrar com senha
-      </button>
-    </div>
+    <>
+      {/* Os dados não aparecem por trás da trava (nem no seletor de apps do celular). */}
+      <div aria-hidden={travado} className={travado ? "hidden" : undefined}>
+        {children}
+      </div>
+      {travado ? (
+        <div className="safe-top fixed inset-0 z-[100] flex min-h-[100dvh] flex-col items-center justify-center bg-[#0B1220] px-6 text-center">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EEF3FF] text-primary">
+            <Lock className="h-7 w-7" />
+          </span>
+          <h1 className="mt-5 text-[20px] font-semibold text-white">CRM travado</h1>
+          <p className="mt-1 max-w-xs text-[14px] text-white/65">
+            Confirme com o Face ID para ver os dados da IA News.
+          </p>
+          <Button
+            className="mt-6 h-12 w-full max-w-xs text-[15px]"
+            onClick={desbloquear}
+            disabled={ocupado}
+            autoFocus
+          >
+            {ocupado ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <ScanFace className="h-5 w-5" />
+            )}
+            Desbloquear com Face ID
+          </Button>
+          {erro ? <p className="mt-3 max-w-xs text-[13px] text-[#FFB4A8]">{erro}</p> : null}
+          <button
+            type="button"
+            onClick={sair}
+            className="mt-5 text-[13px] font-medium text-white/60 hover:text-white"
+          >
+            Sair e entrar com senha
+          </button>
+        </div>
+      ) : null}
+    </>
   );
 }
