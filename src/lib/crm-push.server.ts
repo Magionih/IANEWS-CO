@@ -1,4 +1,4 @@
-import { ApplicationServerKeys, generatePushHTTPRequest } from "webpush-webcrypto";
+import { gerarChavesVapid, montarPush } from "@/lib/webpush-padrao.server";
 
 /* Entrega dos avisos do CRM interno (vendas, pautas, material, resumos do dia) como push no
    celular da equipe. O banco cria os avisos e chama este gancho; as chaves VAPID ficam no cofre
@@ -53,19 +53,16 @@ async function chaves(db: any) {
   let { data, error } = await db.rpc("crm_push_chaves");
   if (error) throw new Error(error.message);
   if (!data) {
-    const novo = await (await ApplicationServerKeys.generate()).toJSON();
+    const novo = await gerarChavesVapid();
     ({ data, error } = await db.rpc("crm_push_chaves_guardar", {
-      p_publica: novo.publicKey,
-      p_privada: novo.privateKey,
+      p_publica: novo.publica,
+      p_privada: novo.privada,
     }));
     if (error) throw new Error(error.message);
   }
   const par = data as { publica?: string; privada?: string } | null;
   if (!par?.publica || !par.privada) throw new Error("Chaves do push indisponíveis.");
-  return {
-    publicKey: par.publica,
-    keys: await ApplicationServerKeys.fromJSON({ publicKey: par.publica, privateKey: par.privada }),
-  };
+  return { publicKey: par.publica, chavesVapid: { publica: par.publica, privada: par.privada } };
 }
 
 /** Vários avisos do mesmo tipo no mesmo minuto viram um só (ex.: 5 vendas de uma vez). */
@@ -107,7 +104,7 @@ export async function entregarAvisosCrm() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabaseAdmin as any;
-  const { publicKey, keys } = await chaves(db);
+  const { publicKey, chavesVapid } = await chaves(db);
 
   // O CRM lê a chave pública daqui para inscrever os aparelhos.
   await db.from("crm_config_publica").upsert({
@@ -160,19 +157,17 @@ export async function entregarAvisosCrm() {
     });
     for (const i of alvo) {
       try {
-        const req = await generatePushHTTPRequest({
-          applicationServerKeys: keys,
-          payload,
-          target: { endpoint: i.endpoint, keys: { p256dh: i.p256dh, auth: i.auth } },
-          adminContact: contato,
+        const req = await montarPush({
+          endpoint: i.endpoint,
+          p256dh: i.p256dh,
+          auth: i.auth,
+          mensagem: payload,
+          chaves: chavesVapid,
+          contato,
           ttl: a.urgente ? 24 * 3600 : 6 * 3600,
-          urgency: a.urgente ? "high" : "normal",
+          urgencia: a.urgente ? "high" : "normal",
         });
-        const res = await fetch(req.endpoint, {
-          method: "POST",
-          headers: req.headers,
-          body: req.body,
-        });
+        const res = await fetch(req.endpoint, req.init);
         if (res.ok) {
           ok += 1;
           usadas.add(i.id);

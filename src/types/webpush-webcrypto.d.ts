@@ -1,7 +1,11 @@
 declare module "webpush-webcrypto" {
+  export function setWebCrypto(crypto: Crypto): void;
   export class ApplicationServerKeys {
     static generate(): Promise<ApplicationServerKeys>;
-    static fromJSON(json: { publicKey: string; privateKey: string }): Promise<ApplicationServerKeys>;
+    static fromJSON(json: {
+      publicKey: string;
+      privateKey: string;
+    }): Promise<ApplicationServerKeys>;
     toJSON(): Promise<{ publicKey: string; privateKey: string }>;
   }
 
